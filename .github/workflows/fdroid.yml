@@ -135,7 +135,13 @@ jobs:
           chmod 600 config.yml
           
           # Generate/Update the repository index
-          fdroid update --create-metadata
+          # --create-metadata will ensure we have basic metadata for new APKs
+          # index-v1.json will be automatically generated/updated
+          fdroid update --create-metadata --pretty
+          
+          # Optional: Also generate the old index.xml just in case, though index-v1.json is modern
+          # fdroid update --create-metadata --create-key
+
           rm config.yml
           cd ..
 
