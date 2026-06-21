@@ -49,6 +49,12 @@ android {
             keepDebugSymbols += ["**/libandroidx.graphics.path.so"]
         }
     }
+
+    applicationVariants.all { variant ->
+        variant.outputs.all {
+            outputFileName = "Illustia-v${variant.versionName}-${variant.name}.apk"
+        }
+    }
 }
 
 kotlin {
