@@ -55,7 +55,7 @@ jobs:
           fi
 
       - name: Update F-Droid Repository
-        uses: fdroid/action-update-repo@v1.1.0
+        uses: fdroid/action-update-repo@v1
         with:
           directory: fdroid
 
