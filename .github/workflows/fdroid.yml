@@ -65,8 +65,11 @@ jobs:
           
           # インデックスの署名にアプリと同じキーストアを使用
           keystore: ../release.keystore
-          repo_keystorepass: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          keystorepass: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          keypass: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          keyalias: ${{ secrets.RELEASE_KEY_ALIAS }}
           repo_keyalias: ${{ secrets.RELEASE_KEY_ALIAS }}
+          repo_keystorepass: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
           repo_keypass: ${{ secrets.RELEASE_KEY_PASSWORD }}
           EOF
           chmod 600 config.yml
