@@ -43,21 +43,32 @@ jobs:
           KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
 
-      - name: Prepare F-Droid directory
+      - name: Install fdroidserver
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y fdroidserver
+
+      - name: Update F-Droid Repository
         run: |
           mkdir -p fdroid/repo
           cp app/build/outputs/apk/release/*.apk fdroid/repo/
           
-          if [ ! -f fdroid/config.yml ]; then
-            echo "repo_url: https://yunfie-twitter.github.io/Illustia-dev/repo" > fdroid/config.yml
-            echo "repo_name: Illustia Dev Repository" >> fdroid/config.yml
-            echo "repo_description: Development builds for Illustia" >> fdroid/config.yml
-          fi
-
-      - name: Update F-Droid Repository
-        uses: fdroid/action-update-repo@v1
-        with:
-          directory: fdroid
+          cd fdroid
+          # 最小限のconfig.ymlを作成
+          cat <<EOF > config.yml
+          repo_url: https://yunfie-twitter.github.io/Illustia-dev/
+          repo_name: Illustia Dev Repository
+          repo_description: Development builds for Illustia
+          
+          # インデックスの署名にアプリと同じキーストアを使用
+          keystore: ../release.keystore
+          keystorepass: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          keypass: ${{ secrets.RELEASE_KEY_PASSWORD }}
+          keyalias: ${{ secrets.RELEASE_KEY_ALIAS }}
+          EOF
+          
+          # インデックス(index-v1.jar等)を生成
+          fdroid update --create-metadata --noverify
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
