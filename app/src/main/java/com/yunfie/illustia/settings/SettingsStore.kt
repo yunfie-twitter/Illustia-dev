@@ -159,13 +159,27 @@ class SettingsStore(context: Context) {
     }
 
     fun savePinHash(pin: String) {
-        val hash = pin.sha256()
-        sensitivePreferences.edit().putString(KEY_PIN_HASH, hash).apply()
+        val salt = generateSalt()
+        val hash = pbkdf2(pin, salt)
+        sensitivePreferences.edit()
+            .putString(KEY_PIN_HASH, hash)
+            .putString(KEY_PIN_SALT, salt)
+            .apply()
     }
 
     fun verifyPin(pin: String): Boolean {
-        val stored = sensitivePreferences.getString(KEY_PIN_HASH, null) ?: return false
-        return pin.sha256() == stored
+        val storedHash = sensitivePreferences.getString(KEY_PIN_HASH, null) ?: return false
+        val salt = sensitivePreferences.getString(KEY_PIN_SALT, null)
+        if (salt == null) {
+            // Legacy SHA-256 hash (no salt) — verify and migrate on success
+            val legacyMatch = constantTimeEquals(sha256(pin).toByteArray(), storedHash.toByteArray())
+            if (legacyMatch) {
+                savePinHash(pin)
+            }
+            return legacyMatch
+        }
+        val computed = pbkdf2(pin, salt)
+        return constantTimeEquals(computed.toByteArray(), storedHash.toByteArray())
     }
 
     fun hasPinSet(): Boolean {
@@ -173,13 +187,38 @@ class SettingsStore(context: Context) {
     }
 
     fun clearPinHash() {
-        sensitivePreferences.edit().remove(KEY_PIN_HASH).apply()
+        sensitivePreferences.edit()
+            .remove(KEY_PIN_HASH)
+            .remove(KEY_PIN_SALT)
+            .apply()
     }
 
-    private fun String.sha256(): String {
+    private fun generateSalt(): String {
+        val bytes = ByteArray(32)
+        java.security.SecureRandom().nextBytes(bytes)
+        return bytes.joinToString("") { "%02x".format(it) }
+    }
+
+    private fun pbkdf2(pin: String, salt: String): String {
+        val spec = javax.crypto.spec.PBEKeySpec(
+            pin.toCharArray(),
+            salt.toByteArray(Charsets.UTF_8),
+            PBKDF2_ITERATIONS,
+            PBKDF2_KEY_LENGTH,
+        )
+        val factory = javax.crypto.SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
+        val hash = factory.generateSecret(spec).encoded
+        return hash.joinToString("") { "%02x".format(it) }
+    }
+
+    private fun sha256(input: String): String {
         val digest = java.security.MessageDigest.getInstance("SHA-256")
-        val hashBytes = digest.digest(this.toByteArray(Charsets.UTF_8))
+        val hashBytes = digest.digest(input.toByteArray(Charsets.UTF_8))
         return hashBytes.joinToString("") { "%02x".format(it) }
+    }
+
+    private fun constantTimeEquals(a: ByteArray, b: ByteArray): Boolean {
+        return java.security.MessageDigest.isEqual(a, b)
     }
 
     private fun readFromDataStore(preferences: Preferences, roomData: RoomSettingsData): AppSettings {
@@ -690,6 +729,9 @@ class SettingsStore(context: Context) {
         private const val KEY_ACCOUNT_TOKENS = "accountTokens"
         private const val KEY_ACTIVE_ACCOUNT_INDEX = "activeAccountIndex"
         private const val KEY_PIN_HASH = "pinHash"
+        private const val KEY_PIN_SALT = "pinSalt"
+        private const val PBKDF2_ITERATIONS = 100_000
+        private const val PBKDF2_KEY_LENGTH = 256
         private const val KEY_BOOKMARK_USER_ID = "bookmarkUserId"
         private const val KEY_ALLOW_R18 = "allowR18"
         private const val KEY_HIGH_QUALITY = "highQualityImages"

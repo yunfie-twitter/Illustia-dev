@@ -349,7 +349,7 @@ class IllustiaViewModel(app: Application) : AndroidViewModel(app) {
         val count = _uiState.value.settings.appLockFailCount + 1
         val cooldownSec = cooldownTable.firstOrNull { count >= it.first }?.second ?: 0L
         val cooldownUntil = if (cooldownSec > 0L) {
-            System.currentTimeMillis() + cooldownSec * 1000L
+            android.os.SystemClock.elapsedRealtime() + cooldownSec * 1000L
         } else {
             0L
         }
@@ -384,7 +384,7 @@ class IllustiaViewModel(app: Application) : AndroidViewModel(app) {
     fun cooldownRemainingSeconds(): Long {
         val until = _uiState.value.settings.appLockCooldownUntil
         if (until == 0L) return 0L
-        return ((until - System.currentTimeMillis()) / 1000L).coerceAtLeast(0L)
+        return ((until - android.os.SystemClock.elapsedRealtime()) / 1000L).coerceAtLeast(0L)
     }
 
     fun updateFollowOnLike(value: Boolean) {
@@ -703,6 +703,7 @@ class IllustiaViewModel(app: Application) : AndroidViewModel(app) {
 
     fun handleIncomingIntent(intent: Intent?) {
         intent?.data?.let { uri ->
+            // Always allow Pixiv OAuth callback (needed for recovery web login)
             if (uri.scheme == "pixiv" && uri.host == "account" && uri.path == "/login") {
                 uri.getQueryParameter("code")
                     ?.takeIf(String::isNotBlank)
@@ -710,6 +711,8 @@ class IllustiaViewModel(app: Application) : AndroidViewModel(app) {
                 return
             }
         }
+        // Block all other intent processing while locked to prevent deep-link bypass
+        if (_uiState.value.appLocked) return
         when (val event = NativeIntentRouter.parse(intent)) {
             is NativeIntentEvent.Artwork -> openIllust(event.id)
             is NativeIntentEvent.User -> openUserPage(event.id)
@@ -722,6 +725,7 @@ class IllustiaViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun handleClipboardText(value: String) {
+        if (_uiState.value.appLocked) return
         when (val event = NativeIntentRouter.parseText(value)) {
             is NativeIntentEvent.Artwork -> openIllust(event.id)
             is NativeIntentEvent.User -> openUserPage(event.id)

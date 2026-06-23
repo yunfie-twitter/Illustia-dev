@@ -84,7 +84,7 @@ fun AppLockScreen(
     // Cooldown countdown timer
     LaunchedEffect(cooldownUntil) {
         while (true) {
-            val remaining = ((cooldownUntil - System.currentTimeMillis()) / 1000L).coerceAtLeast(0L)
+            val remaining = ((cooldownUntil - android.os.SystemClock.elapsedRealtime()) / 1000L).coerceAtLeast(0L)
             cooldownRemaining = remaining
             if (remaining <= 0L) break
             delay(250)

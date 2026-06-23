@@ -93,7 +93,7 @@ fun AppLockSetupScreen(
     LaunchedEffect(state.settings.appLockCooldownUntil) {
         val until = state.settings.appLockCooldownUntil
         while (true) {
-            val remaining = ((until - System.currentTimeMillis()) / 1000L).coerceAtLeast(0L)
+            val remaining = ((until - android.os.SystemClock.elapsedRealtime()) / 1000L).coerceAtLeast(0L)
             cooldownRemaining = remaining
             if (remaining <= 0L) break
             delay(250)

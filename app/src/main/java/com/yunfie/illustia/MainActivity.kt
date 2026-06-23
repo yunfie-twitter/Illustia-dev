@@ -74,9 +74,12 @@ class MainActivity : FragmentActivity() {
 
             // Force FLAG_SECURE while locked so the app is obscured in recents
             // and screenshots are blocked, regardless of secureWindow setting.
+            // Also clear the clipboard to prevent sensitive data leakage.
             LaunchedEffect(state.appLocked, state.settings.secureWindow) {
                 if (state.appLocked && state.settings.appLockEnabled) {
                     window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
+                    val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+                    clipboard?.clearPrimaryClip()
                 } else {
                     applySecureWindow(state.settings.secureWindow)
                 }
