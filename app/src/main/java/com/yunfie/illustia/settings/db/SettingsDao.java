@@ -4,6 +4,7 @@ import androidx.room.Dao;
 import androidx.room.Insert;
 import androidx.room.OnConflictStrategy;
 import androidx.room.Query;
+import androidx.room.Transaction;
 
 import java.util.List;
 
@@ -44,4 +45,29 @@ public interface SettingsDao {
 
     @Query("DELETE FROM accounts")
     void clearAccounts();
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void upsertSavedIllust(SavedIllustEntity item);
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    void upsertSavedIllustPages(List<SavedIllustPageEntity> items);
+
+    @Query("SELECT * FROM saved_illusts ORDER BY savedAt DESC")
+    List<SavedIllustEntity> getSavedIllusts();
+
+    @Transaction
+    @Query("SELECT * FROM saved_illusts WHERE illustId = :illustId LIMIT 1")
+    SavedIllustWithPages getSavedIllust(long illustId);
+
+    @Query("DELETE FROM saved_illust_pages WHERE illustId = :illustId")
+    void deleteSavedIllustPages(long illustId);
+
+    @Query("DELETE FROM saved_illusts WHERE illustId = :illustId")
+    void deleteSavedIllust(long illustId);
+
+    @Query("DELETE FROM saved_illust_pages")
+    void clearSavedIllustPages();
+
+    @Query("DELETE FROM saved_illusts")
+    void clearSavedIllusts();
 }

@@ -7,6 +7,7 @@ import com.yunfie.illustia.data.LoadState
 import com.yunfie.illustia.data.UserPreview
 import com.yunfie.illustia.data.UserProfile
 import com.yunfie.illustia.settings.AppSettings
+import com.yunfie.illustia.settings.db.SavedIllustEntity
 
 @Immutable
 data class IllustiaUiState(
@@ -50,6 +51,8 @@ data class IllustiaUiState(
     val showUserPage: Boolean = false,
     val userPageFromSheet: Boolean = false,
     val userPageDismissed: Boolean = false,
+    val savedIllusts: List<SavedIllustEntity> = emptyList(),
+    val selectedSavedIllustId: Long? = null,
     val imageViewerIllust: Illust? = null,
     val imageViewerStartPage: Int = 0,
     val longPressedIllust: Illust? = null,

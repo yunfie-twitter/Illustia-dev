@@ -83,6 +83,7 @@ fun IllustDetailScreen(
     onOpenIllust: (Illust) -> Unit,
     onOpenIllustById: (Long) -> Unit,
     onSaveImage: (String, String) -> Unit,
+    onSaveOfflineImage: (String, String) -> Unit,
     onSaveAllImages: (List<String>, String) -> Unit,
     onMessage: (String) -> Unit,
     highQualityImages: Boolean,
@@ -185,6 +186,7 @@ fun IllustDetailScreen(
                     onBack = onBack,
                     onOpenImage = onOpenImage,
                     onSaveImage = { url, name, confirm -> requestSave(url, name, confirm) },
+                    onSaveOfflineImage = onSaveOfflineImage,
                     onSaveAllImages = onSaveAllImages,
                     onMuteIllust = onMuteIllust,
                     onMuteUser = onMuteUser,
@@ -236,6 +238,7 @@ private fun IllustDetailHeader(
     onBack: () -> Unit,
     onOpenImage: (Int) -> Unit,
     onSaveImage: (String, String, Boolean) -> Unit,
+    onSaveOfflineImage: (String, String) -> Unit,
     onSaveAllImages: (List<String>, String) -> Unit,
     onMuteIllust: () -> Unit,
     onMuteUser: () -> Unit,
@@ -250,6 +253,7 @@ private fun IllustDetailHeader(
     val openInBrowserLabel = stringResource(R.string.detail_open_in_browser)
     val shareLabel = stringResource(R.string.detail_share)
     val saveImageLabel = stringResource(R.string.detail_save_image)
+    val saveOfflineLabel = stringResource(R.string.detail_save_offline)
     val saveAllPagesLabel = stringResource(R.string.detail_save_all_pages)
     val copyUrlLabel = stringResource(R.string.detail_copy_url)
     val muteWorkLabel = stringResource(R.string.detail_mute_work)
@@ -380,6 +384,12 @@ private fun IllustDetailHeader(
                                 text = saveImageLabel,
                                 onClick = {
                                     onSaveImage(illust.originalImageUrl ?: illust.imageUrl, "illustia_${illust.id}", !skipConfirmOnDetailSave)
+                                },
+                            ),
+                            DropdownItem(
+                                text = saveOfflineLabel,
+                                onClick = {
+                                    onSaveOfflineImage(illust.originalImageUrl ?: illust.imageUrl, "offline_${illust.id}")
                                 },
                             ),
                             if (imageUrls.size > 1) {

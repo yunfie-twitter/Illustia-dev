@@ -29,9 +29,14 @@ import com.yunfie.illustia.data.UserPreview
 import com.yunfie.illustia.data.UserProfile
 import com.yunfie.illustia.settings.AppSettings
 import com.yunfie.illustia.settings.SettingsStore
+import com.yunfie.illustia.settings.db.SavedIllustEntity
+import com.yunfie.illustia.settings.db.SavedIllustPageEntity
 import java.util.concurrent.TimeUnit
 import java.security.MessageDigest
 import java.security.SecureRandom
+import java.io.File
+import java.io.FileOutputStream
+import android.net.ConnectivityManager
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
@@ -70,6 +75,7 @@ class IllustiaViewModel(app: Application) : AndroidViewModel(app) {
     private var detailExtrasJob: Job? = null
     private var loadingJob: Job? = null
     private var closeUserPageJob: Job? = null
+    private var savedLibraryJob: Job? = null
 
     val bookmarkTimelineGridState = LazyGridState()
     val bookmarkMainGridState = LazyGridState()
@@ -241,6 +247,14 @@ class IllustiaViewModel(app: Application) : AndroidViewModel(app) {
 
     fun updateSkipConfirmOnDetailSave(value: Boolean) {
         updateSettings { it.copy(skipConfirmOnDetailSave = value) }
+    }
+
+    fun updateOfflineWifiOnly(value: Boolean) {
+        updateSettings { it.copy(offlineWifiOnly = value) }
+    }
+
+    fun updateOfflineStorageLimitBytes(value: Long) {
+        updateSettings { it.copy(offlineStorageLimitBytes = value.coerceAtLeast(50L * 1024 * 1024)) }
     }
 
     fun updateShowAiBadge(value: Boolean) {
@@ -1257,6 +1271,113 @@ class IllustiaViewModel(app: Application) : AndroidViewModel(app) {
             saveImage(url, "${filenamePrefix}_p$index")
         }
         _uiState.update { it.copy(message = str(R.string.msg_save_started, targets.size)) }
+    }
+
+    fun openOfflineLibrary() {
+        _navigationRequests.tryEmit(IllustiaNavigationRequest.OfflineLibrary)
+    }
+
+    fun loadSavedLibrary() {
+        if (savedLibraryJob?.isActive == true) return
+        savedLibraryJob = viewModelScope.launch(Dispatchers.IO) {
+            val saved = settingsStore.getSavedIllusts()
+            _uiState.update { it.copy(savedIllusts = saved) }
+        }
+    }
+
+    fun openSavedIllustViewer(illustId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            val saved = settingsStore.getSavedIllust(illustId) ?: return@launch
+            _uiState.update { it.copy(selectedSavedIllustId = illustId) }
+            _navigationRequests.tryEmit(IllustiaNavigationRequest.SavedIllustViewer)
+        }
+    }
+
+    fun closeSavedIllustViewer() {
+        _uiState.update { it.copy(selectedSavedIllustId = null) }
+    }
+
+    fun deleteSavedIllust(illustId: Long) {
+        viewModelScope.launch(Dispatchers.IO) {
+            settingsStore.deleteSavedIllust(illustId)
+            _uiState.update { it.copy(savedIllusts = it.savedIllusts.filterNot { item -> item.illustId == illustId }) }
+        }
+    }
+
+    fun saveOfflineImage(url: String, filename: String) {
+        viewModelScope.launch(Dispatchers.IO) {
+            try {
+                if (_uiState.value.settings.offlineWifiOnly && getApplication<Application>().applicationContext.isNetworkMetered()) {
+                    _uiState.update { it.copy(message = str(R.string.offline_wifi_only_desc)) }
+                    return@launch
+                }
+                val requestUrl = proxyPixivImageUrl(url, _uiState.value.settings.pixivImageProxyBaseUrl)
+                val currentSize = settingsStore.getSavedIllustStorageBytes()
+                if (currentSize >= _uiState.value.settings.offlineStorageLimitBytes) {
+                    _uiState.update { it.copy(message = str(R.string.offline_capacity_limit_desc)) }
+                    return@launch
+                }
+                val request = Request.Builder()
+                    .url(requestUrl)
+                    .header("Referer", "https://www.pixiv.net/")
+                    .header("User-Agent", "PixivAndroidApp/6.184.0 (Android 14; Palleria)")
+                    .build()
+                downloadClient.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) throw Exception(str(R.string.error_save_failed) + " (${response.code})")
+                    val body = response.body ?: throw Exception(str(R.string.error_save_failed))
+                    val file = saveOfflineFile(filename, requestUrl, body.byteStream())
+                    val current = _uiState.value.selectedIllust ?: return@use
+                    val pages = listOf(
+                        SavedIllustPageEntity().apply {
+                            illustId = current.id
+                            pageIndex = 0
+                            localPath = file.absolutePath
+                            sourceUrl = requestUrl
+                        }
+                    )
+                    settingsStore.saveSavedIllust(
+                        SavedIllustEntity().apply {
+                            illustId = current.id
+                            title = current.title
+                            artistName = current.artistName
+                            artistId = current.artistId
+                            thumbUrl = current.thumbnailUrl
+                            localCoverPath = file.absolutePath
+                            localPagePathsJson = "[\"${file.absolutePath.replace("\\", "\\\\")}\"]"
+                            pageCount = 1
+                            savedAt = System.currentTimeMillis()
+                            saveGroup = current.artistName
+                        },
+                        pages,
+                    )
+                    loadSavedLibrary()
+                    _uiState.update { it.copy(message = str(R.string.detail_save_offline)) }
+                }
+            } catch (e: Throwable) {
+                _uiState.update { it.copy(message = cleanErrorMessage(e, str(R.string.error_save_failed))) }
+            }
+        }
+    }
+
+    private fun saveOfflineFile(filename: String, sourceUrl: String, input: java.io.InputStream): File {
+        val dir = settingsStore.savedIllustDir()
+        dir.mkdirs()
+        val target = File(dir, filename.withOfflineExtension(sourceUrl))
+        input.use { stream ->
+            FileOutputStream(target).use { output -> stream.copyTo(output) }
+        }
+        return target
+    }
+
+    private fun String.withOfflineExtension(sourceUrl: String): String {
+        if (contains('.')) return this
+        val ext = sourceUrl.substringAfterLast('.', "jpg").substringBefore('?')
+        return "$this.${ext.ifBlank { "jpg" }}"
+    }
+
+    private fun android.content.Context.isNetworkMetered(): Boolean {
+        val cm = getSystemService(ConnectivityManager::class.java)
+        return runCatching { cm?.isActiveNetworkMetered ?: false }.getOrDefault(false)
     }
 
     private suspend fun acquireDownloadSlot() {

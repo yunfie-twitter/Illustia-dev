@@ -14,8 +14,10 @@ enum class IllustiaNavigationRequest {
     ViewHistory,
     MuteSettings,
     AppData,
+    OfflineLibrary,
     About,
     FavoriteTags,
     AppLockSetup,
     AppLockPinEntry,
+    SavedIllustViewer,
 }

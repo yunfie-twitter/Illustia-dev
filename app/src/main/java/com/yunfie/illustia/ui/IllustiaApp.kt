@@ -110,11 +110,13 @@ private sealed interface AppRoute : NavKey {
     data object ViewHistory : AppRoute
     data object MuteSettings : AppRoute
     data object AppData : AppRoute
+    data object OfflineLibrary : AppRoute
     data object About : AppRoute
     data object FavoriteTags : AppRoute
     data object UserProfile : AppRoute
     data object AppLockSetup : AppRoute
     data object AppLockPinEntry : AppRoute
+    data object SavedIllustViewer : AppRoute
 }
 
 @Composable
@@ -235,10 +237,12 @@ fun IllustiaApp(viewModel: IllustiaViewModel) {
                     IllustiaNavigationRequest.ViewHistory -> AppRoute.ViewHistory
                     IllustiaNavigationRequest.MuteSettings -> AppRoute.MuteSettings
                     IllustiaNavigationRequest.AppData -> AppRoute.AppData
+                    IllustiaNavigationRequest.OfflineLibrary -> AppRoute.OfflineLibrary
                     IllustiaNavigationRequest.About -> AppRoute.About
                     IllustiaNavigationRequest.FavoriteTags -> AppRoute.FavoriteTags
                     IllustiaNavigationRequest.AppLockSetup -> AppRoute.AppLockSetup
                     IllustiaNavigationRequest.AppLockPinEntry -> AppRoute.AppLockPinEntry
+                    IllustiaNavigationRequest.SavedIllustViewer -> AppRoute.SavedIllustViewer
                 },
             )
         }
@@ -369,6 +373,7 @@ fun IllustiaApp(viewModel: IllustiaViewModel) {
                         onOpenIllust = viewModel::openIllust,
                         onOpenIllustById = viewModel::openIllust,
                         onSaveImage = viewModel::saveImage,
+                        onSaveOfflineImage = viewModel::saveOfflineImage,
                         onSaveAllImages = viewModel::saveImages,
                         onMessage = viewModel::showMessage,
                         highQualityImages = state.settings.highQualityImages,
@@ -463,6 +468,13 @@ fun IllustiaApp(viewModel: IllustiaViewModel) {
                     onBack = ::popRoute,
                 )
             }
+            entry(AppRoute.OfflineLibrary) {
+                OfflineLibraryScreen(
+                    state = state,
+                    viewModel = viewModel,
+                    onBack = ::popRoute,
+                )
+            }
             entry(AppRoute.About) {
                 AboutScreen(onBack = ::popRoute)
             }
@@ -525,6 +537,13 @@ fun IllustiaApp(viewModel: IllustiaViewModel) {
             entry(AppRoute.AppLockPinEntry) {
                 PinSetupScreen(
                     isChange = state.settings.appLockEnabled,
+                    viewModel = viewModel,
+                    onBack = ::popRoute,
+                )
+            }
+            entry(AppRoute.SavedIllustViewer) {
+                SavedIllustViewerScreen(
+                    state = state,
                     viewModel = viewModel,
                     onBack = ::popRoute,
                 )

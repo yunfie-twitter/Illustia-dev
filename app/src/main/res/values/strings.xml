@@ -11,6 +11,7 @@
 
     <!-- Common actions -->
     <string name="action_save">保存</string>
+    <string name="action_open">開く</string>
     <string name="action_cancel">キャンセル</string>
     <string name="action_delete">削除</string>
     <string name="action_close">閉じる</string>
@@ -103,6 +104,8 @@
     <string name="detail_open_in_browser">ブラウザで開く</string>
     <string name="detail_share">シェア</string>
     <string name="detail_save_image">画像を保存</string>
+    <string name="detail_save_offline">オフライン保存</string>
+    <string name="detail_save_offline_desc">通信がなくても見られるように端末へ保存します。</string>
     <string name="detail_save_all_pages">全ページを保存</string>
     <string name="detail_copy_url">URLをコピー</string>
     <string name="detail_mute_work">この作品をミュート</string>
@@ -129,6 +132,8 @@
     <string name="more_save_progress">保存処理</string>
     <string name="more_save_progress_saving">保存中 %1$d件</string>
     <string name="more_save_progress_idle">待機中</string>
+    <string name="more_offline_library">保存済み作品</string>
+    <string name="more_offline_library_summary">端末に保存した作品を確認</string>
     <string name="more_app_data">アプリのデータ</string>
     <string name="more_app_data_summary">履歴と保存データ</string>
     <string name="more_about">Palleria について</string>
@@ -309,6 +314,13 @@
 
     <!-- App data screen -->
     <string name="app_data_title">アプリのデータ</string>
+    <string name="offline_library_title">保存済み作品</string>
+    <string name="offline_library_empty">保存済みの作品はまだありません。</string>
+    <string name="offline_library_summary">%1$d件の作品を保存済み</string>
+    <string name="offline_wifi_only">Wi-Fi時だけ保存</string>
+    <string name="offline_wifi_only_desc">モバイル通信中は保存を開始しません。</string>
+    <string name="offline_capacity_limit">保存容量の上限</string>
+    <string name="offline_capacity_limit_desc">保存済み作品の合計容量が上限を超えると新規保存を止めます。</string>
     <string name="app_data_section_overview">概要</string>
 
     <!-- About screen -->

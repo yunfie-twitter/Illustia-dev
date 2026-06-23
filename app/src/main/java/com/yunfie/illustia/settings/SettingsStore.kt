@@ -28,6 +28,8 @@ import com.yunfie.illustia.settings.db.FavoriteTagEntity
 import com.yunfie.illustia.settings.db.IllustiaDatabase
 import com.yunfie.illustia.settings.db.SearchHistoryEntity
 import com.yunfie.illustia.settings.db.SettingsDao
+import com.yunfie.illustia.settings.db.SavedIllustEntity
+import com.yunfie.illustia.settings.db.SavedIllustPageEntity
 import com.yunfie.illustia.settings.db.ViewHistoryEntity
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -88,6 +90,8 @@ data class AppSettings(
     val fullscreenQuality: String = "high",
     val viewerThumbnailsInToolbar: Boolean = false,
     val startupScreen: String = "home",
+    val offlineWifiOnly: Boolean = true,
+    val offlineStorageLimitBytes: Long = 5L * 1024 * 1024 * 1024,
     val verticalColumnCount: Int = 2,
     val horizontalColumnCount: Int = 4,
     val pixivImageProxyBaseUrl: String = "",
@@ -193,6 +197,43 @@ class SettingsStore(context: Context) {
             .apply()
     }
 
+    suspend fun getSavedIllusts(): List<SavedIllustEntity> = withContext(Dispatchers.IO) {
+        dao.getSavedIllusts()
+    }
+
+    suspend fun getSavedIllust(illustId: Long): com.yunfie.illustia.settings.db.SavedIllustWithPages? = withContext(Dispatchers.IO) {
+        dao.getSavedIllust(illustId)
+    }
+
+    suspend fun saveSavedIllust(
+        illust: SavedIllustEntity,
+        pages: List<SavedIllustPageEntity>,
+    ) = withContext(Dispatchers.IO) {
+        database.runInTransaction {
+            dao.deleteSavedIllustPages(illust.illustId)
+            dao.deleteSavedIllust(illust.illustId)
+            dao.upsertSavedIllust(illust)
+            dao.upsertSavedIllustPages(pages)
+        }
+    }
+
+    suspend fun deleteSavedIllust(illustId: Long) = withContext(Dispatchers.IO) {
+        database.runInTransaction {
+            dao.deleteSavedIllustPages(illustId)
+            dao.deleteSavedIllust(illustId)
+        }
+    }
+
+    suspend fun getSavedIllustStorageBytes(): Long = withContext(Dispatchers.IO) {
+        val directory = savedIllustDir()
+        if (!directory.exists()) return@withContext 0L
+        directory.walkTopDown().filter { it.isFile }.sumOf { it.length() }
+    }
+
+    fun savedIllustDir(): java.io.File {
+        return java.io.File(appContext.filesDir, "saved_illusts")
+    }
+
     private fun generateSalt(): String {
         val bytes = ByteArray(32)
         java.security.SecureRandom().nextBytes(bytes)
@@ -291,6 +332,8 @@ class SettingsStore(context: Context) {
             fullscreenQuality = preferences[FULLSCREEN_QUALITY] ?: "high",
             viewerThumbnailsInToolbar = preferences[VIEWER_THUMBNAILS_IN_TOOLBAR] ?: false,
             startupScreen = preferences[STARTUP_SCREEN] ?: "home",
+            offlineWifiOnly = preferences[OFFLINE_WIFI_ONLY] ?: true,
+            offlineStorageLimitBytes = preferences[OFFLINE_STORAGE_LIMIT_BYTES] ?: DEFAULT_OFFLINE_STORAGE_LIMIT_BYTES,
             verticalColumnCount = preferences[VERTICAL_COLUMN_COUNT] ?: 2,
             horizontalColumnCount = preferences[HORIZONTAL_COLUMN_COUNT] ?: 4,
             pixivImageProxyBaseUrl = preferences[PIXIV_IMAGE_PROXY_BASE_URL].orEmpty(),
@@ -347,6 +390,8 @@ class SettingsStore(context: Context) {
         preferences[FULLSCREEN_QUALITY] = settings.fullscreenQuality
         preferences[VIEWER_THUMBNAILS_IN_TOOLBAR] = settings.viewerThumbnailsInToolbar
         preferences[STARTUP_SCREEN] = settings.startupScreen
+        preferences[OFFLINE_WIFI_ONLY] = settings.offlineWifiOnly
+        preferences[OFFLINE_STORAGE_LIMIT_BYTES] = settings.offlineStorageLimitBytes
         preferences[VERTICAL_COLUMN_COUNT] = settings.verticalColumnCount
         preferences[HORIZONTAL_COLUMN_COUNT] = settings.horizontalColumnCount
         preferences[PIXIV_IMAGE_PROXY_BASE_URL] = settings.pixivImageProxyBaseUrl
@@ -749,11 +794,14 @@ class SettingsStore(context: Context) {
         private const val KEY_SMOOTH_TRANSITIONS = "smoothTransitions"
         private const val KEY_PREFETCH_IMAGES = "prefetchImages"
         private const val KEY_PIXIV_IMAGE_PROXY_BASE_URL = "pixivImageProxyBaseUrl"
+        private const val KEY_OFFLINE_WIFI_ONLY = "offlineWifiOnly"
+        private const val KEY_OFFLINE_STORAGE_LIMIT_BYTES = "offlineStorageLimitBytes"
         private const val CURRENT_SETTINGS_VERSION = 4
         private const val HISTORY_SEPARATOR = '\u001F'
         private const val FIELD_SEPARATOR = '\u001E'
         private const val MAX_SEARCH_HISTORY = 6
         private const val MAX_VIEW_HISTORY = 48
+        private const val DEFAULT_OFFLINE_STORAGE_LIMIT_BYTES = 5L * 1024 * 1024 * 1024
 
         private val SETTINGS_VERSION = intPreferencesKey("settings_version")
         private val BOOKMARK_USER_ID = longPreferencesKey(KEY_BOOKMARK_USER_ID)
@@ -799,6 +847,8 @@ class SettingsStore(context: Context) {
         private val FULLSCREEN_QUALITY = stringPreferencesKey("fullscreenQuality")
         private val VIEWER_THUMBNAILS_IN_TOOLBAR = booleanPreferencesKey("viewerThumbnailsInToolbar")
         private val STARTUP_SCREEN = stringPreferencesKey("startupScreen")
+        private val OFFLINE_WIFI_ONLY = booleanPreferencesKey(KEY_OFFLINE_WIFI_ONLY)
+        private val OFFLINE_STORAGE_LIMIT_BYTES = longPreferencesKey(KEY_OFFLINE_STORAGE_LIMIT_BYTES)
         private val VERTICAL_COLUMN_COUNT = intPreferencesKey("verticalColumnCount")
         private val HORIZONTAL_COLUMN_COUNT = intPreferencesKey("horizontalColumnCount")
         private val PIXIV_IMAGE_PROXY_BASE_URL = stringPreferencesKey(KEY_PIXIV_IMAGE_PROXY_BASE_URL)

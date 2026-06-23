@@ -11,9 +11,11 @@ import androidx.room.RoomDatabase;
                 SearchHistoryEntity.class,
                 FavoriteTagEntity.class,
                 ViewHistoryEntity.class,
-                AccountEntity.class
+                AccountEntity.class,
+                SavedIllustEntity.class,
+                SavedIllustPageEntity.class
         },
-        version = 1,
+        version = 2,
         exportSchema = false
 )
 public abstract class IllustiaDatabase extends RoomDatabase {
@@ -34,6 +36,7 @@ public abstract class IllustiaDatabase extends RoomDatabase {
                                 IllustiaDatabase.class,
                                 "illustia.db"
                         )
+                        .fallbackToDestructiveMigration()
                         .build();
                 INSTANCE = current;
             }

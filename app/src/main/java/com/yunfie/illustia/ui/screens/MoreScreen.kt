@@ -152,19 +152,10 @@ private fun rememberQuickActions(
                 onClick = viewModel::openMuteSettings,
             ),
             MoreAction(
-                title = context.getString(R.string.more_save_progress),
-                summary = if (state.activeDownloads > 0) context.getString(R.string.more_save_progress_saving, state.activeDownloads) else context.getString(R.string.more_save_progress_idle),
-                icon = MiuixIcons.Download,
-                badge = state.activeDownloads.badgeText(),
-                onClick = {
-                    viewModel.showMessage(
-                        if (state.activeDownloads > 0) {
-                            context.getString(R.string.more_saving_message, state.activeDownloads, state.settings.simultaneousDownloads.coerceIn(1, 4))
-                        } else {
-                            context.getString(R.string.more_no_background_task)
-                        },
-                    )
-                },
+                title = context.getString(R.string.more_offline_library),
+                summary = context.getString(R.string.more_offline_library_summary),
+                icon = MiuixIcons.Photos,
+                onClick = viewModel::openOfflineLibrary,
             ),
             MoreAction(
                 title = context.getString(R.string.more_app_data),
