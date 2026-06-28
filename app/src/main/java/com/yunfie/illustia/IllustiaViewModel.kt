@@ -635,6 +635,14 @@ class IllustiaViewModel(app: Application) : AndroidViewModel(app) {
         updateSettings { it.copy(autoBookmarkOnDownload = value) }
     }
 
+    fun updateDownloadFolderByArtist(value: Boolean) {
+        updateSettings { it.copy(downloadFolderByArtist = value) }
+    }
+
+    fun updateDownloadFolderByWork(value: Boolean) {
+        updateSettings { it.copy(downloadFolderByWork = value) }
+    }
+
     fun updateAutoTagOnBookmark(value: Boolean) {
         updateSettings { it.copy(autoTagOnBookmark = value) }
     }
@@ -1502,8 +1510,9 @@ class IllustiaViewModel(app: Application) : AndroidViewModel(app) {
             acquireDownloadSlot()
             _uiState.update { it.copy(loadState = LoadState.Loading, message = str(R.string.msg_image_saving, it.activeDownloads, it.settings.simultaneousDownloads.coerceIn(1, 4))) }
             try {
-                downloadImageToGallery(url, filename)
-                val currentIllust = _uiState.value.selectedIllust
+                val currentIllust = resolveDownloadIllust(filename)
+                val targetName = buildDownloadPath(filename, currentIllust)
+                downloadImageToGallery(url, targetName)
                 if (
                     _uiState.value.settings.autoBookmarkOnDownload &&
                     currentIllust != null &&
@@ -1668,6 +1677,50 @@ class IllustiaViewModel(app: Application) : AndroidViewModel(app) {
         downloadMutex.withLock {
             _uiState.update { it.copy(activeDownloads = (it.activeDownloads - 1).coerceAtLeast(0)) }
         }
+    }
+
+    private fun buildDownloadPath(filename: String, illust: Illust?): String {
+        val settings = _uiState.value.settings
+        val segments = buildList {
+            if (settings.downloadFolderByArtist) {
+                val artistSegment = illust?.artistName
+                    ?.sanitizeDownloadSegment()
+                    ?.takeIf { it.isNotBlank() }
+                    ?: illust?.artistId?.takeIf { it > 0L }?.let { "artist_$it" }
+                if (!artistSegment.isNullOrBlank()) add(artistSegment)
+            }
+            if (settings.downloadFolderByWork) {
+                val workSegment = illust?.title
+                    ?.sanitizeDownloadSegment()
+                    ?.takeIf { it.isNotBlank() }
+                    ?.let { title -> illust.idIfPresent()?.let { "${title}_$it" } ?: title }
+                    ?: illust?.idIfPresent()?.let { "work_$it" }
+                if (!workSegment.isNullOrBlank()) add(workSegment)
+            }
+        }
+        return (segments + filename.sanitizeDownloadSegment()).joinToString("/")
+    }
+
+    private fun resolveDownloadIllust(filename: String): Illust? {
+        return extractIllustId(filename)?.let(::findIllustById)
+            ?: _uiState.value.selectedIllust
+            ?: _uiState.value.imageViewerIllust
+    }
+
+    private fun extractIllustId(filename: String): Long? {
+        return Regex("""(?:^|[^0-9])illustia_(\d+)""").find(filename)?.groupValues?.getOrNull(1)?.toLongOrNull()
+    }
+
+    private fun Illust?.idIfPresent(): Long? {
+        return this?.id?.takeIf { it > 0L }
+    }
+
+    private fun String.sanitizeDownloadSegment(maxLength: Int = 80): String {
+        val sanitized = trim()
+            .replace(Regex("""[\\/:*?"<>|\u0000-\u001F]"""), "_")
+            .replace(Regex("""\s+"""), " ")
+            .trim(' ', '.')
+        return sanitized.take(maxLength).ifBlank { "untitled" }
     }
 
     private fun downloadImageToGallery(url: String, filename: String) {

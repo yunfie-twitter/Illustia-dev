@@ -233,6 +233,10 @@
     <!-- Image settings screen -->
     <string name="image_settings_title">Image Settings</string>
     <string name="image_section_storage">Storage</string>
+    <string name="image_download_folder_by_artist">Group by artist</string>
+    <string name="image_download_folder_by_artist_desc">Automatically create an artist folder when saving</string>
+    <string name="image_download_folder_by_work">Group by work</string>
+    <string name="image_download_folder_by_work_desc">Automatically create a work folder when saving</string>
     <string name="image_default_save_location">Default save location</string>
     <string name="image_default_save_location_fallback">Pictures/Palleria</string>
     <string name="image_section_quality">Quality</string>

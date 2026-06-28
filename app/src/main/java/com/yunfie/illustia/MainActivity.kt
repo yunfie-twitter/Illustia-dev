@@ -40,6 +40,8 @@ import com.yunfie.illustia.settings.appThemeColorSchemeMode
 import com.yunfie.illustia.ui.IllustiaApp
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.theme.defaultTextStyles
+import top.yukonga.miuix.kmp.theme.TextStyles
 import top.yukonga.miuix.kmp.theme.ThemeController
 
 class MainActivity : FragmentActivity() {
@@ -169,10 +171,13 @@ class MainActivity : FragmentActivity() {
                 viewModel.applyDummyIconSettings(this@MainActivity)
             }
 
-            MiuixTheme(controller = controller) {
-                val fontFamily = remember(state.settings.appFont) {
-                    resolveAppFontFamily(state.settings.appFont)
-                }
+            val fontFamily = remember(state.settings.appFont) {
+                resolveAppFontFamily(state.settings.appFont)
+            }
+            val textStyles = remember(state.settings.appFont) {
+                resolveAppTextStyles(fontFamily)
+            }
+            MiuixTheme(controller = controller, textStyles = textStyles) {
                 CompositionLocalProvider(
                     LocalTextStyle provides LocalTextStyle.current.merge(TextStyle(fontFamily = fontFamily)),
                 ) {
@@ -270,5 +275,25 @@ class MainActivity : FragmentActivity() {
                 Font(R.font.mi_sans_thin, FontWeight.Thin),
             )
         }
+    }
+
+    private fun resolveAppTextStyles(fontFamily: FontFamily): TextStyles {
+        val base = defaultTextStyles()
+        return base.copy(
+            main = base.main.copy(fontFamily = fontFamily),
+            paragraph = base.paragraph.copy(fontFamily = fontFamily),
+            body1 = base.body1.copy(fontFamily = fontFamily),
+            body2 = base.body2.copy(fontFamily = fontFamily),
+            button = base.button.copy(fontFamily = fontFamily),
+            footnote1 = base.footnote1.copy(fontFamily = fontFamily),
+            footnote2 = base.footnote2.copy(fontFamily = fontFamily),
+            headline1 = base.headline1.copy(fontFamily = fontFamily),
+            headline2 = base.headline2.copy(fontFamily = fontFamily),
+            subtitle = base.subtitle.copy(fontFamily = fontFamily),
+            title1 = base.title1.copy(fontFamily = fontFamily),
+            title2 = base.title2.copy(fontFamily = fontFamily),
+            title3 = base.title3.copy(fontFamily = fontFamily),
+            title4 = base.title4.copy(fontFamily = fontFamily),
+        )
     }
 }

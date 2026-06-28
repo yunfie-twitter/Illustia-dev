@@ -10,7 +10,7 @@ data class PixivImageProxy(
 )
 
 val PixivImageProxyOptions = listOf(
-    PixivImageProxy("yuki.sh", "https://i.yuki.sh/"),
+    PixivImageProxy("Palleria", "https://i.yunfi.f5.si/"),
     PixivImageProxy("suimoe.com", "https://i.suimoe.com/"),
     PixivImageProxy("pixiv.re", "https://i.pixiv.re/"),
 )

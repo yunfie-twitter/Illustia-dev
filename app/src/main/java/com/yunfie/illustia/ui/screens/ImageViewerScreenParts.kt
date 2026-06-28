@@ -1,0 +1,265 @@
+package com.yunfie.illustia.ui.screens
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.calculateCentroid
+import androidx.compose.foundation.gestures.calculateCentroidSize
+import androidx.compose.foundation.gestures.calculatePan
+import androidx.compose.foundation.gestures.calculateZoom
+import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChanged
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.util.fastAll
+import androidx.compose.ui.util.fastAny
+import androidx.compose.ui.util.fastForEach
+import com.yunfie.illustia.R
+import com.yunfie.illustia.ui.components.PixivImage
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
+import kotlin.math.abs
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animate
+import androidx.compose.animation.core.tween
+
+@Composable
+internal fun ViewerThumbnailStrip(
+    imageUrls: List<String>,
+    thumbnailUrls: List<String>,
+    currentPage: Int,
+    onPageSelected: (Int) -> Unit,
+    modifier: Modifier = Modifier,
+    ) {
+        LazyRow(
+            modifier = modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(horizontal = 14.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            itemsIndexed(imageUrls, key = { index, _ -> index }) { index, _ ->
+                val selected = currentPage == index
+                Box(
+                    modifier = Modifier
+                        .size(width = 46.dp, height = 58.dp)
+                        .clip(RoundedCornerShape(10.dp))
+                        .background(top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme.surfaceContainerHigh)
+                        .then(
+                            if (selected) Modifier.border(
+                                width = 2.dp,
+                                color = top.yukonga.miuix.kmp.theme.MiuixTheme.colorScheme.primary,
+                                shape = RoundedCornerShape(10.dp),
+                            ) else Modifier
+                        )
+                        .padding(if (selected) 3.dp else 1.dp)
+                        .clip(RoundedCornerShape(8.dp))
+                        .clickable { onPageSelected(index) },
+                ) {
+                    PixivImage(
+                        url = thumbnailUrls.getOrElse(index) { imageUrls[index] },
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                    thumbnail = true,
+                )
+            }
+        }
+    }
+}
+
+@Composable
+internal fun ZoomablePixivImage(
+    url: String,
+    contentDescription: String,
+    isActive: Boolean,
+    onZoomChanged: (Boolean) -> Unit,
+    onTap: () -> Unit,
+) {
+    var scale by remember(url) { mutableFloatStateOf(1f) }
+    var offset by remember(url) { mutableStateOf(Offset.Zero) }
+    var viewportSize by remember { mutableStateOf(IntSize.Zero) }
+    val animationScope = rememberCoroutineScope()
+    val zoomAnimation = remember { arrayOfNulls<Job>(1) }
+    val haptic = LocalHapticFeedback.current
+
+    fun notifyZoomChanged(previous: Float, current: Float) {
+        val wasZoomed = previous > 1.02f
+        val zoomed = current > 1.02f
+        if (wasZoomed != zoomed) onZoomChanged(zoomed)
+    }
+
+    fun clampedOffset(candidate: Offset, atScale: Float): Offset {
+        val maxX = viewportSize.width * (atScale - 1f) / 2f
+        val maxY = viewportSize.height * (atScale - 1f) / 2f
+        return Offset(candidate.x.coerceIn(-maxX, maxX), candidate.y.coerceIn(-maxY, maxY))
+    }
+
+    fun animateTo(targetScale: Float, targetOffset: Offset) {
+        val startScale = scale
+        val startOffset = offset
+        zoomAnimation[0]?.cancel()
+        zoomAnimation[0] = animationScope.launch {
+            animate(
+                initialValue = 0f,
+                targetValue = 1f,
+                animationSpec = tween(260, easing = FastOutSlowInEasing),
+            ) { progress, _ ->
+                val previous = scale
+                scale = startScale + (targetScale - startScale) * progress
+                offset = Offset(
+                    startOffset.x + (targetOffset.x - startOffset.x) * progress,
+                    startOffset.y + (targetOffset.y - startOffset.y) * progress,
+                )
+                notifyZoomChanged(previous, scale)
+            }
+        }
+    }
+
+    LaunchedEffect(isActive) {
+        if (!isActive) {
+            zoomAnimation[0]?.cancel()
+            scale = 1f
+            offset = Offset.Zero
+            onZoomChanged(false)
+        }
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .onSizeChanged { viewportSize = it }
+            .pointerInput(url) {
+                detectTapGestures(
+                    onTap = { onTap() },
+                    onDoubleTap = {
+                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                        if (scale > 1.02f) {
+                            animateTo(1f, Offset.Zero)
+                        } else {
+                            animateTo(2.5f, Offset.Zero)
+                        }
+                    },
+                )
+            }
+            .pointerInput(url) {
+                awaitEachGesture {
+                    zoomAnimation[0]?.cancel()
+                    var localScale = scale
+                    var localOffset = offset
+                    var pastTouchSlop = false
+                    val touchSlop = viewConfiguration.touchSlop
+                    var accumulatedZoom = 1f
+
+                    var event = awaitPointerEvent()
+                    while (event.changes.fastAll { !it.pressed }) {
+                        event = awaitPointerEvent()
+                    }
+
+                    do {
+                        val event = awaitPointerEvent()
+                        val canceled = event.changes.fastAny { it.isConsumed }
+
+                        if (!canceled) {
+                            val zoomChange = event.calculateZoom()
+                            val panChange = event.calculatePan()
+                            val centroid = event.calculateCentroid(useCurrent = false)
+
+                            if (!pastTouchSlop) {
+                                accumulatedZoom *= zoomChange
+                                val centroidSize = event.calculateCentroidSize(useCurrent = false)
+                                val zoomMotion = abs(1 - accumulatedZoom) * centroidSize
+                                val panMotion = panChange.getDistance()
+
+                                if (zoomMotion > touchSlop || panMotion > touchSlop) {
+                                    pastTouchSlop = true
+                                }
+                            }
+
+                            if (pastTouchSlop) {
+                                val nextScale = (localScale * zoomChange).coerceIn(1f, 6f)
+                                val isPinching = zoomChange != 1f
+                                val isZoomed = localScale > 1.02f
+
+                                if (isPinching || isZoomed) {
+                                    event.changes.fastForEach {
+                                        if (it.positionChanged()) {
+                                            it.consume()
+                                        }
+                                    }
+
+                                    val appliedZoom = nextScale / localScale
+                                    val viewportCenter = Offset(viewportSize.width / 2f, viewportSize.height / 2f)
+                                    val focalPoint = centroid - viewportCenter
+                                    val transformedOffset = localOffset + panChange +
+                                        (focalPoint - localOffset) * (1f - appliedZoom)
+                                    val previousScale = localScale
+                                    localScale = nextScale
+                                    localOffset = if (localScale > 1.02f) {
+                                        clampedOffset(transformedOffset, localScale)
+                                    } else {
+                                        Offset.Zero
+                                    }
+
+                                    scale = localScale
+                                    offset = localOffset
+                                    notifyZoomChanged(previousScale, localScale)
+                                }
+                            }
+                        }
+                    } while (!canceled && event.changes.fastAny { it.pressed })
+
+                    if (localScale <= 1.02f) {
+                        scale = 1f
+                        offset = Offset.Zero
+                    }
+                }
+            }
+    ) {
+        PixivImage(
+            url = url,
+            contentDescription = contentDescription,
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                    translationX = offset.x
+                    translationY = offset.y
+                },
+            crossfade = true,
+        )
+    }
+}

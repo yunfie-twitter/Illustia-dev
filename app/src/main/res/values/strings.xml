@@ -240,6 +240,10 @@
     <!-- Image settings screen -->
     <string name="image_settings_title">画像設定</string>
     <string name="image_section_storage">保存</string>
+    <string name="image_download_folder_by_artist">作者ごとにフォルダ分け</string>
+    <string name="image_download_folder_by_artist_desc">保存時に作者名のフォルダを自動で作成します</string>
+    <string name="image_download_folder_by_work">作品ごとにフォルダ分け</string>
+    <string name="image_download_folder_by_work_desc">保存時に作品名のフォルダも自動で作成します</string>
     <string name="image_default_save_location">既定の保存場所</string>
     <string name="image_default_save_location_fallback">Pictures/Palleria</string>
     <string name="image_section_quality">画質</string>

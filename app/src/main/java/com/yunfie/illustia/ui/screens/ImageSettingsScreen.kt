@@ -167,6 +167,20 @@ fun ImageSettingsScreen(
 
             item { Section(stringResource(R.string.image_section_storage)) {
                 ElevatedPanel {
+                    SettingSwitchRow(
+                        title = stringResource(R.string.image_download_folder_by_artist),
+                        checked = state.settings.downloadFolderByArtist,
+                        onCheckedChange = viewModel::updateDownloadFolderByArtist,
+                        summary = stringResource(R.string.image_download_folder_by_artist_desc),
+                    )
+                    DividerLine()
+                    SettingSwitchRow(
+                        title = stringResource(R.string.image_download_folder_by_work),
+                        checked = state.settings.downloadFolderByWork,
+                        onCheckedChange = viewModel::updateDownloadFolderByWork,
+                        summary = stringResource(R.string.image_download_folder_by_work_desc),
+                    )
+                    DividerLine()
                     ArrowPreference(
                         title = stringResource(R.string.image_default_save_location),
                         summary = saveLocation.ifBlank { stringResource(R.string.image_default_save_location_fallback) },

@@ -84,6 +84,8 @@ data class AppSettings(
     val privateBookmarkDefault: Boolean = false,
     val autoDownloadOnBookmark: Boolean = false,
     val autoBookmarkOnDownload: Boolean = false,
+    val downloadFolderByArtist: Boolean = true,
+    val downloadFolderByWork: Boolean = true,
     val autoTagOnBookmark: Boolean = false,
     val simultaneousDownloads: Int = 2,
     val feedPreviewQuality: String = "low",
@@ -395,6 +397,8 @@ class SettingsStore(context: Context) {
             privateBookmarkDefault = preferences[PRIVATE_BOOKMARK_DEFAULT] ?: false,
             autoDownloadOnBookmark = preferences[AUTO_DOWNLOAD_ON_BOOKMARK] ?: false,
             autoBookmarkOnDownload = preferences[AUTO_BOOKMARK_ON_DOWNLOAD] ?: false,
+            downloadFolderByArtist = preferences[DOWNLOAD_FOLDER_BY_ARTIST] ?: true,
+            downloadFolderByWork = preferences[DOWNLOAD_FOLDER_BY_WORK] ?: true,
             autoTagOnBookmark = preferences[AUTO_TAG_ON_BOOKMARK] ?: false,
             simultaneousDownloads = preferences[SIMULTANEOUS_DOWNLOADS] ?: 2,
             feedPreviewQuality = preferences[FEED_PREVIEW_QUALITY] ?: "low",
@@ -461,6 +465,8 @@ class SettingsStore(context: Context) {
         preferences[PRIVATE_BOOKMARK_DEFAULT] = settings.privateBookmarkDefault
         preferences[AUTO_DOWNLOAD_ON_BOOKMARK] = settings.autoDownloadOnBookmark
         preferences[AUTO_BOOKMARK_ON_DOWNLOAD] = settings.autoBookmarkOnDownload
+        preferences[DOWNLOAD_FOLDER_BY_ARTIST] = settings.downloadFolderByArtist
+        preferences[DOWNLOAD_FOLDER_BY_WORK] = settings.downloadFolderByWork
         preferences[AUTO_TAG_ON_BOOKMARK] = settings.autoTagOnBookmark
         preferences[SIMULTANEOUS_DOWNLOADS] = settings.simultaneousDownloads
         preferences[FEED_PREVIEW_QUALITY] = settings.feedPreviewQuality
@@ -632,6 +638,8 @@ class SettingsStore(context: Context) {
             privateBookmarkDefault = preferences.getBoolean("privateBookmarkDefault", false),
             autoDownloadOnBookmark = preferences.getBoolean("autoDownloadOnBookmark", false),
             autoBookmarkOnDownload = preferences.getBoolean("autoBookmarkOnDownload", false),
+            downloadFolderByArtist = preferences.getBoolean("downloadFolderByArtist", true),
+            downloadFolderByWork = preferences.getBoolean("downloadFolderByWork", true),
             autoTagOnBookmark = preferences.getBoolean("autoTagOnBookmark", false),
             simultaneousDownloads = preferences.getInt("simultaneousDownloads", 2),
             feedPreviewQuality = preferences.getString("feedPreviewQuality", "low") ?: "low",
@@ -893,7 +901,7 @@ class SettingsStore(context: Context) {
         private const val KEY_PIXIV_IMAGE_PROXY_BASE_URL = "pixivImageProxyBaseUrl"
         private const val KEY_OFFLINE_WIFI_ONLY = "offlineWifiOnly"
         private const val KEY_OFFLINE_STORAGE_LIMIT_BYTES = "offlineStorageLimitBytes"
-        private const val CURRENT_SETTINGS_VERSION = 5
+        private const val CURRENT_SETTINGS_VERSION = 6
         private const val HISTORY_SEPARATOR = '\u001F'
         private const val FIELD_SEPARATOR = '\u001E'
         private const val MAX_SEARCH_HISTORY = 6
@@ -938,6 +946,8 @@ class SettingsStore(context: Context) {
         private val PRIVATE_BOOKMARK_DEFAULT = booleanPreferencesKey("privateBookmarkDefault")
         private val AUTO_DOWNLOAD_ON_BOOKMARK = booleanPreferencesKey("autoDownloadOnBookmark")
         private val AUTO_BOOKMARK_ON_DOWNLOAD = booleanPreferencesKey("autoBookmarkOnDownload")
+        private val DOWNLOAD_FOLDER_BY_ARTIST = booleanPreferencesKey("downloadFolderByArtist")
+        private val DOWNLOAD_FOLDER_BY_WORK = booleanPreferencesKey("downloadFolderByWork")
         private val AUTO_TAG_ON_BOOKMARK = booleanPreferencesKey("autoTagOnBookmark")
         private val SIMULTANEOUS_DOWNLOADS = intPreferencesKey("simultaneousDownloads")
         private val FEED_PREVIEW_QUALITY = stringPreferencesKey("feedPreviewQuality")
