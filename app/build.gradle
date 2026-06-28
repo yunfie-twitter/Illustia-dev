@@ -96,7 +96,7 @@ dependencies {
     implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2"
     implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0"
     implementation "androidx.navigation3:navigation3-runtime:1.1.2"
-    implementation "androidx.biometric:biometric:1.2.0-alpha05"
+    implementation "androidx.biometric:biometric:1.4.0-alpha07"
     implementation "androidx.lifecycle:lifecycle-process:2.10.0"
     implementation "top.yukonga.miuix.kmp:miuix-ui-android:0.9.2"
     implementation "top.yukonga.miuix.kmp:miuix-preference-android:0.9.2"
