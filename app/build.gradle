@@ -8,7 +8,7 @@ plugins {
 android {
     namespace "com.yunfie.illustia"
     compileSdk 37
-
+// minsdk 29
     defaultConfig {
         applicationId "com.yunfie.illustia"
         minSdk 29
