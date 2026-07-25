@@ -86,10 +86,18 @@
 
     <!-- Search screen -->
     <string name="search_tab_illust">Illustrations</string>
+    <string name="search_tab_novel">Novels</string>
     <string name="search_tab_user">Users</string>
     <string name="search_options">Search Options</string>
     <string name="search_sort_order">Sort Order</string>
     <string name="search_target">Search Target</string>
+    <string name="search_work_type">Work Type</string>
+    <string name="search_work_type_artworks">Illustrations / manga / ugoira</string>
+    <string name="search_work_type_illustrations_and_ugoira">Illustrations / ugoira</string>
+    <string name="search_work_type_illustrations">Illustrations</string>
+    <string name="search_work_type_ugoira">Ugoira</string>
+    <string name="search_work_type_manga">Manga</string>
+    <string name="search_work_type_novels">Novels</string>
     <string name="search_duration">Duration</string>
     <string name="search_bookmark_count">Bookmark Count</string>
     <string name="search_users">User Search</string>
@@ -97,6 +105,7 @@
     <string name="search_history">Search History</string>
     <string name="search_suggest">Suggestions</string>
     <string name="search_empty_illust">No illustrations found</string>
+    <string name="search_empty_novel">No novels found</string>
     <string name="search_empty_user">No users found</string>
     <string name="search_recent_viewed">Recently Viewed</string>
     <string name="search_recommended_tags">Recommended Tags</string>

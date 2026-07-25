@@ -91,17 +91,26 @@
 
     <!-- Search screen -->
     <string name="search_tab_illust">イラスト</string>
+    <string name="search_tab_novel">小説</string>
     <string name="search_tab_user">ユーザー</string>
     <string name="search_users">ユーザー検索</string>
     <string name="search_options">検索オプション</string>
     <string name="search_sort_order">並び順</string>
     <string name="search_target">検索対象</string>
+    <string name="search_work_type">作品の種類</string>
+    <string name="search_work_type_artworks">イラスト／マンガ／うごくイラスト</string>
+    <string name="search_work_type_illustrations_and_ugoira">イラスト／うごくイラスト</string>
+    <string name="search_work_type_illustrations">イラスト</string>
+    <string name="search_work_type_ugoira">うごくイラスト</string>
+    <string name="search_work_type_manga">マンガ</string>
+    <string name="search_work_type_novels">小説</string>
     <string name="search_duration">期間</string>
     <string name="search_bookmark_count">ブックマーク数</string>
     <string name="search_placeholder">作品名またはユーザ名で検索</string>
     <string name="search_history">検索履歴</string>
     <string name="search_suggest">サジェスト</string>
     <string name="search_empty_illust">イラストが見つかりません</string>
+    <string name="search_empty_novel">小説が見つかりません</string>
     <string name="search_empty_user">ユーザーが見つかりません</string>
     <string name="search_recent_viewed">最近見た作品</string>
     <string name="search_recommended_tags">おすすめのタグ</string>

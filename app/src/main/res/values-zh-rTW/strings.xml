@@ -75,10 +75,18 @@
     <string name="bookmark_filter_1000">1000+</string>
     <string name="bookmark_filter_5000">5000+</string>
     <string name="search_tab_illust">插圖</string>
+    <string name="search_tab_novel">小說</string>
     <string name="search_tab_user">用戶</string>
     <string name="search_options">搜尋選項</string>
     <string name="search_sort_order">排序順序</string>
     <string name="search_target">搜尋目標</string>
+    <string name="search_work_type">作品類型</string>
+    <string name="search_work_type_artworks">插圖／漫畫／動圖</string>
+    <string name="search_work_type_illustrations_and_ugoira">插圖／動圖</string>
+    <string name="search_work_type_illustrations">插圖</string>
+    <string name="search_work_type_ugoira">動圖</string>
+    <string name="search_work_type_manga">漫畫</string>
+    <string name="search_work_type_novels">小說</string>
     <string name="search_duration">持續時間</string>
     <string name="search_bookmark_count">書籤計數</string>
     <string name="search_users">用戶搜尋</string>
@@ -86,6 +94,7 @@
     <string name="search_history">搜尋記錄</string>
     <string name="search_suggest">建議</string>
     <string name="search_empty_illust">未找到插圖</string>
+    <string name="search_empty_novel">未找到小說</string>
     <string name="search_empty_user">未找到用戶</string>
     <string name="search_recent_viewed">最近查看</string>
     <string name="search_recommended_tags">推薦標籤</string>

@@ -26,6 +26,7 @@ import com.yunfie.illustia.models.SearchBookmarkFilter
 import com.yunfie.illustia.models.SearchDuration
 import com.yunfie.illustia.models.SearchSort
 import com.yunfie.illustia.models.SearchTarget
+import com.yunfie.illustia.models.SearchWorkType
 import com.yunfie.illustia.models.StoredAccount
 import com.yunfie.illustia.models.UserPreview
 import com.yunfie.illustia.models.UserProfile
@@ -787,6 +788,11 @@ open class IllustiaViewModelCore(
         refreshActiveSearch()
     }
 
+    fun updateSearchWorkType(value: SearchWorkType) {
+        updateSettings { it.copy(searchWorkType = value) }
+        refreshActiveSearch()
+    }
+
     fun updateSearchDuration(value: SearchDuration) {
         updateSettings { it.copy(searchDuration = value) }
         refreshActiveSearch()
@@ -1023,6 +1029,8 @@ open class IllustiaViewModelCore(
                 activeSearchWord = normalized,
                 searchItems = emptyList(),
                 searchNextUrl = null,
+                searchNovelItems = emptyList(),
+                searchNovelNextUrl = null,
                 userSearchItems = emptyList(),
                 userSearchNextUrl = null,
             )
@@ -1032,30 +1040,55 @@ open class IllustiaViewModelCore(
             _uiState.update { it.copy(loadState = LoadState.Loading, message = null) }
             try {
                 kotlinx.coroutines.coroutineScope {
-                    val pageDeferred = async {
-                        val currentSettings = _uiState.value.settings
-                        repository.search(
-                            word = normalized,
-                            sort = currentSettings.searchSort,
-                            target = currentSettings.searchTarget,
-                            duration = currentSettings.searchDuration,
-                            bookmarkFilter = currentSettings.searchBookmarkFilter,
-                            includeR18 = currentSettings.allowR18,
-                        )
+                    val currentSettings = _uiState.value.settings
+                    val workType = currentSettings.searchWorkType
+                    val pageDeferred = if (!workType.isNovel) {
+                        async {
+                            repository.search(
+                                word = normalized,
+                                sort = currentSettings.searchSort,
+                                target = currentSettings.searchTarget,
+                                duration = currentSettings.searchDuration,
+                                bookmarkFilter = currentSettings.searchBookmarkFilter,
+                                includeR18 = currentSettings.allowR18,
+                            )
+                        }
+                    } else {
+                        null
                     }
-                    val usersDeferred = if (_uiState.value.settings.searchUsersEnabled) {
+                    val novelPageDeferred = if (workType.isNovel) {
+                        async {
+                            repository.searchNovels(
+                                word = normalized,
+                                sort = currentSettings.searchSort,
+                                target = currentSettings.searchTarget,
+                                duration = currentSettings.searchDuration,
+                                bookmarkFilter = currentSettings.searchBookmarkFilter,
+                                includeR18 = currentSettings.allowR18,
+                            )
+                        }
+                    } else {
+                        null
+                    }
+                    val usersDeferred = if (currentSettings.searchUsersEnabled) {
                         async { repository.searchUsers(normalized) }
                     } else {
                         null
                     }
 
-                    val page = pageDeferred.await()
+                    val page = pageDeferred?.await()
+                    val novelPage = novelPageDeferred?.await()
                     val users = usersDeferred?.await()
 
                     _uiState.update {
                         it.copy(
-                            searchItems = page.items.visibleWithMutedTagsVisible(it.settings),
-                            searchNextUrl = page.nextUrl,
+                            searchItems = page?.items
+                                ?.filter { illust -> workType.acceptsIllustType(illust.type) }
+                                ?.visibleWithMutedTagsVisible(it.settings)
+                                .orEmpty(),
+                            searchNextUrl = page?.nextUrl,
+                            searchNovelItems = novelPage?.items.orEmpty(),
+                            searchNovelNextUrl = novelPage?.nextUrl,
                             userSearchItems = users?.items.orEmpty(),
                             userSearchNextUrl = users?.nextUrl,
                             loadState = LoadState.Loaded,
@@ -1074,6 +1107,8 @@ open class IllustiaViewModelCore(
                             activeSearchWord = snapshot.activeSearchWord,
                             searchItems = snapshot.searchItems,
                             searchNextUrl = snapshot.searchNextUrl,
+                            searchNovelItems = snapshot.searchNovelItems,
+                            searchNovelNextUrl = snapshot.searchNovelNextUrl,
                             userSearchItems = snapshot.userSearchItems,
                             userSearchNextUrl = snapshot.userSearchNextUrl,
                             loadState = LoadState.Error(loadFailureMessage(it, error)),
@@ -1105,6 +1140,8 @@ open class IllustiaViewModelCore(
                 activeSearchWord = "",
                 searchItems = emptyList(),
                 searchNextUrl = null,
+                searchNovelItems = emptyList(),
+                searchNovelNextUrl = null,
                 userSearchItems = emptyList(),
                 userSearchNextUrl = null,
             )
@@ -2319,15 +2356,33 @@ open class IllustiaViewModelCore(
     }
 
     fun loadMoreSearch() {
-        val nextUrl = _uiState.value.searchNextUrl ?: return
+        val workType = _uiState.value.settings.searchWorkType
+        val nextUrl = if (workType.isNovel) {
+            _uiState.value.searchNovelNextUrl
+        } else {
+            _uiState.value.searchNextUrl
+        } ?: return
         searchJob?.cancel()
         searchJob = runLoading {
-            val page = repository.nextPage(nextUrl)
-            _uiState.update {
-                it.copy(
-                    searchItems = it.searchItems.appendIllusts(page.items.visibleWithMutedTagsVisible(it.settings)),
-                    searchNextUrl = page.nextUrl,
-                )
+            if (workType.isNovel) {
+                val page = repository.nextNovelPage(nextUrl)
+                _uiState.update {
+                    it.copy(
+                        searchNovelItems = it.searchNovelItems + page.items,
+                        searchNovelNextUrl = page.nextUrl,
+                    )
+                }
+            } else {
+                val page = repository.nextPage(nextUrl)
+                _uiState.update {
+                    val filteredItems = page.items
+                        .filter { illust -> workType.acceptsIllustType(illust.type) }
+                        .visibleWithMutedTagsVisible(it.settings)
+                    it.copy(
+                        searchItems = it.searchItems.appendIllusts(filteredItems),
+                        searchNextUrl = page.nextUrl,
+                    )
+                }
             }
         }
     }
@@ -2781,6 +2836,7 @@ open class IllustiaViewModelCore(
         return homeItems.isNotEmpty() ||
             novelItems.isNotEmpty() ||
             searchItems.isNotEmpty() ||
+            searchNovelItems.isNotEmpty() ||
             userSearchItems.isNotEmpty() ||
             timelineItems.isNotEmpty() ||
             watchlistItems.isNotEmpty() ||

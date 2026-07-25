@@ -285,9 +285,11 @@ fun <T> ChoiceRow(
     label: @Composable (T) -> String,
     onSelect: (T) -> Unit,
     modifier: Modifier = Modifier,
+    columns: Int = 3,
 ) {
+    val safeColumns = columns.coerceAtLeast(1)
     Column(modifier = modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        values.chunked(3).forEach { row ->
+        values.chunked(safeColumns).forEach { row ->
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -315,7 +317,7 @@ fun <T> ChoiceRow(
                         )
                     }
                 }
-                repeat(3 - row.size) {
+                repeat(safeColumns - row.size) {
                     Spacer(modifier = Modifier.weight(1f))
                 }
             }

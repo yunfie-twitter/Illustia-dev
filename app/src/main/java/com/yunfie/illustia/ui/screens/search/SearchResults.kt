@@ -57,12 +57,20 @@ internal fun SearchResultGrid(
 ) {
     val feedHighQuality = state.settings.useHighQualityFeedImages
     val showAiBadge = remember(state.settings.showAiBadge) { state.settings.showAiBadge }
-    val prefetchUrls = remember(page, state.searchItems, feedHighQuality) {
+    val isNovelResult = page == 0 && state.settings.searchWorkType.isNovel
+    val prefetchUrls = remember(page, state.searchItems, state.searchNovelItems, feedHighQuality, isNovelResult) {
         if (page == 0) {
-            state.searchItems.asSequence()
-                .take(16)
-                .map { if (feedHighQuality) it.previewUrl else it.thumbnailUrl }
-                .toList()
+            if (isNovelResult) {
+                state.searchNovelItems.asSequence()
+                    .take(8)
+                    .map { it.coverUrl }
+                    .toList()
+            } else {
+                state.searchItems.asSequence()
+                    .take(16)
+                    .map { if (feedHighQuality) it.previewUrl else it.thumbnailUrl }
+                    .toList()
+            }
         } else {
             emptyList()
         }
@@ -70,7 +78,11 @@ internal fun SearchResultGrid(
     PrefetchPixivImages(prefetchUrls, enabled = state.settings.prefetchImages)
     AutoLoadMoreEffect(
         enabled = state.settings.autoLoadMore,
-        nextUrl = if (page == 0) state.searchNextUrl else state.userSearchNextUrl,
+        nextUrl = when {
+            page != 0 -> state.userSearchNextUrl
+            isNovelResult -> state.searchNovelNextUrl
+            else -> state.searchNextUrl
+        },
         isLoading = state.loadState == LoadState.Loading,
         onLoadMore = if (page == 0) viewModel::loadMoreSearch else viewModel::loadMoreUserSearch,
     )
@@ -78,41 +90,63 @@ internal fun SearchResultGrid(
     val gridState = viewModel.searchResultGridState
     LazyVerticalGrid(
         state = gridState,
-        columns = GridCells.Fixed(if (page == 0) adaptiveIllustColumns(state.settings) else 1),
+        columns = GridCells.Fixed(if (page == 0 && !isNovelResult) adaptiveIllustColumns(state.settings) else 1),
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 8.dp, bottom = MainNavigationContentPadding),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         if (page == 0) {
-            gridItems(state.searchItems, key = { it.id }, contentType = { "illust_card" }) { illust ->
-                val illustId = illust.id
-                val onLongClick = remember(illustId) { { viewModel.onIllustLongPress(illustId) } }
-
-                IllustCard(
-                    illust = illust,
-                    onBookmark = { viewModel.toggleBookmark(illust) },
-                    onClick = { onIllustSelected?.invoke(illust) ?: viewModel.openIllust(illust) },
-                    onLongClick = onLongClick,
-                    highQualityImages = feedHighQuality,
-                    showAiBadge = showAiBadge,
-                    isMutedByTag = illust.isMutedByTags(state.settings),
-                )
-            }
-            if (!state.settings.autoLoadMore && state.searchNextUrl != null) {
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    Button(
-                        onClick = viewModel::loadMoreSearch,
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
-                        colors = overlayActionButtonColors(),
-                    ) {
-                        Text(stringResource(R.string.action_load_more))
+            if (isNovelResult) {
+                gridItems(state.searchNovelItems, key = { it.id }, contentType = { "novel_card" }) { novel ->
+                    NovelCard(novel = novel, onClick = { viewModel.openNovel(novel) })
+                }
+                if (!state.settings.autoLoadMore && state.searchNovelNextUrl != null) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Button(
+                            onClick = viewModel::loadMoreSearch,
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                            colors = overlayActionButtonColors(),
+                        ) {
+                            Text(stringResource(R.string.action_load_more))
+                        }
                     }
                 }
-            }
-            if (state.searchItems.isEmpty() && state.loadState != LoadState.Loading && state.loadState !is LoadState.Error) {
-                item(span = { GridItemSpan(maxLineSpan) }) {
-                    EmptyState(stringResource(R.string.search_empty_illust))
+                if (state.searchNovelItems.isEmpty() && state.loadState != LoadState.Loading && state.loadState !is LoadState.Error) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        EmptyState(stringResource(R.string.search_empty_novel))
+                    }
+                }
+            } else {
+                gridItems(state.searchItems, key = { it.id }, contentType = { "illust_card" }) { illust ->
+                    val illustId = illust.id
+                    val onLongClick = remember(illustId) { { viewModel.onIllustLongPress(illustId) } }
+
+                    IllustCard(
+                        illust = illust,
+                        onBookmark = { viewModel.toggleBookmark(illust) },
+                        onClick = { onIllustSelected?.invoke(illust) ?: viewModel.openIllust(illust) },
+                        onLongClick = onLongClick,
+                        highQualityImages = feedHighQuality,
+                        showAiBadge = showAiBadge,
+                        isMutedByTag = illust.isMutedByTags(state.settings),
+                    )
+                }
+                if (!state.settings.autoLoadMore && state.searchNextUrl != null) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Button(
+                            onClick = viewModel::loadMoreSearch,
+                            modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                            colors = overlayActionButtonColors(),
+                        ) {
+                            Text(stringResource(R.string.action_load_more))
+                        }
+                    }
+                }
+                if (state.searchItems.isEmpty() && state.loadState != LoadState.Loading && state.loadState !is LoadState.Error) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        EmptyState(stringResource(R.string.search_empty_illust))
+                    }
                 }
             }
         } else {

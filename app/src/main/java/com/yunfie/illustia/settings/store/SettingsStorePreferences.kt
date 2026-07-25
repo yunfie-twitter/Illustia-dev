@@ -51,6 +51,7 @@ internal fun readFromDataStore(
         bookmarkRestrict = enumValueOrDefault(preferences[BOOKMARK_RESTRICT], com.yunfie.illustia.models.Restrict.Public),
         searchSort = enumValueOrDefault(preferences[SEARCH_SORT], com.yunfie.illustia.models.SearchSort.DateDesc),
         searchTarget = enumValueOrDefault(preferences[SEARCH_TARGET], com.yunfie.illustia.models.SearchTarget.PartialTags),
+        searchWorkType = enumValueOrDefault(preferences[SEARCH_WORK_TYPE], com.yunfie.illustia.models.SearchWorkType.Artworks),
         searchDuration = enumValueOrDefault(preferences[SEARCH_DURATION], com.yunfie.illustia.models.SearchDuration.All),
         searchBookmarkFilter = enumValueOrDefault(preferences[SEARCH_BOOKMARK_FILTER], com.yunfie.illustia.models.SearchBookmarkFilter.None),
         searchUsersEnabled = preferences[SEARCH_USERS_ENABLED] ?: true,
@@ -166,6 +167,7 @@ internal fun readFromSharedPreferences(preferences: SharedPreferences): AppSetti
         bookmarkRestrict = enumValueOrDefault(preferences.getString(KEY_BOOKMARK_RESTRICT, null), com.yunfie.illustia.models.Restrict.Public),
         searchSort = enumValueOrDefault(preferences.getString(KEY_SEARCH_SORT, null), com.yunfie.illustia.models.SearchSort.DateDesc),
         searchTarget = enumValueOrDefault(preferences.getString(KEY_SEARCH_TARGET, null), com.yunfie.illustia.models.SearchTarget.PartialTags),
+        searchWorkType = enumValueOrDefault(preferences.getString(KEY_SEARCH_WORK_TYPE, null), com.yunfie.illustia.models.SearchWorkType.Artworks),
         searchDuration = enumValueOrDefault(preferences.getString(KEY_SEARCH_DURATION, null), com.yunfie.illustia.models.SearchDuration.All),
         searchBookmarkFilter = enumValueOrDefault(preferences.getString(KEY_SEARCH_BOOKMARK_FILTER, null), com.yunfie.illustia.models.SearchBookmarkFilter.None),
         searchUsersEnabled = preferences.getBoolean(KEY_SEARCH_USERS_ENABLED, true),
@@ -255,6 +257,7 @@ internal fun writeToDataStore(preferences: MutablePreferences, settings: AppSett
     preferences[BOOKMARK_RESTRICT] = settings.bookmarkRestrict.name
     preferences[SEARCH_SORT] = settings.searchSort.name
     preferences[SEARCH_TARGET] = settings.searchTarget.name
+    preferences[SEARCH_WORK_TYPE] = settings.searchWorkType.name
     preferences[SEARCH_DURATION] = settings.searchDuration.name
     preferences[SEARCH_BOOKMARK_FILTER] = settings.searchBookmarkFilter.name
     preferences[SEARCH_USERS_ENABLED] = settings.searchUsersEnabled

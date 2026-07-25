@@ -19,6 +19,28 @@ enum class SearchTarget(val apiValue: String, @StringRes val labelResId: Int) {
 }
 
 @Immutable
+enum class SearchWorkType(@StringRes val labelResId: Int) {
+    Artworks(R.string.search_work_type_artworks),
+    IllustrationsAndUgoira(R.string.search_work_type_illustrations_and_ugoira),
+    Illustrations(R.string.search_work_type_illustrations),
+    Ugoira(R.string.search_work_type_ugoira),
+    Manga(R.string.search_work_type_manga),
+    Novels(R.string.search_work_type_novels);
+
+    val isNovel: Boolean
+        get() = this == Novels
+
+    fun acceptsIllustType(type: String): Boolean = when (this) {
+        Artworks -> type == "illust" || type == "manga" || type == "ugoira"
+        IllustrationsAndUgoira -> type == "illust" || type == "ugoira"
+        Illustrations -> type == "illust"
+        Ugoira -> type == "ugoira"
+        Manga -> type == "manga"
+        Novels -> false
+    }
+}
+
+@Immutable
 enum class SearchDuration(val apiValue: String?, @StringRes val labelResId: Int) {
     All(null, R.string.duration_all),
     Day("within_last_day", R.string.duration_24h),

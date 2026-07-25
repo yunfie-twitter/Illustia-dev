@@ -18,6 +18,7 @@ import com.yunfie.illustia.models.SearchBookmarkFilter
 import com.yunfie.illustia.models.SearchDuration
 import com.yunfie.illustia.models.SearchSort
 import com.yunfie.illustia.models.SearchTarget
+import com.yunfie.illustia.models.SearchWorkType
 import com.yunfie.illustia.ui.components.BottomSheetInsideMargin
 import com.yunfie.illustia.ui.components.ChoiceRow
 import com.yunfie.illustia.ui.components.LocalBottomSheetBackgroundColor
@@ -32,6 +33,7 @@ import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
 private val SearchSortOptions = SearchSort.entries.toList()
 private val SearchTargetOptions = SearchTarget.entries.toList()
+private val SearchWorkTypeOptions = SearchWorkType.entries.toList()
 private val SearchDurationOptions = SearchDuration.entries.toList()
 private val SearchBookmarkFilterOptions = SearchBookmarkFilter.entries.toList()
 
@@ -90,6 +92,14 @@ internal fun SearchOptionsContent(
             selected = state.settings.searchTarget,
             label = { stringResource(it.labelResId) },
             onSelect = viewModel::updateSearchTarget,
+        )
+        Text(stringResource(R.string.search_work_type), color = MiuixTheme.colorScheme.onSurfaceVariantSummary, style = MiuixTheme.textStyles.footnote1, fontWeight = FontWeight.Bold)
+        ChoiceRow(
+            values = SearchWorkTypeOptions,
+            selected = state.settings.searchWorkType,
+            label = { stringResource(it.labelResId) },
+            onSelect = viewModel::updateSearchWorkType,
+            columns = 1,
         )
         Text(stringResource(R.string.search_duration), color = MiuixTheme.colorScheme.onSurfaceVariantSummary, style = MiuixTheme.textStyles.footnote1, fontWeight = FontWeight.Bold)
         ChoiceRow(

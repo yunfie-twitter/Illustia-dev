@@ -36,6 +36,8 @@ data class IllustiaUiState(
     val activeSearchWord: String = "",
     val searchItems: List<Illust> = emptyList(),
     val searchNextUrl: String? = null,
+    val searchNovelItems: List<NovelPreview> = emptyList(),
+    val searchNovelNextUrl: String? = null,
     val userSearchItems: List<UserPreview> = emptyList(),
     val userSearchNextUrl: String? = null,
     val timelineItems: List<Illust> = emptyList(),

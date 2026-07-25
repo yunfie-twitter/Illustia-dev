@@ -1,6 +1,7 @@
 package com.yunfie.illustia
 
 import com.yunfie.illustia.models.Illust
+import com.yunfie.illustia.models.NovelPreview
 import com.yunfie.illustia.models.UserPreview
 import com.yunfie.illustia.models.UserProfile
 import com.yunfie.illustia.models.pixiv.Comment
@@ -17,6 +18,8 @@ internal data class SearchSnapshot(
     val activeSearchWord: String,
     val searchItems: List<Illust>,
     val searchNextUrl: String?,
+    val searchNovelItems: List<NovelPreview>,
+    val searchNovelNextUrl: String?,
     val userSearchItems: List<UserPreview>,
     val userSearchNextUrl: String?,
 )
@@ -38,6 +41,8 @@ internal fun IllustiaUiState.toSearchSnapshot(): SearchSnapshot {
         activeSearchWord = activeSearchWord,
         searchItems = searchItems,
         searchNextUrl = searchNextUrl,
+        searchNovelItems = searchNovelItems,
+        searchNovelNextUrl = searchNovelNextUrl,
         userSearchItems = userSearchItems,
         userSearchNextUrl = userSearchNextUrl,
     )

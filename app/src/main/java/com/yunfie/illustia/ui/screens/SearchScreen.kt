@@ -228,10 +228,12 @@ private fun SearchResultsArea(
 ) {
     var showOptionsSheet by remember { mutableStateOf(false) }
     val tabIllust = stringResource(R.string.search_tab_illust)
+    val tabNovel = stringResource(R.string.search_tab_novel)
     val tabUser = stringResource(R.string.search_tab_user)
-    val tabs = remember(state.settings.searchUsersEnabled, widgetSelectionMode, tabIllust, tabUser) {
-        if (widgetSelectionMode) listOf(tabIllust)
-        else if (state.settings.searchUsersEnabled) listOf(tabIllust, tabUser) else listOf(tabIllust)
+    val tabs = remember(state.settings.searchUsersEnabled, state.settings.searchWorkType, widgetSelectionMode, tabIllust, tabNovel, tabUser) {
+        val workTab = if (state.settings.searchWorkType.isNovel) tabNovel else tabIllust
+        if (widgetSelectionMode) listOf(workTab)
+        else if (state.settings.searchUsersEnabled) listOf(workTab, tabUser) else listOf(workTab)
     }
     val resultPagerState = rememberPagerState(pageCount = { tabs.size })
     val coroutineScope = rememberCoroutineScope()
@@ -271,8 +273,19 @@ private fun SearchResultsArea(
             onRefresh = { viewModel.submitSearch() },
             modifier = Modifier.fillMaxSize()
         ) {
-            if (state.loadState == LoadState.Loading && state.searchItems.isEmpty() && state.userSearchItems.isEmpty()) {
-                IllustGridSkeleton(columns = adaptiveIllustColumns(state.settings))
+            if (
+                state.loadState == LoadState.Loading &&
+                state.searchItems.isEmpty() &&
+                state.searchNovelItems.isEmpty() &&
+                state.userSearchItems.isEmpty()
+            ) {
+                if (state.settings.searchWorkType.isNovel) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        LoadingIndicator()
+                    }
+                } else {
+                    IllustGridSkeleton(columns = adaptiveIllustColumns(state.settings))
+                }
             } else {
                 HorizontalPager(state = resultPagerState, modifier = Modifier.fillMaxSize()) { page ->
                     SearchResultGrid(

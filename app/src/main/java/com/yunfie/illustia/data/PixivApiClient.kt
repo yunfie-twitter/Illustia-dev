@@ -139,6 +139,32 @@ class PixivApiClient(
         )
     }
 
+    suspend fun searchNovels(
+        session: PixivSession,
+        word: String,
+        sort: SearchSort,
+        target: SearchTarget,
+        duration: SearchDuration,
+        bookmarkFilter: SearchBookmarkFilter,
+        includeR18: Boolean,
+    ): PageResult<NovelPreview> {
+        val effectiveWord = listOfNotNull(word, bookmarkFilter.keyword).joinToString(" ")
+        return getNovelPage(
+            session = session,
+            url = pixivApiUrl(
+                "v1/search/novel",
+                "word" to effectiveWord,
+                "search_target" to target.apiValue,
+                "sort" to sort.apiValue,
+                "duration" to duration.apiValue,
+                "filter" to "for_android",
+                "merge_plain_keyword_results" to "true",
+                "include_translated_tag_results" to "true",
+                "r18" to if (includeR18) "true" else null,
+            ),
+        )
+    }
+
     suspend fun searchAutocomplete(session: PixivSession, word: String): List<String> {
         return Request.Builder()
             .url(

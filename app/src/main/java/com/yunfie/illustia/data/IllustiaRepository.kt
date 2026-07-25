@@ -129,6 +129,19 @@ class IllustiaRepository(
         }
     }
 
+    suspend fun searchNovels(
+        word: String,
+        sort: SearchSort,
+        target: SearchTarget,
+        duration: SearchDuration,
+        bookmarkFilter: SearchBookmarkFilter,
+        includeR18: Boolean,
+    ): PageResult<NovelPreview> {
+        return withSessionRetry { session ->
+            apiClient.searchNovels(session, word, sort, target, duration, bookmarkFilter, includeR18)
+        }
+    }
+
     suspend fun searchUsers(word: String): PageResult<UserPreview> {
         return withSessionRetry { session -> apiClient.searchUsers(session, word) }
     }
