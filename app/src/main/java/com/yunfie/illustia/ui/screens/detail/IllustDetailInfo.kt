@@ -43,6 +43,7 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.ChevronForward
 import top.yukonga.miuix.kmp.icon.extended.Messages
+import top.yukonga.miuix.kmp.squircle.squircleBackground
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -298,18 +299,35 @@ internal fun RelatedIllustsList(
                 rowItems.forEach { related ->
                     Box(modifier = Modifier.weight(1f)) {
                         key(related.id) {
-                            PixivImage(
-                                url = related.squareImageUrl.ifBlank { related.mediumImageUrl.ifBlank { related.imageUrl } },
-                                contentDescription = related.title,
-                                contentScale = ContentScale.Crop,
+                            Box(
                                 modifier = Modifier
                                     .aspectRatio(1f)
                                     .combinedClickable(
                                         onClick = { onOpenIllust(related) },
                                         onLongClick = { onLongPressIllust(related) },
                                     ),
-                                thumbnail = true,
-                            )
+                            ) {
+                                PixivImage(
+                                    url = related.squareImageUrl.ifBlank { related.mediumImageUrl.ifBlank { related.imageUrl } },
+                                    contentDescription = related.title,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier.fillMaxSize(),
+                                    thumbnail = true,
+                                )
+                                if (related.pageCount > 1) {
+                                    Text(
+                                        text = "${related.pageCount}P",
+                                        color = Color.White,
+                                        style = MiuixTheme.textStyles.footnote2,
+                                        fontWeight = FontWeight.Black,
+                                        modifier = Modifier
+                                            .align(Alignment.TopEnd)
+                                            .padding(8.dp)
+                                            .squircleBackground(Color.Black.copy(alpha = 0.4f), 6.dp)
+                                            .padding(horizontal = 6.dp, vertical = 2.dp),
+                                    )
+                                }
+                            }
                         }
                     }
                 }
