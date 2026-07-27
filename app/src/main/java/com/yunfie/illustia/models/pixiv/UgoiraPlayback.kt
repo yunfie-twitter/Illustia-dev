@@ -8,3 +8,14 @@ data class UgoiraPlaybackFrame(
     val filePath: String,
     val delayMillis: Int,
 )
+
+private const val MIN_VALID_UGOIRA_DELAY_MILLIS = 20
+private const val DEFAULT_UGOIRA_DELAY_MILLIS = 100L
+
+internal fun normalizedUgoiraDelayMillis(delayMillis: Int): Long {
+    return if (delayMillis >= MIN_VALID_UGOIRA_DELAY_MILLIS) {
+        delayMillis.toLong()
+    } else {
+        DEFAULT_UGOIRA_DELAY_MILLIS
+    }
+}

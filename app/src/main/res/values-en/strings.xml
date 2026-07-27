@@ -34,6 +34,7 @@
     <string name="action_share">Share</string>
     <string name="action_download">Download</string>
     <string name="action_load_more">Load More</string>
+    <string name="action_reload">Reload</string>
     <string name="action_view_all">View All</string>
     <string name="action_show">Show</string>
     <string name="action_add">Add</string>
@@ -576,7 +577,11 @@
 
     <string name="user_tab_works">Works</string>
     <string name="user_tab_bookmarks">Bookmarks</string>
+    <string name="user_tab_related">Similar Artists</string>
     <string name="user_tab_info">Info</string>
+    <string name="user_related_summary">Pixiv API suggestions based on similar artwork</string>
+    <string name="user_related_empty">No similar artists were found</string>
+    <string name="error_related_users_load_failed">Could not load similar artists.</string>
     <string name="user_open_full_page">Open Profile</string>
     <string name="user_id_label">User ID</string>
     <string name="action_not_followed">Not Followed</string>

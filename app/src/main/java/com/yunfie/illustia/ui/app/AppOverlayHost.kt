@@ -1,11 +1,17 @@
 package com.yunfie.illustia.ui.app
 
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -21,6 +27,7 @@ import com.yunfie.illustia.ui.components.overlayActionButtonColors
 import com.yunfie.illustia.ui.screens.CommentScreen
 import com.yunfie.illustia.ui.screens.RefreshTokenLoginBottomSheet
 import com.yunfie.illustia.ui.screens.UserProfileScreen
+import com.yunfie.illustia.ui.screens.profile.RelatedCreatorsSheetContent
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
@@ -49,6 +56,7 @@ internal fun AppOverlayHost(
     onSearchTag: (String) -> Unit,
 ) {
     val configuration = LocalConfiguration.current
+    val context = LocalContext.current
 
     selectedCommentTarget?.let { target ->
         CommentScreen(
@@ -174,6 +182,11 @@ internal fun AppOverlayHost(
         if (!appState.state.showUserPage && !appState.state.userPageDismissed) {
             val userSheetBackground = LocalBottomSheetBackgroundColor.current
             val userSheetHeight = minOf(configuration.screenHeightDp.dp * 0.68f, 560.dp)
+            var showRelatedUsers by remember(user.id) { mutableStateOf(false) }
+            val shareLabel = stringResource(R.string.detail_share)
+            val shareFailedMessage = stringResource(R.string.error_share_failed)
+            val shareTitle = user.name.ifBlank { "@${user.account}" }
+            val profileUrl = remember(user.id) { "https://www.pixiv.net/users/${user.id}" }
             WindowBottomSheet(
                 show = true,
                 modifier = Modifier.scrollEndHaptic(),
@@ -195,6 +208,25 @@ internal fun AppOverlayHost(
                         WindowIconDropdownMenu(
                             entry = DropdownEntry(
                                 items = listOf(
+                                    DropdownItem(
+                                        text = shareLabel,
+                                        onClick = {
+                                            runCatching {
+                                                val intent = Intent(Intent.ACTION_SEND).apply {
+                                                    type = "text/plain"
+                                                    putExtra(Intent.EXTRA_TEXT, "$shareTitle\n$profileUrl")
+                                                }
+                                                context.startActivity(Intent.createChooser(intent, shareLabel))
+                                            }.onFailure { viewModel.showMessage(shareFailedMessage) }
+                                        },
+                                    ),
+                                    DropdownItem(
+                                        text = stringResource(R.string.user_tab_related),
+                                        onClick = {
+                                            showRelatedUsers = true
+                                            viewModel.loadSelectedRelatedUsers()
+                                        },
+                                    ),
                                     DropdownItem(
                                         text = stringResource(R.string.dialog_mute),
                                         onClick = {
@@ -221,8 +253,11 @@ internal fun AppOverlayHost(
                         settings = appState.state.settings,
                         illusts = appState.state.selectedUserIllusts,
                         bookmarks = appState.state.selectedUserBookmarks,
+                        relatedUsers = appState.state.selectedRelatedUsers,
                         hasMore = appState.state.selectedUserNextUrl != null,
                         bookmarkHasMore = appState.state.selectedUserBookmarksNextUrl != null,
+                        relatedUsersHasMore = appState.state.selectedRelatedUsersNextUrl != null,
+                        relatedUsersLoading = appState.state.selectedRelatedUsersLoading,
                         onBack = viewModel::closeUser,
                         onOpenIllust = { illust ->
                             viewModel.closeUser()
@@ -232,6 +267,9 @@ internal fun AppOverlayHost(
                         onLoadMore = viewModel::loadMoreUserIllusts,
                         onLoadBookmarks = viewModel::loadSelectedUserBookmarks,
                         onLoadMoreBookmarks = viewModel::loadMoreSelectedUserBookmarks,
+                        onLoadRelatedUsers = viewModel::loadSelectedRelatedUsers,
+                        onLoadMoreRelatedUsers = viewModel::loadMoreSelectedRelatedUsers,
+                        onOpenRelatedUser = viewModel::openUserPage,
                         onToggleFollow = { viewModel.toggleFollow(user) },
                         onMuteUser = { viewModel.muteUser(user.id) },
                         onMessage = viewModel::showMessage,
@@ -243,6 +281,27 @@ internal fun AppOverlayHost(
                         contentHeight = userSheetHeight,
                     )
                 }
+            }
+
+            OverlayBottomSheet(
+                show = showRelatedUsers,
+                modifier = Modifier.scrollEndHaptic(),
+                title = stringResource(R.string.user_tab_related),
+                backgroundColor = userSheetBackground,
+                onDismissRequest = { showRelatedUsers = false },
+                insideMargin = BottomSheetInsideMargin,
+            ) {
+                RelatedCreatorsSheetContent(
+                    users = appState.state.selectedRelatedUsers,
+                    hasMore = appState.state.selectedRelatedUsersNextUrl != null,
+                    loading = appState.state.selectedRelatedUsersLoading,
+                    onOpenUser = { relatedUser ->
+                        showRelatedUsers = false
+                        viewModel.openUser(relatedUser)
+                    },
+                    onRetry = viewModel::loadSelectedRelatedUsers,
+                    onLoadMore = viewModel::loadMoreSelectedRelatedUsers,
+                )
             }
         }
     }

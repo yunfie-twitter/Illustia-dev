@@ -13,6 +13,8 @@ const MAX_ENTRIES: usize = 10_000;
 const MAX_ENTRY_BYTES: u64 = 32 * 1024 * 1024;
 const MAX_TOTAL_BYTES: u64 = 512 * 1024 * 1024;
 const COMPLETE_MARKER: &str = ".complete";
+const MIN_VALID_FRAME_DELAY_MILLIS: i32 = 20;
+const DEFAULT_FRAME_DELAY_MILLIS: i32 = 100;
 
 pub(crate) fn cached(cache_dir: &Path, frames: &[UgoiraFrame]) -> Option<UgoiraPlayback> {
     validate_frame_names(frames).ok()?;
@@ -157,9 +159,17 @@ fn playback(cache_dir: &Path, frames: Vec<UgoiraFrame>) -> UgoiraPlayback {
             .into_iter()
             .map(|frame| UgoiraFrame {
                 file: cache_dir.join(frame.file).to_string_lossy().into_owned(),
-                delay_millis: frame.delay_millis.max(20),
+                delay_millis: normalized_frame_delay(frame.delay_millis),
             })
             .collect(),
+    }
+}
+
+fn normalized_frame_delay(delay_millis: i32) -> i32 {
+    if delay_millis >= MIN_VALID_FRAME_DELAY_MILLIS {
+        delay_millis
+    } else {
+        DEFAULT_FRAME_DELAY_MILLIS
     }
 }
 
@@ -228,7 +238,7 @@ mod tests {
             }],
         )
         .unwrap();
-        assert_eq!(result.frames[0].delay_millis, 20);
+        assert_eq!(result.frames[0].delay_millis, DEFAULT_FRAME_DELAY_MILLIS);
         assert!(cache.join("000.jpg").is_file());
         assert!(!cache.join("unused.jpg").exists());
         assert!(cache.join(COMPLETE_MARKER).is_file());
@@ -248,6 +258,14 @@ mod tests {
         );
         assert!(matches!(result, Err(ApiError::InvalidRequest { .. })));
         fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn preserves_valid_frame_delays_and_replaces_invalid_ones() {
+        assert_eq!(normalized_frame_delay(80), 80);
+        assert_eq!(normalized_frame_delay(20), 20);
+        assert_eq!(normalized_frame_delay(19), DEFAULT_FRAME_DELAY_MILLIS);
+        assert_eq!(normalized_frame_delay(0), DEFAULT_FRAME_DELAY_MILLIS);
     }
 
     #[test]

@@ -40,6 +40,7 @@
     <string name="action_share">共有</string>
     <string name="action_download">ダウンロード</string>
     <string name="action_load_more">さらに読み込む</string>
+    <string name="action_reload">再読み込み</string>
     <string name="action_view_all">すべて見る</string>
     <string name="action_show">表示する</string>
     <string name="action_add">追加</string>
@@ -581,7 +582,11 @@
 
     <string name="user_tab_works">作品</string>
     <string name="user_tab_bookmarks">ブックマーク</string>
+    <string name="user_tab_related">似ている作家</string>
     <string name="user_tab_info">情報</string>
+    <string name="user_related_summary">Pixiv API が作品傾向の近い作家を提案します</string>
+    <string name="user_related_empty">似ている作家は見つかりませんでした</string>
+    <string name="error_related_users_load_failed">似ている作家を取得できませんでした。</string>
     <string name="user_open_full_page">プロフィールを開く</string>
     <string name="user_id_label">ユーザーID</string>
     <string name="action_not_followed">未フォロー</string>

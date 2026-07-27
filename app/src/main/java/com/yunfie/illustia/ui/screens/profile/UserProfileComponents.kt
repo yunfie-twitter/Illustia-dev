@@ -14,6 +14,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.items as lazyListItems
 import androidx.compose.foundation.lazy.grid.*
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.pager.HorizontalPager
@@ -40,9 +41,11 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import com.yunfie.illustia.R
 import com.yunfie.illustia.models.Illust
+import com.yunfie.illustia.models.UserPreview
 import com.yunfie.illustia.models.UserProfile
 import com.yunfie.illustia.settings.AppSettings
 import com.yunfie.illustia.ui.components.*
+import com.yunfie.illustia.ui.screens.UserResultCard
 import top.yukonga.miuix.kmp.basic.*
 import top.yukonga.miuix.kmp.basic.TabRowWithContour
 import top.yukonga.miuix.kmp.icon.MiuixIcons
@@ -227,6 +230,7 @@ internal fun UserProfileTopAppBar(
     onBack: () -> Unit,
     onMuteUser: () -> Unit,
     onMessage: (String) -> Unit,
+    onOpenRelatedUsers: () -> Unit,
     scrollBehavior: ScrollBehavior,
     modifier: Modifier = Modifier,
 ) {
@@ -254,6 +258,10 @@ internal fun UserProfileTopAppBar(
                                 context.startActivity(Intent.createChooser(intent, shareLabel))
                             }.onFailure { onMessage(shareFailedMessage) }
                         }),
+                        DropdownItem(
+                            text = stringResource(R.string.user_tab_related),
+                            onClick = onOpenRelatedUsers,
+                        ),
                         DropdownItem(text = stringResource(R.string.dialog_mute), onClick = {
                             onMuteUser()
                             onBack()
@@ -276,6 +284,7 @@ internal fun UserProfileSmallTopAppBar(
     onBack: () -> Unit,
     onMuteUser: () -> Unit,
     onMessage: (String) -> Unit,
+    onOpenRelatedUsers: () -> Unit,
     compact: Boolean,
 ) {
     val context = LocalContext.current
@@ -339,6 +348,10 @@ internal fun UserProfileSmallTopAppBar(
                                 context.startActivity(Intent.createChooser(intent, shareLabel))
                             }.onFailure { onMessage(shareFailedMessage) }
                         }),
+                        DropdownItem(
+                            text = stringResource(R.string.user_tab_related),
+                            onClick = onOpenRelatedUsers,
+                        ),
                         DropdownItem(text = stringResource(R.string.dialog_mute), onClick = {
                             onMuteUser()
                             onBack()
@@ -420,7 +433,11 @@ internal fun UserProfileTabs(
     modifier: Modifier = Modifier,
     listState: LazyListState = rememberLazyListState(),
 ) {
-    val tabs = listOf(stringResource(R.string.user_tab_works), stringResource(R.string.user_tab_bookmarks), stringResource(R.string.user_tab_info))
+    val tabs = listOf(
+        stringResource(R.string.user_tab_works),
+        stringResource(R.string.user_tab_bookmarks),
+        stringResource(R.string.user_tab_info),
+    )
     TabRowWithContour(
         modifier = modifier.fillMaxWidth(),
         tabs = tabs,
@@ -488,6 +505,77 @@ private fun UserInfoPage(backgroundColor: Color, content: @Composable () -> Unit
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         item { content() }
+    }
+}
+
+@Composable
+internal fun RelatedCreatorsSheetContent(
+    users: List<UserPreview>,
+    hasMore: Boolean,
+    loading: Boolean,
+    onOpenUser: (UserPreview) -> Unit,
+    onRetry: () -> Unit,
+    onLoadMore: () -> Unit,
+) {
+    val listState = rememberLazyListState()
+    LazyColumn(
+        state = listState,
+        modifier = Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 24.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        item(contentType = "related_intro") {
+            Text(
+                text = stringResource(R.string.user_related_summary),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 4.dp, vertical = 8.dp),
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                style = MiuixTheme.textStyles.footnote1,
+            )
+        }
+        lazyListItems(users, key = { "related_user_${it.id}" }, contentType = { "related_user" }) { relatedUser ->
+            UserResultCard(
+                user = relatedUser,
+                onClick = { onOpenUser(relatedUser) },
+            )
+        }
+        if (users.isEmpty() && loading) {
+            item(contentType = "related_loading") {
+                Box(
+                    modifier = Modifier.fillMaxWidth().height(180.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    LoadingIndicator()
+                }
+            }
+        } else if (users.isEmpty()) {
+            item(contentType = "related_empty") {
+                Column(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = 20.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
+                ) {
+                    EmptyState(stringResource(R.string.user_related_empty))
+                    Button(onClick = onRetry) {
+                        Text(stringResource(R.string.action_reload))
+                    }
+                }
+            }
+        }
+        if (hasMore) {
+            item(contentType = "related_more") {
+                Button(
+                    onClick = onLoadMore,
+                    enabled = !loading,
+                    modifier = Modifier.fillMaxWidth().padding(top = 4.dp),
+                ) {
+                    if (loading) {
+                        LoadingIndicator(Modifier.size(20.dp))
+                    } else {
+                        Text(stringResource(R.string.action_load_more))
+                    }
+                }
+            }
+        }
     }
 }
 

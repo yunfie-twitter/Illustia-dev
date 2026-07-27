@@ -1588,6 +1588,9 @@ open class IllustiaViewModelCore(
                     selectedUserNextUrl = null,
                     selectedUserBookmarks = emptyList(),
                     selectedUserBookmarksNextUrl = null,
+                    selectedRelatedUsers = emptyList(),
+                    selectedRelatedUsersNextUrl = null,
+                    selectedRelatedUsersLoading = false,
                     userPageDismissed = false,
                     userPageFromSheet = false,
                 )
@@ -1605,6 +1608,9 @@ open class IllustiaViewModelCore(
                         selectedUserNextUrl = page.nextUrl,
                         selectedUserBookmarks = emptyList(),
                         selectedUserBookmarksNextUrl = null,
+                        selectedRelatedUsers = emptyList(),
+                        selectedRelatedUsersNextUrl = null,
+                        selectedRelatedUsersLoading = false,
                         showUserPage = false,
                         userPageFromSheet = false,
                         userPageDismissed = false,
@@ -1659,6 +1665,9 @@ open class IllustiaViewModelCore(
                 selectedUserNextUrl = null,
                 selectedUserBookmarks = emptyList(),
                 selectedUserBookmarksNextUrl = null,
+                selectedRelatedUsers = emptyList(),
+                selectedRelatedUsersNextUrl = null,
+                selectedRelatedUsersLoading = false,
                 showUserPage = true,
                 userPageFromSheet = false,
                 userPageDismissed = false,
@@ -1675,6 +1684,9 @@ open class IllustiaViewModelCore(
                         selectedUserNextUrl = page.nextUrl,
                         selectedUserBookmarks = emptyList(),
                         selectedUserBookmarksNextUrl = null,
+                        selectedRelatedUsers = emptyList(),
+                        selectedRelatedUsersNextUrl = null,
+                        selectedRelatedUsersLoading = false,
                         loadState = LoadState.Loaded,
                     )
                 }
@@ -1719,6 +1731,9 @@ open class IllustiaViewModelCore(
                     selectedUserNextUrl = null,
                     selectedUserBookmarks = emptyList(),
                     selectedUserBookmarksNextUrl = null,
+                    selectedRelatedUsers = emptyList(),
+                    selectedRelatedUsersNextUrl = null,
+                    selectedRelatedUsersLoading = false,
                     userPageDismissed = false,
                     userPageFromSheet = false,
                 )
@@ -2440,6 +2455,79 @@ open class IllustiaViewModelCore(
         }
     }
 
+    fun loadSelectedRelatedUsers() {
+        val userId = _uiState.value.selectedUser?.id ?: return
+        if (_uiState.value.selectedRelatedUsersLoading || _uiState.value.selectedRelatedUsers.isNotEmpty()) return
+        viewModelScope.launch(Dispatchers.IO) {
+            _uiState.update { it.copy(selectedRelatedUsersLoading = true) }
+            try {
+                val page = repository.relatedUsers(userId)
+                _uiState.update { state ->
+                    if (state.selectedUser?.id != userId) {
+                        state
+                    } else {
+                        state.copy(
+                            selectedRelatedUsers = page.users.filterNot { it.id == userId },
+                            selectedRelatedUsersNextUrl = page.nextUrl,
+                            selectedRelatedUsersLoading = false,
+                        )
+                    }
+                }
+            } catch (error: Throwable) {
+                if (isCancellation(error)) throw error
+                if (handleAuthExpired(error)) return@launch
+                _uiState.update { state ->
+                    if (state.selectedUser?.id == userId) {
+                        state.copy(
+                            selectedRelatedUsersLoading = false,
+                            message = cleanErrorMessage(error, str(R.string.error_related_users_load_failed)),
+                        )
+                    } else {
+                        state
+                    }
+                }
+            }
+        }
+    }
+
+    fun loadMoreSelectedRelatedUsers() {
+        val userId = _uiState.value.selectedUser?.id ?: return
+        val nextUrl = _uiState.value.selectedRelatedUsersNextUrl ?: return
+        if (_uiState.value.selectedRelatedUsersLoading) return
+        viewModelScope.launch(Dispatchers.IO) {
+            _uiState.update { it.copy(selectedRelatedUsersLoading = true) }
+            try {
+                val page = repository.nextRelatedUsersPage(nextUrl)
+                _uiState.update { state ->
+                    if (state.selectedUser?.id != userId) {
+                        state
+                    } else {
+                        state.copy(
+                            selectedRelatedUsers = state.selectedRelatedUsers.appendUserPreviews(
+                                page.users.filterNot { it.id == userId },
+                            ),
+                            selectedRelatedUsersNextUrl = page.nextUrl,
+                            selectedRelatedUsersLoading = false,
+                        )
+                    }
+                }
+            } catch (error: Throwable) {
+                if (isCancellation(error)) throw error
+                if (handleAuthExpired(error)) return@launch
+                _uiState.update { state ->
+                    if (state.selectedUser?.id == userId) {
+                        state.copy(
+                            selectedRelatedUsersLoading = false,
+                            message = cleanErrorMessage(error, str(R.string.error_related_users_load_failed)),
+                        )
+                    } else {
+                        state
+                    }
+                }
+            }
+        }
+    }
+
     fun refreshBookmarks() {
         val userId = _uiState.value.settings.bookmarkUserId
         if (userId == null) {
@@ -2848,6 +2936,7 @@ open class IllustiaViewModelCore(
             selectedUser != null ||
             selectedUserIllusts.isNotEmpty() ||
             selectedUserBookmarks.isNotEmpty() ||
+            selectedRelatedUsers.isNotEmpty() ||
             relatedIllusts.isNotEmpty() ||
             followingUsers.isNotEmpty()
     }

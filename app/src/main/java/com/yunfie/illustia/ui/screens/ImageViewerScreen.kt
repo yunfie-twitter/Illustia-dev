@@ -38,6 +38,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.IntSize
 import com.yunfie.illustia.R
 import com.yunfie.illustia.models.Illust
+import com.yunfie.illustia.models.pixiv.UgoiraPlayback
 import com.yunfie.illustia.ui.components.PixivImage
 import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
 import top.yukonga.miuix.kmp.basic.*
@@ -61,6 +62,7 @@ fun ImageViewerScreen(
     prefetchImages: Boolean,
     mangaReaderMode: String,
     onPageChanged: (Int) -> Unit,
+    loadUgoiraPlayback: suspend (Long) -> UgoiraPlayback,
 ) {
     val context = LocalContext.current
     val shareFailedMessage = stringResource(R.string.viewer_share_failed)
@@ -232,7 +234,17 @@ fun ImageViewerScreen(
                 .fillMaxSize()
                 .background(Color.Black),
         ) {
-            if (comicMode) {
+            if (illust.type == "ugoira") {
+                UgoiraArtwork(
+                    previewUrl = imageUrls.firstOrNull().orEmpty(),
+                    contentDescription = illust.title,
+                    loadPlayback = { loadUgoiraPlayback(illust.id) },
+                    modifier = Modifier.fillMaxSize(),
+                    zoomEnabled = true,
+                    onZoomChanged = { isZoomed = it },
+                    onTap = { showControls = !showControls },
+                )
+            } else if (comicMode) {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize(),
                     contentPadding = PaddingValues(vertical = 72.dp),

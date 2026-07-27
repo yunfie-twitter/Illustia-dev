@@ -156,6 +156,7 @@ internal fun IllustDetailHeader(
                         previewUrl = previewUrl,
                         contentDescription = illust.title,
                         loadPlayback = { loadUgoiraPlayback(illust.id) },
+                        onTap = { if (!maskMutedArtwork) onOpenImage(0) },
                         modifier = Modifier
                             .fillMaxSize()
                             .then(if (maskMutedArtwork) Modifier.blur(18.dp) else Modifier),

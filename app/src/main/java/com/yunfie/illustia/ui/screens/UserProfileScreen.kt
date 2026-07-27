@@ -22,14 +22,20 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.yunfie.illustia.R
 import com.yunfie.illustia.models.Illust
+import com.yunfie.illustia.models.UserPreview
 import com.yunfie.illustia.models.UserProfile
 import com.yunfie.illustia.settings.AppSettings
+import com.yunfie.illustia.ui.components.BottomSheetInsideMargin
+import com.yunfie.illustia.ui.components.LocalBottomSheetBackgroundColor
 import com.yunfie.illustia.ui.components.MiuixConfirmDialog
 import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
+import com.yunfie.illustia.ui.screens.profile.RelatedCreatorsSheetContent
 import com.yunfie.illustia.ui.screens.profile.UserProfilePagerContent
 import com.yunfie.illustia.ui.screens.profile.UserProfileSmallTopAppBar
 import kotlinx.coroutines.launch
+import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
 @Composable
 fun UserProfileScreen(
@@ -37,14 +43,20 @@ fun UserProfileScreen(
     settings: AppSettings,
     illusts: List<Illust>,
     bookmarks: List<Illust>,
+    relatedUsers: List<UserPreview>,
     hasMore: Boolean,
     bookmarkHasMore: Boolean,
+    relatedUsersHasMore: Boolean,
+    relatedUsersLoading: Boolean,
     onBack: () -> Unit,
     onOpenIllust: (Illust) -> Unit,
     onBookmark: (Illust) -> Unit,
     onLoadMore: () -> Unit,
     onLoadBookmarks: () -> Unit,
     onLoadMoreBookmarks: () -> Unit,
+    onLoadRelatedUsers: () -> Unit,
+    onLoadMoreRelatedUsers: () -> Unit,
+    onOpenRelatedUser: (UserPreview) -> Unit,
     onToggleFollow: () -> Unit,
     onMuteUser: () -> Unit,
     onMessage: (String) -> Unit,
@@ -58,6 +70,7 @@ fun UserProfileScreen(
 ) {
     PredictiveBackGestureHandler(onBack = onBack)
     var showUnfollowConfirm by remember(user.id) { mutableStateOf(false) }
+    var showRelatedUsers by remember(user.id) { mutableStateOf(false) }
     var followAnimationTrigger by remember(user.id) { mutableIntStateOf(0) }
     val bookmarkGridState = remember(user.id) { LazyGridState() }
     val pagerState = rememberPagerState(pageCount = { 3 })
@@ -138,10 +151,35 @@ fun UserProfileScreen(
                 onBack = onBack,
                 onMuteUser = onMuteUser,
                 onMessage = onMessage,
+                onOpenRelatedUsers = {
+                    showRelatedUsers = true
+                    onLoadRelatedUsers()
+                },
                 compact = isContentScrolled,
             )
         }
     } else {
         content(contentModifier)
+    }
+
+    OverlayBottomSheet(
+        show = showRelatedUsers,
+        modifier = Modifier.scrollEndHaptic(),
+        title = stringResource(R.string.user_tab_related),
+        backgroundColor = LocalBottomSheetBackgroundColor.current,
+        onDismissRequest = { showRelatedUsers = false },
+        insideMargin = BottomSheetInsideMargin,
+    ) {
+        RelatedCreatorsSheetContent(
+            users = relatedUsers,
+            hasMore = relatedUsersHasMore,
+            loading = relatedUsersLoading,
+            onOpenUser = { relatedUser ->
+                showRelatedUsers = false
+                onOpenRelatedUser(relatedUser)
+            },
+            onRetry = onLoadRelatedUsers,
+            onLoadMore = onLoadMoreRelatedUsers,
+        )
     }
 }

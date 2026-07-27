@@ -31,6 +31,7 @@
     <string name="action_share">分享</string>
     <string name="action_download">下載</string>
     <string name="action_load_more">載入更多</string>
+    <string name="action_reload">重新載入</string>
     <string name="action_view_all">查看全部</string>
     <string name="action_show">顯示</string>
     <string name="action_add">新增</string>
@@ -519,7 +520,11 @@
     <string name="bookmark_skip_confirm_on_detail_desc">從詳細資料畫面儲存時跳過確認對話框</string>
     <string name="user_tab_works">作品</string>
     <string name="user_tab_bookmarks">書籤</string>
+    <string name="user_tab_related">相似創作者</string>
     <string name="user_tab_info">訊息</string>
+    <string name="user_related_summary">Pixiv API 會推薦作品風格相近的創作者</string>
+    <string name="user_related_empty">找不到相似創作者</string>
+    <string name="error_related_users_load_failed">無法載入相似創作者。</string>
     <string name="user_open_full_page">開啟個人資料</string>
     <string name="user_id_label">使用者 ID</string>
     <string name="action_not_followed">未關注</string>

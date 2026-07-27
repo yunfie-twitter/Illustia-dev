@@ -219,6 +219,7 @@ internal fun AppNavHost(
                     prefetchImages = appState.state.settings.prefetchImages,
                     mangaReaderMode = appState.state.settings.mangaReaderMode,
                     onPageChanged = viewModel::updateImageViewerPage,
+                    loadUgoiraPlayback = viewModel::loadUgoiraPlayback,
                 )
             }
         }
@@ -334,8 +335,11 @@ internal fun AppNavHost(
                     settings = appState.state.settings,
                     illusts = appState.state.selectedUserIllusts,
                     bookmarks = appState.state.selectedUserBookmarks,
+                    relatedUsers = appState.state.selectedRelatedUsers,
                     hasMore = appState.state.selectedUserNextUrl != null,
                     bookmarkHasMore = appState.state.selectedUserBookmarksNextUrl != null,
+                    relatedUsersHasMore = appState.state.selectedRelatedUsersNextUrl != null,
+                    relatedUsersLoading = appState.state.selectedRelatedUsersLoading,
                     onBack = {
                         if (appState.state.userPageFromSheet) {
                             viewModel.collapseUserPageToSheet()
@@ -351,6 +355,9 @@ internal fun AppNavHost(
                     onLoadMore = viewModel::loadMoreUserIllusts,
                     onLoadBookmarks = viewModel::loadSelectedUserBookmarks,
                     onLoadMoreBookmarks = viewModel::loadMoreSelectedUserBookmarks,
+                    onLoadRelatedUsers = viewModel::loadSelectedRelatedUsers,
+                    onLoadMoreRelatedUsers = viewModel::loadMoreSelectedRelatedUsers,
+                    onOpenRelatedUser = viewModel::openUserPage,
                     onToggleFollow = { viewModel.toggleFollow(user) },
                     onMuteUser = { viewModel.muteUser(user.id) },
                     onMessage = viewModel::showMessage,
