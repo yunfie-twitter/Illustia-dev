@@ -465,6 +465,8 @@
     <string name="login_feature_ranking">Ranking</string>
     <string name="login_feature_bookmarks">Bookmarks</string>
     <string name="login_feature_sync">Sync</string>
+    <string name="pallasync_participating_devices">Participating devices</string>
+    <string name="pallasync_no_participating_devices">No participating devices</string>
     <string name="login_walkthrough_title_1">Find works faster</string>
     <string name="login_walkthrough_title_2">Keep bookmarks together</string>
     <string name="login_walkthrough_title_3">Pick up where you left off</string>

@@ -424,6 +424,8 @@
     <string name="login_feature_ranking">排名</string>
     <string name="login_feature_bookmarks">书签</string>
     <string name="login_feature_sync">同步</string>
+    <string name="pallasync_participating_devices">参与同步的设备</string>
+    <string name="pallasync_no_participating_devices">暂无参与同步的设备</string>
     <string name="login_walkthrough_title_1">查找速度更快</string>
     <string name="login_walkthrough_title_2">将书签放在一起</string>
     <string name="login_walkthrough_title_3">从上次停下的地方继续</string>

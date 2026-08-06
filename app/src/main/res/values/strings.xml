@@ -709,4 +709,24 @@
     <string name="tag_sheet_remove_favorite">お気に入りから削除</string>
     <string name="tag_sheet_mute">タグをミュート</string>
     <string name="tag_sheet_unmute">ミュートを解除</string>
+    
+    <!-- PallaSync settings -->
+    <string name="pallasync_settings_title">PallaSync 同期</string>
+    <string name="pallasync_enable">PallaSync を有効にする</string>
+    <string name="pallasync_enable_desc">他の端末と閲覧履歴やブックマークなどを同期します</string>
+    <string name="pallasync_server_url">サーバー URL</string>
+    <string name="pallasync_leave_chain">同期チェーンから離れる</string>
+    <string name="pallasync_leave_chain_desc">現在の同期チェーンからこのデバイスを外します</string>
+    <string name="pallasync_leave_chain_confirm">本当に現在の同期チェーンから離れますか？ローカルのチェーンデータは削除されます。</string>
+    <string name="pallasync_participating_devices">参加デバイス一覧</string>
+    <string name="pallasync_no_participating_devices">参加中のデバイスはありません</string>
+    <string name="msg_pallasync_chain_left">同期チェーンから離れました</string>
+    <string name="pallasync_delete_chain">チェーンの削除</string>
+    <string name="pallasync_delete_chain_desc">この端末の同期データをすべて削除します</string>
+    <string name="pallasync_delete_chain_confirm">チェーンを削除しますか？\n同期データと設定が初期化されます。</string>
+    <string name="msg_pallasync_chain_deleted">チェーンを削除しました。</string>
+    <string name="pallasync_server_url_dialog_title">サーバー URL の入力</string>
+    <string name="pallasync_server_url_dialog_desc">PallaSync サーバーのベースURLを入力してください</string>
+    <string name="pallasync_pair_device">端末の追加</string>
+    <string name="pallasync_pair_device_desc">QRコードをスキャンして他の端末と同期します</string>
 </resources>

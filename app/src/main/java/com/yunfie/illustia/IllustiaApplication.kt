@@ -19,6 +19,9 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import com.yunfie.illustia.settings.SettingsStore
 import com.yunfie.illustia.account.PalleriaAccount
+import com.yunfie.illustia.pallasync.PalleriaSyncManager
+import com.google.firebase.crashlytics.FirebaseCrashlytics
+import com.google.firebase.perf.FirebasePerformance
 import java.util.concurrent.TimeUnit
 
 class IllustiaApplication : Application() {
@@ -40,6 +43,15 @@ class IllustiaApplication : Application() {
             .build()
     }
 
+    /** The only stateful PallaSync coordinator in this application process. */
+    val pallaSyncCoordinator: PalleriaSyncManager by lazy {
+        PalleriaSyncManager(
+            client = sharedHttpClient,
+            context = this,
+            coordinatorScope = appScope,
+        )
+    }
+
     override fun onCreate() {
         super.onCreate()
         CrashHandler.instance.init(this)
@@ -48,9 +60,20 @@ class IllustiaApplication : Application() {
         val cacheDirectory = cacheDir.resolve("image_cache").toOkioPath()
         val configuredCacheMb = SettingsStore.readImageCacheSizeMbSync(appContext)
         appScope.launch {
-            PalleriaAccount.reconcile(appContext, SettingsStore(appContext).read().accounts)
+            val recoveredPallaSync = runCatching {
+                pallaSyncCoordinator.recoverInterruptedActivation()
+            }.getOrDefault(false)
+            val settings = SettingsStore(appContext).read()
+            PalleriaAccount.reconcile(appContext, settings.accounts)
+            FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(settings.sendTelemetry)
+            FirebasePerformance.getInstance().isPerformanceCollectionEnabled = settings.sendTelemetry
             RankingWidgetProvider.publishPreview(appContext)
             IllustWidgetProvider.publishPreview(appContext)
+            if (recoveredPallaSync || settings.pallaSyncEnabled) {
+                pallaSyncCoordinator.startBackgroundSync()
+            } else {
+                pallaSyncCoordinator.stopBackgroundSync()
+            }
         }
         SingletonImageLoader.setSafe {
             ImageLoader.Builder(appContext)

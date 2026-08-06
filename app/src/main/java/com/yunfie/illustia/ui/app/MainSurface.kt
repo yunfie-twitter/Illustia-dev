@@ -132,6 +132,7 @@ internal fun MainSurface(
                     state = pagerState,
                     beyondViewportPageCount = 1,
                     userScrollEnabled = appState.settings.swipeToSwitchWorks &&
+                        !isSearchResultMode &&
                         !(selectedTab == AppTab.ShortsFeed && appState.settings.disableHorizontalSwipeInShortsFeed),
                     modifier = Modifier
                         .weight(1f)

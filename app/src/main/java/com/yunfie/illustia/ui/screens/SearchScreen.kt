@@ -169,10 +169,18 @@ fun SearchScreen(
                         expanded = false,
                         suggestions = suggestions,
                         historyCount = state.settings.searchHistory.size,
-                        onExpandedChange = onExpandedChange,
+                        onExpandedChange = { expanded ->
+                            if (expanded && state.searchDraft.isBlank()) {
+                                onUpdateDraft(state.activeSearchWord)
+                            }
+                            onExpandedChange(expanded)
+                        },
                         onValueChange = onUpdateDraft,
                         onSearch = { onSubmit(state.searchDraft.ifBlank { state.activeSearchWord }); onExpandedChange(false) },
-                        onClear = { onUpdateDraft("") },
+                        onClear = {
+                            onUpdateDraft("")
+                            onExpandedChange(true)
+                        },
                         onSuggestionClick = { onSubmit(it); onExpandedChange(false) },
                         modifier = Modifier.weight(1f),
                     )
@@ -186,7 +194,10 @@ fun SearchScreen(
                     onExpandedChange = onExpandedChange,
                     onValueChange = onUpdateDraft,
                     onSearch = { onSubmit(state.searchDraft.ifBlank { state.activeSearchWord }); onExpandedChange(false) },
-                    onClear = { onUpdateDraft("") },
+                    onClear = {
+                        onUpdateDraft("")
+                        onExpandedChange(true)
+                    },
                     onSuggestionClick = { onSubmit(it); onExpandedChange(false) },
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
@@ -245,12 +256,12 @@ private fun SearchResultsArea(
         }
     }
 
-        Column(modifier = Modifier.fillMaxSize()) {
-            Row(
-                modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 12.dp, top = 2.dp, bottom = 2.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
+    Column(modifier = Modifier.fillMaxSize()) {
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(start = 16.dp, end = 12.dp, top = 2.dp, bottom = 2.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             TabRowWithContour(
                 tabs = tabs,
                 selectedTabIndex = selectedResultTab,
@@ -306,4 +317,3 @@ private fun SearchResultsArea(
         onDismiss = { showOptionsSheet = false },
     )
 }
-

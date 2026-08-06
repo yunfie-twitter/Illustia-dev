@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "906372320208",
+    "project_id": "ilustia",
+    "storage_bucket": "ilustia.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:906372320208:android:627a8c3841511fe71947d5",
+        "android_client_info": {
+          "package_name": "com.yunfie.illustia"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDf3Xequlw5muC1cI515mVdC4VXnVQ1ijE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

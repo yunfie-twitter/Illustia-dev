@@ -23,4 +23,6 @@ enum class IllustiaNavigationRequest {
     AppLockSetup,
     AppLockPinEntry,
     PrivacyModeSettings,
+    PallaSyncSettings,
+    PallaSyncDevices,
 }

@@ -53,7 +53,6 @@ fun SearchToolbar(
                 icon = MiuixIcons.Close,
                 onClick = {
                     onClear()
-                    onExpandedChange(false)
                 },
             )
         },

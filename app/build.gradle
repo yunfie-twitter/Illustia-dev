@@ -2,7 +2,13 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id "com.android.application"
+    id "org.jetbrains.kotlin.android"
+    id "org.jetbrains.kotlin.kapt"
     id "org.jetbrains.kotlin.plugin.compose"
+    id "org.jetbrains.kotlin.plugin.serialization"
+    id 'com.google.firebase.crashlytics'
+    id 'com.google.firebase.firebase-perf'
+    id 'com.google.gms.google-services'
 }
 
 ext.releaseKeystorePath = System.getenv("KEYSTORE_PATH")
@@ -14,8 +20,8 @@ android {
         applicationId "com.yunfie.illustia"
         minSdk 29
         targetSdk 36
-        versionCode 35
-        versionName "4.7.2"
+        versionCode 36
+        versionName "5.0.0"
     }
 
     signingConfigs {
@@ -42,6 +48,8 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
+
+
 
     buildFeatures {
         compose true
@@ -120,8 +128,16 @@ tasks.register("buildRustAndroid", Exec) {
     )
 }
 
+tasks.register("buildPallaSyncCoreAndroid", Exec) {
+    def pallaSyncCoreCrateDir = rootProject.file("rust/pallasync-core")
+    workingDir pallaSyncCoreCrateDir
+    environment "CARGO_TARGET_DIR", rustTargetDir
+    commandLine cargoExecutable, "ndk", "-t", "arm64-v8a", "-t", "armeabi-v7a", "-t", "x86_64",
+        "-o", uniffiJniDir.get().asFile, "build", "--release"
+}
+
 tasks.named("preBuild").configure {
-    dependsOn "generateUniFfiBindings", "buildRustAndroid"
+    dependsOn "generateUniFfiBindings", "buildRustAndroid", "buildPallaSyncCoreAndroid"
 }
 
 androidComponents {
@@ -134,9 +150,12 @@ androidComponents {
 }
 
 
+
+
 kotlin {
     compilerOptions {
         jvmTarget = JvmTarget.fromTarget("17")
+        moduleName = "illustia_app"
     }
 }
 
@@ -152,7 +171,11 @@ dependencies {
     implementation "androidx.security:security-crypto:1.1.0"
     implementation "androidx.datastore:datastore-preferences:1.2.1"
     implementation "androidx.room:room-runtime:2.8.4"
-    annotationProcessor "androidx.room:room-compiler:2.8.4"
+    implementation 'com.google.firebase:firebase-perf:22.0.6'
+    implementation 'com.google.firebase:firebase-crashlytics:20.1.0'
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
+    implementation("com.google.zxing:core:3.4.1")
+    kapt "androidx.room:room-compiler:2.8.4"
     implementation "androidx.compose.foundation:foundation"
     implementation "androidx.documentfile:documentfile:1.1.0"
     implementation "androidx.profileinstaller:profileinstaller:1.4.1"
@@ -177,8 +200,10 @@ dependencies {
     testImplementation "io.kotest:kotest-runner-junit5:6.2.2"
     testImplementation "io.kotest:kotest-assertions-core:6.2.2"
     testImplementation "io.kotest:kotest-property:6.2.2"
+    testImplementation "junit:junit:4.13.2"
     testImplementation "androidx.test:core:1.7.0"
     testImplementation "org.robolectric:robolectric:4.16.1"
+    testRuntimeOnly "org.junit.vintage:junit-vintage-engine:5.10.1"
 }
 
 

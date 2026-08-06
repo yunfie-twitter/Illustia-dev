@@ -1,33 +1,21 @@
 package com.yunfie.illustia.ui.screens
 
-import android.app.Activity
-import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.view.WindowCompat
 import com.yunfie.illustia.IllustiaUiState
 import com.yunfie.illustia.IllustiaViewModel
 import com.yunfie.illustia.R
-import com.yunfie.illustia.settings.isAppDarkTheme
 import com.yunfie.illustia.ui.components.miuixClickable
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
@@ -46,33 +34,11 @@ fun OnboardingScreen(
     onTokenLoginDismiss: () -> Unit = {},
 ) {
     var showDetails by remember { mutableStateOf(false) }
-    val backgroundColor = Color.Black
-    val contentColor = Color.White
-    val activity = LocalContext.current as? Activity
-    val restoreLightSystemBars = !isAppDarkTheme(
-        state.settings.themeMode,
-        isSystemInDarkTheme(),
-    )
 
-    DisposableEffect(activity, restoreLightSystemBars) {
-        val window = activity?.window
-        val controller = window?.let {
-            WindowCompat.getInsetsController(it, it.decorView)
-        }
-        controller?.isAppearanceLightStatusBars = false
-        controller?.isAppearanceLightNavigationBars = false
-
-        onDispose {
-            controller?.isAppearanceLightStatusBars = restoreLightSystemBars
-            controller?.isAppearanceLightNavigationBars = restoreLightSystemBars
-        }
-    }
-
-    Scaffold(containerColor = backgroundColor) { scaffoldPadding ->
+    Scaffold { scaffoldPadding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .background(backgroundColor)
                 .padding(
                     start = 22.dp,
                     end = 22.dp,
@@ -83,15 +49,12 @@ fun OnboardingScreen(
             verticalArrangement = Arrangement.Center,
         ) {
             BrandLockup(
-                contentColor = contentColor,
                 modifier = Modifier.fillMaxWidth(),
             )
 
             Spacer(Modifier.height(72.dp))
 
             LoginActions(
-                backgroundColor = backgroundColor,
-                contentColor = contentColor,
                 onWebLogin = viewModel::openWebLogin,
                 onShowDetails = { showDetails = true },
                 onRefreshTokenLogin = onRefreshTokenLogin,
@@ -137,26 +100,18 @@ fun OnboardingScreen(
 
 @Composable
 private fun BrandLockup(
-    contentColor: Color,
     modifier: Modifier = Modifier,
 ) {
     val appName = stringResource(R.string.app_name)
 
     Row(
         modifier = modifier,
-        horizontalArrangement = Arrangement.spacedBy(12.dp, Alignment.CenterHorizontally),
+        horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Image(
-            painter = painterResource(R.drawable.onboarding_app_icon),
-            contentDescription = null,
-            modifier = Modifier
-                .size(60.dp)
-                .clip(RoundedCornerShape(17.dp)),
-        )
         Text(
             text = appName,
-            color = contentColor,
+            color = MiuixTheme.colorScheme.onBackground,
             fontSize = 48.sp,
             lineHeight = 52.sp,
             fontWeight = FontWeight.Bold,
@@ -167,8 +122,6 @@ private fun BrandLockup(
 
 @Composable
 private fun LoginActions(
-    backgroundColor: Color,
-    contentColor: Color,
     onWebLogin: () -> Unit,
     onShowDetails: () -> Unit,
     onRefreshTokenLogin: () -> Unit,
@@ -182,15 +135,11 @@ private fun LoginActions(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(60.dp),
-            colors = ButtonDefaults.buttonColors(
-                color = contentColor,
-                contentColor = backgroundColor,
-            ),
+            colors = ButtonDefaults.buttonColorsPrimary(),
             insideMargin = PaddingValues(horizontal = 18.dp, vertical = 14.dp),
         ) {
             Text(
                 text = stringResource(R.string.login_web_button),
-                color = backgroundColor,
                 fontSize = 18.sp,
                 fontWeight = FontWeight.Bold,
             )
@@ -205,17 +154,17 @@ private fun LoginActions(
         ) {
             HorizontalDivider(
                 modifier = Modifier.weight(1f),
-                color = contentColor.copy(alpha = 0.72f),
+                color = MiuixTheme.colorScheme.dividerLine,
             )
             Text(
                 text = stringResource(R.string.login_or),
-                color = contentColor.copy(alpha = 0.82f),
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 fontSize = 17.sp,
                 fontWeight = FontWeight.SemiBold,
             )
             HorizontalDivider(
                 modifier = Modifier.weight(1f),
-                color = contentColor.copy(alpha = 0.72f),
+                color = MiuixTheme.colorScheme.dividerLine,
             )
         }
 
@@ -227,13 +176,11 @@ private fun LoginActions(
         ) {
             BottomAction(
                 label = stringResource(R.string.login_details),
-                contentColor = contentColor,
                 onClick = onShowDetails,
                 modifier = Modifier.weight(1f),
             )
             BottomAction(
                 label = stringResource(R.string.login_token_short),
-                contentColor = contentColor,
                 onClick = onRefreshTokenLogin,
                 modifier = Modifier.weight(1f),
             )
@@ -244,7 +191,6 @@ private fun LoginActions(
 @Composable
 private fun BottomAction(
     label: String,
-    contentColor: Color,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -257,7 +203,7 @@ private fun BottomAction(
     ) {
         Text(
             text = label,
-            color = contentColor,
+            color = MiuixTheme.colorScheme.onBackground,
             fontSize = 17.sp,
             fontWeight = FontWeight.Bold,
             textAlign = TextAlign.Center,

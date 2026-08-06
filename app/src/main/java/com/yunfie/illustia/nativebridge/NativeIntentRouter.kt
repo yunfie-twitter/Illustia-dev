@@ -2,6 +2,7 @@ package com.yunfie.illustia.nativebridge
 
 import android.content.Intent
 import android.net.Uri
+import java.net.URI
 
 sealed interface NativeIntentEvent {
     data class Artwork(val id: Long) : NativeIntentEvent
@@ -87,16 +88,20 @@ object NativeIntentRouter {
     }
 
     private fun parseUri(value: String?): NativeIntentEvent? {
-        val uri = runCatching { Uri.parse(value) }.getOrNull() ?: return null
-        if (!uri.isTrustedPixivRoute()) return null
-        val segments = uri.pathSegments
+        val uri = runCatching { URI(value) }.getOrNull() ?: return null
+        val normalizedScheme = uri.scheme?.lowercase() ?: return null
+        val normalizedHost = uri.host?.lowercase() ?: return null
+        if (!isTrustedPixivRoute(normalizedScheme, normalizedHost)) return null
+        val segments = uri.rawPath.orEmpty()
+            .split('/')
+            .filter(String::isNotEmpty)
         val artworkIndex = segments.indexOfFirst { it == "artworks" || it == "illusts" }
         if (artworkIndex >= 0) {
             segments.getOrNull(artworkIndex + 1)?.toLongOrNull()?.let {
                 return NativeIntentEvent.Artwork(it)
             }
         }
-        if (uri.host == "illusts") {
+        if (normalizedHost == "illusts") {
             segments.firstOrNull()?.toLongOrNull()?.let { return NativeIntentEvent.Artwork(it) }
         }
         val userIndex = segments.indexOfFirst { it == "users" }
@@ -105,15 +110,13 @@ object NativeIntentRouter {
                 return NativeIntentEvent.User(it)
             }
         }
-        if (uri.host == "users") {
+        if (normalizedHost == "users") {
             segments.firstOrNull()?.toLongOrNull()?.let { return NativeIntentEvent.User(it) }
         }
         return null
     }
 
-    private fun Uri.isTrustedPixivRoute(): Boolean {
-        val normalizedScheme = scheme?.lowercase() ?: return false
-        val normalizedHost = host?.lowercase() ?: return false
+    private fun isTrustedPixivRoute(normalizedScheme: String, normalizedHost: String): Boolean {
         return when (normalizedScheme) {
             "http", "https" -> normalizedHost in WEB_PIXIV_HOSTS
             in CUSTOM_PIXIV_SCHEMES -> normalizedHost in CUSTOM_PIXIV_HOSTS

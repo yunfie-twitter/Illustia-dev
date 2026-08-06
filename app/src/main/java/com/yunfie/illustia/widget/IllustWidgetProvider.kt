@@ -22,7 +22,9 @@ import com.yunfie.illustia.MainActivity
 import com.yunfie.illustia.R
 import com.yunfie.illustia.settings.SettingsStore
 import java.io.File
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 class IllustWidgetProvider : AppWidgetProvider() {
@@ -33,7 +35,14 @@ class IllustWidgetProvider : AppWidgetProvider() {
 
     override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
         super.onUpdate(context, appWidgetManager, appWidgetIds)
-        appWidgetIds.forEach { updateWidget(context, appWidgetManager, it) }
+        val pendingResult = goAsync()
+        CoroutineScope(Dispatchers.IO).launch {
+            try {
+                appWidgetIds.forEach { updateWidget(context, appWidgetManager, it) }
+            } finally {
+                pendingResult.finish()
+            }
+        }
     }
 
     override fun onDeleted(context: Context, appWidgetIds: IntArray) {

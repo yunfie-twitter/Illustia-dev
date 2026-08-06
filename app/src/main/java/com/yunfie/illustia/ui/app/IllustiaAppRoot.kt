@@ -176,6 +176,9 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
     }
 
     LaunchedEffect(selectedTab) {
+        if (previousTab == AppTab.Search && selectedTab != AppTab.Search) {
+            viewModel.clearSearchResults()
+        }
         if (selectedTab == AppTab.ShortsFeed && previousTab != AppTab.ShortsFeed) {
             viewModel.refreshShortsFeed()
         }
@@ -285,6 +288,8 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
                     IllustiaNavigationRequest.AppLockSetup -> AppRoute.AppLockSetup
                     IllustiaNavigationRequest.AppLockPinEntry -> AppRoute.AppLockPinEntry
                     IllustiaNavigationRequest.PrivacyModeSettings -> AppRoute.PrivacyModeSettings
+                    IllustiaNavigationRequest.PallaSyncSettings -> AppRoute.PallaSyncSettings
+                    IllustiaNavigationRequest.PallaSyncDevices -> AppRoute.PallaSyncDevices
                 },
             )
         }
@@ -336,9 +341,10 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
         }
     }
 
-    LaunchedEffect(state.showUserPage, state.selectedUser?.id) {
-        if (state.showUserPage) {
-            val route = AppRoute.UserProfile(state.selectedUser?.id ?: return@LaunchedEffect)
+    val activeUserId = state.selectedUser?.id
+    LaunchedEffect(state.showUserPage, activeUserId) {
+        if (state.showUserPage && activeUserId != null) {
+            val route = AppRoute.UserProfile(activeUserId)
             if (backStack.lastOrNull() != route) {
                 backStack.add(route)
             }

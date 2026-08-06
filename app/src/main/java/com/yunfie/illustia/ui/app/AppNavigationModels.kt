@@ -82,7 +82,10 @@ internal sealed interface AppRoute : NavKey {
     data object AppLockPinEntry : AppRoute
     data object PrivacyModeSettings : AppRoute
     data object IllustSeries : AppRoute
-    data object Comments : AppRoute
+    data object PallaSyncSettings : AppRoute
+    data object PallaSyncDevices : AppRoute
+    data object DevicePairing : AppRoute
+    data class DeviceViewHistory(val deviceId: String, val deviceName: String) : AppRoute
 }
 
 internal data class DetailEntrySnapshot(

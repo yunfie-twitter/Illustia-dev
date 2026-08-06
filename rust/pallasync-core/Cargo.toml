@@ -1,0 +1,27 @@
+[package]
+name = "pallasync-core"
+version = "0.1.0"
+edition = "2024"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+ed25519-dalek = { version = "2.1", features = ["rand_core"] }
+x25519-dalek = { version = "2.0", features = ["static_secrets"] }
+hpke = "0.12"
+chacha20poly1305 = "0.10"
+sha2 = "0.10"
+hkdf = "0.12"
+uuid = { version = "1.8", features = ["v7", "serde"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+jni = "0.21"
+base64 = "0.22"
+rand = "0.8"
+rand_core = "0.6"
+serde_jcs = "0.2.0"
+hmac = "0.12"
+hex = "0.4.3"
+pbkdf2 = "0.12"
+bip39 = "2.0.0"

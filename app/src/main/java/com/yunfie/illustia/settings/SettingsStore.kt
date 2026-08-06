@@ -6,6 +6,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
@@ -17,6 +18,8 @@ import com.yunfie.illustia.settings.db.SavedIllustWithPages
 import com.yunfie.illustia.settings.store.DATASTORE_NAME
 import com.yunfie.illustia.settings.store.LEGACY_PREFS_NAME
 import com.yunfie.illustia.settings.store.PRIVACY_MODE_ENABLED
+import com.yunfie.illustia.settings.store.PALLA_SYNC_ENABLED
+import com.yunfie.illustia.settings.store.PALLA_SYNC_SERVER_URL
 import com.yunfie.illustia.settings.store.KEY_APP_LANGUAGE
 import com.yunfie.illustia.settings.store.clearPinHash as clearPinHashImpl
 import com.yunfie.illustia.settings.store.clearSensitiveSettings as clearSensitiveSettingsImpl
@@ -32,12 +35,32 @@ import com.yunfie.illustia.settings.store.saveUnlockCodeHash as saveUnlockCodeHa
 import com.yunfie.illustia.settings.store.verifyPinHash as verifyPinHashImpl
 import com.yunfie.illustia.settings.store.verifyUnlockCodeHash as verifyUnlockCodeHashImpl
 import com.yunfie.illustia.settings.store.writeAppSettings as writeAppSettingsImpl
+import com.yunfie.illustia.settings.store.writeSyncedCollections as writeSyncedCollectionsImpl
+import com.yunfie.illustia.pallasync.PalleriaSyncManager
+import com.yunfie.illustia.pallasync.buildSettingsSyncEvents
 import java.io.File
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.util.concurrent.atomic.AtomicLong
+
+internal data class SettingsSyncUpdate(
+    val revision: Long,
+    val collections: SyncedCollectionsSnapshot,
+)
+
+internal data class PallaSyncEnabledUpdate(
+    val revision: Long,
+    val enabled: Boolean,
+)
 
 class SettingsStore(context: Context) {
     private val appContext = context.applicationContext
@@ -47,6 +70,7 @@ class SettingsStore(context: Context) {
     private val dataStore = Companion.dataStoreFor(appContext)
     private val database = IllustiaDatabase.getInstance(appContext)
     private val dao = database.settingsDao()
+    private val syncManager by lazy { PalleriaSyncManager(context = appContext) }
 
     init {
         migrateIfNeeded()
@@ -56,14 +80,103 @@ class SettingsStore(context: Context) {
         return readAppSettingsImpl(dataStore, sensitivePreferences, dao)
     }
 
-    suspend fun write(settings: AppSettings) {
-        writeAppSettingsImpl(dataStore, sensitivePreferences, database, dao, settings)
-        // These non-sensitive values are needed before the asynchronous authoritative
-        // settings load completes. Keep a lightweight startup mirror off the DataStore path.
-        legacyPreferences.edit()
-            .putInt(KEY_IMAGE_CACHE_SIZE_MB, settings.imageCacheSizeMb)
-            .putString(KEY_APP_LANGUAGE, settings.appLanguage)
-            .apply()
+    suspend fun write(settings: AppSettings, baseSettings: AppSettings? = null): AppSettings {
+        val base = baseSettings ?: persistenceMutex.withLock { read() }
+        val events = if (base.pallaSyncEnabled && settings.pallaSyncEnabled) {
+            buildSettingsSyncEvents(base, settings)
+        } else {
+            emptyList()
+        }
+
+        suspend fun persistRebased(): AppSettings = persistenceMutex.withLock {
+            val persisted = read()
+            val rebasedCollections = rebaseSyncedCollections(
+                base = base.syncedCollections(),
+                intended = settings.syncedCollections(),
+                persisted = persisted.syncedCollections(),
+            )
+            // A queued unrelated settings write must not re-enable a chain that
+            // the coordinator disabled after an authoritative 410 response.
+            val enabled = if (base.pallaSyncEnabled == settings.pallaSyncEnabled) {
+                persisted.pallaSyncEnabled
+            } else {
+                settings.pallaSyncEnabled
+            }
+            val serverUrl = if (base.pallaSyncServerUrl == settings.pallaSyncServerUrl) {
+                persisted.pallaSyncServerUrl
+            } else {
+                settings.pallaSyncServerUrl
+            }
+            val rebased = settings
+                .copy(
+                    pallaSyncEnabled = enabled,
+                    pallaSyncServerUrl = serverUrl,
+                )
+                .withSyncedCollections(rebasedCollections)
+            writeAppSettingsImpl(dataStore, sensitivePreferences, database, dao, rebased)
+            // These non-sensitive values are needed before the asynchronous authoritative
+            // settings load completes. Keep a lightweight startup mirror off the DataStore path.
+            legacyPreferences.edit()
+                .putInt(KEY_IMAGE_CACHE_SIZE_MB, rebased.imageCacheSizeMb)
+                .putString(KEY_APP_LANGUAGE, rebased.appLanguage)
+                .apply()
+
+            rebased
+        }
+
+        if (events.isEmpty()) return persistRebased()
+        return try {
+            // The coordinator owns operationMutex first, then this callback takes
+            // persistenceMutex. Incoming page apply uses the same lock order.
+            syncManager.enqueueDataEventsThen(events) { persistRebased() }
+        } catch (error: CancellationException) {
+            throw error
+        } catch (error: Exception) {
+            PalleriaSyncManager.log("Failed to durably enqueue local settings changes: ${error.message}")
+            throw error
+        }
+    }
+
+    suspend fun writeFromSync(settings: AppSettings) {
+        writeSyncedCollections(settings.syncedCollections())
+    }
+
+    internal suspend fun writeSyncedCollections(collections: SyncedCollectionsSnapshot) {
+        updateSyncedCollections { collections }
+    }
+
+    internal suspend fun readSyncedCollections(): SyncedCollectionsSnapshot {
+        return persistenceMutex.withLock { read().syncedCollections() }
+    }
+
+    internal suspend fun updateSyncedCollections(
+        transform: (SyncedCollectionsSnapshot) -> SyncedCollectionsSnapshot,
+    ): SyncedCollectionsSnapshot {
+        persistenceMutex.withLock {
+            val current = read().syncedCollections()
+            val updated = transform(current)
+            if (updated != current) {
+                writeSyncedCollectionsImpl(dataStore, database, dao, updated)
+                publishSyncUpdate(updated)
+            }
+            return updated
+        }
+    }
+
+    internal suspend fun setPallaSyncEnabledFromCoordinator(enabled: Boolean) {
+        persistenceMutex.withLock {
+            dataStore.edit { preferences -> preferences[PALLA_SYNC_ENABLED] = enabled }
+            _pallaSyncEnabledUpdates.value = PallaSyncEnabledUpdate(
+                revision = pallaSyncStateRevision.incrementAndGet(),
+                enabled = enabled,
+            )
+        }
+    }
+
+    internal suspend fun setPallaSyncServerUrlFromCoordinator(serverUrl: String) {
+        persistenceMutex.withLock {
+            dataStore.edit { preferences -> preferences[PALLA_SYNC_SERVER_URL] = serverUrl }
+        }
     }
 
     suspend fun clearSensitive() {
@@ -155,6 +268,22 @@ class SettingsStore(context: Context) {
     }
 
     companion object {
+        private val syncRevision = AtomicLong(0L)
+        private val _syncUpdates = MutableStateFlow<SettingsSyncUpdate?>(null)
+        internal val syncUpdates: StateFlow<SettingsSyncUpdate?> = _syncUpdates.asStateFlow()
+        private val pallaSyncStateRevision = AtomicLong(0L)
+        private val persistenceMutex = Mutex()
+        private val _pallaSyncEnabledUpdates = MutableStateFlow<PallaSyncEnabledUpdate?>(null)
+        internal val pallaSyncEnabledUpdates: StateFlow<PallaSyncEnabledUpdate?> =
+            _pallaSyncEnabledUpdates.asStateFlow()
+
+        private fun publishSyncUpdate(collections: SyncedCollectionsSnapshot) {
+            _syncUpdates.value = SettingsSyncUpdate(
+                revision = syncRevision.incrementAndGet(),
+                collections = collections,
+            )
+        }
+
         @Volatile
         private var sharedDataStore: DataStore<Preferences>? = null
         @Volatile

@@ -32,27 +32,80 @@ import com.yunfie.illustia.models.pixiv.UserWorkspace
 import com.yunfie.illustia.models.pixiv.UserFollowDetail
 import com.yunfie.illustia.settings.AppSettings
 import com.yunfie.illustia.settings.SettingsStore
+import com.yunfie.illustia.settings.SyncedCollectionsSnapshot
+import com.yunfie.illustia.settings.syncedCollections
+import com.yunfie.illustia.settings.withSyncedCollections
+import com.yunfie.illustia.settings.rebaseSyncedCollections
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 class IllustiaRepository(
     private val settingsStore: SettingsStore,
 ) {
     private var session: PixivSession? = null
     private var cachedSettings: AppSettings? = null
+    private val settingsCacheMutex = Mutex()
     @Volatile
     private var apiClientMode: NetworkMode = NetworkMode.Standard
     @Volatile
     private var apiClient: PixivApiClient = PixivApiClient()
 
     suspend fun readSettings(): AppSettings {
-        val settings = cachedSettings ?: settingsStore.read().also { cachedSettings = it }
+        val settings = settingsCacheMutex.withLock {
+            cachedSettings ?: settingsStore.read().also { cachedSettings = it }
+        }
         ensureApiClient(NetworkMode.fromCode(settings.pixivNetworkMode))
         return settings
     }
 
-    suspend fun saveSettings(settings: AppSettings) {
-        cachedSettings = settings
-        ensureApiClient(NetworkMode.fromCode(settings.pixivNetworkMode))
-        settingsStore.write(settings)
+    suspend fun saveSettings(settings: AppSettings, baseSettings: AppSettings? = null) {
+        val written = settingsStore.write(settings, baseSettings)
+        val cached = settingsCacheMutex.withLock {
+            val current = cachedSettings ?: settingsStore.read()
+            val base = baseSettings ?: current
+            val collections = rebaseSyncedCollections(
+                base.syncedCollections(),
+                settings.syncedCollections(),
+                current.syncedCollections(),
+            )
+            val enabled = if (base.pallaSyncEnabled == settings.pallaSyncEnabled) {
+                current.pallaSyncEnabled
+            } else {
+                settings.pallaSyncEnabled
+            }
+            val serverUrl = if (base.pallaSyncServerUrl == settings.pallaSyncServerUrl) {
+                current.pallaSyncServerUrl
+            } else {
+                settings.pallaSyncServerUrl
+            }
+            written.copy(
+                pallaSyncEnabled = enabled,
+                pallaSyncServerUrl = serverUrl,
+            )
+                .withSyncedCollections(collections)
+                .also { cachedSettings = it }
+        }
+        ensureApiClient(NetworkMode.fromCode(cached.pixivNetworkMode))
+    }
+
+    suspend fun saveSettingsFromSync(settings: AppSettings) {
+        val synced = settings.syncedCollections()
+        settingsStore.writeSyncedCollections(synced)
+        updateCachedSyncedCollections(synced)
+    }
+
+    internal suspend fun updateCachedSyncedCollections(synced: SyncedCollectionsSnapshot) {
+        settingsCacheMutex.withLock {
+            val current = cachedSettings ?: settingsStore.read()
+            cachedSettings = current.withSyncedCollections(synced)
+        }
+    }
+
+    internal suspend fun updateCachedPallaSyncEnabled(enabled: Boolean) {
+        settingsCacheMutex.withLock {
+            val current = cachedSettings ?: settingsStore.read()
+            cachedSettings = current.copy(pallaSyncEnabled = enabled)
+        }
     }
 
     suspend fun login(refreshToken: String): PixivSession {
@@ -76,14 +129,16 @@ class IllustiaRepository(
             refreshToken = nextSession.refreshToken,
             bookmarkUserId = nextSession.userId ?: current.bookmarkUserId,
         )
-        cachedSettings = nextSettings
-        settingsStore.write(nextSettings)
+        settingsCacheMutex.withLock {
+            cachedSettings = settingsStore.write(nextSettings, current)
+        }
     }
 
     suspend fun logout() {
         session = null
         settingsStore.clearSensitive()
-        cachedSettings = settingsStore.read().also { ensureApiClient(NetworkMode.fromCode(it.pixivNetworkMode)) }
+        cachedSettings = settingsCacheMutex.withLock { settingsStore.read().also { cachedSettings = it } }
+            .also { ensureApiClient(NetworkMode.fromCode(it.pixivNetworkMode)) }
     }
 
     suspend fun loadRanking(mode: String): PageResult<Illust> {

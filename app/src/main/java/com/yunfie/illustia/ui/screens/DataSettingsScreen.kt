@@ -140,6 +140,28 @@ fun DataSettingsScreen(
                     SettingLinkRow(stringResource(R.string.data_delete_cache)) { showCacheDeleteConfirm = true }
                 }
             }}
+
+            item { Section("プライバシーとテレメトリ") {
+                ElevatedPanel(contentPadding = PaddingValues(0.dp)) {
+                    SettingSwitchRow(
+                        title = "テレメトリの送信",
+                        checked = state.settings.sendTelemetry,
+                        onCheckedChange = viewModel::updateSendTelemetry,
+                        summary = "クラッシュレポートと利用状況データを送信して品質向上に協力します"
+                    )
+                }
+            }}
+
+            item { Section("PallaSync") {
+                ElevatedPanel(contentPadding = PaddingValues(0.dp)) {
+                    SettingLinkRow(
+                        title = stringResource(R.string.pallasync_settings_title),
+                        summary = stringResource(R.string.pallasync_enable_desc)
+                    ) {
+                        viewModel.openPallaSyncSettings()
+                    }
+                }
+            }}
         }
     }
 }

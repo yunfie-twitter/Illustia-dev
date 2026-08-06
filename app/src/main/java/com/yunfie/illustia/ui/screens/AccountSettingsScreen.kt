@@ -37,6 +37,7 @@ fun AccountSettingsScreen(
     state: IllustiaUiState,
     viewModel: IllustiaViewModel,
     onBack: () -> Unit,
+    onOpenPallaSync: () -> Unit,
 ) {
     PredictiveBackGestureHandler(onBack = onBack)
     val scrollBehavior = MiuixScrollBehavior()
@@ -96,6 +97,12 @@ fun AccountSettingsScreen(
                     SettingLinkRow(stringResource(R.string.account_switch_add)) { viewModel.openAccountLoginMethod() }
                     DividerLine()
                     SettingLinkRow(stringResource(R.string.account_logout)) { showLogoutConfirm = true }
+                }
+            }}
+            
+            item { Section("PallaSync (E2EE Sync)") {
+                ElevatedPanel {
+                    SettingLinkRow("PallaSync Settings") { onOpenPallaSync() }
                 }
             }}
         }

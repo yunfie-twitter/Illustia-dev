@@ -35,7 +35,9 @@ import com.yunfie.illustia.models.pixiv.UgoiraPlayback
 import com.yunfie.illustia.models.pixiv.UgoiraMetadataResponse
 import com.yunfie.illustia.settings.AppSettings
 import com.yunfie.illustia.settings.SettingsStore
+import com.yunfie.illustia.settings.SyncedCollectionsSnapshot
 import com.yunfie.illustia.settings.isDynamicColorAvailable
+import com.yunfie.illustia.settings.withSyncedCollections
 import com.yunfie.illustia.settings.db.SavedIllustEntity
 import com.yunfie.illustia.settings.db.SavedIllustPageEntity
 import java.util.concurrent.TimeUnit
@@ -58,6 +60,7 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.filterNotNull
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -77,7 +80,9 @@ import java.io.FileOutputStream
 
 private data class SettingsPersistenceRequest(
     val settings: AppSettings,
+    val baseSettings: AppSettings? = null,
     val notifyLiveWallpaper: Boolean,
+    val fromSync: Boolean = false,
 )
 
 private fun AppSettings.hasLiveWallpaperChangesComparedTo(other: AppSettings): Boolean {
@@ -90,6 +95,12 @@ private fun AppSettings.hasLiveWallpaperChangesComparedTo(other: AppSettings): B
         liveWallpaperBackground != other.liveWallpaperBackground ||
         liveWallpaperCrossfade != other.liveWallpaperCrossfade ||
         liveWallpaperExcludeSensitive != other.liveWallpaperExcludeSensitive
+}
+
+internal fun AppSettings.replaceSyncedCollections(
+    synced: SyncedCollectionsSnapshot,
+): AppSettings {
+    return withSyncedCollections(synced)
 }
 
 open class IllustiaViewModelCore(
@@ -167,6 +178,9 @@ open class IllustiaViewModelCore(
             persistSettingsUpdates()
         }
         viewModelScope.launch(Dispatchers.IO) {
+            val initialSyncRevision = SettingsStore.syncUpdates.value?.revision ?: 0L
+            val initialPallaSyncStateRevision =
+                SettingsStore.pallaSyncEnabledUpdates.value?.revision ?: 0L
             val settings = repository.readSettings()
             val normalizedSettings = if (settings.useDynamicColor && !isDynamicColorAvailable()) {
                 settings.copy(useDynamicColor = false)
@@ -174,7 +188,7 @@ open class IllustiaViewModelCore(
                 settings
             }
             if (normalizedSettings != settings) {
-                repository.saveSettings(normalizedSettings)
+                repository.saveSettings(normalizedSettings, settings)
             }
             val shouldLock = normalizedSettings.appLockEnabled && settingsStore.hasPinSet()
             _uiState.update {
@@ -193,6 +207,24 @@ open class IllustiaViewModelCore(
                 }
                 refreshRecommendedTags()
             }
+
+            launch {
+                SettingsStore.pallaSyncEnabledUpdates
+                    .filterNotNull()
+                    .collect { update ->
+                        if (update.revision > initialPallaSyncStateRevision) {
+                            applyPallaSyncEnabledUpdate(update.enabled)
+                        }
+                    }
+            }
+
+            SettingsStore.syncUpdates
+                .filterNotNull()
+                .collect { update ->
+                    if (update.revision > initialSyncRevision) {
+                        applySyncedSettings(update.collections)
+                    }
+                }
         }
     }
 
@@ -298,6 +330,20 @@ open class IllustiaViewModelCore(
 
     fun updateHideNotifications(value: Boolean) {
         updateSettings { it.copy(hideNotifications = value) }
+    }
+
+    fun updatePallaSyncEnabled(value: Boolean) {
+        updateSettings { it.copy(pallaSyncEnabled = value) }
+    }
+
+    fun updatePallaSyncServerUrl(value: String) {
+        updateSettings { it.copy(pallaSyncServerUrl = value) }
+    }
+
+    fun updateSendTelemetry(value: Boolean) {
+        updateSettings { it.copy(sendTelemetry = value) }
+        com.google.firebase.crashlytics.FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(value)
+        com.google.firebase.perf.FirebasePerformance.getInstance().isPerformanceCollectionEnabled = value
     }
 
     fun updateDummyAppName(value: String) {
@@ -1409,7 +1455,7 @@ open class IllustiaViewModelCore(
             runCatching {
                 val current = _uiState.value.settings
                 val imported = managedDataRepository.import(uri, current)
-                repository.saveSettings(imported)
+                repository.saveSettings(imported, current)
                 imported
             }.onSuccess { imported ->
                 _uiState.update { it.withSettings(imported).copy(message = str(R.string.msg_data_imported)) }
@@ -1479,6 +1525,24 @@ open class IllustiaViewModelCore(
         runLoading {
             val illust = repository.illustDetail(illustId)
             openIllust(illust)
+        }
+    }
+
+    fun lazyLoadPartialIllust(illustId: Long) {
+        val currentSettings = _uiState.value.settings
+        val target = currentSettings.viewHistory.find { it.id == illustId } ?: return
+        if (target.artistId != 0L) return
+
+        viewModelScope.launch {
+            try {
+                val fullIllust = repository.illustDetail(illustId)
+                val updatedHistory = _uiState.value.settings.viewHistory.map {
+                    if (it.id == illustId) fullIllust else it
+                }
+                updateSettings { it.copy(viewHistory = updatedHistory) }
+            } catch (e: Exception) {
+                // Ignore error on lazy load
+            }
         }
     }
 
@@ -2151,6 +2215,14 @@ open class IllustiaViewModelCore(
         _navigationRequests.tryEmit(IllustiaNavigationRequest.DataSettings)
     }
 
+    fun openPallaSyncSettings() {
+        _navigationRequests.tryEmit(IllustiaNavigationRequest.PallaSyncSettings)
+    }
+
+    fun openPallaSyncDevices() {
+        _navigationRequests.tryEmit(IllustiaNavigationRequest.PallaSyncDevices)
+    }
+
     fun openViewHistory() {
         _navigationRequests.tryEmit(IllustiaNavigationRequest.ViewHistory)
     }
@@ -2282,10 +2354,11 @@ open class IllustiaViewModelCore(
     }
 
     fun switchAccount(index: Int) {
-        val accounts = _uiState.value.settings.accounts
+        val current = _uiState.value.settings
+        val accounts = current.accounts
         if (index < 0 || index >= accounts.size) return
         val account = accounts[index]
-        val nextSettings = _uiState.value.settings.copy(
+        val nextSettings = current.copy(
             refreshToken = account.refreshToken,
             activeAccountIndex = index,
             bookmarkUserId = account.userId,
@@ -2299,7 +2372,7 @@ open class IllustiaViewModelCore(
             )
         }
         viewModelScope.launch(Dispatchers.IO) {
-            repository.saveSettings(nextSettings)
+            repository.saveSettings(nextSettings, current)
             login()
         }
     }
@@ -2340,7 +2413,7 @@ open class IllustiaViewModelCore(
             }
         } else {
             viewModelScope.launch(Dispatchers.IO) {
-                repository.saveSettings(nextSettings)
+                repository.saveSettings(nextSettings, current)
                 if (removedActiveAccount) {
                     login()
                 }
@@ -2807,6 +2880,7 @@ open class IllustiaViewModelCore(
                     settingsPersistenceRequests.trySend(
                         SettingsPersistenceRequest(
                             settings = next,
+                            baseSettings = previous,
                             notifyLiveWallpaper = previous.hasLiveWallpaperChangesComparedTo(next),
                         ),
                     ).isSuccess,
@@ -2817,10 +2891,45 @@ open class IllustiaViewModelCore(
         }
     }
 
+    private suspend fun applySyncedSettings(synced: SyncedCollectionsSnapshot) {
+        synchronized(settingsUpdateLock) {
+            lateinit var previous: AppSettings
+            lateinit var replaced: AppSettings
+            _uiState.update { state ->
+                previous = state.settings
+                replaced = previous.replaceSyncedCollections(synced)
+                if (replaced == previous) state else state.withSettings(replaced)
+            }
+        }
+        // The event applier has already persisted these collections. Only update
+        // the repository's in-memory cache here to avoid a feedback sync write.
+        repository.updateCachedSyncedCollections(synced)
+    }
+
+    private suspend fun applyPallaSyncEnabledUpdate(enabled: Boolean) {
+        synchronized(settingsUpdateLock) {
+            _uiState.update { state ->
+                val settings = state.settings
+                if (settings.pallaSyncEnabled == enabled) {
+                    state
+                } else {
+                    state.withSettings(settings.copy(pallaSyncEnabled = enabled))
+                }
+            }
+        }
+        // The coordinator already persisted this flag. Keep only the in-memory
+        // repository mirror in sync and do not enqueue another settings write.
+        repository.updateCachedPallaSyncEnabled(enabled)
+    }
+
     private suspend fun persistSettingsUpdates() {
         for (request in settingsPersistenceRequests) {
             try {
-                repository.saveSettings(request.settings)
+                if (request.fromSync) {
+                    repository.saveSettingsFromSync(request.settings)
+                } else {
+                    repository.saveSettings(request.settings, request.baseSettings)
+                }
                 PalleriaAccount.reconcile(getApplication(), request.settings.accounts)
                 if (request.notifyLiveWallpaper) {
                     val application = getApplication<Application>()

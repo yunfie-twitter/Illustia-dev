@@ -45,6 +45,7 @@ import top.yukonga.miuix.kmp.icon.extended.FavoritesFill
 import top.yukonga.miuix.kmp.icon.extended.Filter
 import top.yukonga.miuix.kmp.icon.extended.More
 import top.yukonga.miuix.kmp.icon.extended.Messages
+import top.yukonga.miuix.kmp.icon.extended.Refresh
 import top.yukonga.miuix.kmp.icon.extended.Settings
 import top.yukonga.miuix.kmp.icon.extended.Timer
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -107,40 +108,62 @@ private fun rememberQuickActions(
     return remember(
         state.activeDownloads,
         state.settings.favoriteTags.size,
+        state.settings.pallaSyncEnabled,
     ) {
-        listOf(
-            MoreAction(
-                title = context.getString(R.string.more_settings),
-                icon = MiuixIcons.Settings,
-                onClick = viewModel::openSettings,
-            ),
-            MoreAction(
-                title = context.getString(R.string.more_view_history),
-                icon = MiuixIcons.Timer,
-                onClick = viewModel::openViewHistory,
-            ),
-            MoreAction(
-                title = context.getString(R.string.more_notifications),
-                icon = MiuixIcons.Messages,
-                onClick = viewModel::openNotifications,
-            ),
-            MoreAction(
-                title = context.getString(R.string.more_favorite_tags),
-                icon = MiuixIcons.FavoritesFill,
-                badge = state.settings.favoriteTags.size.badgeText(),
-                onClick = viewModel::openFavoriteTags,
-            ),
-            MoreAction(
-                title = context.getString(R.string.more_mute_settings),
-                icon = MiuixIcons.Filter,
-                onClick = viewModel::openMuteSettings,
-            ),
-            MoreAction(
-                title = context.getString(R.string.more_download_list),
-                icon = MiuixIcons.Download,
-                onClick = viewModel::openDownloadQueue,
-            ),
-        )
+        buildList {
+            add(
+                MoreAction(
+                    title = context.getString(R.string.more_settings),
+                    icon = MiuixIcons.Settings,
+                    onClick = viewModel::openSettings,
+                ),
+            )
+            add(
+                MoreAction(
+                    title = context.getString(R.string.more_view_history),
+                    icon = MiuixIcons.Timer,
+                    onClick = viewModel::openViewHistory,
+                ),
+            )
+            add(
+                MoreAction(
+                    title = context.getString(R.string.more_notifications),
+                    icon = MiuixIcons.Messages,
+                    onClick = viewModel::openNotifications,
+                ),
+            )
+            add(
+                MoreAction(
+                    title = context.getString(R.string.more_favorite_tags),
+                    icon = MiuixIcons.FavoritesFill,
+                    badge = state.settings.favoriteTags.size.badgeText(),
+                    onClick = viewModel::openFavoriteTags,
+                ),
+            )
+            if (state.settings.pallaSyncEnabled) {
+                add(
+                    MoreAction(
+                        title = context.getString(R.string.login_feature_sync),
+                        icon = MiuixIcons.Refresh,
+                        onClick = viewModel::openPallaSyncDevices,
+                    ),
+                )
+            }
+            add(
+                MoreAction(
+                    title = context.getString(R.string.more_mute_settings),
+                    icon = MiuixIcons.Filter,
+                    onClick = viewModel::openMuteSettings,
+                ),
+            )
+            add(
+                MoreAction(
+                    title = context.getString(R.string.more_download_list),
+                    icon = MiuixIcons.Download,
+                    onClick = viewModel::openDownloadQueue,
+                ),
+            )
+        }
     }
 }
 

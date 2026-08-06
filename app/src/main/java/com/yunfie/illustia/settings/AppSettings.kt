@@ -102,6 +102,9 @@ data class AppSettings(
     val hideNotifications: Boolean = false,
     val dummyAppName: String = "電卓",
     val dummyIconVariant: String = "ic_launcher_dummy",
+    val pallaSyncEnabled: Boolean = false,
+    val pallaSyncServerUrl: String = "https://api.yunfi.f5.si",
+    val sendTelemetry: Boolean = false,
 ) {
     val useHighQualityFeedImages: Boolean
         get() = highQualityImages && feedPreviewQuality != "low"

@@ -132,6 +132,9 @@ internal fun readFromDataStore(
         hideNotifications = preferences[HIDE_NOTIFICATIONS] ?: false,
         dummyAppName = preferences[DUMMY_APP_NAME] ?: "電卓",
         dummyIconVariant = preferences[DUMMY_ICON_VARIANT] ?: "ic_launcher_dummy",
+        pallaSyncEnabled = preferences[PALLA_SYNC_ENABLED] ?: false,
+        pallaSyncServerUrl = preferences[PALLA_SYNC_SERVER_URL] ?: "https://api.yunfi.f5.si",
+        sendTelemetry = preferences[SEND_TELEMETRY] ?: false,
     )
 }
 
@@ -227,6 +230,9 @@ internal fun readFromSharedPreferences(preferences: SharedPreferences): AppSetti
         hideNotifications = false,
         dummyAppName = "電卓",
         dummyIconVariant = "ic_launcher_dummy",
+        pallaSyncEnabled = false,
+        pallaSyncServerUrl = "https://api.yunfi.f5.si",
+        sendTelemetry = false,
     )
 }
 
@@ -331,6 +337,9 @@ internal fun writeToDataStore(preferences: MutablePreferences, settings: AppSett
     preferences[HIDE_NOTIFICATIONS] = settings.hideNotifications
     preferences[DUMMY_APP_NAME] = settings.dummyAppName
     preferences[DUMMY_ICON_VARIANT] = settings.dummyIconVariant
+    preferences[PALLA_SYNC_ENABLED] = settings.pallaSyncEnabled
+    preferences[PALLA_SYNC_SERVER_URL] = settings.pallaSyncServerUrl
+    preferences[SEND_TELEMETRY] = settings.sendTelemetry
 }
 
 internal fun writeSensitiveSettings(

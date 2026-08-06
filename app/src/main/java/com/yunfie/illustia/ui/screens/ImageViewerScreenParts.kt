@@ -145,40 +145,46 @@ internal fun ZoomablePixivImage(
                     notifyZoomChanged(previousScale, localScale)
                 }
             }
-            .pointerInput(url, swipeThresholdPx) {
-                var accumulatedX = 0f
-                var triggered = false
-                detectHorizontalDragGestures(
-                    onDragStart = {
-                        accumulatedX = 0f
-                        triggered = false
-                    },
-                    onHorizontalDrag = { change, dragAmount ->
-                        if (triggered) return@detectHorizontalDragGestures
+            .then(
+                if (scale > 1.02f) {
+                    Modifier.pointerInput(url, swipeThresholdPx) {
+                        var accumulatedX = 0f
+                        var triggered = false
+                        detectHorizontalDragGestures(
+                            onDragStart = {
+                                accumulatedX = 0f
+                                triggered = false
+                            },
+                            onHorizontalDrag = { change, dragAmount ->
+                                if (triggered) return@detectHorizontalDragGestures
 
-                        accumulatedX += dragAmount
+                                accumulatedX += dragAmount
 
-                        if (abs(accumulatedX) >= swipeThresholdPx) {
-                            triggered = true
-                            if (accumulatedX < 0) {
-                                onSwipeNext()
-                            } else {
-                                onSwipePrevious()
-                            }
-                            animateTo(1f, Offset.Zero)
-                            change.consume()
-                        }
-                    },
-                    onDragEnd = {
-                        accumulatedX = 0f
-                        triggered = false
-                    },
-                    onDragCancel = {
-                        accumulatedX = 0f
-                        triggered = false
-                    },
-                )
-            }
+                                if (abs(accumulatedX) >= swipeThresholdPx) {
+                                    triggered = true
+                                    if (accumulatedX < 0) {
+                                        onSwipeNext()
+                                    } else {
+                                        onSwipePrevious()
+                                    }
+                                    animateTo(1f, Offset.Zero)
+                                    change.consume()
+                                }
+                            },
+                            onDragEnd = {
+                                accumulatedX = 0f
+                                triggered = false
+                            },
+                            onDragCancel = {
+                                accumulatedX = 0f
+                                triggered = false
+                            },
+                        )
+                    }
+                } else {
+                    Modifier
+                },
+            )
     ) {
         PixivImage(
             url = url,

@@ -158,8 +158,7 @@ class MainActivity : FragmentActivity() {
                     applySecureWindow(settings.secureWindow)
                 }
             }
-
-            LaunchedEffect(settings.appLanguage) {
+            LaunchedEffect(settings.appLanguage) {
                 applyAppLanguage(settings.appLanguage)
             }
 
@@ -169,6 +168,16 @@ class MainActivity : FragmentActivity() {
                     statusBarStyle = if (isDarkTheme) SystemBarStyle.dark(Color.TRANSPARENT) else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
                     navigationBarStyle = if (isDarkTheme) SystemBarStyle.dark(Color.TRANSPARENT) else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
                 )
+            }
+
+            LaunchedEffect(settings.pallaSyncEnabled) {
+                val syncCoordinator =
+                    (application as IllustiaApplication).pallaSyncCoordinator
+                if (settings.pallaSyncEnabled) {
+                    syncCoordinator.startBackgroundSync()
+                } else {
+                    syncCoordinator.stopBackgroundSync()
+                }
             }
 
             LaunchedEffect(settings.privacyModeEnabled, settings.hideRecents, settings.dummyAppName, settings.dummyIconVariant) {

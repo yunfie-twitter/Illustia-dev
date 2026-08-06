@@ -139,14 +139,12 @@ class PalleriaLiveWallpaperService : WallpaperService() {
             val previousOffset = lastOffset
             lastOffset = xOffset
             if (previousOffset.isNaN()) return
-            scope.launch {
-                val settings = withContext(Dispatchers.IO) { SettingsStore(applicationContext).read() }
-                if (
-                    settings.liveWallpaperChangeMode == "home" &&
-                    kotlin.math.abs(xOffset - previousOffset) >= max(xOffsetStep, 0.1f)
-                ) {
-                    loadNext(forceDifferent = true)
-                }
+            val settings = currentSettings ?: return
+            if (
+                settings.liveWallpaperChangeMode == "home" &&
+                kotlin.math.abs(xOffset - previousOffset) >= max(xOffsetStep, 0.1f)
+            ) {
+                loadNext(forceDifferent = true)
             }
         }
 
@@ -173,8 +171,10 @@ class PalleriaLiveWallpaperService : WallpaperService() {
             loadJob?.cancel()
             current?.recycle()
             previous?.recycle()
+            currentBlurred?.recycle()
             current = null
             previous = null
+            currentBlurred = null
             scope.cancel()
             super.onDestroy()
         }
@@ -254,6 +254,8 @@ class PalleriaLiveWallpaperService : WallpaperService() {
             previous?.recycle()
             previous = current
             current = bitmap
+            currentBlurred?.recycle()
+            currentBlurred = if (settings.liveWallpaperBackground == "blur") createBlurred(bitmap) else null
             if (!settings.liveWallpaperCrossfade || previous == null) {
                 previous?.recycle()
                 previous = null
@@ -323,21 +325,31 @@ class PalleriaLiveWallpaperService : WallpaperService() {
             }
         }
 
+        private var currentBlurred: Bitmap? = null
+
+        private fun createBlurred(bitmap: Bitmap): Bitmap {
+            val blurredWidth = 24
+            val blurredHeight = (blurredWidth * bitmap.height.toFloat() / bitmap.width).toInt().coerceAtLeast(1)
+            return Bitmap.createScaledBitmap(bitmap, blurredWidth, blurredHeight, true)
+        }
+
         private fun drawBackground(canvas: Canvas, bitmap: Bitmap, settings: AppSettings) {
             when (settings.liveWallpaperBackground) {
                 "white" -> canvas.drawColor(Color.WHITE)
                 "dominant" -> canvas.drawColor(NativeImageAnalysis.dominantColor(bitmap))
                 "blur" -> {
                     canvas.drawColor(Color.BLACK)
-                    val blurredWidth = 24
-                    val blurredHeight = (blurredWidth * bitmap.height.toFloat() / bitmap.width)
-                        .toInt()
-                        .coerceAtLeast(1)
-                    val blurred = Bitmap.createScaledBitmap(bitmap, blurredWidth, blurredHeight, true)
+                    val blurred = if (bitmap === current && currentBlurred != null && !currentBlurred!!.isRecycled) {
+                        currentBlurred!!
+                    } else {
+                        createBlurred(bitmap)
+                    }
                     paint.alpha = 190
                     drawScaled(canvas, blurred, "cover")
                     paint.alpha = 255
-                    if (blurred !== bitmap) blurred.recycle()
+                    if (blurred !== currentBlurred && blurred !== bitmap && !blurred.isRecycled) {
+                        blurred.recycle()
+                    }
                 }
                 else -> canvas.drawColor(Color.BLACK)
             }

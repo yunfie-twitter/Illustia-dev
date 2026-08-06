@@ -2,6 +2,7 @@ package com.yunfie.illustia.settings.store
 
 import androidx.datastore.preferences.core.Preferences
 import com.yunfie.illustia.settings.AppSettings
+import com.yunfie.illustia.settings.SyncedCollectionsSnapshot
 import com.yunfie.illustia.settings.db.AccountEntity
 import com.yunfie.illustia.settings.db.FavoriteTagEntity
 import com.yunfie.illustia.settings.db.IllustiaDatabase
@@ -25,8 +26,8 @@ internal suspend fun writeRoomSettingsData(
     database: IllustiaDatabase,
     dao: SettingsDao,
     settings: AppSettings,
-) = withContext(Dispatchers.IO) {
-    database.runInTransaction {
+): Unit = withContext(Dispatchers.IO) {
+    database.runInTransaction(Runnable {
         dao.clearSearchHistory()
         dao.insertSearchHistory(
             settings.searchHistory.take(MAX_SEARCH_HISTORY).mapIndexed { index, query ->
@@ -40,7 +41,6 @@ internal suspend fun writeRoomSettingsData(
                 FavoriteTagEntity(tag, index)
             },
         )
-
         dao.clearViewHistory()
         dao.insertViewHistory(
             settings.viewHistory.take(MAX_VIEW_HISTORY).mapIndexed { index, illust ->
@@ -64,6 +64,42 @@ internal suspend fun writeRoomSettingsData(
                     account.name,
                     account.account,
                     account.profileImageUrl,
+                    index,
+                )
+            },
+        )
+    })
+}
+
+/** Writes only PallaSync-owned Room collections, leaving accounts and other data untouched. */
+internal suspend fun writeSyncedRoomSettingsData(
+    database: IllustiaDatabase,
+    dao: SettingsDao,
+    synced: SyncedCollectionsSnapshot,
+): Unit = withContext(Dispatchers.IO) {
+    database.runInTransaction {
+        dao.clearSearchHistory()
+        dao.insertSearchHistory(
+            synced.searchHistory.take(MAX_SEARCH_HISTORY).mapIndexed { index, query ->
+                SearchHistoryEntity(query, index)
+            },
+        )
+
+        dao.clearFavoriteTags()
+        dao.insertFavoriteTags(
+            synced.favoriteTags.mapIndexed { index, tag -> FavoriteTagEntity(tag, index) },
+        )
+
+        dao.clearViewHistory()
+        dao.insertViewHistory(
+            synced.viewHistory.take(MAX_VIEW_HISTORY).mapIndexed { index, illust ->
+                ViewHistoryEntity(
+                    illust.id,
+                    illust.title,
+                    illust.artistName,
+                    illust.imageUrl,
+                    illust.pageCount,
+                    illust.type,
                     index,
                 )
             },

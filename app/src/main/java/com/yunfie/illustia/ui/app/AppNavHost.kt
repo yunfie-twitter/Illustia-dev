@@ -258,7 +258,41 @@ internal fun AppNavHost(
             BookmarkSettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
         }
         entry(AppRoute.AccountSettings) {
-            AccountSettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
+            AccountSettingsScreen(
+                state = appState.state,
+                viewModel = viewModel,
+                onBack = onPopRoute,
+                onOpenPallaSync = { onNavigate(AppRoute.PallaSyncSettings) }
+            )
+        }
+        entry(AppRoute.PallaSyncSettings) {
+            com.yunfie.illustia.ui.screens.pallasync.PallaSyncSettingsScreen(
+                state = appState.state,
+                viewModel = viewModel,
+                onBack = onPopRoute,
+                onPairDevice = { onNavigate(AppRoute.DevicePairing) },
+                onDeviceClick = { deviceId, deviceName ->
+                    onNavigate(AppRoute.DeviceViewHistory(deviceId, deviceName))
+                }
+            )
+        }
+        entry(AppRoute.PallaSyncDevices) {
+            com.yunfie.illustia.ui.screens.pallasync.PallaSyncDevicesScreen(
+                state = appState.state,
+                onBack = onPopRoute,
+                onDeviceClick = { deviceId, deviceName ->
+                    onNavigate(AppRoute.DeviceViewHistory(deviceId, deviceName))
+                },
+            )
+        }
+        entry(AppRoute.DevicePairing) {
+            com.yunfie.illustia.ui.screens.pallasync.DevicePairingScreen(
+                serverUrl = appState.state.settings.pallaSyncServerUrl,
+                onBack = onPopRoute,
+                onPairSuccess = {
+                    onPopRoute()
+                }
+            )
         }
         entry(AppRoute.AccountLoginMethod) {
             AccountLoginMethodScreen(
@@ -389,6 +423,19 @@ internal fun AppNavHost(
         }
         entry(AppRoute.PrivacyModeSettings) {
             PrivacyModeSettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
+        }
+        entry<AppRoute.DeviceViewHistory> { route ->
+            com.yunfie.illustia.ui.screens.pallasync.DeviceViewHistoryScreen(
+                deviceId = route.deviceId,
+                deviceName = route.deviceName,
+                state = appState.state,
+                viewModel = viewModel,
+                onBack = onPopRoute,
+                onIllustClick = { illust ->
+                    viewModel.openIllust(illust)
+                    onNavigate(AppRoute.Detail(illust.id))
+                },
+            )
         }
     }
 
