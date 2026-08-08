@@ -10,25 +10,21 @@ hero:
     alt: Palleria Icon
   actions:
     - theme: brand
-      text: ドキュメントを読む
-      link: /guide/
+      text: ユーザーガイド
+      link: /user/
     - theme: alt
-      text: GitHub リポジトリ
-      link: https://github.com/yunfie-twitter/Palleria
+      text: 開発者ドキュメント
+      link: /dev/
 
 features:
-  - title: Compose & Miuix UI
-    details: Jetpack Compose および Miuix KMP コンポーネントによる UI 構成。ダークモード・AMOLED テーマに対応。
-  - title: Rust Native コア
-    details: 通信処理および API JSON のパースを Rust クレート (`pixiv-api`) で処理し、メモリ消費とクラッシュを防止。
-  - title: 多種メディア対応
-    details: イラスト、マンガ、小説（縦書き対応）、うごイラ（アニメーション Zip 再生）、ショートフィードの閲覧機能。
-  - title: アプリ偽装 & セキュリティ
-    details: PIN / 生体認証、電卓偽装モード、タスク一覧での画面ぼかし、FLAG_SECURE によるスクリーンショット防止。
-  - title: 高機能ダウンロード
-    details: 原寸画像の保存、作者別/作品別フォルダ自動分類、マルチスレッド並列キュー管理、自動ブックマーク連携。
-  - title: ライブ壁紙 & ウィジェット
-    details: ブックマーク作品のローテーション表示（ライブ壁紙）およびホーム画面用ランキング表示ウィジェット。
+  - title: 快適な作品鑑賞
+    details: イラスト、マンガ、小説（縦書き対応）、うごイラ（Zip解凍再生）、ショートフィードに対応。
+  - title: 簡単操作と安心セキュリティ
+    details: タグ検索、ウォッチリスト機能に加え、PINロックや本物として使える電卓偽装モードを搭載。
+  - title: 高速な Rust コア
+    details: 通信・JSON解析を Rust ネイティブクレートで処理し、大容量データでもメモリ消費を強力に抑制。
+  - title: 高機能ダウンロード & 壁紙
+    details: 原寸画像の保存、作者別自動フォルダ分け、お気に入り作品の自動切り替えライブ壁紙サービス。
 ---
 
 <style>
