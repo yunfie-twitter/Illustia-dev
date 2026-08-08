@@ -55,7 +55,7 @@ export default defineConfig({
     // 分割せず一元化した完全サイドバー目次
     sidebar: [
       {
-        text: '📘 ユーザーガイド (使い方)',
+        text: 'ユーザーガイド (使い方)',
         collapsed: false,
         items: [
           { text: 'Palleria とは', link: '/user/' },
@@ -72,7 +72,7 @@ export default defineConfig({
         ]
       },
       {
-        text: '💻 開発者ガイド (技術仕様)',
+        text: '開発者ガイド (技術仕様)',
         collapsed: false,
         items: [
           { text: 'アーキテクチャ概要 & レイヤー設計', link: '/dev/' },
@@ -85,7 +85,7 @@ export default defineConfig({
         ]
       },
       {
-        text: '☕ ポリシー & 支援',
+        text: 'ポリシー & 支援',
         collapsed: false,
         items: [
           { text: 'プライバシーポリシー', link: '/privacy-policy' },
