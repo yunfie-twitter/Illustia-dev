@@ -9,7 +9,7 @@ description: 動作環境、パーミッション権限、F-Droid および GitH
 
 | 項目 | 条件 / 仕様 |
 | :--- | :--- |
-| **OS バージョン** | Android 13 (API Level 33) 以上 |
+| **OS バージョン** | Android 10 (API Level 29) 以上 |
 | **ターゲット SDK** | Android 14 (API Level 34) |
 | **アカウント** | Pixiv アカウント (ログイン時) |
 | **ネットワーク** | インターネット接続環境 |

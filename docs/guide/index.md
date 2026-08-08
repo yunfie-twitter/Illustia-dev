@@ -5,7 +5,7 @@ description: Palleria の概要、特徴、アーキテクチャ設計、およ�
 
 # Palleria の概要
 
-**Palleria** は Android 13（API レベル 33）以上を対象としたオープンソースの非公式 Pixiv クライアントアプリケーションです。
+**Palleria** は Android 10（API レベル 29）以上を対象としたオープンソースの非公式 Pixiv クライアントアプリケーションです。
 
 宣言型 UI フレームワークである **Jetpack Compose** と **Miuix KMP** コンポーネントシステムを採用し、通信およびデータ処理のネイティブコアとして **Rust (UniFFI)** を統合しています。
 
@@ -73,7 +73,7 @@ Palleria は非公式の Pixiv クライアントであり、ピクシブ株式�
 
 | 項目 | 条件 / 仕様 |
 | :--- | :--- |
-| **最小 OS** | Android 13 (API Level 33) |
+| **最小 OS** | Android 10 (API Level 29) |
 | **ターゲット SDK** | Android 14 (API Level 34) |
 | **対応 ABI** | `arm64-v8a`, `armeabi-v7a`, `x86_64` |
 | **ライセンス** | GNU General Public License v3.0 (GPL-3.0-only) |
