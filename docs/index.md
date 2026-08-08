@@ -30,6 +30,14 @@ features:
 <style>
 :root {
   --vp-home-hero-name-color: transparent;
-  --vp-home-hero-name-background: -webkit-linear-gradient(120deg, #7f52ff 30%, #ff6900);
+  --vp-home-hero-name-background: -webkit-linear-gradient(120deg, #3ab8f4 30%, #1976d2);
+}
+
+.VPHero .image-src {
+  max-width: 280px !important;
+  max-height: 280px !important;
+  width: 100% !important;
+  height: auto !important;
+  filter: drop-shadow(0 8px 24px rgba(58, 184, 244, 0.25));
 }
 </style>
