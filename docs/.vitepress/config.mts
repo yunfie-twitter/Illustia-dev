@@ -49,7 +49,8 @@ export default defineConfig({
           { text: 'テーマ & 個人設定・バックアップ', link: '/features/personalization' },
           { text: 'プライバシー & セキュリティ保護', link: '/features/privacy-security' },
           { text: 'ライブ壁紙 & ウィジェット', link: '/features/wallpaper-widget' },
-          { text: 'テレメトリ & クラッシュレポート', link: '/features/telemetry' }
+          { text: 'テレメトリ & クラッシュレポート', link: '/features/telemetry' },
+          { text: 'データ同期 (PallaSync)', link: '/features/sync' }
         ]
       },
       {
