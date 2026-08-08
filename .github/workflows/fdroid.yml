@@ -185,6 +185,7 @@ jobs:
           publish_dir: ./public
           publish_branch: gh-pages
           force_orphan: false
+          keep_files: true
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
