@@ -3,13 +3,36 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   base: '/Palleria/',
   title: "Palleria",
-  description: "Android 向け Pixiv クライアント「Palleria」の公式ドキュメント",
+  titleTemplate: ':title | Palleria - Android Pixiv Client',
+  description: "Android向け高速オープンソースPixivクライアント「Palleria」の公式ドキュメント。イラスト、マンガ、小説の閲覧、うごイラ再生、暗号化同期、プライバシー保護、電卓偽装モードをサポート。",
   lang: 'ja-JP',
   cleanUrls: true,
   lastUpdated: true,
-  
+
+  // SEO 用 sitemap.xml 自動生成
+  sitemap: {
+    hostname: 'https://yunfi.f5.si/Palleria/'
+  },
+
   head: [
-    ['link', { rel: 'icon', href: '/logo.svg' }]
+    ['link', { rel: 'icon', href: '/logo.svg', type: 'image/svg+xml' }],
+    ['meta', { name: 'keywords', content: 'Palleria, Pixiv, Android, Pixivクライアント, オープンソース, Jetpack Compose, Rust, うごイラ, マンガ, 小説, 縦書き, アプリロック, 電卓偽装, F-Droid' }],
+    ['meta', { name: 'author', content: 'ゆんふぃ (yunfie)' }],
+    ['meta', { name: 'robots', content: 'index, follow' }],
+    
+    // OGP メタタグ (SNS 共有・検索エンジンプレビュー用)
+    ['meta', { property: 'og:type', content: 'website' }],
+    ['meta', { property: 'og:site_name', content: 'Palleria Official Documentation' }],
+    ['meta', { property: 'og:title', content: 'Palleria - Fast & Modern Pixiv Client for Android' }],
+    ['meta', { property: 'og:description', content: 'Android向け高速オープンソースPixivクライアント「Palleria」の公式ドキュメント。作品閲覧、ダウンロード、プライバシー保護機能を網羅。' }],
+    ['meta', { property: 'og:image', content: 'https://yunfi.f5.si/Palleria/repo/com.yunfie.illustia/en-US/icon.png' }],
+    ['meta', { property: 'og:url', content: 'https://yunfi.f5.si/Palleria/' }],
+    
+    // Twitter Cards
+    ['meta', { name: 'twitter:card', content: 'summary_large_image' }],
+    ['meta', { name: 'twitter:title', content: 'Palleria Docs - Android Pixiv Client' }],
+    ['meta', { name: 'twitter:description', content: 'Jetpack ComposeとRustで構築されたAndroid向けオープンソースPixivクライアント Palleria の公式ガイド' }],
+    ['meta', { name: 'twitter:image', content: 'https://yunfi.f5.si/Palleria/repo/com.yunfie.illustia/en-US/icon.png' }]
   ],
 
   themeConfig: {
@@ -58,7 +81,6 @@ export default defineConfig({
           ]
         }
       ],
-      // デフォルトフォールバック
       '/': [
         {
           text: 'スタートガイド',
