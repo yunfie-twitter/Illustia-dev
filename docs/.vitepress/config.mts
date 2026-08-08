@@ -20,6 +20,7 @@ export default defineConfig({
       { text: 'ガイド', link: '/guide/' },
       { text: '機能一覧', link: '/features/browse' },
       { text: 'アーキテクチャ', link: '/architecture/' },
+      { text: '寄付・支援', link: '/donate' },
       { text: 'GitHub', link: 'https://github.com/yunfie-twitter/Palleria' }
     ],
 
@@ -32,7 +33,8 @@ export default defineConfig({
           { text: 'インストール', link: '/guide/installation' },
           { text: 'ログインと認証', link: '/guide/authentication' },
           { text: 'ビルド手順', link: '/guide/build' },
-          { text: 'プライバシーポリシー', link: '/privacy-policy' }
+          { text: 'プライバシーポリシー', link: '/privacy-policy' },
+          { text: '寄付・開発支援', link: '/donate' }
         ]
       },
       {
