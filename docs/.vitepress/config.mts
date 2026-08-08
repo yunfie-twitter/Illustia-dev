@@ -31,7 +31,8 @@ export default defineConfig({
           { text: 'Palleriaとは', link: '/guide/' },
           { text: 'インストール', link: '/guide/installation' },
           { text: 'ログインと認証', link: '/guide/authentication' },
-          { text: 'ビルド手順', link: '/guide/build' }
+          { text: 'ビルド手順', link: '/guide/build' },
+          { text: 'プライバシーポリシー', link: '/privacy-policy' }
         ]
       },
       {
@@ -45,7 +46,8 @@ export default defineConfig({
           { text: '閲覧 & 検索履歴', link: '/features/history' },
           { text: 'テーマ & 個人設定・バックアップ', link: '/features/personalization' },
           { text: 'プライバシー & セキュリティ保護', link: '/features/privacy-security' },
-          { text: 'ライブ壁紙 & ウィジェット', link: '/features/wallpaper-widget' }
+          { text: 'ライブ壁紙 & ウィジェット', link: '/features/wallpaper-widget' },
+          { text: 'テレメトリ & クラッシュレポート', link: '/features/telemetry' }
         ]
       },
       {
