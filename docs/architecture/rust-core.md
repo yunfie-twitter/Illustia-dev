@@ -1,37 +1,54 @@
 ---
-title: Rust Native コア (pixiv-api)
-description: UniFFI を用いた Rust API クライアント、型バインディング、メモリ安全設計
+title: Rust Native コア (pixiv-api) 仕様
+description: UniFFI を用いた Rust API クライアント、バッファサイズ上限制限、メモリ安全設計
 ---
 
-# Rust Native コア (`pixiv-api`)
+# Rust Native コア (`pixiv-api`) 仕様
 
-Pixiv API との通信トランスポート、レスポンス JSON の検証・デコード処理は `rust/pixiv-api` クレートで実装されています。UniFFI を介した型付き Kotlin バインディング（`nativebridge`）を通して利用されます。
-
----
-
-## 設計上のポイント
-
-1. **直接的な DTO 変換**: レスポンス本文を文字列として Kotlin (JVM) へ渡さず、Rust 側で `serde` により DTO へパースしてからアプリモデルへ橋渡しします。
-2. **バッファサイズの安全制御**: メモリ超過（OOM）や例外クラッシュを防止するため、処理バッファに上限が設定されています。
+`rust/pixiv-api` は、Pixiv API のネットワーク通信およびレスポンス JSON のパース・型検証を行うネイティブ Rust クレートです。
 
 ---
 
-## 制限値仕様
+## なぜ Rust なのか？
 
-| 対象データ | 上限サイズ | 動作仕様 |
+1. **ゼロコピーデコード & メモリ削減**:
+   巨大な JSON レスポンス（数百件の検索結果や長編小説本文）を直接 JVM ヒープメモリへ巨大文字列として読み込まず、Rust 側の型付き DTO にストリームパースしてからアプリモデルへ最小構造で転送します。
+2. **メモリ上限による OOM / クラッシュ防止**:
+   不正なレスポンスや過大なデータによるアプリのメモリエラーを防ぐため、厳格なバッファ制限を設けています。
+3. **UniFFI による安全な JNI 境界**:
+   Mozilla UniFFI により、C/C++ で発生しがちな手動メモリ管理や Null ポインタ参照によるクラッシュのリスクを排除。
+
+---
+
+## バッファ上限仕様表
+
+`pixiv-api` 内で規定されている各データの安全読み込み上限サイズです。
+
+| 対象データ | 上限サイズ | 超過時の動作 |
 | :--- | :--- | :--- |
-| **JSON レスポンス** | **16 MiB** | デコードバッファ上限。ストリームパース時に超過した場合は処理中断 |
-| **小説本文 (HTML)** | **8 MiB** | 読み込みバッファ上限 |
-| **HTTP エラー本文** | **64 KiB** | エラー解析用読み取り上限 |
-| **例外詳細情報** | **4 KiB** | Kotlin 側へ返却する例外メッセージ上限 |
+| **JSON レスポンス** | **16 MiB** | デコードストリームバッファ上限。超過時は即時 `ApiException` を発生 |
+| **小説本文 (HTML)** | **8 MiB** | 小説本文パースバッファ上限 |
+| **HTTP エラー本文** | **64 KiB** | サーバーエラーレスポンス取得上限 |
+| **例外スタック詳細** | **4 KiB** | Kotlin 側へ伝播するエラーメッセージ情報量の上限 |
 
 ---
 
-## ビルドおよびツールチェーン
+## モジュール構造 (`rust/pixiv-api/src/`)
 
-- **UniFFI**: UDL / proc-macro から Kotlin のインターフェースコードを生成。
-- **cargo-ndk**: Android SDK の NDK を自動検出し、以下の 3 アーキテクチャ向け `.so` バイナリを出力。
-  - `aarch64-linux-android`
-  - `armv7-linux-androideabi`
-  - `x86_64-linux-android`
-- Gradle の `preBuild` タスクがこれらをビルドパイプラインの一部として実行します。
+- `lib.rs`: UniFFI インターフェース定義およびエントリポイント
+- `client.rs`: HTTP 通信クライアントおよびヘッダー・認証処理
+- `models/`: Domain 別 DTO 定義
+  - `illust.rs`: イラスト・マンガレスポンスモデル
+  - `novel.rs`: 小説レスポンスモデル
+  - `user.rs`: ユーザー・プロフィールモデル
+  - `ugoira.rs`: うごイラフレームメタデータモデル
+
+---
+
+## Android ABI 出力
+
+`cargo-ndk` によりコンパイルされた以下の `.so` ファイルが `app/src/main/jniLibs`（または `$buildDir/generated/uniffi/jniLibs`）に配置され、実行時に `System.loadLibrary` によりロードされます。
+
+- `arm64-v8a/libpalleria_pixiv_api.so`
+- `armeabi-v7a/libpalleria_pixiv_api.so`
+- `x86_64/libpalleria_pixiv_api.so`

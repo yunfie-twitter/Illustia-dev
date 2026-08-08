@@ -1,40 +1,37 @@
 ---
-title: ビルド手順
-description: Android SDK と Rust NDK を使用したビルド手順
+title: ビルド & 環境構築ガイド
+description: Android SDK, NDK, UniFFI, Rust ツールチェーンのビルドパイプライン
 ---
 
-# ビルド手順
+# ビルド & 環境構築ガイド
 
-Palleria は Kotlin と Rust のハイブリッド構造になっています。ビルドを行うには Android 開発環境と Rust クロスコンパイル環境が必要です。
+Palleria は Kotlin (Jetpack Compose) と Rust (NDK Native) から構成されるマルチ言語プロジェクトです。
 
 ---
 
-## 必須環境
+## 開発環境と前提条件
 
-- **JDK**: Java 21 以上
-- **Android SDK**: API Level 34 (Build-Tools 34.0.0 以上), NDK (最新版)
-- **Rust**: stable ツールチェーン (`cargo`, `rustc`)
-- **cargo-ndk**: Cargo 用 Android NDK ビルドヘルパー
+- **JDK**: OpenJDK / Temurin 21 以上
+- **Android SDK**: API Level 34 (Android 14) / Compile SDK 37
+- **NDK**: Android NDK (最新版)
+- **Rust**: 1.80 以上 (stable)
+- **Cargo-NDK**: Cargo 用 Android NDK クロスコンパイルツール
 - **Git**
 
 ---
 
-## 1. Rust ネイティブターゲットの設定 (初回のみ)
+## 1. Rust NDK ツールチェーンの設定
 
-Android の各 CPU アーキテクチャ向けターゲットを追加し、`cargo-ndk` をインストールします。
+Android の各ターゲットアーキテクチャ向け標準ライブラリおよび `cargo-ndk` をインストールします。
 
 ```bash
 rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android
 cargo install cargo-ndk --locked
 ```
 
-::: info 自動ビルド
-Gradle の `preBuild` タスク実行時に UniFFI による Kotlin バインディング生成と各 ABI (`.so`) のコンパイルが自動的に行われます。
-:::
-
 ---
 
-## 2. リポジトリの取得
+## 2. リポジトリのクローン
 
 ```bash
 git clone https://github.com/yunfie-twitter/Palleria.git
@@ -43,7 +40,19 @@ cd Palleria
 
 ---
 
-## 3. Gradle によるビルド
+## 3. Gradle ビルドパイプライン
+
+Gradle の `preBuild` タスクにより、Rust コードのコンパイルおよび UniFFI による Kotlin バインディングの自動生成が実行されます。
+
+### 自動呼び出しされる内部 Gradle タスク
+1. `buildUniFfiHost`: ホスト環境用 Rust ライブラリのビルド。
+2. `generateUniFfiBindings`: UniFFI `uniffi-bindgen` を呼び出し、Kotlin インターフェースコードを `$buildDir/generated/uniffi/kotlin` へ出力。
+3. `buildRustAndroid`: `cargo-ndk` を用いて 3 つの ABI (`arm64-v8a`, `armeabi-v7a`, `x86_64`) 用の `libpalleria_pixiv_api.so` をビルドし `$buildDir/generated/uniffi/jniLibs` へ出力。
+4. `buildPallaSyncCoreAndroid`: `pallasync-core` クレートの `.so` バイナリビルド。
+
+---
+
+## 4. ビルドコマンド
 
 ### Debug APK のビルド
 
@@ -57,26 +66,26 @@ Windows (PowerShell):
 .\gradlew.bat :app:assembleDebug
 ```
 
-出力先: `app/build/outputs/apk/debug/app-debug.apk`
+出力結果: `app/build/outputs/apk/debug/app-debug.apk`
 
 ---
 
 ### Release APK のビルドと署名設定
 
-リリースビルドには環境変数で署名用キーストア情報を渡す必要があります。
+リリースビルドを行う場合は、署名用キーストアの環境変数を設定してください。
 
-設定する環境変数:
+#### 必要な環境変数
 - `KEYSTORE_PATH`: キーストアファイルの絶対パス (`.jks` / `.keystore`)
-- `KEYSTORE_PASSWORD`: キーストアのパスワード
+- `KEYSTORE_PASSWORD`: キーストアパスワード
 - `KEY_ALIAS`: キーのエイリアス名
 - `KEY_PASSWORD`: キーのパスワード
 
 Linux / macOS:
 ```bash
 export KEYSTORE_PATH="/path/to/release.keystore"
-export KEYSTORE_PASSWORD="your_password"
-export KEY_ALIAS="your_alias"
-export KEY_PASSWORD="your_password"
+export KEYSTORE_PASSWORD="your_keystore_password"
+export KEY_ALIAS="your_key_alias"
+export KEY_PASSWORD="your_key_password"
 
 ./gradlew :app:assembleRelease
 ```
@@ -84,24 +93,25 @@ export KEY_PASSWORD="your_password"
 Windows (PowerShell):
 ```powershell
 $env:KEYSTORE_PATH = "C:\path\to\release.keystore"
-$env:KEYSTORE_PASSWORD = "your_password"
-$env:KEY_ALIAS = "your_alias"
-$env:KEY_PASSWORD = "your_password"
+$env:KEYSTORE_PASSWORD = "your_keystore_password"
+$env:KEY_ALIAS = "your_key_alias"
+$env:KEY_PASSWORD = "your_key_password"
 
 .\gradlew.bat :app:assembleRelease
 ```
 
-出力先: `app/build/outputs/apk/release/` (`Illustia-v5.0.0-release.apk`)
+出力結果: `app/build/outputs/apk/release/Illustia-v5.0.0-release.apk`
 
 ---
 
-## 4. Rust クレート (`pixiv-api`) の単体テスト
+## 5. Rust 単体テスト・ベンチマーク
 
-Rust 側の動作検証およびコード品質チェックを行う場合:
+Rust クレート単体でのテストやコードフォーマット確認を行う場合:
 
 ```bash
 cd rust/pixiv-api
 cargo fmt --check
 cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all-features
+cargo bench --features bench --bench illust_decode
 ```

@@ -1,34 +1,43 @@
 ---
-title: ライブ壁紙 & ウィジェット
-description: ライブ壁紙サービスとホーム画面用ウィジェットの仕様
+title: ライブ壁紙 & ウィジェット仕様
+description: ライブ壁紙サービス、画像ローテーション制御、ホーム画面ウィジェットプロバイダ
 ---
 
-# ライブ壁紙 & ウィジェット
+# ライブ壁紙 & ウィジェット仕様
 
-Android システム機能と連携したライブ壁紙サービスおよびウィジェットの仕様です。
+Android システムと統合されたライブ壁紙およびホーム画面ウィジェットに関する詳細仕様です。
 
 ---
 
 ## ライブ壁紙サービス (`PalleriaLiveWallpaperService`)
 
-端末の壁紙としてイラストを定期的に切り替えて表示する Android LiveWallpaper サービスです。
+Android の `WallpaperService` を拡張し、Pixiv 作品やローカル保存画像を定期的に壁紙として描画・切り替えるバックグラウンドサービスです。
 
-### 設定パラメータ (`AppSettings`)
-- `liveWallpaperSource`: ソースの選択 (`all` / `bookmarks` / `folder`)
-- `liveWallpaperIntervalMinutes`: 切り替え間隔（分単位。デフォルト 60 分）
-- `liveWallpaperOrder`: 再生順序 (`random` / `order`)
-- `liveWallpaperScaleMode`: 画面フィット方式 (`cover` / `fit`)
-- `liveWallpaperCrossfade`: 画像切り替え時のクロスフェード遷移 (Boolean)
-- `liveWallpaperExcludeSensitive`: センシティブ（R-18）作品の除外 (Boolean)
+### 制御パラメータ (`AppSettings`)
+
+| 設定キー | 型 | 初期値 | 説明 |
+| :--- | :--- | :--- | :--- |
+| `wallpaperPlaylistEnabled` | `Boolean` | `false` | ライブ壁紙機能の有効化 |
+| `liveWallpaperSource` | `String` | `"all"` | 画像ソース (`all` / `bookmarks` / `folder`) |
+| `liveWallpaperSourceFolder` | `String` | `""` | カスタムフォルダ指定時のローカルパス |
+| `liveWallpaperIntervalMinutes`| `Int` | `60` | 画像切り替えインターバル時間（分） |
+| `liveWallpaperOrder` | `String` | `"random"` | 切り替え順序 (`random` / `order`) |
+| `liveWallpaperScaleMode` | `String` | `"cover"` | 画面フィッティング (`cover` / `fit`) |
+| `liveWallpaperBackground` | `String` | `"black"` | 余白背景色 (`black` / `white` / `blur`) |
+| `liveWallpaperCrossfade` | `Boolean` | `true` | 切り替え時のクロスフェードアニメーション |
+| `liveWallpaperExcludeSensitive`| `Boolean` | `true` | R-18 センシティブ作品の壁紙除外 |
 
 ---
 
 ## ホーム画面ウィジェット
 
-### 1. イラストウィジェット (`IllustWidgetProvider`)
-- お気に入り作品やランダムイラストをホーム画面に常時表示。
-- ウィジェットタップ時に Palleria アプリ内の該当イラスト詳細画面へ直接遷移。
+`AppWidgetProvider` を継承した 2 種類のホーム画面ウィジェットを提供します。
+
+### 1. イラストウィジェット (`IllustWidgetProvider` / `IllustWidgetConfigureActivity`)
+- **機能**: ブックマーク作品や特定タグのイラストを 2x2 / 4x4 サイズで配置。
+- **データ保持 (`IllustWidgetStore`)**: 設定された表示モード、作品 ID、更新タイマーを Preferences に保持。
+- **タップアクション**: ウィジェットタップ時に Palleria アプリを起動し、該当イラストの詳細画面へ直接ディープリンク遷移。
 
 ### 2. ランキングウィジェット (`RankingWidgetProvider`)
-- 今日の Pixiv デイリーランキング TOP 10 作品を取得し、スライド表示。
-- 定期バックグラウンド更新により、最新データを維持。
+- **機能**: Pixiv のデイリーランキング TOP 10 作品のサムネイルとタイトルを 4x2 サイズでスライド表示。
+- **更新ロジック**: `WorkManager` 定期タスクと連携し、毎日バックグラウンドでランキングデータを最新に更新。
