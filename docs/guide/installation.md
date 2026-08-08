@@ -31,5 +31,5 @@ https://yunfi.f5.si/Palleria/repo/
 
 [GitHub Releases](https://github.com/yunfie-twitter/Palleria/releases/latest) から直接 APK ファイルを入手して手動インストールします。
 
-1. 最新リリースの `Assets` から `app-release.apk` をダウンロードします。
+1. 最新リリースの `Assets` から `Illustia-v5.0.0-release.apk`（または最新バージョンの APK）をダウンロードします。
 2. 端末でファイルを開き、セキュリティダイアログに従って「このソースからのアプリを許可」を有効にしてインストールを実行します。

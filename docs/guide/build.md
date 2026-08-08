@@ -91,7 +91,7 @@ $env:KEY_PASSWORD = "your_password"
 .\gradlew.bat :app:assembleRelease
 ```
 
-出力先: `app/build/outputs/apk/release/app-release.apk`
+出力先: `app/build/outputs/apk/release/` (`Illustia-v5.0.0-release.apk`)
 
 ---
 
