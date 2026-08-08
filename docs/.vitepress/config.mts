@@ -9,11 +9,11 @@ export default defineConfig({
   lastUpdated: true,
   
   head: [
-    ['link', { rel: 'icon', href: 'https://yunfi.f5.si/Palleria/repo/com.yunfie.illustia/en-US/icon.png' }]
+    ['link', { rel: 'icon', href: '/logo.svg' }]
   ],
 
   themeConfig: {
-    logo: 'https://yunfi.f5.si/Palleria/repo/com.yunfie.illustia/en-US/icon.png',
+    logo: '/logo.svg',
     siteTitle: 'Palleria Docs',
     
     nav: [

@@ -6,7 +6,7 @@ hero:
   text: "Pixiv client for Android"
   tagline: "Jetpack Compose と Rust ネイティブエンジンで構築された Android 向け Pixiv クライアント"
   image:
-    src: https://yunfi.f5.si/Palleria/repo/com.yunfie.illustia/en-US/icon.png
+    src: /logo.svg
     alt: Palleria Icon
   actions:
     - theme: brand
