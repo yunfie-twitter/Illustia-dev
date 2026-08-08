@@ -38,6 +38,12 @@ export default defineConfig({
   themeConfig: {
     logo: '/logo.svg',
     siteTitle: 'Palleria Docs',
+
+    // ページ内目次 (右側のアウトライン) を全ページで自動表示
+    outline: {
+      level: [2, 3],
+      label: '目次'
+    },
     
     nav: [
       { text: 'ユーザーガイド', link: '/user/' },
@@ -46,7 +52,7 @@ export default defineConfig({
       { text: 'GitHub', link: 'https://github.com/yunfie-twitter/Palleria' }
     ],
 
-    // サイドバーで「ユーザーガイド」と「開発者ドキュメント」が常に両方表示され相互遷移できるように統合
+    // 分割せず一元化した完全サイドバー目次
     sidebar: [
       {
         text: '📘 ユーザーガイド (使い方)',
