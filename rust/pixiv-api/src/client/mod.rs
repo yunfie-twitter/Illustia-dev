@@ -7,7 +7,7 @@ use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::time::Duration;
 
-use reqwest::blocking::Client;
+use reqwest::Client;
 
 use crate::config::{ECH_HOSTS, ECH_IPS};
 use crate::error::{ApiError, invalid_request, invalid_response, network_error};
@@ -82,19 +82,19 @@ impl PixivHttpClient {
         })
     }
 
-    pub fn login_with_refresh_token(
+    pub async fn login_with_refresh_token(
         &self,
         refresh_token: String,
     ) -> Result<LoginSession, ApiError> {
-        oauth::login_with_refresh_token(self, refresh_token)
+        oauth::login_with_refresh_token(self, refresh_token).await
     }
 
-    pub fn login_with_authorization_code(
+    pub async fn login_with_authorization_code(
         &self,
         code: String,
         code_verifier: String,
     ) -> Result<LoginSession, ApiError> {
-        oauth::login_with_authorization_code(self, code, code_verifier)
+        oauth::login_with_authorization_code(self, code, code_verifier).await
     }
 
     pub fn create_web_login_url(
@@ -105,158 +105,158 @@ impl PixivHttpClient {
         oauth::create_web_login_url(create_provisional_account, code_challenge)
     }
 
-    pub fn execute_illust_page(&self, request: PixivRequest) -> Result<IllustPage, ApiError> {
-        transport::execute_json::<IllustPageResponse>(self, request, "illust page")
+    pub async fn execute_illust_page(&self, request: PixivRequest) -> Result<IllustPage, ApiError> {
+        transport::execute_json::<IllustPageResponse>(self, request, "illust page").await
             .map(IllustPageResponse::into_page)
     }
 
-    pub fn execute_illust_detail(&self, request: PixivRequest) -> Result<Illust, ApiError> {
-        transport::execute_json::<IllustDetailResponse>(self, request, "illust detail")?
+    pub async fn execute_illust_detail(&self, request: PixivRequest) -> Result<Illust, ApiError> {
+        transport::execute_json::<IllustDetailResponse>(self, request, "illust detail").await?
             .into_illust()
             .ok_or_else(|| {
                 invalid_response("illust detail response does not contain a valid illust")
             })
     }
 
-    pub fn execute_user_profile(
+    pub async fn execute_user_profile(
         &self,
         request: PixivRequest,
         fallback_user_id: i64,
     ) -> Result<UserProfile, ApiError> {
-        transport::execute_json::<UserDetailResponse>(self, request, "user detail")
+        transport::execute_json::<UserDetailResponse>(self, request, "user detail").await
             .map(|response| response.into_profile(fallback_user_id))
     }
 
-    pub fn execute_autocomplete(&self, request: PixivRequest) -> Result<StringList, ApiError> {
-        transport::execute_json::<AutocompleteResponse>(self, request, "autocomplete")
+    pub async fn execute_autocomplete(&self, request: PixivRequest) -> Result<StringList, ApiError> {
+        transport::execute_json::<AutocompleteResponse>(self, request, "autocomplete").await
             .map(AutocompleteResponse::into_list)
     }
 
-    pub fn execute_user_preview_page(
+    pub async fn execute_user_preview_page(
         &self,
         request: PixivRequest,
     ) -> Result<UserPreviewPage, ApiError> {
-        transport::execute_json::<UserPreviewPageResponse>(self, request, "user preview page")
+        transport::execute_json::<UserPreviewPageResponse>(self, request, "user preview page").await
             .map(UserPreviewPageResponse::into_page)
     }
 
-    pub fn execute_ugoira_metadata(
+    pub async fn execute_ugoira_metadata(
         &self,
         request: PixivRequest,
     ) -> Result<UgoiraMetadata, ApiError> {
-        transport::execute_json::<UgoiraMetadataResponse>(self, request, "ugoira metadata")
+        transport::execute_json::<UgoiraMetadataResponse>(self, request, "ugoira metadata").await
             .map(UgoiraMetadataResponse::into_metadata)
     }
 
-    pub fn execute_comment_page(&self, request: PixivRequest) -> Result<CommentPage, ApiError> {
-        transport::execute_json::<CommentPageResponse>(self, request, "comment page")
+    pub async fn execute_comment_page(&self, request: PixivRequest) -> Result<CommentPage, ApiError> {
+        transport::execute_json::<CommentPageResponse>(self, request, "comment page").await
             .map(CommentPageResponse::into_page)
     }
 
-    pub fn execute_notification_page(
+    pub async fn execute_notification_page(
         &self,
         request: PixivRequest,
     ) -> Result<NotificationPage, ApiError> {
-        transport::execute_json::<NotificationPageResponse>(self, request, "notification page")
+        transport::execute_json::<NotificationPageResponse>(self, request, "notification page").await
             .map(NotificationPageResponse::into_page)
     }
 
-    pub fn execute_novel_page(&self, request: PixivRequest) -> Result<NovelPage, ApiError> {
-        transport::execute_json::<NovelPageResponse>(self, request, "novel page")
+    pub async fn execute_novel_page(&self, request: PixivRequest) -> Result<NovelPage, ApiError> {
+        transport::execute_json::<NovelPageResponse>(self, request, "novel page").await
             .map(NovelPageResponse::into_page)
     }
 
-    pub fn execute_watchlist_manga(
+    pub async fn execute_watchlist_manga(
         &self,
         request: PixivRequest,
     ) -> Result<WatchlistMangaPage, ApiError> {
-        transport::execute_json::<WatchlistMangaResponse>(self, request, "watchlist manga")
+        transport::execute_json::<WatchlistMangaResponse>(self, request, "watchlist manga").await
             .map(WatchlistMangaResponse::into_page)
     }
 
-    pub fn execute_illust_series_page(
+    pub async fn execute_illust_series_page(
         &self,
         request: PixivRequest,
     ) -> Result<IllustSeriesPage, ApiError> {
-        transport::execute_json::<IllustSeriesPageResponse>(self, request, "illust series")
+        transport::execute_json::<IllustSeriesPageResponse>(self, request, "illust series").await
             .map(IllustSeriesPageResponse::into_page)
     }
 
-    pub fn execute_optional_boolean(
+    pub async fn execute_optional_boolean(
         &self,
         request: PixivRequest,
     ) -> Result<OptionalBoolean, ApiError> {
-        transport::execute_json::<SimpleBooleanResponse>(self, request, "boolean response")
+        transport::execute_json::<SimpleBooleanResponse>(self, request, "boolean response").await
             .map(SimpleBooleanResponse::into_value)
     }
 
-    pub fn execute_user_follow_detail(
+    pub async fn execute_user_follow_detail(
         &self,
         request: PixivRequest,
     ) -> Result<UserFollowDetail, ApiError> {
-        transport::execute_json::<UserFollowDetailResponse>(self, request, "user follow detail")
+        transport::execute_json::<UserFollowDetailResponse>(self, request, "user follow detail").await
             .map(UserFollowDetailResponse::into_detail)
     }
 
-    pub fn execute_stamps(&self, request: PixivRequest) -> Result<StampList, ApiError> {
-        transport::execute_json::<StampResponse>(self, request, "stamps")
+    pub async fn execute_stamps(&self, request: PixivRequest) -> Result<StampList, ApiError> {
+        transport::execute_json::<StampResponse>(self, request, "stamps").await
             .map(StampResponse::into_list)
     }
 
-    pub fn execute_trending_tags(
+    pub async fn execute_trending_tags(
         &self,
         request: PixivRequest,
     ) -> Result<TrendingTagList, ApiError> {
-        transport::execute_json::<TrendingTagResponse>(self, request, "trending tags")
+        transport::execute_json::<TrendingTagResponse>(self, request, "trending tags").await
             .map(TrendingTagResponse::into_list)
     }
 
-    pub fn execute_spotlight(&self, request: PixivRequest) -> Result<SpotlightPage, ApiError> {
-        transport::execute_json::<SpotlightResponse>(self, request, "spotlight")
+    pub async fn execute_spotlight(&self, request: PixivRequest) -> Result<SpotlightPage, ApiError> {
+        transport::execute_json::<SpotlightResponse>(self, request, "spotlight").await
             .map(SpotlightResponse::into_page)
     }
 
-    pub fn execute_current_user_profile(
+    pub async fn execute_current_user_profile(
         &self,
         request: PixivRequest,
     ) -> Result<CurrentUserProfile, ApiError> {
-        transport::execute_json::<UserMeResponse>(self, request, "current user profile")?
+        transport::execute_json::<UserMeResponse>(self, request, "current user profile").await?
             .into_profile()
             .ok_or_else(|| {
                 invalid_response("current user profile response is missing a valid profile")
             })
     }
 
-    pub fn execute_account_edit(
+    pub async fn execute_account_edit(
         &self,
         request: PixivRequest,
     ) -> Result<AccountEditResult, ApiError> {
-        transport::execute_json::<AccountEditResponse>(self, request, "account edit")
+        transport::execute_json::<AccountEditResponse>(self, request, "account edit").await
             .map(AccountEditResponse::into_result)
     }
 
-    pub fn execute_novel_text(
+    pub async fn execute_novel_text(
         &self,
         request: PixivRequest,
         novel_id: i64,
     ) -> Result<NovelText, ApiError> {
         let body =
-            transport::execute_text(self, request, "novel text", transport::HTML_RESPONSE_LIMIT)?;
+            transport::execute_text(self, request, "novel text", transport::HTML_RESPONSE_LIMIT).await?;
         endpoints::novel_text(&body, novel_id)
     }
 
-    pub fn execute_no_content(&self, request: PixivRequest) -> Result<(), ApiError> {
-        transport::execute_no_content(self, request)
+    pub async fn execute_no_content(&self, request: PixivRequest) -> Result<(), ApiError> {
+        transport::execute_no_content(self, request).await
     }
 
-    pub fn prepare_ugoira(
+    pub async fn prepare_ugoira(
         &self,
         url: String,
         headers: HashMap<String, String>,
         cache_dir: String,
         frames: Vec<UgoiraFrame>,
     ) -> Result<UgoiraPlayback, ApiError> {
-        ugoira_download::prepare(self, url, headers, cache_dir, frames)
+        ugoira_download::prepare(self, url, headers, cache_dir, frames).await
     }
 }
 
@@ -314,50 +314,55 @@ mod tests {
         }
     }
 
-    #[test]
-    fn exposes_http_status_and_body() {
+    #[tokio::test]
+    async fn exposes_http_status_and_body() {
         let error = client()
             .execute_no_content(request(server(403, "denied")))
+            .await
             .unwrap_err();
         assert!(matches!(error, ApiError::Http { status: 403, detail } if detail == "denied"));
     }
 
-    #[test]
-    fn parses_illust_page_before_crossing_the_ffi_boundary() {
+    #[tokio::test]
+    async fn parses_illust_page_before_crossing_the_ffi_boundary() {
         let response = client()
             .execute_illust_page(request(server(
                 200,
                 r#"{"illusts":[{"id":1}],"next_url":null}"#,
             )))
+            .await
             .unwrap();
         assert_eq!(response.items.len(), 1);
         assert_eq!(response.items[0].id, 1);
     }
 
-    #[test]
-    fn parses_illust_detail_before_crossing_the_ffi_boundary() {
+    #[tokio::test]
+    async fn parses_illust_detail_before_crossing_the_ffi_boundary() {
         let response = client()
             .execute_illust_detail(request(server(200, r#"{"illust":{"id":7}}"#)))
+            .await
             .unwrap();
         assert_eq!(response.id, 7);
     }
 
-    #[test]
-    fn parses_user_profile_before_crossing_the_ffi_boundary() {
+    #[tokio::test]
+    async fn parses_user_profile_before_crossing_the_ffi_boundary() {
         let response = client()
             .execute_user_profile(
                 request(server(200, r#"{"user":{"name":"artist"},"profile":{}}"#)),
                 8,
             )
+            .await
             .unwrap();
         assert_eq!(response.id, 8);
         assert_eq!(response.name, "artist");
     }
 
-    #[test]
-    fn reports_invalid_json_as_an_invalid_response() {
+    #[tokio::test]
+    async fn reports_invalid_json_as_an_invalid_response() {
         let error = client()
             .execute_illust_page(request(server(200, "{broken")))
+            .await
             .unwrap_err();
         assert!(matches!(error, ApiError::InvalidResponse { .. }));
     }

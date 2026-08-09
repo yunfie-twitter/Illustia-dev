@@ -658,6 +658,28 @@ class PalleriaSyncManager(
         dao.deleteAcceptedEvents()
         val events = dao.getQueuedEvents().filter { it.chainId == chainId }
         if (events.isEmpty()) return PallaSyncHttpResult.Success(Unit)
+        val batchJson = events.joinToString(separator = ",", prefix = "[", postfix = "]") { it.eventJson }
+        val batchRequest = Request.Builder()
+            .url(PallaSyncUrls.recordsEndpoint(baseUrl, chainId))
+            .header("Accept", JSON_MEDIA_TYPE.toString())
+            .post(batchJson.toRequestBody(JSON_MEDIA_TYPE))
+            .build()
+
+        when (val result = executeUnit(batchRequest)) {
+            is PallaSyncHttpResult.Success -> {
+                events.forEach { dao.deleteOutboxEvent(it.id) }
+                log("Uploaded and removed ${events.size} accepted sync record(s) in a single batch")
+                return PallaSyncHttpResult.Success(Unit)
+            }
+            is PallaSyncHttpResult.ProtocolError -> {
+                if (result.statusCode != 400) {
+                    return result
+                }
+                log("Batch upload failed, falling back to sequential upload to isolate the bad record")
+            }
+            else -> return result
+        }
+
         var accepted = 0
         for (event in events) {
             val request = Request.Builder()

@@ -6,7 +6,7 @@ use crate::config::{CLIENT_ID, CLIENT_SECRET, OAUTH_URL, REDIRECT_URI};
 use crate::error::{ApiError, invalid_request, invalid_response};
 use crate::models::LoginSession;
 
-pub(super) fn login_with_refresh_token(
+pub(super) async fn login_with_refresh_token(
     client: &PixivHttpClient,
     refresh_token: String,
 ) -> Result<LoginSession, ApiError> {
@@ -22,10 +22,10 @@ pub(super) fn login_with_refresh_token(
             ("refresh_token", token.into()),
         ],
         Some(token),
-    )
+    ).await
 }
 
-pub(super) fn login_with_authorization_code(
+pub(super) async fn login_with_authorization_code(
     client: &PixivHttpClient,
     code: String,
     code_verifier: String,
@@ -46,7 +46,7 @@ pub(super) fn login_with_authorization_code(
             ("redirect_uri", REDIRECT_URI.into()),
         ],
         None,
-    )
+    ).await
 }
 
 pub(super) fn create_web_login_url(
@@ -68,7 +68,7 @@ pub(super) fn create_web_login_url(
         .to_string()
 }
 
-fn oauth_login(
+async fn oauth_login(
     client: &PixivHttpClient,
     mut fields: Vec<(&str, String)>,
     fallback_refresh_token: Option<&str>,
@@ -82,7 +82,7 @@ fn oauth_login(
             .headers(client.headers.for_request(Default::default())?)
             .form(&fields),
         "OAuth",
-    )?;
+    ).await?;
     finish_session(payload, fallback_refresh_token)
 }
 

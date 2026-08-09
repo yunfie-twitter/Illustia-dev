@@ -44,6 +44,9 @@ jobs:
       needs.changes.outputs.buildgradle == 'true'
 
     runs-on: ubuntu-latest
+    concurrency:
+      group: gh-pages-publish
+      cancel-in-progress: false
     outputs:
       tag: ${{ steps.version.outputs.tag }}
 
@@ -53,7 +56,7 @@ jobs:
           fetch-depth: 0
 
       - name: Set up JDK 17
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v5.6.0
         with:
           java-version: '17'
           distribution: temurin
@@ -144,14 +147,13 @@ jobs:
 
       - name: Update F-Droid Repository
         run: |
-          mkdir -p public/repo
-          mkdir -p public/metadata
-
           git clone --branch gh-pages --single-branch \
             https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git old-repo || true
 
-          [ -d old-repo/repo ] && cp -r old-repo/repo/. public/repo/
-          [ -d old-repo/metadata ] && cp -r old-repo/metadata/. public/metadata/
+          mkdir -p public
+          [ -d old-repo ] && rsync -a --exclude='.git' old-repo/ public/
+          mkdir -p public/repo
+          mkdir -p public/metadata
           [ -d fdroid/metadata ] && cp -r fdroid/metadata/. public/metadata/
 
           cp app/build/outputs/apk/release/*.apk public/repo/
@@ -185,6 +187,7 @@ jobs:
           publish_dir: ./public
           publish_branch: gh-pages
           force_orphan: false
+          keep_files: true
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3

@@ -10,7 +10,10 @@ crate-type = ["cdylib", "rlib"]
 bench = []
 
 [dependencies]
-reqwest = { version = "0.12", default-features = false, features = ["blocking", "rustls-tls", "gzip", "brotli", "deflate"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "gzip", "brotli", "deflate", "stream"] }
+futures-util = "0.3"
+rayon = "1.10"
+tokio = { version = "1.40", features = ["rt", "rt-multi-thread", "macros", "fs", "io-util"] }
 chrono = { version = "0.4", default-features = false, features = ["clock"] }
 md5 = "0.7"
 serde = { version = "1", features = ["derive"] }
