@@ -1,48 +1,51 @@
-# OSX
-#
+# OS / Desktop
 .DS_Store
+Thumbs.db
 
-# Android/IntelliJ
-#
+# Android / Gradle / IntelliJ
 build/
-.idea
-.gradle
+.idea/
+.gradle/
 local.properties
 *.iml
 *.hprof
 .cxx/
+.kotlin/
+app/release/
 
-# Bundle artifacts
-*.jsbundle
-pixez/
 # Android signing keys
 *.keystore
 *.jks
 debug.keystore
 release.keystore
+<<<<<<< HEAD
 mcp/
 .kotlin/
 rust/**/target/
 app/release/
+=======
+release.properties
+
+# Node.js / VitePress
+node_modules/
+docs/.vitepress/dist/
+docs/.vitepress/cache/
+.npm/
+
+>>>>>>> b85653cb264de3137e8bad14d61ebfcb28489357
 # Rust build output
 /target/
-rust/pixiv-api/target/
-# rustfmt backup files
+rust/**/target/
 **/*.rs.bk
 
 # IDE
-.idea/
 .vscode/
-*.iml
 
-# OS
-.DS_Store
-Thumbs.db
-
-# Environment variables
+# Environment variables & Local logs
 .env
 .env.*
 !.env.example
+<<<<<<< HEAD
 
 # VitePress
 node_modules/
@@ -50,7 +53,13 @@ docs/.vitepress/cache/
 docs/.vitepress/dist/
 
 # Local files
+=======
+>>>>>>> b85653cb264de3137e8bad14d61ebfcb28489357
 *.log
 *.tmp
+
+# Miscellaneous / Local artifacts
+pixez/
+mcp/
 AGENTs.md
 .agents/
