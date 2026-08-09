@@ -24,7 +24,6 @@ mcp/
 .kotlin/
 rust/**/target/
 app/release/
-docs/
 # Rust build output
 /target/
 rust/pixiv-api/target/
@@ -44,6 +43,11 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# VitePress
+node_modules/
+docs/.vitepress/cache/
+docs/.vitepress/dist/
 
 # Local files
 *.log

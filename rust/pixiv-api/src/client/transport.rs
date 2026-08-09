@@ -1,7 +1,7 @@
 use std::collections::HashMap;
-use std::io::{self, BufReader, Read};
 
-use reqwest::blocking::{RequestBuilder, Response};
+use futures_util::StreamExt;
+use reqwest::{RequestBuilder, Response};
 use reqwest::header::{CONTENT_TYPE, HeaderMap, HeaderName, HeaderValue};
 use serde::de::DeserializeOwned;
 
@@ -14,30 +14,29 @@ pub(super) const HTML_RESPONSE_LIMIT: u64 = 8 * 1024 * 1024;
 const ERROR_RESPONSE_LIMIT: u64 = 64 * 1024;
 const ERROR_DETAIL_LIMIT: usize = 4 * 1024;
 const NO_CONTENT_DRAIN_LIMIT: u64 = 64 * 1024;
-const LIMIT_ERROR: &str = "decoded response exceeds configured limit";
 
-pub(super) fn execute_json<T: DeserializeOwned>(
+pub(super) async fn execute_json<T: DeserializeOwned>(
     client: &PixivHttpClient,
     request: PixivRequest,
     context: &str,
 ) -> Result<T, ApiError> {
-    send_json(build_request(client, request)?, context)
+    send_json(build_request(client, request)?, context).await
 }
 
-pub(super) fn execute_text(
+pub(super) async fn execute_text(
     client: &PixivHttpClient,
     request: PixivRequest,
     context: &str,
     limit: u64,
 ) -> Result<String, ApiError> {
-    send_text(build_request(client, request)?, context, limit)
+    send_text(build_request(client, request)?, context, limit).await
 }
 
-pub(super) fn execute_no_content(
+pub(super) async fn execute_no_content(
     client: &PixivHttpClient,
     request: PixivRequest,
 ) -> Result<(), ApiError> {
-    send_no_content(build_request(client, request)?)
+    send_no_content(build_request(client, request)?).await
 }
 
 fn build_request(
@@ -75,48 +74,54 @@ pub(super) fn request_headers(
     client.headers.for_request(header_map)
 }
 
-pub(super) fn send_json<T: DeserializeOwned>(
+pub(super) async fn send_json<T: DeserializeOwned>(
     request: RequestBuilder,
     context: &str,
 ) -> Result<T, ApiError> {
-    let response = ensure_success(request.send().map_err(network_error)?)?;
+    let response = ensure_success(request.send().await.map_err(network_error)?).await?;
     reject_declared_size(&response, JSON_RESPONSE_LIMIT, context)?;
-    let reader = BufReader::new(LimitedReader::new(response, JSON_RESPONSE_LIMIT));
-    serde_json::from_reader(reader).map_err(|error| {
-        if error.to_string().contains(LIMIT_ERROR) {
-            response_too_large(context, JSON_RESPONSE_LIMIT)
-        } else {
-            invalid_response(format!("invalid {context} response: {error}"))
-        }
+    let bytes = read_limited_bytes(response, JSON_RESPONSE_LIMIT, context).await?;
+    serde_json::from_slice(&bytes).map_err(|error| {
+        invalid_response(format!("invalid {context} response: {error}"))
     })
 }
 
-pub(super) fn send_text(
+pub(super) async fn send_text(
     request: RequestBuilder,
     context: &str,
     limit: u64,
 ) -> Result<String, ApiError> {
-    let response = ensure_success(request.send().map_err(network_error)?)?;
+    let response = ensure_success(request.send().await.map_err(network_error)?).await?;
     reject_declared_size(&response, limit, context)?;
-    read_limited_text(response, limit).map_err(|error| map_read_error(error, context, limit))
+    let bytes = read_limited_bytes(response, limit, context).await?;
+    String::from_utf8(bytes).map_err(|error| {
+        invalid_response(format!("invalid {context} response body: {error}"))
+    })
 }
 
-pub(super) fn send_no_content(request: RequestBuilder) -> Result<(), ApiError> {
-    let mut response = ensure_success(request.send().map_err(network_error)?)?;
-    let _ = io::copy(
-        &mut response.by_ref().take(NO_CONTENT_DRAIN_LIMIT),
-        &mut io::sink(),
-    );
+pub(super) async fn send_no_content(request: RequestBuilder) -> Result<(), ApiError> {
+    let response = ensure_success(request.send().await.map_err(network_error)?).await?;
+    let mut stream = response.bytes_stream();
+    let mut drained = 0;
+    while let Some(chunk) = stream.next().await {
+        if let Ok(chunk) = chunk {
+            drained += chunk.len() as u64;
+            if drained > NO_CONTENT_DRAIN_LIMIT {
+                break;
+            }
+        } else {
+            break;
+        }
+    }
     Ok(())
 }
 
-pub(super) fn ensure_success(response: Response) -> Result<Response, ApiError> {
+pub(super) async fn ensure_success(response: Response) -> Result<Response, ApiError> {
     let status = response.status().as_u16();
     if (200..300).contains(&status) {
         return Ok(response);
     }
-    let mut body = Vec::new();
-    let _ = response.take(ERROR_RESPONSE_LIMIT).read_to_end(&mut body);
+    let body = read_limited_bytes(response, ERROR_RESPONSE_LIMIT, "error").await.unwrap_or_default();
     Err(http_error(status, &error_preview(&body)))
 }
 
@@ -130,18 +135,17 @@ fn reject_declared_size(response: &Response, limit: u64, context: &str) -> Resul
     Ok(())
 }
 
-fn read_limited_text(response: Response, limit: u64) -> Result<String, io::Error> {
-    let mut text = String::new();
-    LimitedReader::new(response, limit).read_to_string(&mut text)?;
-    Ok(text)
-}
-
-fn map_read_error(error: io::Error, context: &str, limit: u64) -> ApiError {
-    if error.to_string().contains(LIMIT_ERROR) {
-        response_too_large(context, limit)
-    } else {
-        invalid_response(format!("invalid {context} response body: {error}"))
+pub(super) async fn read_limited_bytes(response: Response, limit: u64, context: &str) -> Result<Vec<u8>, ApiError> {
+    let mut bytes = Vec::new();
+    let mut stream = response.bytes_stream();
+    while let Some(chunk) = stream.next().await {
+        let chunk = chunk.map_err(network_error)?;
+        if bytes.len() as u64 + chunk.len() as u64 > limit {
+            return Err(response_too_large(context, limit));
+        }
+        bytes.extend_from_slice(&chunk);
     }
+    Ok(bytes)
 }
 
 fn response_too_large(context: &str, limit: u64) -> ApiError {
@@ -173,62 +177,12 @@ fn truncate_utf8(value: &str, max_bytes: usize) -> String {
     format!("{}…", &value[..end])
 }
 
-struct LimitedReader<R> {
-    inner: R,
-    remaining: u64,
-    checked_end: bool,
-}
-
-impl<R> LimitedReader<R> {
-    fn new(inner: R, limit: u64) -> Self {
-        Self {
-            inner,
-            remaining: limit,
-            checked_end: false,
-        }
-    }
-}
-
-impl<R: Read> Read for LimitedReader<R> {
-    fn read(&mut self, buffer: &mut [u8]) -> io::Result<usize> {
-        if buffer.is_empty() || self.checked_end {
-            return Ok(0);
-        }
-        if self.remaining == 0 {
-            let mut probe = [0_u8; 1];
-            let read = self.inner.read(&mut probe)?;
-            self.checked_end = true;
-            return if read == 0 {
-                Ok(0)
-            } else {
-                Err(io::Error::other(LIMIT_ERROR))
-            };
-        }
-        let allowed = usize::try_from(self.remaining.min(buffer.len() as u64))
-            .expect("limited read size must fit usize");
-        let read = self.inner.read(&mut buffer[..allowed])?;
-        self.remaining -= read as u64;
-        Ok(read)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::io::Cursor;
     use std::io::Write;
     use std::net::TcpListener;
     use std::thread;
-
-    fn client() -> PixivHttpClient {
-        PixivHttpClient::new(
-            "standard".into(),
-            "test".into(),
-            "Android 10".into(),
-            "en-US".into(),
-        )
-        .unwrap()
-    }
 
     fn raw_server(response: Vec<u8>) -> String {
         let listener = TcpListener::bind("127.0.0.1:0").unwrap();
@@ -236,7 +190,7 @@ mod tests {
         thread::spawn(move || {
             let (mut stream, _) = listener.accept().unwrap();
             let mut request = [0_u8; 1024];
-            let _ = stream.read(&mut request);
+            let _ = std::io::Read::read(&mut stream, &mut request);
             stream.write_all(&response).unwrap();
         });
         address
@@ -249,23 +203,13 @@ mod tests {
         response
     }
 
-    #[test]
-    fn limited_reader_accepts_exact_limit() {
-        let mut output = String::new();
-        LimitedReader::new(Cursor::new(b"exact"), 5)
-            .read_to_string(&mut output)
-            .unwrap();
-        assert_eq!(output, "exact");
-    }
-
-    #[test]
-    fn limited_reader_rejects_one_byte_over_limit() {
-        let mut output = Vec::new();
-        let error = LimitedReader::new(Cursor::new(b"large"), 4)
-            .read_to_end(&mut output)
-            .unwrap_err();
-        assert_eq!(error.to_string(), LIMIT_ERROR);
-        assert_eq!(output, b"larg");
+    fn client() -> PixivHttpClient {
+        PixivHttpClient::new(
+            "standard".into(),
+            "test".into(),
+            "Android 10".into(),
+            "en-US".into(),
+        ).unwrap()
     }
 
     #[test]
@@ -276,36 +220,36 @@ mod tests {
         assert!(preview.ends_with('…'));
     }
 
-    #[test]
-    fn accepts_an_exact_size_body_without_content_length() {
+    #[tokio::test]
+    async fn accepts_an_exact_size_body_without_content_length() {
         let url = raw_server(response("200 OK", "", b"four"));
-        let text = send_text(client().client.get(url), "test", 4).unwrap();
+        let text = send_text(client().client.get(url), "test", 4).await.unwrap();
         assert_eq!(text, "four");
     }
 
-    #[test]
-    fn rejects_an_oversized_body_without_content_length() {
+    #[tokio::test]
+    async fn rejects_an_oversized_body_without_content_length() {
         let url = raw_server(response("200 OK", "", b"large"));
-        let error = send_text(client().client.get(url), "test", 4).unwrap_err();
+        let error = send_text(client().client.get(url), "test", 4).await.unwrap_err();
         assert!(matches!(error, ApiError::InvalidResponse { .. }));
     }
 
-    #[test]
-    fn rejects_a_declared_size_above_the_limit_before_reading() {
+    #[tokio::test]
+    async fn rejects_a_declared_size_above_the_limit_before_reading() {
         let url = raw_server(response("200 OK", "Content-Length: 100\r\n", b"x"));
-        let error = send_text(client().client.get(url), "test", 4).unwrap_err();
+        let error = send_text(client().client.get(url), "test", 4).await.unwrap_err();
         assert!(matches!(error, ApiError::InvalidResponse { .. }));
     }
 
-    #[test]
-    fn truncates_large_http_error_details() {
+    #[tokio::test]
+    async fn truncates_large_http_error_details() {
         let body = vec![b'x'; ERROR_RESPONSE_LIMIT as usize + 1024];
         let url = raw_server(response(
             "500 Internal Server Error",
             &format!("Content-Length: {}\r\n", body.len()),
             &body,
         ));
-        let error = send_no_content(client().client.get(url)).unwrap_err();
+        let error = send_no_content(client().client.get(url)).await.unwrap_err();
         assert!(matches!(
             error,
             ApiError::Http {
@@ -315,9 +259,9 @@ mod tests {
         ));
     }
 
-    #[test]
-    fn accepts_an_empty_no_content_response() {
+    #[tokio::test]
+    async fn accepts_an_empty_no_content_response() {
         let url = raw_server(response("204 No Content", "", b""));
-        send_no_content(client().client.get(url)).unwrap();
+        send_no_content(client().client.get(url)).await.unwrap();
     }
 }

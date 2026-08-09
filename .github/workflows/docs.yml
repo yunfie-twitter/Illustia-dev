@@ -1,0 +1,59 @@
+name: Documentation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "fdroid/metadata/com.yunfie.illustia/en-US/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    concurrency:
+      group: gh-pages-publish
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build documentation
+        run: npm run docs:build
+
+      - name: Preserve F-Droid repository
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          git clone --branch gh-pages --single-branch \
+            https://x-access-token:${GH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git old-pages || true
+
+          for directory in repo metadata tmp; do
+            if [ -d "old-pages/${directory}" ]; then
+              cp -a "old-pages/${directory}" "docs/.vitepress/dist/${directory}"
+            fi
+          done
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/.vitepress/dist
+          publish_branch: gh-pages
+          force_orphan: false

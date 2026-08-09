@@ -7,6 +7,8 @@ import com.yunfie.illustia.settings.SyncedCollectionsSnapshot
 import com.yunfie.illustia.settings.store.MAX_SEARCH_HISTORY
 import com.yunfie.illustia.settings.store.MAX_VIEW_HISTORY
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
@@ -46,12 +48,19 @@ class PallaSyncEventApplier internal constructor(
     ): List<PallaSyncApplyResult> = withContext(Dispatchers.IO) {
         if (payloadJsonStrings.isEmpty()) return@withContext emptyList()
 
+        val parsedPayloads = kotlinx.coroutines.coroutineScope {
+            payloadJsonStrings.map { encoded ->
+                async(Dispatchers.Default) {
+                    runCatching { json.decodeFromString<DataPayload>(encoded) }
+                }
+            }.awaitAll()
+        }
+
         val results = ArrayList<PallaSyncApplyResult>(payloadJsonStrings.size)
         collectionStore.update { original ->
             var current = original
-            payloadJsonStrings.forEach { encoded ->
-                val outcome = runCatching {
-                    val payload = json.decodeFromString<DataPayload>(encoded)
+            parsedPayloads.forEach { parsed ->
+                val outcome = parsed.mapCatching { payload ->
                     applyPayload(current, payload)
                 }.fold(
                     onSuccess = { it },

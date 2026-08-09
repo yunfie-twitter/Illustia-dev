@@ -21,7 +21,7 @@ pub(crate) fn cached(cache_dir: &Path, frames: &[UgoiraFrame]) -> Option<UgoiraP
     cache_is_complete(cache_dir, frames).then(|| playback(cache_dir, frames.to_vec()))
 }
 
-pub(crate) fn prepare(
+pub(crate) async fn prepare(
     zip_path: &Path,
     cache_dir: &Path,
     frames: Vec<UgoiraFrame>,
@@ -39,76 +39,97 @@ pub(crate) fn prepare(
     fs::create_dir_all(staging.path())
         .map_err(|error| io_error("create ugoira staging directory", error))?;
 
-    extract_required(zip_path, staging.path(), &frames).and_then(|()| {
-        File::create(staging.path().join(COMPLETE_MARKER))
-            .map_err(|error| io_error("create ugoira completion marker", error))?;
-        remove_if_exists(cache_dir)?;
-        fs::rename(staging.path(), cache_dir)
-            .map_err(|error| io_error("publish ugoira cache", error))
-    })?;
+    extract_required(zip_path, staging.path(), &frames).await?;
+    File::create(staging.path().join(COMPLETE_MARKER))
+        .map_err(|error| io_error("create ugoira completion marker", error))?;
+    remove_if_exists(cache_dir)?;
+    fs::rename(staging.path(), cache_dir)
+        .map_err(|error| io_error("publish ugoira cache", error))?;
+
     Ok(playback(cache_dir, frames))
 }
 
-fn extract_required(
+async fn extract_required(
     zip_path: &Path,
     staging: &Path,
     frames: &[UgoiraFrame],
 ) -> Result<(), ApiError> {
-    let file = File::open(zip_path).map_err(|error| io_error("open ugoira archive", error))?;
-    let mut archive = ZipArchive::new(file).map_err(zip_error)?;
-    if archive.len() > MAX_ENTRIES {
-        return Err(invalid("ugoira archive contains too many entries"));
+    let zip_path = zip_path.to_owned();
+    let staging = staging.to_owned();
+    let frames = frames.to_vec();
+
+    let write_tasks = tokio::task::spawn_blocking(move || {
+        let file = File::open(&zip_path).map_err(|error| io_error("open ugoira archive", error))?;
+        let mut archive = ZipArchive::new(file).map_err(zip_error)?;
+        if archive.len() > MAX_ENTRIES {
+            return Err(invalid("ugoira archive contains too many entries"));
+        }
+
+        let required: HashSet<&str> = frames.iter().map(|frame| frame.file.as_str()).collect();
+        let mut extracted = HashSet::with_capacity(required.len());
+        let mut total_bytes = 0_u64;
+        let mut write_tasks = Vec::new();
+
+        for index in 0..archive.len() {
+            let mut entry = archive.by_index(index).map_err(zip_error)?;
+            let name = entry.name().replace('\\', "/");
+            validate_relative_path(&name)?;
+            if entry
+                .unix_mode()
+                .is_some_and(|mode| mode & 0o170000 == 0o120000)
+            {
+                return Err(invalid("ugoira archive contains a symbolic link"));
+            }
+            if entry.is_dir() || !required.contains(name.as_str()) {
+                continue;
+            }
+            if entry.size() > MAX_ENTRY_BYTES {
+                return Err(invalid("ugoira frame exceeds the size limit"));
+            }
+            total_bytes = total_bytes
+                .checked_add(entry.size())
+                .ok_or_else(|| invalid("ugoira archive size overflow"))?;
+            if total_bytes > MAX_TOTAL_BYTES {
+                return Err(invalid("ugoira archive exceeds the total size limit"));
+            }
+
+            let target = staging.join(&name);
+            let expected_size = entry.size();
+            let mut buf = Vec::with_capacity(expected_size as usize);
+            let copied = io::copy(&mut entry.by_ref().take(MAX_ENTRY_BYTES + 1), &mut buf)
+                .map_err(|error| io_error("extract ugoira frame", error))?;
+            if copied > MAX_ENTRY_BYTES {
+                return Err(invalid("ugoira frame exceeds the size limit"));
+            }
+            if copied != expected_size {
+                return Err(invalid("ugoira frame size does not match its ZIP metadata"));
+            }
+            extracted.insert(name);
+
+            write_tasks.push(tokio::spawn(async move {
+                if let Some(parent) = target.parent() {
+                    tokio::fs::create_dir_all(parent)
+                        .await
+                        .map_err(|error| io_error("create ugoira frame directory", error))?;
+                }
+                tokio::fs::write(&target, buf)
+                    .await
+                    .map_err(|error| io_error("create ugoira frame", error))
+            }));
+        }
+
+        if required.iter().any(|name| !extracted.contains(*name)) {
+            return Err(invalid("ugoira archive is missing required frames"));
+        }
+        Ok(write_tasks)
+    })
+    .await
+    .map_err(|_| invalid("ugoira extraction panicked"))??;
+
+    for task in write_tasks {
+        task.await.map_err(|_| invalid("ugoira write panicked"))??;
     }
 
-    let required: HashSet<&str> = frames.iter().map(|frame| frame.file.as_str()).collect();
-    let mut extracted = HashSet::with_capacity(required.len());
-    let mut total_bytes = 0_u64;
-
-    for index in 0..archive.len() {
-        let mut entry = archive.by_index(index).map_err(zip_error)?;
-        let name = entry.name().replace('\\', "/");
-        validate_relative_path(&name)?;
-        if entry
-            .unix_mode()
-            .is_some_and(|mode| mode & 0o170000 == 0o120000)
-        {
-            return Err(invalid("ugoira archive contains a symbolic link"));
-        }
-        if entry.is_dir() || !required.contains(name.as_str()) {
-            continue;
-        }
-        if entry.size() > MAX_ENTRY_BYTES {
-            return Err(invalid("ugoira frame exceeds the size limit"));
-        }
-        total_bytes = total_bytes
-            .checked_add(entry.size())
-            .ok_or_else(|| invalid("ugoira archive size overflow"))?;
-        if total_bytes > MAX_TOTAL_BYTES {
-            return Err(invalid("ugoira archive exceeds the total size limit"));
-        }
-
-        let target = staging.join(&name);
-        if let Some(parent) = target.parent() {
-            fs::create_dir_all(parent)
-                .map_err(|error| io_error("create ugoira frame directory", error))?;
-        }
-        let mut output =
-            File::create(target).map_err(|error| io_error("create ugoira frame", error))?;
-        let expected_size = entry.size();
-        let copied = io::copy(&mut entry.by_ref().take(MAX_ENTRY_BYTES + 1), &mut output)
-            .map_err(|error| io_error("extract ugoira frame", error))?;
-        if copied > MAX_ENTRY_BYTES {
-            return Err(invalid("ugoira frame exceeds the size limit"));
-        }
-        if copied != expected_size {
-            return Err(invalid("ugoira frame size does not match its ZIP metadata"));
-        }
-        extracted.insert(name);
-    }
-
-    if required.iter().any(|name| !extracted.contains(*name)) {
-        return Err(invalid("ugoira archive is missing required frames"));
-    }
     Ok(())
 }
 
@@ -229,14 +250,16 @@ mod tests {
         let zip_path = root.join("frames.zip");
         zip_with(&zip_path, &[("000.jpg", b"a"), ("unused.jpg", b"b")]);
         let cache = root.join("cache");
-        let result = prepare(
-            &zip_path,
-            &cache,
-            vec![UgoiraFrame {
-                file: "000.jpg".into(),
-                delay_millis: 10,
-            }],
-        )
+        let result = tokio::runtime::Runtime::new().unwrap().block_on(async {
+            prepare(
+                &zip_path,
+                &cache,
+                vec![UgoiraFrame {
+                    file: "000.jpg".into(),
+                    delay_millis: 10,
+                }],
+            ).await
+        })
         .unwrap();
         assert_eq!(result.frames[0].delay_millis, DEFAULT_FRAME_DELAY_MILLIS);
         assert!(cache.join("000.jpg").is_file());
@@ -248,14 +271,16 @@ mod tests {
     #[test]
     fn rejects_unsafe_frame_paths() {
         let root = temp_dir("unsafe");
-        let result = prepare(
-            &root.join("missing.zip"),
-            &root.join("cache"),
-            vec![UgoiraFrame {
-                file: "../escape.jpg".into(),
-                delay_millis: 20,
-            }],
-        );
+        let result = tokio::runtime::Runtime::new().unwrap().block_on(async {
+            prepare(
+                &root.join("missing.zip"),
+                &root.join("cache"),
+                vec![UgoiraFrame {
+                    file: "../escape.jpg".into(),
+                    delay_millis: 20,
+                }],
+            ).await
+        });
         assert!(matches!(result, Err(ApiError::InvalidRequest { .. })));
         fs::remove_dir_all(root).unwrap();
     }
@@ -273,14 +298,16 @@ mod tests {
         let root = temp_dir("missing");
         let zip_path = root.join("frames.zip");
         zip_with(&zip_path, &[("other.jpg", b"x")]);
-        let result = prepare(
-            &zip_path,
-            &root.join("cache"),
-            vec![UgoiraFrame {
-                file: "000.jpg".into(),
-                delay_millis: 20,
-            }],
-        );
+        let result = tokio::runtime::Runtime::new().unwrap().block_on(async {
+            prepare(
+                &zip_path,
+                &root.join("cache"),
+                vec![UgoiraFrame {
+                    file: "000.jpg".into(),
+                    delay_millis: 20,
+                }],
+            ).await
+        });
         assert!(matches!(result, Err(ApiError::InvalidRequest { .. })));
         fs::remove_dir_all(root).unwrap();
     }
@@ -310,14 +337,16 @@ mod tests {
         let root = temp_dir("corrupt");
         let zip_path = root.join("frames.zip");
         fs::write(&zip_path, b"not-a-zip").unwrap();
-        let result = prepare(
-            &zip_path,
-            &root.join("cache"),
-            vec![UgoiraFrame {
-                file: "000.jpg".into(),
-                delay_millis: 20,
-            }],
-        );
+        let result = tokio::runtime::Runtime::new().unwrap().block_on(async {
+            prepare(
+                &zip_path,
+                &root.join("cache"),
+                vec![UgoiraFrame {
+                    file: "000.jpg".into(),
+                    delay_millis: 20,
+                }],
+            ).await
+        });
         assert!(matches!(result, Err(ApiError::InvalidRequest { .. })));
         assert!(fs::read_dir(&root).unwrap().all(|entry| {
             !entry
