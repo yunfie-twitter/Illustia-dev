@@ -39,10 +39,7 @@ internal fun mainTabs(shortsFeedEnabled: Boolean): List<AppTab> = buildList {
     add(AppTab.More)
 }
 
-internal fun visibleTabs(shortsFeedEnabled: Boolean, liquidGlass: Boolean): List<AppTab> {
-    val tabs = mainTabs(shortsFeedEnabled)
-    return if (liquidGlass) tabs.filter { it != AppTab.More } else tabs
-}
+internal fun visibleTabs(shortsFeedEnabled: Boolean): List<AppTab> = mainTabs(shortsFeedEnabled)
 
 internal fun startupTabFor(value: String): AppTab {
     return when (value) {

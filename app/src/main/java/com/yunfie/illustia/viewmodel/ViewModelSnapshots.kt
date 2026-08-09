@@ -25,6 +25,7 @@ internal data class SearchSnapshot(
 )
 
 internal data class UserPageSnapshot(
+    val selectedUserId: Long?,
     val selectedUser: UserProfile?,
     val selectedUserIllusts: List<Illust>,
     val selectedUserNextUrl: String?,
@@ -53,6 +54,7 @@ internal fun IllustiaUiState.toSearchSnapshot(): SearchSnapshot {
 
 internal fun IllustiaUiState.toUserPageSnapshot(): UserPageSnapshot {
     return UserPageSnapshot(
+        selectedUserId = selectedUserId,
         selectedUser = selectedUser,
         selectedUserIllusts = selectedUserIllusts,
         selectedUserNextUrl = selectedUserNextUrl,
@@ -69,6 +71,7 @@ internal fun IllustiaUiState.toUserPageSnapshot(): UserPageSnapshot {
 
 internal fun IllustiaUiState.restore(snapshot: UserPageSnapshot): IllustiaUiState {
     return copy(
+        selectedUserId = snapshot.selectedUserId,
         selectedUser = snapshot.selectedUser,
         selectedUserIllusts = snapshot.selectedUserIllusts,
         selectedUserNextUrl = snapshot.selectedUserNextUrl,

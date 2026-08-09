@@ -52,9 +52,9 @@ class CrashHandler : Thread.UncaughtExceptionHandler {
         val message = ex.message.orEmpty()
         return when {
             ex is Resources.NotFoundException || ex is InflateException || message.contains("XML") ->
-                "アプリのリソース読み込みに失敗しました。\n$message"
+                context?.getString(R.string.error_crash_resource_loading, message) ?: message
             message.contains("document", ignoreCase = true) ->
-                "保存先フォルダの権限を確認してください。設定から保存先を選び直すと復旧できる場合があります。\n$message"
+                context?.getString(R.string.error_crash_storage_permission, message) ?: message
             else -> {
                 val sw = StringWriter()
                 ex.printStackTrace(PrintWriter(sw))

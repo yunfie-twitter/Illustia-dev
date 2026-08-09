@@ -100,12 +100,11 @@ data class AppSettings(
     val privacyModeAutoLockTiming: String = "immediate",  // immediate|30s|1m|5m|10m|disabled
     val hideRecents: Boolean = true,
     val hideNotifications: Boolean = false,
-    val dummyAppName: String = "電卓",
+    val dummyAppName: String = "",
     val dummyIconVariant: String = "ic_launcher_dummy",
     val pallaSyncEnabled: Boolean = false,
     val pallaSyncServerUrl: String = "https://api.yunfi.f5.si",
     val sendTelemetry: Boolean = false,
-    val liquidGlass: Boolean = false,
 ) {
     val useHighQualityFeedImages: Boolean
         get() = highQualityImages && feedPreviewQuality != "low"

@@ -467,6 +467,7 @@
     <string name="login_token_title">Refresh Tokenログイン</string>
     <string name="login_token_description">既に発行済みの refresh token を貼り付けて、すばやくログインします。</string>
     <string name="login_token_button">Refresh Tokenでログイン</string>
+    <string name="login_refresh_token_label">Pixiv refresh token</string>
     <string name="login_feature_ranking">ランキング</string>
     <string name="login_feature_bookmarks">ブックマーク</string>
     <string name="login_feature_sync">同期</string>
@@ -709,6 +710,11 @@
     <string name="tag_sheet_remove_favorite">お気に入りから削除</string>
     <string name="tag_sheet_mute">タグをミュート</string>
     <string name="tag_sheet_unmute">ミュートを解除</string>
+
+    <!-- Data and telemetry settings -->
+    <string name="data_section_privacy_telemetry">プライバシーとテレメトリ</string>
+    <string name="data_send_telemetry">テレメトリの送信</string>
+    <string name="data_send_telemetry_desc">クラッシュレポートと利用状況データを送信して品質向上に協力します</string>
     
     <!-- PallaSync settings -->
     <string name="pallasync_settings_title">PallaSync 同期</string>
@@ -729,4 +735,40 @@
     <string name="pallasync_server_url_dialog_desc">PallaSync サーバーのベースURLを入力してください</string>
     <string name="pallasync_pair_device">端末の追加</string>
     <string name="pallasync_pair_device_desc">QRコードをスキャンして他の端末と同期します</string>
+    <string name="pallasync_section_title">PallaSync</string>
+    <string name="pallasync_account_section">PallaSync（E2EE 同期）</string>
+    <string name="pallasync_sync_devices">同期デバイス</string>
+    <string name="pallasync_view_sync_code">同期コードを表示</string>
+    <string name="pallasync_enter_sync_code">同期コードを入力</string>
+    <string name="pallasync_sync_qr_code">同期用QRコード</string>
+    <string name="pallasync_recovery_phrase_title">同期チェーンの復元フレーズ</string>
+    <string name="pallasync_recovery_phrase_desc">データを同期するには、この24単語を正しい順序で別の端末に入力してください。このフレーズは誰にも共有しないでください。</string>
+    <string name="msg_copied_to_clipboard">クリップボードにコピーしました</string>
+    <string name="action_copy_to_clipboard">クリップボードにコピー</string>
+    <string name="pallasync_invalid_seed_phrase">復元フレーズの形式が正しくありません。</string>
+    <string name="status_loading">読み込み中…</string>
+    <string name="pallasync_join_chain">同期チェーンに参加</string>
+    <string name="pallasync_join_chain_desc">別の端末に表示された24単語の復元フレーズを入力して、データを同期します。</string>
+    <string name="msg_pallasync_chain_joined">同期チェーンに参加しました</string>
+    <string name="error_pallasync_join_chain_failed">同期チェーンに参加できませんでした</string>
+    <string name="error_pallasync_seed_phrase_word_count">24単語を正確に入力してください</string>
+    <string name="pallasync_joining">参加中…</string>
+    <string name="pallasync_scan_qr_prompt">同期用QRコードをスキャンしてください</string>
+    <string name="pallasync_scan_qr_code">QRコードをスキャン</string>
+    <string name="pallasync_device_view_history">デバイスの閲覧履歴</string>
+    <string name="pallasync_device_id">ID: %1$s</string>
+    <string name="error_pallasync_invalid_server_url">有効なHTTP(S) URLを入力してください</string>
+    <string name="error_pallasync_delete_chain_failed">チェーンを削除できませんでした。設定は保持されています</string>
+    <string name="error_pallasync_create_chain_failed">同期チェーンを作成できませんでした</string>
+    <string name="pallasync_sync_now">手動で同期する</string>
+    <string name="pallasync_sync_now_desc">直ちにサーバーとデータの送受信を行います</string>
+    <string name="msg_pallasync_sync_completed">同期が完了しました</string>
+    <string name="error_pallasync_sync_failed">同期できませんでした。状態は保持されています</string>
+    <string name="pallasync_sync_logs">同期ログ</string>
+    <string name="pallasync_no_logs">ログはまだありません…</string>
+    <string name="field_url">URL</string>
+    <string name="error_crash_resource_loading">アプリのリソース読み込みに失敗しました。\n%1$s</string>
+    <string name="error_crash_storage_permission">保存先フォルダの権限を確認してください。設定から保存先を選び直すと復旧できる場合があります。\n%1$s</string>
+    <string name="mute_user_id">ユーザーID: %1$d</string>
+    <string name="mute_illust_id">イラストID: %1$d</string>
 </resources>

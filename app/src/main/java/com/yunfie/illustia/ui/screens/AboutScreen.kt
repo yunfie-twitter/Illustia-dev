@@ -105,7 +105,7 @@ fun AboutScreen(
                     )
                 }
                 Text(
-                    text = "Palleria",
+                    text = stringResource(R.string.app_name),
                     color = MiuixTheme.colorScheme.onBackground,
                     style = MiuixTheme.textStyles.title1,
                     fontWeight = FontWeight.Black,

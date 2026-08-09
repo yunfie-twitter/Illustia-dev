@@ -120,6 +120,7 @@ open class IllustiaViewModelCore(
     private var searchJob: Job? = null
     private var detailExtrasJob: Job? = null
     private var loadingJob: Job? = null
+    private var userPageLoadJob: Job? = null
     private var closeUserPageJob: Job? = null
     private var privacyUnlockJob: Job? = null
     private var autoLockJob: Job? = null
@@ -398,10 +399,6 @@ open class IllustiaViewModelCore(
 
     fun updateShowAiBadge(value: Boolean) {
         updateSettings { it.copy(showAiBadge = value) }
-    }
-
-    fun updateLiquidGlass(value: Boolean) {
-        updateSettings { it.copy(liquidGlass = value) }
     }
 
     fun userProfileGridState(userId: Long): LazyGridState {
@@ -1639,6 +1636,8 @@ open class IllustiaViewModelCore(
     fun openUser(userId: Long) {
         closeUserPageJob?.cancel()
         closeUserPageJob = null
+        userPageLoadJob?.cancel()
+        userPageLoadJob = null
         if (userId <= 0L) {
             _uiState.update { it.copy(message = str(R.string.error_load_artist_failed)) }
             return
@@ -1648,9 +1647,10 @@ open class IllustiaViewModelCore(
             openUserPage(userId)
             return
         }
-        if (_uiState.value.selectedUser?.id != userId) {
-            _uiState.update {
+        _uiState.update {
+            if (it.selectedUser?.id != userId) {
                 it.copy(
+                    selectedUserId = userId,
                     selectedUser = null,
                     selectedUserIllusts = emptyList(),
                     selectedUserNextUrl = null,
@@ -1662,17 +1662,26 @@ open class IllustiaViewModelCore(
                     userPageDismissed = false,
                     userPageFromSheet = false,
                 )
+            } else {
+                it.copy(
+                    selectedUserId = userId,
+                    userPageDismissed = false,
+                    userPageFromSheet = false,
+                )
             }
         }
-        viewModelScope.launch(Dispatchers.IO) {
+        val job = viewModelScope.launch(Dispatchers.IO) {
             _uiState.update { it.copy(loadState = LoadState.Loading, message = null) }
             try {
-                val profile = repository.userDetail(userId)
-                val page = repository.userIllusts(userId)
-                _uiState.update {
-                    it.copy(
+                val profileDeferred = async { repository.userDetail(userId) }
+                val pageDeferred = async { repository.userIllusts(userId) }
+                val profile = profileDeferred.await()
+                val page = pageDeferred.await()
+                _uiState.update { state ->
+                    if (state.selectedUserId != userId) return@update state
+                    state.copy(
                         selectedUser = profile,
-                        selectedUserIllusts = page.items.visibleWithSettings(it.settings),
+                        selectedUserIllusts = page.items.visibleWithSettings(state.settings),
                         selectedUserNextUrl = page.nextUrl,
                         selectedUserBookmarks = emptyList(),
                         selectedUserBookmarksNextUrl = null,
@@ -1699,11 +1708,17 @@ open class IllustiaViewModelCore(
                 }
             }
         }
+        userPageLoadJob = job
+        job.invokeOnCompletion {
+            if (userPageLoadJob === job) userPageLoadJob = null
+        }
     }
 
     fun closeUser() {
         closeUserPageJob?.cancel()
         closeUserPageJob = null
+        userPageLoadJob?.cancel()
+        userPageLoadJob = null
         _uiState.update {
             it.copy(
                 showUserPage = false,
@@ -1720,6 +1735,8 @@ open class IllustiaViewModelCore(
     fun openUserPage(userId: Long) {
         closeUserPageJob?.cancel()
         closeUserPageJob = null
+        userPageLoadJob?.cancel()
+        userPageLoadJob = null
         if (userId <= 0L) {
             _uiState.update { it.copy(message = str(R.string.error_load_artist_failed)) }
             return
@@ -1728,6 +1745,7 @@ open class IllustiaViewModelCore(
         captureProfileReturnDetail()
         _uiState.update {
             it.copy(
+                selectedUserId = userId,
                 selectedUser = null,
                 selectedUserIllusts = emptyList(),
                 selectedUserNextUrl = null,
@@ -1739,16 +1757,20 @@ open class IllustiaViewModelCore(
                 showUserPage = true,
                 userPageFromSheet = false,
                 userPageDismissed = false,
+                message = null,
             )
         }
-        viewModelScope.launch(Dispatchers.IO) {
+        val job = viewModelScope.launch(Dispatchers.IO) {
             try {
-                val profile = repository.userDetail(userId)
-                val page = repository.userIllusts(userId)
-                _uiState.update {
-                    it.copy(
+                val profileDeferred = async { repository.userDetail(userId) }
+                val pageDeferred = async { repository.userIllusts(userId) }
+                val profile = profileDeferred.await()
+                val page = pageDeferred.await()
+                _uiState.update { state ->
+                    if (state.selectedUserId != userId) return@update state
+                    state.copy(
                         selectedUser = profile,
-                        selectedUserIllusts = page.items.visibleWithSettings(it.settings),
+                        selectedUserIllusts = page.items.visibleWithSettings(state.settings),
                         selectedUserNextUrl = page.nextUrl,
                         selectedUserBookmarks = emptyList(),
                         selectedUserBookmarksNextUrl = null,
@@ -1772,10 +1794,16 @@ open class IllustiaViewModelCore(
                 }
             }
         }
+        userPageLoadJob = job
+        job.invokeOnCompletion {
+            if (userPageLoadJob === job) userPageLoadJob = null
+        }
     }
 
     fun hideUserPage() {
         closeUserPageJob?.cancel()
+        userPageLoadJob?.cancel()
+        userPageLoadJob = null
         _uiState.update {
             it.copy(userPageDismissed = true)
         }
@@ -1783,6 +1811,8 @@ open class IllustiaViewModelCore(
 
     fun closeUserPage() {
         closeUserPageJob?.cancel()
+        userPageLoadJob?.cancel()
+        userPageLoadJob = null
         _uiState.update {
             it.copy(
                 showUserPage = false,
@@ -1794,6 +1824,7 @@ open class IllustiaViewModelCore(
             delay(350)
             _uiState.update {
                 it.copy(
+                    selectedUserId = null,
                     selectedUser = null,
                     selectedUserIllusts = emptyList(),
                     selectedUserNextUrl = null,
@@ -2993,6 +3024,7 @@ open class IllustiaViewModelCore(
         searchJob?.cancel()
         detailExtrasJob?.cancel()
         loadingJob?.cancel()
+        userPageLoadJob?.cancel()
         recommendedTagsJob?.cancel()
         recommendedTagsExpiryJob?.cancel()
     }

@@ -462,6 +462,7 @@
     <string name="login_token_title">Refresh Token Login</string>
     <string name="login_token_description">Paste an existing refresh token to log in quickly.</string>
     <string name="login_token_button">Log In with Refresh Token</string>
+    <string name="login_refresh_token_label">Pixiv refresh token</string>
     <string name="login_feature_ranking">Ranking</string>
     <string name="login_feature_bookmarks">Bookmarks</string>
     <string name="login_feature_sync">Sync</string>
@@ -711,4 +712,63 @@
     <string name="tag_sheet_remove_favorite">Remove favorite</string>
     <string name="tag_sheet_mute">Mute tag</string>
     <string name="tag_sheet_unmute">Unmute tag</string>
+
+    <!-- Data and telemetry settings -->
+    <string name="data_section_privacy_telemetry">Privacy and telemetry</string>
+    <string name="data_send_telemetry">Send telemetry</string>
+    <string name="data_send_telemetry_desc">Help improve quality by sending crash reports and usage data</string>
+
+    <!-- PallaSync settings -->
+    <string name="pallasync_settings_title">PallaSync Sync</string>
+    <string name="pallasync_enable">Enable PallaSync</string>
+    <string name="pallasync_enable_desc">Sync browsing history, bookmarks, and more with your other devices</string>
+    <string name="pallasync_server_url">Server URL</string>
+    <string name="pallasync_leave_chain">Leave sync chain</string>
+    <string name="pallasync_leave_chain_desc">Remove this device from the current sync chain</string>
+    <string name="pallasync_leave_chain_confirm">Leave the current sync chain? Local chain data will be deleted.</string>
+    <string name="msg_pallasync_chain_left">Left the sync chain</string>
+    <string name="pallasync_delete_chain">Delete chain</string>
+    <string name="pallasync_delete_chain_desc">Delete all sync data from this device</string>
+    <string name="pallasync_delete_chain_confirm">Delete this chain?\nSync data and settings will be reset.</string>
+    <string name="msg_pallasync_chain_deleted">Chain deleted.</string>
+    <string name="pallasync_server_url_dialog_title">Enter server URL</string>
+    <string name="pallasync_server_url_dialog_desc">Enter the base URL of the PallaSync server</string>
+    <string name="pallasync_pair_device">Add device</string>
+    <string name="pallasync_pair_device_desc">Scan a QR code to sync with another device</string>
+    <string name="pallasync_section_title">PallaSync</string>
+    <string name="pallasync_account_section">PallaSync (E2EE Sync)</string>
+    <string name="pallasync_sync_devices">Sync devices</string>
+    <string name="pallasync_view_sync_code">View sync code</string>
+    <string name="pallasync_enter_sync_code">Enter sync code</string>
+    <string name="pallasync_sync_qr_code">Sync QR code</string>
+    <string name="pallasync_recovery_phrase_title">Sync chain recovery phrase</string>
+    <string name="pallasync_recovery_phrase_desc">Enter these 24 words in the exact order on another device to sync your data. Do not share this phrase with anyone.</string>
+    <string name="msg_copied_to_clipboard">Copied to clipboard</string>
+    <string name="action_copy_to_clipboard">Copy to clipboard</string>
+    <string name="pallasync_invalid_seed_phrase">Invalid recovery phrase format.</string>
+    <string name="status_loading">Loading…</string>
+    <string name="pallasync_join_chain">Join sync chain</string>
+    <string name="pallasync_join_chain_desc">Enter the 24-word recovery phrase from another device to sync your data.</string>
+    <string name="msg_pallasync_chain_joined">Successfully joined the sync chain</string>
+    <string name="error_pallasync_join_chain_failed">Could not join the sync chain</string>
+    <string name="error_pallasync_seed_phrase_word_count">Enter exactly 24 words</string>
+    <string name="pallasync_joining">Joining…</string>
+    <string name="pallasync_scan_qr_prompt">Scan a sync QR code</string>
+    <string name="pallasync_scan_qr_code">Scan QR code</string>
+    <string name="pallasync_device_view_history">Device browsing history</string>
+    <string name="pallasync_device_id">ID: %1$s</string>
+    <string name="error_pallasync_invalid_server_url">Enter a valid HTTP(S) URL</string>
+    <string name="error_pallasync_delete_chain_failed">Could not delete the chain. Settings were preserved.</string>
+    <string name="error_pallasync_create_chain_failed">Could not create the sync chain</string>
+    <string name="pallasync_sync_now">Sync now</string>
+    <string name="pallasync_sync_now_desc">Send and receive data from the server now</string>
+    <string name="msg_pallasync_sync_completed">Sync completed</string>
+    <string name="error_pallasync_sync_failed">Could not sync. The current state was preserved.</string>
+    <string name="pallasync_sync_logs">Sync logs</string>
+    <string name="pallasync_no_logs">No logs yet…</string>
+    <string name="field_url">URL</string>
+    <string name="error_crash_resource_loading">Failed to load app resources.\n%1$s</string>
+    <string name="error_crash_storage_permission">Check access to the destination folder. Selecting the folder again in Settings may resolve the issue.\n%1$s</string>
+    <string name="mute_user_id">User ID: %1$d</string>
+    <string name="mute_illust_id">Illust ID: %1$d</string>
 </resources>

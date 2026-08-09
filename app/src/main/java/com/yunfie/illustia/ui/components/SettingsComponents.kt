@@ -140,21 +140,24 @@ fun ElevatedPanel(
 
 @Composable
 fun HeroPanel(title: String, body: String) {
+    val modifier = Modifier
+        .padding(horizontal = 18.dp, vertical = 10.dp)
+        .fillMaxWidth()
+    val content: @Composable ColumnScope.() -> Unit = {
+        Text(text = title, fontWeight = FontWeight.Black, color = MiuixTheme.colorScheme.onPrimaryContainer)
+        Spacer(modifier = Modifier.height(8.dp))
+        Text(text = body, color = MiuixTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.84f))
+    }
     Card(
-        modifier = Modifier
-            .padding(horizontal = 18.dp, vertical = 10.dp)
-            .fillMaxWidth(),
+        modifier = modifier,
         cornerRadius = 24.dp,
         insideMargin = PaddingValues(20.dp),
         colors = CardDefaults.defaultColors(
             color = MiuixTheme.colorScheme.primaryContainer,
             contentColor = MiuixTheme.colorScheme.onPrimaryContainer,
         ),
-    ) {
-        Text(text = title, fontWeight = FontWeight.Black, color = MiuixTheme.colorScheme.onPrimaryContainer)
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(text = body, color = MiuixTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.84f))
-    }
+        content = content,
+    )
 }
 
 @Composable

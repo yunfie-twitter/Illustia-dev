@@ -171,8 +171,8 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
         }
     }
 
-    LaunchedEffect(pagerState.currentPage) {
-        selectedTab = tabs[pagerState.currentPage]
+    LaunchedEffect(pagerState.settledPage) {
+        selectedTab = tabs[pagerState.settledPage]
     }
 
     LaunchedEffect(selectedTab) {
@@ -341,12 +341,19 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
         }
     }
 
-    val activeUserId = state.selectedUser?.id
-    LaunchedEffect(state.showUserPage, activeUserId) {
-        if (state.showUserPage && activeUserId != null) {
+    val activeUserId = state.selectedUserId ?: state.selectedUser?.id
+    LaunchedEffect(state.showUserPage, state.userPageDismissed, activeUserId) {
+        if (state.showUserPage && !state.userPageDismissed && activeUserId != null) {
             val route = AppRoute.UserProfile(activeUserId)
             if (backStack.lastOrNull() != route) {
-                backStack.add(route)
+                val existingIndex = backStack.indexOfLast { it == route }
+                if (existingIndex >= 0 && backStack.drop(existingIndex + 1).all { it is AppRoute.UserProfile }) {
+                    while (backStack.lastIndex > existingIndex) {
+                        backStack.removeAt(backStack.lastIndex)
+                    }
+                } else {
+                    backStack.add(route)
+                }
             }
         } else if (backStack.lastOrNull() is AppRoute.UserProfile) {
             backStack.removeAt(backStack.lastIndex)
@@ -366,14 +373,17 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
     }
 
     val preferLowDataImages = remember(context) { context.isActiveNetworkMetered() }
-
     CompositionLocalProvider(
         LocalPixivImageProxyBaseUrl provides state.settings.pixivImageProxyBaseUrl,
         LocalPreferLowDataImages provides preferLowDataImages,
         LocalBottomSheetBackgroundColor provides MiuixTheme.colorScheme.surfaceContainerHigh,
         LocalAppHapticMode provides AppHapticMode.fromValue(state.settings.hapticMode),
     ) {
-        Box(modifier = Modifier.fillMaxSize().scrollEndHaptic()) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .scrollEndHaptic(),
+        ) {
             if (!state.privacyLocked || state.isTransitioningToIllustia) {
                 Scaffold(
                     containerColor = MiuixTheme.colorScheme.surface,
@@ -382,13 +392,15 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
                         SnackbarHost(state = snackbarHostState)
                     },
                 ) { rootPadding ->
-                    Surface(
+                    Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(rootPadding),
-                        color = MiuixTheme.colorScheme.surface,
                     ) {
-                        Box(modifier = Modifier.fillMaxSize()) {
+                        Surface(
+                            modifier = Modifier.fillMaxSize(),
+                            color = MiuixTheme.colorScheme.surface,
+                        ) {
                             AppNavHost(
                                 appState = appState,
                                 viewModel = viewModel,

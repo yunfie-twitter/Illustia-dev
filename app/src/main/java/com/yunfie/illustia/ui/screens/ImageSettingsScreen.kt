@@ -418,7 +418,7 @@ fun ImageSettingsScreen(
                                 TextField(
                                     value = customUrlInput,
                                     onValueChange = { customUrlInput = it },
-                                    label = "URL",
+                                    label = stringResource(R.string.field_url),
                                     singleLine = true,
                                     modifier = Modifier.fillMaxWidth()
                                 )

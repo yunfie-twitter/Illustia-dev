@@ -63,6 +63,7 @@ data class IllustiaUiState(
     val relatedIllusts: List<Illust> = emptyList(),
     val savedIllusts: List<SavedIllustEntity> = emptyList(),
     val selectedSavedIllustId: Long? = null,
+    val selectedUserId: Long? = null,
     val selectedUser: UserProfile? = null,
     val selectedUserIllusts: List<Illust> = emptyList(),
     val selectedUserNextUrl: String? = null,

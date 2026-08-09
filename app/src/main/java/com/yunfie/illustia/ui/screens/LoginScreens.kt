@@ -77,7 +77,7 @@ fun RefreshTokenLoginBottomSheet(
                 TextField(
                     value = state.settings.refreshToken,
                     onValueChange = viewModel::updateRefreshToken,
-                    label = "Pixiv refresh token",
+                    label = stringResource(R.string.login_refresh_token_label),
                     useLabelAsPlaceholder = true,
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),

@@ -88,6 +88,7 @@ fun PrivacyModeSettingsScreen(
 ) {
     PredictiveBackGestureHandler(onBack = onBack)
     val scrollBehavior = MiuixScrollBehavior()
+    val defaultDummyAppName = stringResource(R.string.app_name_dummy)
 
     // ── Change unlock code dialog state ───────────────────────────────────────
     var showChangeCodeDialog by remember { mutableStateOf(false) }
@@ -219,9 +220,9 @@ fun PrivacyModeSettingsScreen(
                         // 6. Dummy app name text input (Req 10.1, 10.3)
                         SettingLinkRow(
                             title = stringResource(R.string.privacy_dummy_app_name),
-                            summary = state.settings.dummyAppName.ifBlank { stringResource(R.string.value_not_set) },
+                            summary = state.settings.dummyAppName.ifBlank { defaultDummyAppName },
                             onClick = {
-                                dummyNameDraft = state.settings.dummyAppName
+                                dummyNameDraft = state.settings.dummyAppName.ifBlank { defaultDummyAppName }
                                 dummyNameError = null
                                 showDummyNameDialog = true
                             },

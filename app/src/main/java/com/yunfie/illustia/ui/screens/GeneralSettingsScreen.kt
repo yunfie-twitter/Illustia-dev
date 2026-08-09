@@ -272,16 +272,6 @@ fun GeneralSettingsScreen(
                 }
             }}
 
-            item { Section("Liquid Glass") {
-                ElevatedPanel {
-                    SettingSwitchRow(
-                        title = "Liquid Glass",
-                        checked = state.settings.liquidGlass,
-                        onCheckedChange = viewModel::updateLiquidGlass,
-                        summary = "ナビゲーションバーを実験的なLiquid Glassスタイルに変更します",
-                    )
-                }
-            }}
         }
     }
 }

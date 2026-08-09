@@ -100,9 +100,9 @@ fun AccountSettingsScreen(
                 }
             }}
             
-            item { Section("PallaSync (E2EE Sync)") {
+            item { Section(stringResource(R.string.pallasync_account_section)) {
                 ElevatedPanel {
-                    SettingLinkRow("PallaSync Settings") { onOpenPallaSync() }
+                    SettingLinkRow(stringResource(R.string.pallasync_settings_title)) { onOpenPallaSync() }
                 }
             }}
         }

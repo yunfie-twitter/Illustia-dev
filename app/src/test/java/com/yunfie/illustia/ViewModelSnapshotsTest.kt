@@ -16,6 +16,7 @@ class ViewModelSnapshotsTest : StringSpec({
             previewIllusts = emptyList(),
         )
         val source = IllustiaUiState(
+            selectedUserId = relatedUser.id,
             selectedRelatedUsers = listOf(relatedUser),
             selectedRelatedUsersNextUrl = "https://app-api.pixiv.net/v1/user/related?offset=30",
             selectedRelatedUsersLoading = true,
@@ -23,6 +24,7 @@ class ViewModelSnapshotsTest : StringSpec({
 
         val restored = IllustiaUiState().restore(source.toUserPageSnapshot())
 
+        restored.selectedUserId shouldBe relatedUser.id
         restored.selectedRelatedUsers shouldBe listOf(relatedUser)
         restored.selectedRelatedUsersNextUrl shouldBe source.selectedRelatedUsersNextUrl
         restored.selectedRelatedUsersLoading shouldBe true

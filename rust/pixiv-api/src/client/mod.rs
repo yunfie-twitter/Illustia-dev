@@ -82,6 +82,7 @@ impl PixivHttpClient {
         })
     }
 
+    #[uniffi::method(async_runtime = "tokio")]
     pub async fn login_with_refresh_token(
         &self,
         refresh_token: String,
@@ -89,6 +90,7 @@ impl PixivHttpClient {
         oauth::login_with_refresh_token(self, refresh_token).await
     }
 
+    #[uniffi::method(async_runtime = "tokio")]
     pub async fn login_with_authorization_code(
         &self,
         code: String,
@@ -105,11 +107,13 @@ impl PixivHttpClient {
         oauth::create_web_login_url(create_provisional_account, code_challenge)
     }
 
+    #[uniffi::method(async_runtime = "tokio")]
     pub async fn execute_illust_page(&self, request: PixivRequest) -> Result<IllustPage, ApiError> {
         transport::execute_json::<IllustPageResponse>(self, request, "illust page").await
             .map(IllustPageResponse::into_page)
     }
 
+    #[uniffi::method(async_runtime = "tokio")]
     pub async fn execute_illust_detail(&self, request: PixivRequest) -> Result<Illust, ApiError> {
         transport::execute_json::<IllustDetailResponse>(self, request, "illust detail").await?
             .into_illust()
@@ -118,6 +122,7 @@ impl PixivHttpClient {
             })
     }
 
+    #[uniffi::method(async_runtime = "tokio")]
     pub async fn execute_user_profile(
         &self,
         request: PixivRequest,
@@ -127,11 +132,13 @@ impl PixivHttpClient {
             .map(|response| response.into_profile(fallback_user_id))
     }
 
+    #[uniffi::method(async_runtime = "tokio")]
     pub async fn execute_autocomplete(&self, request: PixivRequest) -> Result<StringList, ApiError> {
         transport::execute_json::<AutocompleteResponse>(self, request, "autocomplete").await
             .map(AutocompleteResponse::into_list)
     }
 
+    #[uniffi::method(async_runtime = "tokio")]
     pub async fn execute_user_preview_page(
         &self,
         request: PixivRequest,
@@ -140,6 +147,7 @@ impl PixivHttpClient {
             .map(UserPreviewPageResponse::into_page)
     }
 
+    #[uniffi::method(async_runtime = "tokio")]
     pub async fn execute_ugoira_metadata(
         &self,
         request: PixivRequest,
@@ -148,11 +156,13 @@ impl PixivHttpClient {
             .map(UgoiraMetadataResponse::into_metadata)
     }
 
+    #[uniffi::method(async_runtime = "tokio")]
     pub async fn execute_comment_page(&self, request: PixivRequest) -> Result<CommentPage, ApiError> {
         transport::execute_json::<CommentPageResponse>(self, request, "comment page").await
             .map(CommentPageResponse::into_page)
     }
 
+    #[uniffi::method(async_runtime = "tokio")]
     pub async fn execute_notification_page(
         &self,
         request: PixivRequest,
@@ -161,11 +171,13 @@ impl PixivHttpClient {
             .map(NotificationPageResponse::into_page)
     }
 
+    #[uniffi::method(async_runtime = "tokio")]
     pub async fn execute_novel_page(&self, request: PixivRequest) -> Result<NovelPage, ApiError> {
         transport::execute_json::<NovelPageResponse>(self, request, "novel page").await
             .map(NovelPageResponse::into_page)
     }
 
+    #[uniffi::method(async_runtime = "tokio")]
     pub async fn execute_watchlist_manga(
         &self,
         request: PixivRequest,
@@ -174,6 +186,7 @@ impl PixivHttpClient {
             .map(WatchlistMangaResponse::into_page)
     }
 
+    #[uniffi::method(async_runtime = "tokio")]
     pub async fn execute_illust_series_page(
         &self,
         request: PixivRequest,
@@ -182,6 +195,7 @@ impl PixivHttpClient {
             .map(IllustSeriesPageResponse::into_page)
     }
 
+    #[uniffi::method(async_runtime = "tokio")]
     pub async fn execute_optional_boolean(
         &self,
         request: PixivRequest,
@@ -190,6 +204,7 @@ impl PixivHttpClient {
             .map(SimpleBooleanResponse::into_value)
     }
 
+    #[uniffi::method(async_runtime = "tokio")]
     pub async fn execute_user_follow_detail(
         &self,
         request: PixivRequest,
@@ -198,11 +213,13 @@ impl PixivHttpClient {
             .map(UserFollowDetailResponse::into_detail)
     }
 
+    #[uniffi::method(async_runtime = "tokio")]
     pub async fn execute_stamps(&self, request: PixivRequest) -> Result<StampList, ApiError> {
         transport::execute_json::<StampResponse>(self, request, "stamps").await
             .map(StampResponse::into_list)
     }
 
+    #[uniffi::method(async_runtime = "tokio")]
     pub async fn execute_trending_tags(
         &self,
         request: PixivRequest,
@@ -211,11 +228,13 @@ impl PixivHttpClient {
             .map(TrendingTagResponse::into_list)
     }
 
+    #[uniffi::method(async_runtime = "tokio")]
     pub async fn execute_spotlight(&self, request: PixivRequest) -> Result<SpotlightPage, ApiError> {
         transport::execute_json::<SpotlightResponse>(self, request, "spotlight").await
             .map(SpotlightResponse::into_page)
     }
 
+    #[uniffi::method(async_runtime = "tokio")]
     pub async fn execute_current_user_profile(
         &self,
         request: PixivRequest,
@@ -227,6 +246,7 @@ impl PixivHttpClient {
             })
     }
 
+    #[uniffi::method(async_runtime = "tokio")]
     pub async fn execute_account_edit(
         &self,
         request: PixivRequest,
@@ -235,6 +255,7 @@ impl PixivHttpClient {
             .map(AccountEditResponse::into_result)
     }
 
+    #[uniffi::method(async_runtime = "tokio")]
     pub async fn execute_novel_text(
         &self,
         request: PixivRequest,
@@ -245,10 +266,12 @@ impl PixivHttpClient {
         endpoints::novel_text(&body, novel_id)
     }
 
+    #[uniffi::method(async_runtime = "tokio")]
     pub async fn execute_no_content(&self, request: PixivRequest) -> Result<(), ApiError> {
         transport::execute_no_content(self, request).await
     }
 
+    #[uniffi::method(async_runtime = "tokio")]
     pub async fn prepare_ugoira(
         &self,
         url: String,

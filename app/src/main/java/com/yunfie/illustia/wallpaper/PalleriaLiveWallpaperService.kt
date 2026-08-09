@@ -15,6 +15,7 @@ import android.service.wallpaper.WallpaperService
 import android.view.MotionEvent
 import android.view.SurfaceHolder
 import androidx.core.content.ContextCompat
+import com.yunfie.illustia.R
 import com.yunfie.illustia.data.NativeImageAnalysis
 import com.yunfie.illustia.nativebridge.NativeImageStore
 import com.yunfie.illustia.nativebridge.NativeSavedImage
@@ -320,7 +321,7 @@ class PalleriaLiveWallpaperService : WallpaperService() {
                 paint.alpha = 215
                 paint.textAlign = Paint.Align.CENTER
                 paint.textSize = min(surfaceWidth, surfaceHeight) * 0.08f
-                canvas.drawText("Palleria", surfaceWidth / 2f, surfaceHeight / 2f, paint)
+                canvas.drawText(getString(R.string.app_name), surfaceWidth / 2f, surfaceHeight / 2f, paint)
                 paint.alpha = 255
             }
         }

@@ -97,7 +97,7 @@ fun MuteSettingsScreen(
                 }
             }
             items(state.settings.mutedUsers, key = { "user_$it" }) { userId ->
-                MuteItemRow(text = "User ID: $userId") {
+                MuteItemRow(text = stringResource(R.string.mute_user_id, userId)) {
                     viewModel.unmuteUser(userId)
                 }
             }
@@ -115,7 +115,7 @@ fun MuteSettingsScreen(
                 }
             }
             items(state.settings.mutedIllusts, key = { "illust_$it" }) { illustId ->
-                MuteItemRow(text = "Illust ID: $illustId") {
+                MuteItemRow(text = stringResource(R.string.mute_illust_id, illustId)) {
                     viewModel.unmuteIllust(illustId)
                 }
             }

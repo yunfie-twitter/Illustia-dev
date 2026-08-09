@@ -10,9 +10,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalClipboardManager
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
 import android.widget.Toast
+import com.yunfie.illustia.R
 import com.yunfie.illustia.pallasync.PalleriaSyncManager
 import com.yunfie.illustia.ui.components.HeaderIcon
 import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
@@ -72,14 +74,17 @@ fun DevicePairingScreen(
         }
     }
     
-    val tabs = listOf("View Sync Code", "Enter Sync Code")
+    val tabs = listOf(
+        stringResource(R.string.pallasync_view_sync_code),
+        stringResource(R.string.pallasync_enter_sync_code),
+    )
     var selectedTabIndex by remember { mutableStateOf(0) }
     
     Scaffold(
         containerColor = MiuixTheme.colorScheme.surface,
         topBar = {
             TopAppBar(
-                title = "Sync Devices",
+                title = stringResource(R.string.pallasync_sync_devices),
                 navigationIcon = {
                     HeaderIcon(MiuixIcons.Back, onClick = onBack)
                 },
@@ -124,7 +129,7 @@ fun DevicePairingScreen(
         if (qrBitmap != null) {
             Image(
                 bitmap = qrBitmap.asImageBitmap(),
-                contentDescription = "Sync QR Code",
+                contentDescription = stringResource(R.string.pallasync_sync_qr_code),
                 modifier = Modifier.size(200.dp).padding(bottom = 16.dp)
             )
         }
@@ -134,13 +139,13 @@ fun DevicePairingScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
-                        text = "Sync Chain Recovery Phrase",
+                        text = stringResource(R.string.pallasync_recovery_phrase_title),
                         style = MiuixTheme.textStyles.headline1,
                         color = MiuixTheme.colorScheme.onBackground
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Enter these 24 words in the exact order on another device to sync your data. Do not share this phrase with anyone.",
+                        text = stringResource(R.string.pallasync_recovery_phrase_desc),
                         style = MiuixTheme.textStyles.body2,
                         color = MiuixTheme.colorScheme.onBackgroundVariant
                     )
@@ -183,22 +188,22 @@ fun DevicePairingScreen(
                             Button(
                                 onClick = {
                                     clipboardManager.setText(AnnotatedString(seedPhrase))
-                                    Toast.makeText(context, "Copied to clipboard", Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(context, R.string.msg_copied_to_clipboard, Toast.LENGTH_SHORT).show()
                                 },
                                 modifier = Modifier.fillMaxWidth()
                             ) {
-                                Text("Copy to Clipboard")
+                                Text(stringResource(R.string.action_copy_to_clipboard))
                             }
                         } else {
                             Text(
-                                text = "Invalid seed phrase format.",
+                                text = stringResource(R.string.pallasync_invalid_seed_phrase),
                                 style = MiuixTheme.textStyles.body1,
                                 color = MiuixTheme.colorScheme.error
                             )
                         }
                     } else {
                         Text(
-                            text = "Loading...",
+                            text = stringResource(R.string.status_loading),
                             style = MiuixTheme.textStyles.body1,
                             color = MiuixTheme.colorScheme.onBackgroundVariant
                         )
@@ -212,13 +217,13 @@ fun DevicePairingScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
-                        text = "Join Sync Chain",
+                        text = stringResource(R.string.pallasync_join_chain),
                         style = MiuixTheme.textStyles.headline1,
                         color = MiuixTheme.colorScheme.onBackground
                     )
                     Spacer(modifier = Modifier.height(16.dp))
                     Text(
-                        text = "Enter the 24-word recovery phrase from another device to sync your data.",
+                        text = stringResource(R.string.pallasync_join_chain_desc),
                         style = MiuixTheme.textStyles.body2,
                         color = MiuixTheme.colorScheme.onBackgroundVariant
                     )
@@ -248,20 +253,24 @@ fun DevicePairingScreen(
                                         isJoining = false
                                     }
                                     if (success) {
-                                        Toast.makeText(context, "Successfully joined Sync Chain", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, R.string.msg_pallasync_chain_joined, Toast.LENGTH_SHORT).show()
                                         onPairSuccess()
                                     } else {
-                                        Toast.makeText(context, "Failed to join Sync Chain", Toast.LENGTH_SHORT).show()
+                                        Toast.makeText(context, R.string.error_pallasync_join_chain_failed, Toast.LENGTH_SHORT).show()
                                     }
                                 }
                             } else {
-                                Toast.makeText(context, "Please enter exactly 24 words", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, R.string.error_pallasync_seed_phrase_word_count, Toast.LENGTH_SHORT).show()
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
                         enabled = !isJoining
                     ) {
-                        Text(if (isJoining) "Joining..." else "Join Sync Chain")
+                        Text(
+                            stringResource(
+                                if (isJoining) R.string.pallasync_joining else R.string.pallasync_join_chain,
+                            ),
+                        )
                     }
 
                     Spacer(modifier = Modifier.height(16.dp))
@@ -270,7 +279,7 @@ fun DevicePairingScreen(
                         onClick = {
                             qrLauncher.launch(ScanOptions().apply {
                                 setDesiredBarcodeFormats(ScanOptions.QR_CODE)
-                                setPrompt("Scan a Sync QR Code")
+                                setPrompt(context.getString(R.string.pallasync_scan_qr_prompt))
                                 setBeepEnabled(false)
                                 setBarcodeImageEnabled(false)
                             })
@@ -278,7 +287,7 @@ fun DevicePairingScreen(
                         modifier = Modifier.fillMaxWidth(),
                         colors = top.yukonga.miuix.kmp.basic.ButtonDefaults.buttonColorsPrimary()
                     ) {
-                        Text("Scan QR Code")
+                        Text(stringResource(R.string.pallasync_scan_qr_code))
                     }
                 }
             }

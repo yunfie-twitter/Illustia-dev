@@ -64,7 +64,7 @@ fun DeviceViewHistoryScreen(
             TopAppBar(
                 title = deviceName,
                 largeTitle = deviceName,
-                subtitle = "デバイスの閲覧履歴",
+                subtitle = stringResource(R.string.pallasync_device_view_history),
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     HeaderIcon(MiuixIcons.Back, onClick = onBack)

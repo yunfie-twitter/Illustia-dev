@@ -21,7 +21,6 @@ import com.yunfie.illustia.ui.components.BottomSheetInsideMargin
 import com.yunfie.illustia.ui.components.LocalBottomSheetBackgroundColor
 import com.yunfie.illustia.ui.components.LoadingIndicator
 import com.yunfie.illustia.ui.components.MiuixConfirmDialog
-import com.yunfie.illustia.ui.components.NonAmoledDarkTheme
 import com.yunfie.illustia.ui.components.TagPreviewBottomSheet
 import com.yunfie.illustia.ui.components.overlayActionButtonColors
 import com.yunfie.illustia.ui.screens.CommentScreen
@@ -247,40 +246,38 @@ internal fun AppOverlayHost(
                 onDismissRequest = viewModel::closeUser,
                 insideMargin = BottomSheetInsideMargin,
             ) {
-                NonAmoledDarkTheme {
-                    UserProfileScreen(
-                        user = user,
-                        settings = appState.state.settings,
-                        illusts = appState.state.selectedUserIllusts,
-                        bookmarks = appState.state.selectedUserBookmarks,
-                        relatedUsers = appState.state.selectedRelatedUsers,
-                        hasMore = appState.state.selectedUserNextUrl != null,
-                        bookmarkHasMore = appState.state.selectedUserBookmarksNextUrl != null,
-                        relatedUsersHasMore = appState.state.selectedRelatedUsersNextUrl != null,
-                        relatedUsersLoading = appState.state.selectedRelatedUsersLoading,
-                        onBack = viewModel::closeUser,
-                        onOpenIllust = { illust ->
-                            viewModel.closeUser()
-                            viewModel.openIllust(illust)
-                        },
-                        onBookmark = viewModel::toggleBookmark,
-                        onLoadMore = viewModel::loadMoreUserIllusts,
-                        onLoadBookmarks = viewModel::loadSelectedUserBookmarks,
-                        onLoadMoreBookmarks = viewModel::loadMoreSelectedUserBookmarks,
-                        onLoadRelatedUsers = viewModel::loadSelectedRelatedUsers,
-                        onLoadMoreRelatedUsers = viewModel::loadMoreSelectedRelatedUsers,
-                        onOpenRelatedUser = viewModel::openUserPage,
-                        onToggleFollow = { viewModel.toggleFollow(user) },
-                        onMuteUser = { viewModel.muteUser(user.id) },
-                        onMessage = viewModel::showMessage,
-                        isMuted = appState.state.settings.mutedUsers.contains(user.id),
-                        onUnmuteUser = { viewModel.unmuteUser(user.id) },
-                        gridState = viewModel.userProfileGridState(user.id),
-                        showHeaderControls = false,
-                        backgroundColor = userSheetBackground,
-                        contentHeight = userSheetHeight,
-                    )
-                }
+                UserProfileScreen(
+                    user = user,
+                    settings = appState.state.settings,
+                    illusts = appState.state.selectedUserIllusts,
+                    bookmarks = appState.state.selectedUserBookmarks,
+                    relatedUsers = appState.state.selectedRelatedUsers,
+                    hasMore = appState.state.selectedUserNextUrl != null,
+                    bookmarkHasMore = appState.state.selectedUserBookmarksNextUrl != null,
+                    relatedUsersHasMore = appState.state.selectedRelatedUsersNextUrl != null,
+                    relatedUsersLoading = appState.state.selectedRelatedUsersLoading,
+                    onBack = viewModel::closeUser,
+                    onOpenIllust = { illust ->
+                        viewModel.closeUser()
+                        viewModel.openIllust(illust)
+                    },
+                    onBookmark = viewModel::toggleBookmark,
+                    onLoadMore = viewModel::loadMoreUserIllusts,
+                    onLoadBookmarks = viewModel::loadSelectedUserBookmarks,
+                    onLoadMoreBookmarks = viewModel::loadMoreSelectedUserBookmarks,
+                    onLoadRelatedUsers = viewModel::loadSelectedRelatedUsers,
+                    onLoadMoreRelatedUsers = viewModel::loadMoreSelectedRelatedUsers,
+                    onOpenRelatedUser = viewModel::openUserPage,
+                    onToggleFollow = { viewModel.toggleFollow(user) },
+                    onMuteUser = { viewModel.muteUser(user.id) },
+                    onMessage = viewModel::showMessage,
+                    isMuted = appState.state.settings.mutedUsers.contains(user.id),
+                    onUnmuteUser = { viewModel.unmuteUser(user.id) },
+                    gridState = viewModel.userProfileGridState(user.id),
+                    showHeaderControls = false,
+                    backgroundColor = userSheetBackground,
+                    contentHeight = userSheetHeight,
+                )
             }
 
             OverlayBottomSheet(

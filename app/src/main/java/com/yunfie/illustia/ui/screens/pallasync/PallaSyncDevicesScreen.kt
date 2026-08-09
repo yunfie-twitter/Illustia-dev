@@ -108,7 +108,7 @@ fun PallaSyncDevicesScreen(
                             devices.forEachIndexed { index, device ->
                                 SettingLinkRow(
                                     title = device.deviceName,
-                                    summary = "ID: ${device.deviceId}",
+                                    summary = stringResource(R.string.pallasync_device_id, device.deviceId),
                                     onClick = { onDeviceClick(device.deviceId, device.deviceName) },
                                 )
                                 if (index < devices.lastIndex) {

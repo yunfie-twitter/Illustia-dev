@@ -113,7 +113,7 @@ fun PallaSyncSettingsScreen(
                         onClick = {
                             val normalized = syncManager.normalizeServerUrl(tempUrl)
                             if (normalized == null) {
-                                Toast.makeText(context, "有効なHTTP(S) URLを入力してください", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(context, R.string.error_pallasync_invalid_server_url, Toast.LENGTH_SHORT).show()
                             } else {
                                 viewModel.updatePallaSyncServerUrl(normalized)
                                 showUrlDialog = false
@@ -142,7 +142,7 @@ fun PallaSyncSettingsScreen(
                         viewModel.updatePallaSyncEnabled(false)
                         Toast.makeText(context, R.string.msg_pallasync_chain_deleted, Toast.LENGTH_SHORT).show()
                     } else {
-                        Toast.makeText(context, "チェーンを削除できませんでした。設定は保持されています", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, R.string.error_pallasync_delete_chain_failed, Toast.LENGTH_SHORT).show()
                     }
                 }
             },
@@ -214,7 +214,7 @@ fun PallaSyncSettingsScreen(
                                             isCreatingChain = false
                                         }
                                         if (seedPhrase.isBlank()) {
-                                            Toast.makeText(context, "同期チェーンを作成できませんでした", Toast.LENGTH_SHORT).show()
+                                            Toast.makeText(context, R.string.error_pallasync_create_chain_failed, Toast.LENGTH_SHORT).show()
                                         }
                                     }
                                 }
@@ -240,14 +240,18 @@ fun PallaSyncSettingsScreen(
                         if (state.settings.pallaSyncEnabled) {
                             DividerLine()
                             SettingLinkRow(
-                                title = "手動で同期する",
-                                summary = "直ちにサーバーとデータの送受信を行います",
+                                title = stringResource(R.string.pallasync_sync_now),
+                                summary = stringResource(R.string.pallasync_sync_now_desc),
                                 onClick = {
                                     scope.launch {
                                         val success = syncManager.syncNow()
                                         Toast.makeText(
                                             context,
-                                            if (success) "同期が完了しました" else "同期できませんでした。状態は保持されています",
+                                            if (success) {
+                                                context.getString(R.string.msg_pallasync_sync_completed)
+                                            } else {
+                                                context.getString(R.string.error_pallasync_sync_failed)
+                                            },
                                             Toast.LENGTH_SHORT,
                                         ).show()
                                     }
@@ -266,7 +270,7 @@ fun PallaSyncSettingsScreen(
                                 devices.forEachIndexed { index, device ->
                                     SettingLinkRow(
                                         title = device.deviceName,
-                                        summary = "ID: ${device.deviceId}",
+                                        summary = stringResource(R.string.pallasync_device_id, device.deviceId),
                                         onClick = { onDeviceClick(device.deviceId, device.deviceName) }
                                     )
                                     if (index < devices.size - 1) {
@@ -298,10 +302,14 @@ fun PallaSyncSettingsScreen(
 
                 item {
                     val logs by PalleriaSyncManager.syncLogs.collectAsState()
-                    Section("Sync Logs") {
+                    Section(stringResource(R.string.pallasync_sync_logs)) {
                         ElevatedPanel(contentPadding = PaddingValues(16.dp)) {
                             if (logs.isEmpty()) {
-                                Text("No logs yet...", style = MiuixTheme.textStyles.body2, color = MiuixTheme.colorScheme.onBackgroundVariant)
+                            Text(
+                                stringResource(R.string.pallasync_no_logs),
+                                style = MiuixTheme.textStyles.body2,
+                                color = MiuixTheme.colorScheme.onBackgroundVariant,
+                            )
                             } else {
                                 Column(modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp)) {
                                     logs.forEach { logMsg ->

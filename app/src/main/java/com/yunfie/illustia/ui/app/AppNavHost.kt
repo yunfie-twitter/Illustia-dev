@@ -362,8 +362,9 @@ internal fun AppNavHost(
             }
         }
         entry<AppRoute.UserProfile> { route ->
-            if (appState.state.selectedUser != null) {
-                val user = appState.state.selectedUser
+            val selectedUser = appState.state.selectedUser
+            if (selectedUser?.id == route.userId) {
+                val user = selectedUser
                 UserProfileScreen(
                     user = user,
                     settings = appState.state.settings,

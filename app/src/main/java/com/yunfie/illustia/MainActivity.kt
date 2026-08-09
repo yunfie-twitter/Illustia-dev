@@ -158,7 +158,8 @@ class MainActivity : FragmentActivity() {
                     applySecureWindow(settings.secureWindow)
                 }
             }
-            LaunchedEffect(settings.appLanguage) {
+
+            LaunchedEffect(settings.appLanguage) {
                 applyAppLanguage(settings.appLanguage)
             }
 
@@ -326,7 +327,7 @@ class MainActivity : FragmentActivity() {
         if (!settings.privacyModeEnabled) return
 
         val title = if (settings.hideRecents) {
-            settings.dummyAppName.ifBlank { getString(R.string.app_name) }
+            settings.dummyAppName.ifBlank { getString(R.string.app_name_dummy) }
         } else {
             getString(R.string.app_name)
         }

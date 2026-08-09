@@ -59,7 +59,6 @@ import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.*
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.PressFeedbackType
-import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
 import kotlinx.coroutines.launch
 
 private val SearchSortOptions = SearchSort.entries.toList()

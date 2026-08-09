@@ -1,11 +1,7 @@
 package com.yunfie.illustia.ui.app
 
 import android.app.Activity
-import androidx.activity.compose.BackHandler
-import androidx.compose.animation.*
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PagerState
@@ -15,7 +11,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -34,9 +29,6 @@ import com.yunfie.illustia.ui.screens.MoreScreen
 import com.yunfie.illustia.ui.screens.RankingScreen
 import com.yunfie.illustia.ui.screens.SearchScreen
 import com.yunfie.illustia.ui.screens.ShortsFeedScreen
-import com.yunfie.illustia.ui.components.LiquidBottomTabs
-import com.yunfie.illustia.ui.components.LocalLiquidBottomTabScale
-import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import top.yukonga.miuix.kmp.basic.*
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -54,13 +46,7 @@ internal fun MainSurface(
     onOpenWatchlistSeries: (Long) -> Unit,
 ) {
     val tabs = mainTabs(appState.settings.shortsFeedEnabled)
-    val navigationTabs = visibleTabs(appState.settings.shortsFeedEnabled, appState.settings.liquidGlass)
-    val onOpenMore: () -> Unit = remember(tabs, onTabSelected) {
-        {
-            val moreIndex = tabs.indexOf(AppTab.More)
-            if (moreIndex != -1) onTabSelected(moreIndex, AppTab.More)
-        }
-    }
+    val navigationTabs = visibleTabs(appState.settings.shortsFeedEnabled)
     val context = LocalContext.current
     var lastBackAt by remember { mutableStateOf(0L) }
     val isSearchResultMode = selectedTab == AppTab.Search &&
@@ -70,22 +56,6 @@ internal fun MainSurface(
     LaunchedEffect(selectedTab) {
         if (appState.state.showAccountSwitcher) {
             viewModel.closeAccountSwitcher()
-        }
-    }
-
-    var lastValidNavTab by remember { mutableStateOf(navigationTabs.firstOrNull() ?: AppTab.Home) }
-    LaunchedEffect(selectedTab, navigationTabs) {
-        if (selectedTab in navigationTabs) {
-            lastValidNavTab = selectedTab
-        }
-    }
-
-    if (appState.settings.liquidGlass && selectedTab == AppTab.More) {
-        BackHandler {
-            val idx = tabs.indexOf(lastValidNavTab)
-            if (idx >= 0) {
-                onTabSelected(idx, lastValidNavTab)
-            }
         }
     }
 
@@ -115,79 +85,21 @@ internal fun MainSurface(
             contentWindowInsets = WindowInsets(0),
             bottomBar = {
                 if (!useNavigationRail && !isSearchResultMode) {
-                    if (appState.settings.liquidGlass) {
-                        AnimatedVisibility(
-                            visible = selectedTab != AppTab.More,
-                            enter = slideInVertically(initialOffsetY = { it }) + fadeIn(),
-                            exit = slideOutVertically(targetOffsetY = { it }) + fadeOut(),
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .navigationBarsPadding()
-                                    .padding(start = 32.dp, end = 32.dp, top = 12.dp, bottom = 24.dp)
-                            ) {
-                                val backdrop = rememberLayerBackdrop()
-                                LiquidBottomTabs(
-                                    selectedTabIndex = { navigationTabs.indexOf(lastValidNavTab).coerceAtLeast(0) },
-                                    onTabSelected = { index ->
-                                        viewModel.closeAccountSwitcher()
-                                        if (index in navigationTabs.indices) {
-                                            val tab = navigationTabs[index]
-                                            onTabSelected(tabs.indexOf(tab), tab)
-                                        }
-                                    },
-                                    backdrop = backdrop,
-                                    tabsCount = navigationTabs.size,
-                                ) {
-                                    navigationTabs.forEach { tab ->
-                                        val pageIndex = tabs.indexOf(tab)
-                                        val isSelected = lastValidNavTab == tab
-                                        Box(
-                                            modifier = Modifier
-                                                .weight(1f)
-                                                .fillMaxHeight()
-                                                .clickable(
-                                                    interactionSource = remember { MutableInteractionSource() },
-                                                    indication = null,
-                                                    onClick = {
-                                                        viewModel.closeAccountSwitcher()
-                                                        if (pageIndex != -1) onTabSelected(pageIndex, tab)
-                                                    }
-                                                ),
-                                            contentAlignment = Alignment.Center
-                                        ) {
-                                            androidx.compose.foundation.Image(
-                                                imageVector = tab.icon,
-                                                contentDescription = stringResource(tab.labelResId),
-                                                colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(
-                                                    if (isSelected) MiuixTheme.colorScheme.primary
-                                                    else MiuixTheme.colorScheme.onSurface
-                                                ),
-                                                modifier = Modifier.size(24.dp)
-                                            )
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    } else {
-                        NavigationBar(
-                            color = MiuixTheme.colorScheme.surfaceContainer,
-                            showDivider = true,
-                        ) {
-                            navigationTabs.forEach { tab ->
-                                val pageIndex = tabs.indexOf(tab)
-                                NavigationBarItem(
-                                    selected = selectedTab == tab,
-                                    onClick = {
-                                        viewModel.closeAccountSwitcher()
-                                        onTabSelected(pageIndex, tab)
-                                    },
-                                    icon = tab.icon,
-                                    label = stringResource(tab.labelResId),
-                                )
-                            }
+                    NavigationBar(
+                        color = MiuixTheme.colorScheme.surfaceContainer,
+                        showDivider = true,
+                    ) {
+                        navigationTabs.forEach { tab ->
+                            val pageIndex = tabs.indexOf(tab)
+                            NavigationBarItem(
+                                selected = selectedTab == tab,
+                                onClick = {
+                                    viewModel.closeAccountSwitcher()
+                                    onTabSelected(pageIndex, tab)
+                                },
+                                icon = tab.icon,
+                                label = stringResource(tab.labelResId),
+                            )
                         }
                     }
                 }
@@ -198,7 +110,7 @@ internal fun MainSurface(
                     .fillMaxSize()
                     .padding(
                         top = paddingValues.calculateTopPadding(),
-                        bottom = if (appState.settings.liquidGlass && !isSearchResultMode) 0.dp else paddingValues.calculateBottomPadding(),
+                        bottom = paddingValues.calculateBottomPadding(),
                         start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
                         end = paddingValues.calculateEndPadding(LocalLayoutDirection.current)
                     ),
@@ -223,17 +135,17 @@ internal fun MainSurface(
                     }
                 }
                 HorizontalPager(
-                    state = pagerState,
-                    beyondViewportPageCount = 1,
-                    userScrollEnabled = appState.settings.swipeToSwitchWorks &&
-                        !isSearchResultMode &&
-                        !(selectedTab == AppTab.ShortsFeed && appState.settings.disableHorizontalSwipeInShortsFeed),
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .background(MiuixTheme.colorScheme.surface),
-                ) { page ->
-                    when (tabs[page]) {
+                        state = pagerState,
+                        beyondViewportPageCount = 1,
+                        userScrollEnabled = appState.settings.swipeToSwitchWorks &&
+                            !isSearchResultMode &&
+                            !(selectedTab == AppTab.ShortsFeed && appState.settings.disableHorizontalSwipeInShortsFeed),
+                        modifier = Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .background(MiuixTheme.colorScheme.surface),
+                    ) { page ->
+                        when (tabs[page]) {
                         AppTab.Home -> HomeScreen(
                             items = appState.homeItems,
                             timelineItems = appState.timelineItems,
@@ -246,7 +158,6 @@ internal fun MainSurface(
                             scrollBehavior = homeScrollBehavior,
                             onSearch = onSearch,
                             onOpenNovels = onOpenNovels,
-                            onOpenMore = onOpenMore,
                         )
 
                         AppTab.Novel -> Unit
@@ -258,7 +169,6 @@ internal fun MainSurface(
                             mode = appState.rankingChrome.rankingMode,
                             settings = appState.settings,
                             viewModel = viewModel,
-                            onOpenMore = onOpenMore,
                         )
 
                         AppTab.Bookmarks -> BookmarkScreen(
@@ -270,7 +180,6 @@ internal fun MainSurface(
                             chrome = appState.bookmarkChrome,
                             viewModel = viewModel,
                             onOpenWatchlistSeries = onOpenWatchlistSeries,
-                            onOpenMore = onOpenMore,
                         )
 
                         AppTab.Search -> SearchScreen(state = appState.state, viewModel = viewModel)
@@ -287,8 +196,8 @@ internal fun MainSurface(
                             viewModel = viewModel,
                             onOpenWatchlistSeries = onOpenWatchlistSeries,
                         )
+                        }
                     }
-                }
             }
         }
 

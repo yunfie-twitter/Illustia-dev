@@ -141,18 +141,18 @@ fun DataSettingsScreen(
                 }
             }}
 
-            item { Section("プライバシーとテレメトリ") {
+            item { Section(stringResource(R.string.data_section_privacy_telemetry)) {
                 ElevatedPanel(contentPadding = PaddingValues(0.dp)) {
                     SettingSwitchRow(
-                        title = "テレメトリの送信",
+                        title = stringResource(R.string.data_send_telemetry),
                         checked = state.settings.sendTelemetry,
                         onCheckedChange = viewModel::updateSendTelemetry,
-                        summary = "クラッシュレポートと利用状況データを送信して品質向上に協力します"
+                        summary = stringResource(R.string.data_send_telemetry_desc),
                     )
                 }
             }}
 
-            item { Section("PallaSync") {
+            item { Section(stringResource(R.string.pallasync_section_title)) {
                 ElevatedPanel(contentPadding = PaddingValues(0.dp)) {
                     SettingLinkRow(
                         title = stringResource(R.string.pallasync_settings_title),
