@@ -400,6 +400,10 @@ open class IllustiaViewModelCore(
         updateSettings { it.copy(showAiBadge = value) }
     }
 
+    fun updateLiquidGlass(value: Boolean) {
+        updateSettings { it.copy(liquidGlass = value) }
+    }
+
     fun userProfileGridState(userId: Long): LazyGridState {
         return userProfileGridStates.getOrPut(userId) { LazyGridState() }
     }

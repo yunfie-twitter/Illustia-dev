@@ -38,6 +38,7 @@ import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Filter
 import top.yukonga.miuix.kmp.icon.extended.Refresh
+import top.yukonga.miuix.kmp.icon.extended.More
 import top.yukonga.miuix.kmp.menu.WindowIconDropdownMenu
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -57,6 +58,7 @@ fun BookmarkScreen(
     chrome: BookmarkChromeState,
     viewModel: IllustiaViewModel,
     onOpenWatchlistSeries: (Long) -> Unit,
+    onOpenMore: () -> Unit,
 ) {
     var followingUserSort by rememberSaveable { mutableStateOf(FollowingUserSort.Newest) }
     val repository = remember(viewModel) { viewModel.uiRepository() }
@@ -160,6 +162,14 @@ fun BookmarkScreen(
                         ),
                     ) {
                         Icon(MiuixIcons.Filter, contentDescription = androidx.compose.ui.res.stringResource(R.string.action_sort))
+                    }
+                }
+                if (settings.liquidGlass) {
+                    IconButton(onClick = onOpenMore) {
+                        Icon(
+                            MiuixIcons.More,
+                            contentDescription = androidx.compose.ui.res.stringResource(R.string.nav_more),
+                        )
                     }
                 }
                 IconButton(onClick = {

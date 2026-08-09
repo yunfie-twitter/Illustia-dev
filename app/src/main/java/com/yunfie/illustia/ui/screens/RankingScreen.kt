@@ -49,6 +49,7 @@ import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.squircle.squircleSurface
 import top.yukonga.miuix.kmp.icon.extended.*
+import top.yukonga.miuix.kmp.icon.extended.More
 
 @Composable
 fun RankingScreen(
@@ -58,6 +59,7 @@ fun RankingScreen(
     mode: String,
     settings: com.yunfie.illustia.settings.AppSettings,
     viewModel: IllustiaViewModel,
+    onOpenMore: () -> Unit,
 ) {
     val modes = remember {
         listOf("day", "day_male", "day_female", "week", "month", "week_rookie", "day_ai")
@@ -115,6 +117,14 @@ fun RankingScreen(
             largeTitle = stringResource(R.string.nav_ranking),
             scrollBehavior = scrollBehavior,
             actions = {
+                if (settings.liquidGlass) {
+                    IconButton(onClick = onOpenMore) {
+                        Icon(
+                            MiuixIcons.More,
+                            contentDescription = stringResource(R.string.nav_more),
+                        )
+                    }
+                }
                 IconButton(onClick = viewModel::refreshRanking) {
                     Icon(MiuixIcons.Refresh, contentDescription = stringResource(R.string.dialog_reload))
                 }

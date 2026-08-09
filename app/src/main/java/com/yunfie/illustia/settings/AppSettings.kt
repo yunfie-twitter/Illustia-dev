@@ -105,6 +105,7 @@ data class AppSettings(
     val pallaSyncEnabled: Boolean = false,
     val pallaSyncServerUrl: String = "https://api.yunfi.f5.si",
     val sendTelemetry: Boolean = false,
+    val liquidGlass: Boolean = false,
 ) {
     val useHighQualityFeedImages: Boolean
         get() = highQualityImages && feedPreviewQuality != "low"

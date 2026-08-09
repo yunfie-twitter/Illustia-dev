@@ -20,8 +20,8 @@ android {
         applicationId "com.yunfie.illustia"
         minSdk 29
         targetSdk 36
-        versionCode 36
-        versionName "5.0.0"
+        versionCode 38
+        versionName "5.2.0"
     }
 
     signingConfigs {
@@ -195,6 +195,7 @@ dependencies {
     implementation "top.yukonga.miuix.kmp:miuix-icons-android:0.9.3"
     implementation "top.yukonga.miuix.kmp:miuix-squircle-android:0.9.3"
     implementation "top.yukonga.miuix.kmp:miuix-navigation3-ui-android:0.9.3"
+    implementation "io.github.kyant0:backdrop:2.0.0"
 
     // Test dependencies
     testImplementation "io.kotest:kotest-runner-junit5:6.2.2"

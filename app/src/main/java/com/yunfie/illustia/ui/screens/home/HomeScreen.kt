@@ -12,6 +12,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import top.yukonga.miuix.kmp.icon.extended.More
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.yunfie.illustia.IllustiaViewModel
@@ -45,6 +46,7 @@ fun HomeScreen(
     scrollBehavior: ScrollBehavior,
     onSearch: () -> Unit,
     onOpenNovels: () -> Unit,
+    onOpenMore: () -> Unit,
 ) {
     val pagerState = rememberPagerState(
         initialPage = HomeTab.Feed.ordinal,
@@ -90,6 +92,14 @@ fun HomeScreen(
                         MiuixIcons.Photos,
                         contentDescription = stringResource(R.string.nav_novel),
                     )
+                }
+                if (settings.liquidGlass) {
+                    IconButton(onClick = onOpenMore) {
+                        Icon(
+                            MiuixIcons.More,
+                            contentDescription = stringResource(R.string.nav_more),
+                        )
+                    }
                 }
                 IconButton(
                     onClick = {
