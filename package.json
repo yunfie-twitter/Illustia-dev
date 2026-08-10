@@ -2,6 +2,11 @@
   "name": "palleria-docs",
   "private": true,
   "type": "module",
+<<<<<<< HEAD
+=======
+  "version": "1.0.0",
+  "private": true,
+>>>>>>> aac9e13634306ad2f635dd342c02d825e79b639c
   "scripts": {
     "docs:dev": "vitepress dev docs",
     "docs:build": "vitepress build docs",
