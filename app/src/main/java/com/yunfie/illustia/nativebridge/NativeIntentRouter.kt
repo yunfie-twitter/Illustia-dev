@@ -2,6 +2,7 @@ package com.yunfie.illustia.nativebridge
 
 import android.content.Intent
 import android.net.Uri
+import androidx.core.content.IntentCompat
 import java.net.URI
 
 sealed interface NativeIntentEvent {
@@ -31,7 +32,7 @@ object NativeIntentRouter {
                 ?.let(NativeIntentEvent::Text)
         }
         if (intent.action == Intent.ACTION_SEND) {
-            val imageUri = intent.getParcelableExtra(Intent.EXTRA_STREAM, Uri::class.java)
+            val imageUri = IntentCompat.getParcelableExtra(intent, Intent.EXTRA_STREAM, Uri::class.java)
             if (imageUri != null) return NativeIntentEvent.Image(imageUri)
             val text = intent.getStringExtra(Intent.EXTRA_TEXT)?.trim().orEmpty()
             if (text.isNotBlank()) {

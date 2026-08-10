@@ -1,14 +1,17 @@
 package com.yunfie.illustia
 
+import android.Manifest
 import android.app.ActivityManager
 import android.app.HandoffActivityData
 import android.app.HandoffActivityDataRequestInfo
 import android.app.HandoffActivityParams
 import android.app.LocaleManager
+import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.content.res.Configuration
 import android.graphics.BitmapFactory
 import android.graphics.Color
@@ -25,6 +28,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatDelegate
+import androidx.annotation.RequiresApi
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.CompositionLocalProvider
@@ -57,6 +61,7 @@ import top.yukonga.miuix.kmp.theme.TextStyles
 class MainActivity : FragmentActivity() {
     private companion object {
         const val MIN_HANOFF_API = 37
+        const val LEGACY_STORAGE_PERMISSION_REQUEST_CODE = 25
     }
 
     private val viewModel by viewModels<IllustiaViewModel> {
@@ -75,48 +80,22 @@ class MainActivity : FragmentActivity() {
             !viewModel.uiState.value.settingsLoaded
         }
 
-        // スプラッシュ終了時のアニメーション (フル対応)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            splashScreen.setOnExitAnimationListener { splashScreenView ->
-                // 全体のフェードアウト
-                val alpha = android.animation.ObjectAnimator.ofFloat(
-                    splashScreenView.view,
-                    android.view.View.ALPHA,
-                    1f,
-                    0f
-                )
-                // アイコンは少しだけ縮小しながら抜けるほうが自然に見える
-                val scaleX = android.animation.ObjectAnimator.ofFloat(
-                    splashScreenView.iconView,
-                    android.view.View.SCALE_X,
-                    1f,
-                    0.92f
-                )
-                val scaleY = android.animation.ObjectAnimator.ofFloat(
-                    splashScreenView.iconView,
-                    android.view.View.SCALE_Y,
-                    1f,
-                    0.92f
-                )
-                val translateY = android.animation.ObjectAnimator.ofFloat(
-                    splashScreenView.iconView,
-                    android.view.View.TRANSLATION_Y,
-                    0f,
-                    -12f
-                )
-
-                android.animation.AnimatorSet().apply {
-                    duration = 160L
-                    interpolator = AccelerateDecelerateInterpolator()
-                    playTogether(alpha, scaleX, scaleY, translateY)
-                    addListener(object : android.animation.AnimatorListenerAdapter() {
-                        override fun onAnimationEnd(animation: android.animation.Animator) {
-                            splashScreenView.view.alpha = 0f
-                            splashScreenView.remove()
-                        }
-                    })
-                    start()
-                }
+        // core-splashscreen の互換実装を使い、API 25 以降で同じフェードアウトにする。
+        splashScreen.setOnExitAnimationListener { splashScreenView ->
+            android.animation.ObjectAnimator.ofFloat(
+                splashScreenView.view,
+                android.view.View.ALPHA,
+                1f,
+                0f,
+            ).apply {
+                duration = 220L
+                interpolator = AccelerateDecelerateInterpolator()
+                addListener(object : android.animation.AnimatorListenerAdapter() {
+                    override fun onAnimationEnd(animation: android.animation.Animator) {
+                        splashScreenView.remove()
+                    }
+                })
+                start()
             }
         }
         val isDark = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
@@ -125,6 +104,7 @@ class MainActivity : FragmentActivity() {
             navigationBarStyle = if (isDark) SystemBarStyle.dark(Color.TRANSPARENT) else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
         )
         super.onCreate(savedInstanceState)
+        requestLegacyStoragePermissionIfNeeded()
         applyAppLanguage(SettingsStore.readStoredAppLanguage(applicationContext))
 
         // Observe app lifecycle for lock-on-return
@@ -158,7 +138,12 @@ class MainActivity : FragmentActivity() {
                 if (appLocked && settings.appLockEnabled) {
                     window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
                     val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-                    clipboard?.clearPrimaryClip()
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                        clipboard?.clearPrimaryClip()
+                    } else {
+                        @Suppress("DEPRECATION")
+                        clipboard?.setPrimaryClip(ClipData.newPlainText("", ""))
+                    }
                 } else {
                     applySecureWindow(settings.secureWindow)
                 }
@@ -242,6 +227,7 @@ class MainActivity : FragmentActivity() {
         viewModel.handleIncomingIntent(intent)
     }
 
+    @RequiresApi(MIN_HANOFF_API)
     override fun onHandoffActivityDataRequested(handoffRequestInfo: HandoffActivityDataRequestInfo): HandoffActivityData {
         val state = viewModel.uiState.value
         val activityComponent = ComponentName(this, MainActivity::class.java)
@@ -268,6 +254,18 @@ class MainActivity : FragmentActivity() {
             .setAllowHandoffWithoutPackageInstalled(true)
             .build()
         setHandoffEnabled(true, params)
+    }
+
+    private fun requestLegacyStoragePermissionIfNeeded() {
+        if (
+            Build.VERSION.SDK_INT <= Build.VERSION_CODES.P &&
+            checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+        ) {
+            requestPermissions(
+                arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE),
+                LEGACY_STORAGE_PERMISSION_REQUEST_CODE,
+            )
+        }
     }
 
     private fun currentHandoffUri(state: IllustiaUiState): Uri? {

@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 
 use futures_util::StreamExt;
-use reqwest::{RequestBuilder, Response};
 use reqwest::header::{CONTENT_TYPE, HeaderMap, HeaderName, HeaderValue};
+use reqwest::{RequestBuilder, Response};
 use serde::de::DeserializeOwned;
 
 use super::PixivHttpClient;
@@ -81,9 +81,8 @@ pub(super) async fn send_json<T: DeserializeOwned>(
     let response = ensure_success(request.send().await.map_err(network_error)?).await?;
     reject_declared_size(&response, JSON_RESPONSE_LIMIT, context)?;
     let bytes = read_limited_bytes(response, JSON_RESPONSE_LIMIT, context).await?;
-    serde_json::from_slice(&bytes).map_err(|error| {
-        invalid_response(format!("invalid {context} response: {error}"))
-    })
+    serde_json::from_slice(&bytes)
+        .map_err(|error| invalid_response(format!("invalid {context} response: {error}")))
 }
 
 pub(super) async fn send_text(
@@ -94,9 +93,8 @@ pub(super) async fn send_text(
     let response = ensure_success(request.send().await.map_err(network_error)?).await?;
     reject_declared_size(&response, limit, context)?;
     let bytes = read_limited_bytes(response, limit, context).await?;
-    String::from_utf8(bytes).map_err(|error| {
-        invalid_response(format!("invalid {context} response body: {error}"))
-    })
+    String::from_utf8(bytes)
+        .map_err(|error| invalid_response(format!("invalid {context} response body: {error}")))
 }
 
 pub(super) async fn send_no_content(request: RequestBuilder) -> Result<(), ApiError> {
@@ -121,7 +119,9 @@ pub(super) async fn ensure_success(response: Response) -> Result<Response, ApiEr
     if (200..300).contains(&status) {
         return Ok(response);
     }
-    let body = read_limited_bytes(response, ERROR_RESPONSE_LIMIT, "error").await.unwrap_or_default();
+    let body = read_limited_bytes(response, ERROR_RESPONSE_LIMIT, "error")
+        .await
+        .unwrap_or_default();
     Err(http_error(status, &error_preview(&body)))
 }
 
@@ -135,7 +135,11 @@ fn reject_declared_size(response: &Response, limit: u64, context: &str) -> Resul
     Ok(())
 }
 
-pub(super) async fn read_limited_bytes(response: Response, limit: u64, context: &str) -> Result<Vec<u8>, ApiError> {
+pub(super) async fn read_limited_bytes(
+    response: Response,
+    limit: u64,
+    context: &str,
+) -> Result<Vec<u8>, ApiError> {
     let mut bytes = Vec::new();
     let mut stream = response.bytes_stream();
     while let Some(chunk) = stream.next().await {
@@ -209,7 +213,8 @@ mod tests {
             "test".into(),
             "Android 10".into(),
             "en-US".into(),
-        ).unwrap()
+        )
+        .unwrap()
     }
 
     #[test]
@@ -223,21 +228,27 @@ mod tests {
     #[tokio::test]
     async fn accepts_an_exact_size_body_without_content_length() {
         let url = raw_server(response("200 OK", "", b"four"));
-        let text = send_text(client().client.get(url), "test", 4).await.unwrap();
+        let text = send_text(client().client.get(url), "test", 4)
+            .await
+            .unwrap();
         assert_eq!(text, "four");
     }
 
     #[tokio::test]
     async fn rejects_an_oversized_body_without_content_length() {
         let url = raw_server(response("200 OK", "", b"large"));
-        let error = send_text(client().client.get(url), "test", 4).await.unwrap_err();
+        let error = send_text(client().client.get(url), "test", 4)
+            .await
+            .unwrap_err();
         assert!(matches!(error, ApiError::InvalidResponse { .. }));
     }
 
     #[tokio::test]
     async fn rejects_a_declared_size_above_the_limit_before_reading() {
         let url = raw_server(response("200 OK", "Content-Length: 100\r\n", b"x"));
-        let error = send_text(client().client.get(url), "test", 4).await.unwrap_err();
+        let error = send_text(client().client.get(url), "test", 4)
+            .await
+            .unwrap_err();
         assert!(matches!(error, ApiError::InvalidResponse { .. }));
     }
 

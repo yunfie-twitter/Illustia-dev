@@ -1,5 +1,5 @@
 ---
-title: Palleria ユーザーガイド
+title: ユーザーガイド
 description: Palleria の特徴、画面構成、主な機能ガイド
 ---
 
@@ -46,6 +46,6 @@ description: Palleria の特徴、画面構成、主な機能ガイド
 
 ## 動作要件
 
-- **対応端末**: Android 10 以上
+- **対応端末**: Android 7.1 以上
 - **アカウント**: Pixiv アカウント
 - **費用**: 完全無料（広告なし・オープンソース）

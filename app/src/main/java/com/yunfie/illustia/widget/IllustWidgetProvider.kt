@@ -15,9 +15,11 @@ import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.graphics.RectF
 import android.net.Uri
+import android.os.Build
 import android.view.View
 import android.widget.RemoteViews
 import android.widget.RemoteViews.RemoteResponse
+import androidx.annotation.RequiresApi
 import com.yunfie.illustia.MainActivity
 import com.yunfie.illustia.R
 import com.yunfie.illustia.settings.SettingsStore
@@ -147,11 +149,12 @@ class IllustWidgetProvider : AppWidgetProvider() {
                 val bitmap = decodeWidgetBitmap(imageFile, WIDGET_IMAGE_MAX_DIMENSION)
                 if (bitmap != null) {
                     views.setImageViewBitmap(R.id.widget_image, bitmap)
-                    views.setOnClickResponse(
-                        R.id.widget_root,
-                        RemoteResponse.fromPendingIntent(detailPendingIntent(context, selection.illustId))
-                            .addSharedElement(R.id.widget_image, "illust_widget_image"),
-                    )
+                    val pendingIntent = detailPendingIntent(context, selection.illustId)
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                        bindSharedElementClick(views, pendingIntent)
+                    } else {
+                        views.setOnClickPendingIntent(R.id.widget_root, pendingIntent)
+                    }
                 } else {
                     views.setImageViewResource(R.id.widget_image, R.mipmap.ic_launcher)
                     views.setOnClickPendingIntent(R.id.widget_root, configurePendingIntent(context, appWidgetId))
@@ -164,6 +167,15 @@ class IllustWidgetProvider : AppWidgetProvider() {
                 views.setOnClickPendingIntent(R.id.widget_empty_button, configurePendingIntent(context, appWidgetId))
                 views.setOnClickPendingIntent(R.id.widget_root, configurePendingIntent(context, appWidgetId))
             }
+        }
+
+        @RequiresApi(Build.VERSION_CODES.Q)
+        private fun bindSharedElementClick(views: RemoteViews, pendingIntent: PendingIntent) {
+            views.setOnClickResponse(
+                R.id.widget_root,
+                RemoteResponse.fromPendingIntent(pendingIntent)
+                    .addSharedElement(R.id.widget_image, "illust_widget_image"),
+            )
         }
 
         private fun configurePendingIntent(context: Context, appWidgetId: Int): PendingIntent {

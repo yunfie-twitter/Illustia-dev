@@ -109,13 +109,15 @@ impl PixivHttpClient {
 
     #[uniffi::method(async_runtime = "tokio")]
     pub async fn execute_illust_page(&self, request: PixivRequest) -> Result<IllustPage, ApiError> {
-        transport::execute_json::<IllustPageResponse>(self, request, "illust page").await
+        transport::execute_json::<IllustPageResponse>(self, request, "illust page")
+            .await
             .map(IllustPageResponse::into_page)
     }
 
     #[uniffi::method(async_runtime = "tokio")]
     pub async fn execute_illust_detail(&self, request: PixivRequest) -> Result<Illust, ApiError> {
-        transport::execute_json::<IllustDetailResponse>(self, request, "illust detail").await?
+        transport::execute_json::<IllustDetailResponse>(self, request, "illust detail")
+            .await?
             .into_illust()
             .ok_or_else(|| {
                 invalid_response("illust detail response does not contain a valid illust")
@@ -128,13 +130,18 @@ impl PixivHttpClient {
         request: PixivRequest,
         fallback_user_id: i64,
     ) -> Result<UserProfile, ApiError> {
-        transport::execute_json::<UserDetailResponse>(self, request, "user detail").await
+        transport::execute_json::<UserDetailResponse>(self, request, "user detail")
+            .await
             .map(|response| response.into_profile(fallback_user_id))
     }
 
     #[uniffi::method(async_runtime = "tokio")]
-    pub async fn execute_autocomplete(&self, request: PixivRequest) -> Result<StringList, ApiError> {
-        transport::execute_json::<AutocompleteResponse>(self, request, "autocomplete").await
+    pub async fn execute_autocomplete(
+        &self,
+        request: PixivRequest,
+    ) -> Result<StringList, ApiError> {
+        transport::execute_json::<AutocompleteResponse>(self, request, "autocomplete")
+            .await
             .map(AutocompleteResponse::into_list)
     }
 
@@ -143,7 +150,8 @@ impl PixivHttpClient {
         &self,
         request: PixivRequest,
     ) -> Result<UserPreviewPage, ApiError> {
-        transport::execute_json::<UserPreviewPageResponse>(self, request, "user preview page").await
+        transport::execute_json::<UserPreviewPageResponse>(self, request, "user preview page")
+            .await
             .map(UserPreviewPageResponse::into_page)
     }
 
@@ -152,13 +160,18 @@ impl PixivHttpClient {
         &self,
         request: PixivRequest,
     ) -> Result<UgoiraMetadata, ApiError> {
-        transport::execute_json::<UgoiraMetadataResponse>(self, request, "ugoira metadata").await
+        transport::execute_json::<UgoiraMetadataResponse>(self, request, "ugoira metadata")
+            .await
             .map(UgoiraMetadataResponse::into_metadata)
     }
 
     #[uniffi::method(async_runtime = "tokio")]
-    pub async fn execute_comment_page(&self, request: PixivRequest) -> Result<CommentPage, ApiError> {
-        transport::execute_json::<CommentPageResponse>(self, request, "comment page").await
+    pub async fn execute_comment_page(
+        &self,
+        request: PixivRequest,
+    ) -> Result<CommentPage, ApiError> {
+        transport::execute_json::<CommentPageResponse>(self, request, "comment page")
+            .await
             .map(CommentPageResponse::into_page)
     }
 
@@ -167,13 +180,15 @@ impl PixivHttpClient {
         &self,
         request: PixivRequest,
     ) -> Result<NotificationPage, ApiError> {
-        transport::execute_json::<NotificationPageResponse>(self, request, "notification page").await
+        transport::execute_json::<NotificationPageResponse>(self, request, "notification page")
+            .await
             .map(NotificationPageResponse::into_page)
     }
 
     #[uniffi::method(async_runtime = "tokio")]
     pub async fn execute_novel_page(&self, request: PixivRequest) -> Result<NovelPage, ApiError> {
-        transport::execute_json::<NovelPageResponse>(self, request, "novel page").await
+        transport::execute_json::<NovelPageResponse>(self, request, "novel page")
+            .await
             .map(NovelPageResponse::into_page)
     }
 
@@ -182,7 +197,8 @@ impl PixivHttpClient {
         &self,
         request: PixivRequest,
     ) -> Result<WatchlistMangaPage, ApiError> {
-        transport::execute_json::<WatchlistMangaResponse>(self, request, "watchlist manga").await
+        transport::execute_json::<WatchlistMangaResponse>(self, request, "watchlist manga")
+            .await
             .map(WatchlistMangaResponse::into_page)
     }
 
@@ -191,7 +207,8 @@ impl PixivHttpClient {
         &self,
         request: PixivRequest,
     ) -> Result<IllustSeriesPage, ApiError> {
-        transport::execute_json::<IllustSeriesPageResponse>(self, request, "illust series").await
+        transport::execute_json::<IllustSeriesPageResponse>(self, request, "illust series")
+            .await
             .map(IllustSeriesPageResponse::into_page)
     }
 
@@ -200,7 +217,8 @@ impl PixivHttpClient {
         &self,
         request: PixivRequest,
     ) -> Result<OptionalBoolean, ApiError> {
-        transport::execute_json::<SimpleBooleanResponse>(self, request, "boolean response").await
+        transport::execute_json::<SimpleBooleanResponse>(self, request, "boolean response")
+            .await
             .map(SimpleBooleanResponse::into_value)
     }
 
@@ -209,13 +227,15 @@ impl PixivHttpClient {
         &self,
         request: PixivRequest,
     ) -> Result<UserFollowDetail, ApiError> {
-        transport::execute_json::<UserFollowDetailResponse>(self, request, "user follow detail").await
+        transport::execute_json::<UserFollowDetailResponse>(self, request, "user follow detail")
+            .await
             .map(UserFollowDetailResponse::into_detail)
     }
 
     #[uniffi::method(async_runtime = "tokio")]
     pub async fn execute_stamps(&self, request: PixivRequest) -> Result<StampList, ApiError> {
-        transport::execute_json::<StampResponse>(self, request, "stamps").await
+        transport::execute_json::<StampResponse>(self, request, "stamps")
+            .await
             .map(StampResponse::into_list)
     }
 
@@ -224,13 +244,18 @@ impl PixivHttpClient {
         &self,
         request: PixivRequest,
     ) -> Result<TrendingTagList, ApiError> {
-        transport::execute_json::<TrendingTagResponse>(self, request, "trending tags").await
+        transport::execute_json::<TrendingTagResponse>(self, request, "trending tags")
+            .await
             .map(TrendingTagResponse::into_list)
     }
 
     #[uniffi::method(async_runtime = "tokio")]
-    pub async fn execute_spotlight(&self, request: PixivRequest) -> Result<SpotlightPage, ApiError> {
-        transport::execute_json::<SpotlightResponse>(self, request, "spotlight").await
+    pub async fn execute_spotlight(
+        &self,
+        request: PixivRequest,
+    ) -> Result<SpotlightPage, ApiError> {
+        transport::execute_json::<SpotlightResponse>(self, request, "spotlight")
+            .await
             .map(SpotlightResponse::into_page)
     }
 
@@ -239,7 +264,8 @@ impl PixivHttpClient {
         &self,
         request: PixivRequest,
     ) -> Result<CurrentUserProfile, ApiError> {
-        transport::execute_json::<UserMeResponse>(self, request, "current user profile").await?
+        transport::execute_json::<UserMeResponse>(self, request, "current user profile")
+            .await?
             .into_profile()
             .ok_or_else(|| {
                 invalid_response("current user profile response is missing a valid profile")
@@ -251,7 +277,8 @@ impl PixivHttpClient {
         &self,
         request: PixivRequest,
     ) -> Result<AccountEditResult, ApiError> {
-        transport::execute_json::<AccountEditResponse>(self, request, "account edit").await
+        transport::execute_json::<AccountEditResponse>(self, request, "account edit")
+            .await
             .map(AccountEditResponse::into_result)
     }
 
@@ -262,7 +289,8 @@ impl PixivHttpClient {
         novel_id: i64,
     ) -> Result<NovelText, ApiError> {
         let body =
-            transport::execute_text(self, request, "novel text", transport::HTML_RESPONSE_LIMIT).await?;
+            transport::execute_text(self, request, "novel text", transport::HTML_RESPONSE_LIMIT)
+                .await?;
         endpoints::novel_text(&body, novel_id)
     }
 

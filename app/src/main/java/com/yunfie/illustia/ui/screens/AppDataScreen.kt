@@ -12,7 +12,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -20,12 +19,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.paneTitle
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.yunfie.illustia.IllustiaUiState
 import com.yunfie.illustia.IllustiaViewModel
 import com.yunfie.illustia.R
+import com.yunfie.illustia.data.AppStorageUsage
+import com.yunfie.illustia.data.readAppStorageUsage
 import com.yunfie.illustia.ui.components.DividerLine
 import com.yunfie.illustia.ui.components.ElevatedPanel
 import com.yunfie.illustia.ui.components.HeaderIcon
@@ -35,7 +39,6 @@ import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
 import com.yunfie.illustia.ui.components.Section
 import com.yunfie.illustia.ui.components.SettingLinkRow
 import com.yunfie.illustia.ui.components.SettingRow
-import java.io.File
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.TopAppBar
@@ -62,12 +65,13 @@ fun AppDataScreen(
 ) {
     PredictiveBackGestureHandler(onBack = onBack)
     val context = LocalContext.current
-    var cacheBytes by remember { mutableLongStateOf(0L) }
+    val pageTitle = stringResource(R.string.app_data_title)
+    var storageUsage by remember { mutableStateOf<AppStorageUsage?>(null) }
     var deleteTarget by remember { mutableStateOf<AppDataDeleteTarget?>(null) }
     val mutedTotal = state.settings.mutedIllusts.size + state.settings.mutedUsers.size + state.settings.mutedTags.size
 
     LaunchedEffect(state.message) {
-        cacheBytes = withContext(Dispatchers.IO) { context.cacheBytes() }
+        storageUsage = withContext(Dispatchers.IO) { context.readAppStorageUsage() }
     }
 
     deleteTarget?.let { target ->
@@ -93,11 +97,12 @@ fun AppDataScreen(
 
     val scrollBehavior = MiuixScrollBehavior()
     Scaffold(
+        modifier = Modifier.semantics { paneTitle = pageTitle },
         containerColor = MiuixTheme.colorScheme.surface,
         topBar = {
             TopAppBar(
-                title = stringResource(R.string.app_data_title),
-                largeTitle = stringResource(R.string.app_data_title),
+                title = pageTitle,
+                largeTitle = pageTitle,
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     HeaderIcon(MiuixIcons.Back, onClick = onBack)
@@ -120,6 +125,78 @@ fun AppDataScreen(
         ) {
 
         item {
+            val loadingSize = stringResource(R.string.data_storage_calculating)
+            Section(stringResource(R.string.data_storage_section)) {
+                ElevatedPanel {
+                    SettingRow(
+                        title = stringResource(R.string.data_storage_total),
+                        summary = storageUsage?.totalBytes?.readableBytes() ?: loadingSize,
+                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                    ) {
+                        Text(
+                            text = stringResource(R.string.data_storage_total_badge),
+                            color = MiuixTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                    DividerLine()
+                    SettingRow(
+                        title = stringResource(R.string.data_storage_app),
+                        summary = storageUsage?.appBytes?.readableBytes() ?: loadingSize,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.data_storage_app_badge),
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                    DividerLine()
+                    SettingRow(
+                        title = stringResource(R.string.data_storage_user_data),
+                        summary = storageUsage?.userDataBytes?.readableBytes() ?: loadingSize,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.data_storage_user_data_badge),
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                    DividerLine()
+                    SettingRow(
+                        title = stringResource(R.string.data_cache),
+                        summary = storageUsage?.cacheBytes?.readableBytes() ?: loadingSize,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.data_cache_badge),
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.6f),
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+            }
+        }
+
+        storageUsage?.takeIf(AppStorageUsage::hasCodeBreakdown)?.let { usage ->
+            item {
+                Section(stringResource(R.string.data_storage_code_breakdown)) {
+                    ElevatedPanel {
+                        StorageDetailRow(stringResource(R.string.data_storage_apk), usage.apkBytes)
+                        DividerLine()
+                        StorageDetailRow(stringResource(R.string.data_storage_optimized_code), usage.optimizedCodeBytes)
+                        DividerLine()
+                        StorageDetailRow(stringResource(R.string.data_storage_dex_metadata), usage.dexMetadataBytes)
+                        DividerLine()
+                        StorageDetailRow(stringResource(R.string.data_storage_native_libraries), usage.nativeLibraryBytes)
+                        DividerLine()
+                        StorageDetailRow(stringResource(R.string.data_storage_reference_profile), usage.referenceProfileBytes)
+                        DividerLine()
+                        StorageDetailRow(stringResource(R.string.data_storage_current_profile), usage.currentProfileBytes)
+                    }
+                }
+            }
+        }
+
+        item {
             Section(stringResource(R.string.app_data_section_overview)) {
                 ElevatedPanel {
                     SettingRow(stringResource(R.string.data_view_history), stringResource(R.string.data_items_count, state.settings.viewHistory.size)) {
@@ -136,10 +213,6 @@ fun AppDataScreen(
                     DividerLine()
                     SettingRow(stringResource(R.string.data_mute_data), stringResource(R.string.data_items_count, mutedTotal)) {
                         Text(stringResource(R.string.data_mute_data_badge), color = MiuixTheme.colorScheme.onSurfaceVariantSummary, fontWeight = FontWeight.Bold)
-                    }
-                    DividerLine()
-                    SettingRow(stringResource(R.string.data_cache), cacheBytes.readableBytes()) {
-                        Text(stringResource(R.string.data_cache_badge), color = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.6f), fontWeight = FontWeight.Bold)
                     }
                 }
             }
@@ -165,6 +238,20 @@ fun AppDataScreen(
     }
 }
 
+@Composable
+private fun StorageDetailRow(title: String, bytes: Long?) {
+    SettingRow(
+        title = title,
+        summary = (bytes ?: 0L).readableBytes(),
+    ) {
+        Text(
+            text = stringResource(R.string.data_storage_android_15_badge),
+            color = MiuixTheme.colorScheme.primary,
+            fontWeight = FontWeight.Bold,
+        )
+    }
+}
+
 private fun AppDataDeleteTarget.confirmTitle(context: Context): String {
     return when (this) {
         AppDataDeleteTarget.Cache -> context.getString(R.string.data_delete_cache)
@@ -183,18 +270,6 @@ private fun AppDataDeleteTarget.confirmSummary(context: Context): String {
         AppDataDeleteTarget.FavoriteTags -> context.getString(R.string.data_delete_watchlist_tags_desc)
         AppDataDeleteTarget.MuteData -> context.getString(R.string.data_delete_mute_data_desc)
     }
-}
-
-private fun Context.cacheBytes(): Long {
-    return sequenceOf(cacheDir, externalCacheDir)
-        .filterNotNull()
-        .sumOf { it.directorySize() }
-}
-
-private fun File.directorySize(): Long {
-    if (!exists()) return 0L
-    if (isFile) return length()
-    return walkTopDown().filter { it.isFile }.sumOf { it.length() }
 }
 
 private fun Long.readableBytes(): String {

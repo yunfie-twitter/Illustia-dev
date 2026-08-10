@@ -131,8 +131,8 @@ fun AboutScreen(
                         Text(stringResource(R.string.about_latest), color = MiuixTheme.colorScheme.primary, fontWeight = FontWeight.Bold, style = MiuixTheme.textStyles.footnote1)
                     }
                     DividerLine()
-                    SettingRow(stringResource(R.string.about_supported_os), "Android 13+") {
-                        Text("API 33", color = MiuixTheme.colorScheme.onSurfaceVariantSummary, fontWeight = FontWeight.Bold, style = MiuixTheme.textStyles.footnote1)
+                    SettingRow(stringResource(R.string.about_supported_os), "Android 7.1+") {
+                        Text("API 25", color = MiuixTheme.colorScheme.onSurfaceVariantSummary, fontWeight = FontWeight.Bold, style = MiuixTheme.textStyles.footnote1)
                     }
                     DividerLine()
                     SettingRow(stringResource(R.string.about_license), stringResource(R.string.about_open_source)) {

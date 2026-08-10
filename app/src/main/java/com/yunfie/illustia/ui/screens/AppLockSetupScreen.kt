@@ -42,6 +42,7 @@ import com.yunfie.illustia.IllustiaUiState
 import com.yunfie.illustia.IllustiaViewModel
 import com.yunfie.illustia.R
 import com.yunfie.illustia.ui.components.DividerLine
+import com.yunfie.illustia.ui.components.AppHapticEffect
 import com.yunfie.illustia.ui.components.ElevatedPanel
 import com.yunfie.illustia.ui.components.HeaderIcon
 import com.yunfie.illustia.ui.components.LocalAppHapticMode
@@ -129,7 +130,7 @@ fun AppLockSetupScreen(
                 val prompt = BiometricPrompt(activity, executor, object : BiometricPrompt.AuthenticationCallback() {
                     override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                         viewModel.updateBiometricEnabled(true)
-                        performAppHapticFeedback(context, haptic, hapticMode)
+                        performAppHapticFeedback(context, haptic, hapticMode, AppHapticEffect.Success)
                     }
                     override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
                         requestBiometric = false
@@ -172,6 +173,7 @@ fun AppLockSetupScreen(
         verifyPin = newPin
         if (newPin.length == 6) {
             if (viewModel.verifyPin(newPin)) {
+                performAppHapticFeedback(context, haptic, hapticMode, AppHapticEffect.Success)
                 viewModel.resetLockFailCount()
                 when (val action = pendingAction) {
                     is PinVerifyAction.Disable -> viewModel.disableAppLock()
@@ -180,6 +182,7 @@ fun AppLockSetupScreen(
                 }
                 dismissPinOverlay()
             } else {
+                performAppHapticFeedback(context, haptic, hapticMode, AppHapticEffect.Error)
                 verifyError = true
                 verifyShake = true
                 viewModel.recordLockFailure()

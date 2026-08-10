@@ -1,9 +1,9 @@
+use futures_util::StreamExt;
 use std::collections::HashMap;
 use std::fs;
 use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex, OnceLock, Weak};
-use futures_util::StreamExt;
 use tokio::sync::Mutex as AsyncMutex;
 
 use super::{PixivHttpClient, transport};
@@ -98,7 +98,9 @@ async fn copy_with_limit(
         if copied > limit {
             return Err(archive_too_large());
         }
-        writer.write_all(&chunk).map_err(|error| io_error("write ugoira download", error))?;
+        writer
+            .write_all(&chunk)
+            .map_err(|error| io_error("write ugoira download", error))?;
     }
     Ok(copied)
 }

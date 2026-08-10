@@ -1,32 +1,8 @@
 ---
 layout: home
-<<<<<<< HEAD
-title: Palleria Docs
+title: Palleria - Android向けPixivクライアント
 titleTemplate: false
-description: Palleriaのインストール、使い方、開発に関する公式ドキュメント
-hero:
-  name: Palleria
-  text: 創作を、もっと心地よく。
-  tagline: イラスト・マンガ・小説を快適に楽しむためのオープンソースAndroidクライアント
-  image:
-    src: https://yunfi.f5.si/Palleria/repo/com.yunfie.illustia/en-US/icon.png
-    alt: Palleria
-  actions:
-    - theme: brand
-      text: インストール
-      link: /guide/install
-    - theme: alt
-      text: 使い方を見る
-      link: /guide/
-features:
-  - title: 高速で快適
-    details: 軽快な操作感で、作品そのものに集中できます。
-  - title: 作品を見つける
-    details: 検索、ランキング、おすすめから新しい作品と出会えます。
-  - title: 自分らしく調整
-    details: テーマ、画質、プライバシー設定を自分の楽しみ方に合わせられます。
----
-=======
+description: Android向けオープンソースPixivクライアント「Palleria」の公式ガイド。閲覧・同期・プライバシー機能を紹介。
 
 hero:
   name: "Palleria"
@@ -34,25 +10,50 @@ hero:
   tagline: "Jetpack Compose と Rust ネイティブエンジンで構築された Android 向け Pixiv クライアント"
   image:
     src: /logo.svg
-    alt: Palleria Icon
+    alt: Palleria Androidアプリのロゴ
   actions:
     - theme: brand
+      text: インストール方法を見る
+      link: /user/installation
+    - theme: alt
       text: ユーザーガイド
       link: /user/
-    - theme: alt
-      text: 開発者ドキュメント
-      link: /dev/
 
 features:
   - title: 快適な作品鑑賞
-    details: イラスト、マンガ、小説（縦書き対応）、うごイラ（Zip解凍再生）、ショートフィードに対応。
-  - title: 簡単操作と安心セキュリティ
-    details: タグ検索、ウォッチリスト機能に加え、PINロックや本物として使える電卓偽装モードを搭載。
-  - title: 高速な Rust コア
-    details: 通信・JSON解析を Rust ネイティブクレートで処理し、大容量データでもメモリ消費を強力に抑制。
-  - title: 高機能ダウンロード & 壁紙
-    details: 原寸画像の保存、作者別自動フォルダ分け、お気に入り作品の自動切り替えライブ壁紙サービス。
+    details: イラスト、マンガ、小説の縦書き表示、うごイラの再生に対応。
+    link: /user/browse
+    linkText: 閲覧機能を見る
+  - title: 検索とコレクション
+    details: タグ検索、ウォッチリスト、ブックマークで好きな作品を整理。
+    link: /user/search
+    linkText: 検索機能を見る
+  - title: プライバシー保護
+    details: PINロック、生体認証、本物として使える電卓偽装モードを搭載。
+    link: /user/security
+    linkText: セキュリティ機能を見る
+  - title: 暗号化された端末間同期
+    details: PallaSyncで設定やお気に入りタグを複数端末へ安全に同期。
+    link: /user/sync
+    linkText: 同期機能を見る
 ---
+
+## Palleriaを使い始める
+
+まずは[対応環境とインストール手順](/user/installation)を確認し、アプリを入手してください。初回起動後は[Pixivアカウントでのログイン方法](/user/authentication)を案内しています。
+
+## 機能から探す
+
+- [イラスト・マンガ・小説・うごイラの閲覧](/user/browse)
+- [タグ検索とお気に入りタグ](/user/search)
+- [ブックマークとフォロー](/user/bookmarks)
+- [画像の保存と一括ダウンロード](/user/downloads)
+- [外観テーマと各種設定](/user/personalization)
+- [アプリロックと電卓偽装](/user/security)
+- [PallaSyncによる端末間同期](/user/sync)
+- [ライブ壁紙とウィジェット](/user/wallpaper-widget)
+
+アプリの仕組みや開発への参加方法は、[開発者ドキュメント](/dev/)と[ビルド手順](/dev/build)を参照してください。
 
 <style>
 :root {
@@ -68,4 +69,3 @@ features:
   filter: drop-shadow(0 8px 24px rgba(58, 184, 244, 0.25));
 }
 </style>
->>>>>>> b85653cb264de3137e8bad14d61ebfcb28489357

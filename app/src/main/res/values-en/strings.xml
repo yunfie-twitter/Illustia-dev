@@ -433,6 +433,22 @@
     <!-- App data screen -->
     <string name="app_data_title">App Data</string>
     <string name="app_data_section_overview">Overview</string>
+    <string name="data_storage_section">Storage usage</string>
+    <string name="data_storage_total">Total used</string>
+    <string name="data_storage_total_badge">Total</string>
+    <string name="data_storage_app">App and code</string>
+    <string name="data_storage_app_badge">Code</string>
+    <string name="data_storage_user_data">User data</string>
+    <string name="data_storage_user_data_badge">Local</string>
+    <string name="data_storage_calculating">Calculating…</string>
+    <string name="data_storage_code_breakdown">Code storage breakdown</string>
+    <string name="data_storage_apk">APK</string>
+    <string name="data_storage_optimized_code">AOT and optimized code</string>
+    <string name="data_storage_dex_metadata">Dex metadata</string>
+    <string name="data_storage_native_libraries">Native libraries</string>
+    <string name="data_storage_reference_profile">Reference profile</string>
+    <string name="data_storage_current_profile">Current profile</string>
+    <string name="data_storage_android_15_badge">Android 15</string>
 
     <!-- About screen -->
     <string name="about_title">About Palleria</string>

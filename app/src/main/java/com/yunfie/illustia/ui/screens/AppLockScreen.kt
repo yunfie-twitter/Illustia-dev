@@ -52,6 +52,7 @@ import com.yunfie.illustia.R
 import kotlinx.coroutines.delay
 import com.yunfie.illustia.ui.components.LocalAppHapticMode
 import com.yunfie.illustia.ui.components.performAppHapticFeedback
+import com.yunfie.illustia.ui.components.AppHapticEffect
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.icon.MiuixIcons
@@ -101,11 +102,11 @@ fun AppLockScreen(
     }
 
     fun vibrateUnlock() {
-        performAppHapticFeedback(context, haptic, hapticMode)
+        performAppHapticFeedback(context, haptic, hapticMode, AppHapticEffect.Success)
     }
 
     fun vibrateError() {
-        performAppHapticFeedback(context, haptic, hapticMode)
+        performAppHapticFeedback(context, haptic, hapticMode, AppHapticEffect.Error)
     }
 
     fun triggerUnlockAnimation() {

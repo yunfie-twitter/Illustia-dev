@@ -30,6 +30,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yunfie.illustia.IllustiaViewModel
 import com.yunfie.illustia.R
+import com.yunfie.illustia.ui.components.AppHapticEffect
 import com.yunfie.illustia.ui.components.LocalAppHapticMode
 import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
 import com.yunfie.illustia.ui.components.performAppHapticFeedback
@@ -106,6 +107,7 @@ fun PinSetupScreen(
                         pin = ""
                         step = 2
                     } else {
+                        performAppHapticFeedback(context, haptic, hapticMode, AppHapticEffect.Error)
                         error = incorrectError
                         shake = true
                         pin = ""
@@ -129,9 +131,11 @@ fun PinSetupScreen(
                         } else {
                             viewModel.setupPin(newPin)
                         }
+                        performAppHapticFeedback(context, haptic, hapticMode, AppHapticEffect.Success)
                         reset()
                         onBack()
                     } else {
+                        performAppHapticFeedback(context, haptic, hapticMode, AppHapticEffect.Error)
                         error = mismatchError
                         shake = true
                         confirmPin = ""

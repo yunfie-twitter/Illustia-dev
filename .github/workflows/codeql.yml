@@ -3,8 +3,30 @@ name: "CodeQL"
 on:
   push:
     branches: [ "main" ]
+    paths:
+      - "app/**"
+      - "benchmark/**"
+      - "rust/**"
+      - "gradle/**"
+      - "build.gradle"
+      - "settings.gradle"
+      - "gradle.properties"
+      - "gradlew"
+      - "gradlew.bat"
+      - ".github/workflows/codeql.yml"
   pull_request:
     branches: [ "main" ]
+    paths:
+      - "app/**"
+      - "benchmark/**"
+      - "rust/**"
+      - "gradle/**"
+      - "build.gradle"
+      - "settings.gradle"
+      - "gradle.properties"
+      - "gradlew"
+      - "gradlew.bat"
+      - ".github/workflows/codeql.yml"
   schedule:
     - cron: '28 17 * * 5'
 

@@ -132,7 +132,7 @@ You can also download the latest APK directly from GitHub Releases.
 
 ### Requirements
 
-* Android 13 or later
+* Android 7.1 or later
 * Pixiv account
 * Internet connection
 
@@ -238,8 +238,8 @@ Sign in directly using an existing Pixiv refresh token.
 | Image Loading           | Coil 3          |
 | Database                | Room            |
 | Preferences             | DataStore       |
-| Minimum Android Version | Android 13      |
-| Minimum API Level       | API 33          |
+| Minimum Android Version | Android 7.1     |
+| Minimum API Level       | API 25          |
 | License                 | GPL-3.0-only    |
 
 ---

@@ -25,7 +25,7 @@ fun proxyPixivImageUrl(url: String, proxyBaseUrl: String): String {
     val sourcePrefix = url.pixivImagePrefixOrNull() ?: return url
 
     if (proxyBaseUrl == PALLERIA_WEBP_PROXY_BASE_URL) {
-        return proxyBaseUrl + URLEncoder.encode(url, StandardCharsets.UTF_8)
+        return proxyBaseUrl + URLEncoder.encode(url, StandardCharsets.UTF_8.name())
     }
 
     val proxy = proxyBaseUrl.trim().trimEnd('/')

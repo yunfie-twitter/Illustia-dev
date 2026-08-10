@@ -42,8 +42,9 @@ pub fn analyze_rgba(pixels: Vec<u8>) -> ImageAnalysis {
                 state.luminance_sum += relative_luminance(red, green, blue);
                 state.sample_count += 1;
 
-                let index =
-                    ((red as usize >> 4) << 8) | ((green as usize >> 4) << 4) | (blue as usize >> 4);
+                let index = ((red as usize >> 4) << 8)
+                    | ((green as usize >> 4) << 4)
+                    | (blue as usize >> 4);
                 let bucket = &mut state.buckets[index];
                 bucket.count += 1;
                 bucket.red += red as u64;

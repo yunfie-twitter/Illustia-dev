@@ -250,17 +250,20 @@ mod tests {
         let zip_path = root.join("frames.zip");
         zip_with(&zip_path, &[("000.jpg", b"a"), ("unused.jpg", b"b")]);
         let cache = root.join("cache");
-        let result = tokio::runtime::Runtime::new().unwrap().block_on(async {
-            prepare(
-                &zip_path,
-                &cache,
-                vec![UgoiraFrame {
-                    file: "000.jpg".into(),
-                    delay_millis: 10,
-                }],
-            ).await
-        })
-        .unwrap();
+        let result = tokio::runtime::Runtime::new()
+            .unwrap()
+            .block_on(async {
+                prepare(
+                    &zip_path,
+                    &cache,
+                    vec![UgoiraFrame {
+                        file: "000.jpg".into(),
+                        delay_millis: 10,
+                    }],
+                )
+                .await
+            })
+            .unwrap();
         assert_eq!(result.frames[0].delay_millis, DEFAULT_FRAME_DELAY_MILLIS);
         assert!(cache.join("000.jpg").is_file());
         assert!(!cache.join("unused.jpg").exists());
@@ -279,7 +282,8 @@ mod tests {
                     file: "../escape.jpg".into(),
                     delay_millis: 20,
                 }],
-            ).await
+            )
+            .await
         });
         assert!(matches!(result, Err(ApiError::InvalidRequest { .. })));
         fs::remove_dir_all(root).unwrap();
@@ -306,7 +310,8 @@ mod tests {
                     file: "000.jpg".into(),
                     delay_millis: 20,
                 }],
-            ).await
+            )
+            .await
         });
         assert!(matches!(result, Err(ApiError::InvalidRequest { .. })));
         fs::remove_dir_all(root).unwrap();
@@ -345,7 +350,8 @@ mod tests {
                     file: "000.jpg".into(),
                     delay_millis: 20,
                 }],
-            ).await
+            )
+            .await
         });
         assert!(matches!(result, Err(ApiError::InvalidRequest { .. })));
         assert!(fs::read_dir(&root).unwrap().all(|entry| {

@@ -177,12 +177,12 @@ fun BookmarkHeartButton(
     LaunchedEffect(stage) {
         when (stage) {
             BookmarkButtonStage.CHECK -> {
-                performAppHapticFeedback(context, haptic, hapticMode)
+                performAppHapticFeedback(context, haptic, hapticMode, AppHapticEffect.Toggle)
                 delay(420)
                 stage = BookmarkButtonStage.BOOKMARKED
             }
             BookmarkButtonStage.REMOVING -> {
-                performAppHapticFeedback(context, haptic, hapticMode)
+                performAppHapticFeedback(context, haptic, hapticMode, AppHapticEffect.Toggle)
                 delay(220)
                 stage = BookmarkButtonStage.UNBOOKMARKED
             }

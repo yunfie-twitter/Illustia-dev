@@ -6,6 +6,9 @@ on:
       - main
     tags:
       - "v*"
+    paths:
+      - "app/build.gradle"
+      - ".github/workflows/fdroid.yml"
   workflow_dispatch:
 
 concurrency:

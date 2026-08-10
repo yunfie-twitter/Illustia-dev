@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.Intent
 import android.media.MediaScannerConnection
 import android.net.Uri
+import android.os.Build
 import android.os.Environment
 import android.provider.DocumentsContract
 import android.provider.MediaStore
@@ -234,8 +235,17 @@ class NativeImageStore(private val context: Context) {
 
     private fun saveMode(): Int {
         val nativeMode = preferences.getInt(KEY_SAVE_MODE, UNKNOWN_MODE)
-        if (nativeMode != UNKNOWN_MODE) return nativeMode
-        return flutterPreferences.getLong("flutter.save_mode", SAVE_MODE_MEDIASTORE.toLong()).toInt()
+        val configuredMode = if (nativeMode != UNKNOWN_MODE) {
+            nativeMode
+        } else {
+            flutterPreferences.getLong("flutter.save_mode", SAVE_MODE_MEDIASTORE.toLong()).toInt()
+        }
+        // RELATIVE_PATH and IS_PENDING are only available with scoped storage.
+        return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q && configuredMode == SAVE_MODE_MEDIASTORE) {
+            SAVE_MODE_DIRECT
+        } else {
+            configuredMode
+        }
     }
 
     private fun saveToMediaStore(

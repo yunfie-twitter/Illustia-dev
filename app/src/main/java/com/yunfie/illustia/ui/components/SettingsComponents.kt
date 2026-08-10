@@ -1,5 +1,6 @@
 package com.yunfie.illustia.ui.components
 
+import android.annotation.SuppressLint
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -20,6 +21,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import com.yunfie.illustia.R
 import top.yukonga.miuix.kmp.basic.BasicComponent
@@ -47,22 +50,27 @@ import top.yukonga.miuix.kmp.utils.PressFeedbackType
 @Composable
 fun Section(title: String, content: @Composable ColumnScope.() -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        SmallTitle(text = title)
+        SmallTitle(
+            text = title,
+            modifier = Modifier.semantics { heading() },
+        )
         content()
     }
 }
 
 @Composable
+@SuppressLint("ModifierParameter") // Keep the existing positional API stable for current callers.
 fun SettingRow(
     title: String,
     summary: String? = null,
     icon: ImageVector? = null,
+    modifier: Modifier = Modifier,
     action: @Composable () -> Unit
 ) {
     BasicComponent(
         title = title,
         summary = summary,
-        modifier = Modifier.fillMaxWidth(),
+        modifier = modifier.fillMaxWidth(),
         startAction = icon?.let {
             {
                 PreferenceIcon(it)

@@ -21,10 +21,11 @@ android {
     compileSdk 37
     defaultConfig {
         applicationId "com.yunfie.illustia"
-        minSdk 29
+        // Android 7.1 (API 25) and newer.
+        minSdk 25
         targetSdk 36
-        versionCode 40
-        versionName "5.4.0-beta.1"
+        versionCode 41
+        versionName "5.4.0-beta.2"
     }
 
     signingConfigs {
@@ -48,6 +49,7 @@ android {
     }
 
     compileOptions {
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
@@ -198,6 +200,9 @@ kotlin {
 
 dependencies {
     baselineProfile project(":benchmark")
+
+    // Backport java.time and other Java library APIs to Android 7.1.
+    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.5"
 
     implementation platform("androidx.compose:compose-bom:2026.06.01")
     implementation "androidx.compose.material:material"

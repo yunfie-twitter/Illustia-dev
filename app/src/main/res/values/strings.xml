@@ -438,6 +438,22 @@
     <!-- App data screen -->
     <string name="app_data_title">アプリのデータ</string>
     <string name="app_data_section_overview">概要</string>
+    <string name="data_storage_section">ストレージ使用量</string>
+    <string name="data_storage_total">使用中の合計</string>
+    <string name="data_storage_total_badge">合計</string>
+    <string name="data_storage_app">アプリとコード</string>
+    <string name="data_storage_app_badge">コード</string>
+    <string name="data_storage_user_data">ユーザーデータ</string>
+    <string name="data_storage_user_data_badge">ローカル</string>
+    <string name="data_storage_calculating">計算中…</string>
+    <string name="data_storage_code_breakdown">コード領域の内訳</string>
+    <string name="data_storage_apk">APK</string>
+    <string name="data_storage_optimized_code">AOT・最適化コード</string>
+    <string name="data_storage_dex_metadata">Dex メタデータ</string>
+    <string name="data_storage_native_libraries">ネイティブライブラリ</string>
+    <string name="data_storage_reference_profile">参照プロファイル</string>
+    <string name="data_storage_current_profile">現在のプロファイル</string>
+    <string name="data_storage_android_15_badge">Android 15</string>
 
     <!-- About screen -->
     <string name="about_title">Palleria について</string>

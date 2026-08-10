@@ -22,7 +22,8 @@ pub(super) async fn login_with_refresh_token(
             ("refresh_token", token.into()),
         ],
         Some(token),
-    ).await
+    )
+    .await
 }
 
 pub(super) async fn login_with_authorization_code(
@@ -46,7 +47,8 @@ pub(super) async fn login_with_authorization_code(
             ("redirect_uri", REDIRECT_URI.into()),
         ],
         None,
-    ).await
+    )
+    .await
 }
 
 pub(super) fn create_web_login_url(
@@ -82,7 +84,8 @@ async fn oauth_login(
             .headers(client.headers.for_request(Default::default())?)
             .form(&fields),
         "OAuth",
-    ).await?;
+    )
+    .await?;
     finish_session(payload, fallback_refresh_token)
 }
 
