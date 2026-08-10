@@ -195,7 +195,9 @@
     <string name="settings_data">資料管理</string>
     <string name="settings_logged_in">已登入</string>
     <string name="settings_not_logged_in">未登入</string>
+    <string name="settings_experimental_summary">體驗仍在開發中的功能</string>
     <string name="general_settings_title">常規設定</string>
+    <string name="experimental_settings_title">實驗性功能</string>
     <string name="general_section_display">顯示</string>
     <string name="general_section_interaction">交互</string>
     <string name="general_section_startup">啟動</string>

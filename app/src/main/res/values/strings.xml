@@ -223,9 +223,11 @@
     <string name="settings_data">データ管理</string>
     <string name="settings_logged_in">ログイン中</string>
     <string name="settings_not_logged_in">未ログイン</string>
+    <string name="settings_experimental_summary">開発中の機能を試します</string>
 
     <!-- General settings screen -->
     <string name="general_settings_title">一般設定</string>
+    <string name="experimental_settings_title">実験的機能</string>
     <string name="general_section_display">表示</string>
     <string name="general_section_interaction">操作</string>
     <string name="general_section_startup">起動</string>

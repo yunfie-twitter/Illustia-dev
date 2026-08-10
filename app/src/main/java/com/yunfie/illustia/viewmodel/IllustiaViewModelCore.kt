@@ -2377,6 +2377,10 @@ open class IllustiaViewModelCore(
         _navigationRequests.tryEmit(IllustiaNavigationRequest.PrivacyModeSettings)
     }
 
+    fun openExperimentalSettings() {
+        _navigationRequests.tryEmit(IllustiaNavigationRequest.ExperimentalSettings)
+    }
+
     fun closeFavoriteTags() {
     }
 

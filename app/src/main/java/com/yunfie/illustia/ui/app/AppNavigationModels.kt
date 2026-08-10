@@ -81,6 +81,7 @@ internal sealed interface AppRoute : NavKey {
     data object AppLockSetup : AppRoute
     data object AppLockPinEntry : AppRoute
     data object PrivacyModeSettings : AppRoute
+    data object ExperimentalSettings : AppRoute
     data object IllustSeries : AppRoute
     data object PallaSyncSettings : AppRoute
     data object PallaSyncDevices : AppRoute

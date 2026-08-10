@@ -288,6 +288,7 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
                     IllustiaNavigationRequest.AppLockSetup -> AppRoute.AppLockSetup
                     IllustiaNavigationRequest.AppLockPinEntry -> AppRoute.AppLockPinEntry
                     IllustiaNavigationRequest.PrivacyModeSettings -> AppRoute.PrivacyModeSettings
+                    IllustiaNavigationRequest.ExperimentalSettings -> AppRoute.ExperimentalSettings
                     IllustiaNavigationRequest.PallaSyncSettings -> AppRoute.PallaSyncSettings
                     IllustiaNavigationRequest.PallaSyncDevices -> AppRoute.PallaSyncDevices
                 },

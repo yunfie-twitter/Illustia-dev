@@ -23,6 +23,7 @@ import top.yukonga.miuix.kmp.basic.HorizontalDivider
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
+import top.yukonga.miuix.kmp.preference.CheckboxPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -58,6 +59,16 @@ fun OnboardingScreen(
                 onWebLogin = viewModel::openWebLogin,
                 onShowDetails = { showDetails = true },
                 onRefreshTokenLogin = onRefreshTokenLogin,
+            )
+
+            Spacer(Modifier.height(16.dp))
+
+            CheckboxPreference(
+                title = stringResource(R.string.data_send_telemetry),
+                summary = stringResource(R.string.data_send_telemetry_desc),
+                checked = state.settings.sendTelemetry,
+                onCheckedChange = viewModel::updateSendTelemetry,
+                modifier = Modifier.fillMaxWidth(),
             )
         }
     }

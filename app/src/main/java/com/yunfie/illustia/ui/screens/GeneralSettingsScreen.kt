@@ -4,10 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
@@ -27,7 +23,6 @@ import com.yunfie.illustia.settings.isDynamicColorAvailable
 import com.yunfie.illustia.ui.components.DividerLine
 import com.yunfie.illustia.ui.components.ElevatedPanel
 import com.yunfie.illustia.ui.components.HeaderIcon
-import com.yunfie.illustia.ui.components.MiuixConfirmDialog
 import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
 import com.yunfie.illustia.ui.components.Section
 import com.yunfie.illustia.ui.components.ThemeSwitchSettingRow
@@ -49,23 +44,7 @@ fun GeneralSettingsScreen(
 ) {
     PredictiveBackGestureHandler(onBack = onBack)
     val scrollBehavior = MiuixScrollBehavior()
-    var showAmoledWarningDialog by remember { mutableStateOf(false) }
     val dynamicColorAvailable = isDynamicColorAvailable()
-
-    if (showAmoledWarningDialog) {
-        MiuixConfirmDialog(
-            show = true,
-            title = stringResource(R.string.general_experimental_feature),
-            summary = stringResource(R.string.general_amoled_warning_desc),
-            confirmText = stringResource(R.string.action_enable),
-            destructive = false,
-            onConfirm = {
-                viewModel.updateAmoledMode(true)
-                showAmoledWarningDialog = false
-            },
-            onDismiss = { showAmoledWarningDialog = false },
-        )
-    }
 
     Scaffold(
         containerColor = MiuixTheme.colorScheme.surface,
@@ -102,19 +81,6 @@ fun GeneralSettingsScreen(
                         selected = state.settings.themeMode,
                         label = { appThemeLabel(it) },
                         onSelect = viewModel::updateThemeMode,
-                    )
-                    DividerLine()
-                    ThemeSwitchSettingRow(
-                        title = stringResource(R.string.general_amoled),
-                        checked = state.settings.amoledMode,
-                        onCheckedChange = { enabled ->
-                            if (enabled) {
-                                showAmoledWarningDialog = true
-                            } else {
-                                viewModel.updateAmoledMode(false)
-                            }
-                        },
-                        summary = stringResource(R.string.general_amoled_desc),
                     )
                     DividerLine()
                     ThemeSwitchSettingRow(

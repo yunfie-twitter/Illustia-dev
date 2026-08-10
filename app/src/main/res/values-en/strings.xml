@@ -218,9 +218,11 @@
     <string name="settings_data">Data Management</string>
     <string name="settings_logged_in">Logged In</string>
     <string name="settings_not_logged_in">Not Logged In</string>
+    <string name="settings_experimental_summary">Try features that are still in development</string>
 
     <!-- General settings screen -->
     <string name="general_settings_title">General Settings</string>
+    <string name="experimental_settings_title">Experimental Features</string>
     <string name="general_section_display">Display</string>
     <string name="general_section_interaction">Interaction</string>
     <string name="general_section_startup">Startup</string>

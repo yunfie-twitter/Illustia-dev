@@ -33,6 +33,7 @@ import top.yukonga.miuix.kmp.icon.extended.FavoritesFill
 import top.yukonga.miuix.kmp.icon.extended.Lock
 import top.yukonga.miuix.kmp.icon.extended.More
 import top.yukonga.miuix.kmp.icon.extended.Photos
+import top.yukonga.miuix.kmp.icon.extended.Settings
 import top.yukonga.miuix.kmp.icon.extended.Timer
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -73,6 +74,11 @@ fun SettingsScreen(
                 else context.getString(R.string.privacy_settings_disabled),
                 MiuixIcons.Lock,
             ) { viewModel.openPrivacyModeSettings() },
+            SettingsCategory(
+                context.getString(R.string.experimental_settings_title),
+                context.getString(R.string.settings_experimental_summary),
+                MiuixIcons.Settings,
+            ) { viewModel.openExperimentalSettings() },
         )
     }
 
