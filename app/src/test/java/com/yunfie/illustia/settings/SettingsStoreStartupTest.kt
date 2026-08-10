@@ -1,0 +1,48 @@
+package com.yunfie.illustia.settings
+
+import android.content.Context
+import androidx.test.core.app.ApplicationProvider
+import io.kotest.matchers.booleans.shouldBeTrue
+import io.kotest.matchers.collections.shouldBeEmpty
+import io.kotest.matchers.collections.shouldContain
+import kotlinx.coroutines.runBlocking
+import org.junit.Test
+import org.junit.runner.RunWith
+import org.robolectric.RobolectricTestRunner
+import org.robolectric.annotation.SQLiteMode
+
+@RunWith(RobolectricTestRunner::class)
+@SQLiteMode(SQLiteMode.Mode.LEGACY)
+class SettingsStoreStartupTest {
+    @Test
+    fun `startup read skips Room collections and uses the privacy mirror`() {
+        runBlocking {
+            val context = ApplicationProvider.getApplicationContext<Context>()
+            val store = SettingsStore(context)
+            val original = store.read()
+            val marker = "startup-room-marker"
+
+            try {
+                val updated = original.copy(
+                    privacyModeEnabled = true,
+                    searchHistory = listOf(marker),
+                    favoriteTags = listOf(marker),
+                )
+                store.write(updated, original)
+
+                SettingsStore.isPrivacyModeEnabledSync(context).shouldBeTrue()
+                store.readStartup().apply {
+                    privacyModeEnabled.shouldBeTrue()
+                    searchHistory.shouldBeEmpty()
+                    favoriteTags.shouldBeEmpty()
+                }
+                store.read().apply {
+                    searchHistory.shouldContain(marker)
+                    favoriteTags.shouldContain(marker)
+                }
+            } finally {
+                store.write(original, store.read())
+            }
+        }
+    }
+}

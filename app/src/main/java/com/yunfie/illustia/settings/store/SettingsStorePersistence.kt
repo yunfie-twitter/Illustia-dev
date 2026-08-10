@@ -19,6 +19,18 @@ internal suspend fun readAppSettings(
     return readFromDataStore(preferences, roomData, sensitivePreferences)
 }
 
+/**
+ * Reads only the settings required to build the first app frame.
+ * Room-backed collections are hydrated separately after startup.
+ */
+internal suspend fun readStartupAppSettings(
+    dataStore: DataStore<Preferences>,
+    sensitivePreferences: SharedPreferences,
+): AppSettings {
+    val preferences = readDataStorePreferences(dataStore)
+    return readFromDataStore(preferences, RoomSettingsData(), sensitivePreferences)
+}
+
 internal suspend fun writeAppSettings(
     dataStore: DataStore<Preferences>,
     sensitivePreferences: SharedPreferences,

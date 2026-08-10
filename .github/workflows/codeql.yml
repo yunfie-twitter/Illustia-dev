@@ -8,6 +8,10 @@ on:
   schedule:
     - cron: '28 17 * * 5'
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   analyze:
     name: Analyze
@@ -31,7 +35,6 @@ jobs:
       with:
         java-version: '17'
         distribution: 'temurin'
-        cache: gradle
 
     - name: Initialize CodeQL
       uses: github/codeql-action/init@v4
@@ -48,7 +51,14 @@ jobs:
         cargo install cargo-ndk --locked
 
     - name: Build for CodeQL
-      run: ./gradlew clean assembleDebug --no-build-cache --no-configuration-cache --no-daemon
+      shell: bash
+      run: |
+        set -o pipefail
+        ./gradlew clean assembleDebug \
+          --no-build-cache \
+          --no-configuration-cache \
+          --no-daemon 2>&1 \
+          | tee codeql-build.log
 
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@v4

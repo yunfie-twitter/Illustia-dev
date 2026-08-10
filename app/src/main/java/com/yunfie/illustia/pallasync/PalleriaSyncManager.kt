@@ -104,8 +104,6 @@ class PalleriaSyncManager(
         }
         synchronized(jobLock) {
             if (backgroundSyncJob?.isActive == true) {
-                // This method is also the compatibility entry point used by the manual-sync UI.
-                scope.launch { syncNow() }
                 return
             }
             backgroundSyncJob = scope.launch {

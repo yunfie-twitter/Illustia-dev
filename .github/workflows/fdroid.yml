@@ -5,7 +5,7 @@ on:
     branches:
       - main
     tags:
-      - 'v*'
+      - "v*"
   workflow_dispatch:
 
 concurrency:
@@ -18,168 +18,707 @@ permissions:
   id-token: write
 
 jobs:
-  changes:
+  # ============================================================
+  # バージョン情報取得・変更検出
+  # ============================================================
+  prepare:
     runs-on: ubuntu-latest
-    outputs:
-      buildgradle: ${{ steps.filter.outputs.buildgradle }}
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 2
 
-      - uses: dorny/paths-filter@v3
+    outputs:
+      version_name: ${{ steps.version.outputs.version_name }}
+      version_code: ${{ steps.version.outputs.version_code }}
+      tag: ${{ steps.version.outputs.tag }}
+      prerelease: ${{ steps.version.outputs.prerelease }}
+      channel: ${{ steps.version.outputs.channel }}
+      buildgradle: ${{ steps.filter.outputs.buildgradle }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Detect build.gradle changes
         id: filter
+        uses: dorny/paths-filter@v3
         with:
           filters: |
             buildgradle:
               - 'app/build.gradle'
-              # Kotlin DSLの場合は追加
+              # Kotlin DSLの場合
               # - 'app/build.gradle.kts'
 
-  build:
-    needs: changes
+      - name: Get Version Info
+        id: version
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VERSION_NAME=$(grep "versionName" app/build.gradle \
+            | head -n 1 \
+            | sed -E 's/.*versionName[[:space:]]*[= ]*[\"\x27]([^\"\x27]+)[\"\x27].*/\1/')
+
+          VERSION_CODE=$(grep "versionCode" app/build.gradle \
+            | head -n 1 \
+            | grep -oE '[0-9]+' \
+            | tail -n 1)
+
+          if [ -z "$VERSION_NAME" ]; then
+            echo "Could not detect versionName."
+            exit 1
+          fi
+
+          if [ -z "$VERSION_CODE" ]; then
+            echo "Could not detect versionCode."
+            exit 1
+          fi
+
+          TAG="v${VERSION_NAME}"
+          VERSION_LOWER=$(echo "$VERSION_NAME" | tr '[:upper:]' '[:lower:]')
+
+          # ----------------------------------------------------
+          # Release Channel
+          #
+          # Stable:
+          #   5.3.0
+          #
+          # Pre-release:
+          #   5.3.0-alpha.1
+          #   5.3.0-beta.1
+          #   5.3.0-rc.1
+          #   5.3.0-pre.1
+          #   5.3.0-preview.1
+          #   5.3.0-dev.1
+          #   5.3.0-snapshot
+          # ----------------------------------------------------
+
+          if [[ "$VERSION_LOWER" =~ -(alpha|beta|rc|pre|preview|dev|snapshot)([.-].*)?$ ]]; then
+
+            PRERELEASE="true"
+
+            if [[ "$VERSION_LOWER" =~ -alpha ]]; then
+              CHANNEL="alpha"
+
+            elif [[ "$VERSION_LOWER" =~ -beta ]]; then
+              CHANNEL="beta"
+
+            elif [[ "$VERSION_LOWER" =~ -rc ]]; then
+              CHANNEL="rc"
+
+            elif [[ "$VERSION_LOWER" =~ -(pre|preview) ]]; then
+              CHANNEL="preview"
+
+            else
+              CHANNEL="development"
+            fi
+
+          else
+            PRERELEASE="false"
+            CHANNEL="stable"
+          fi
+
+          echo "version_name=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "version_code=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+          echo "prerelease=$PRERELEASE" >> "$GITHUB_OUTPUT"
+          echo "channel=$CHANNEL" >> "$GITHUB_OUTPUT"
+
+          echo "================================"
+          echo "Version Name : $VERSION_NAME"
+          echo "Version Code : $VERSION_CODE"
+          echo "Tag          : $TAG"
+          echo "Channel      : $CHANNEL"
+          echo "Pre-release  : $PRERELEASE"
+          echo "================================"
+
+
+  # ============================================================
+  # main / workflow_dispatch の場合だけタグを自動作成
+  #
+  # 注意:
+  # GITHUB_TOKENで作成したタグpushは通常、
+  # 別Workflowを新しく起動しない。
+  #
+  # そのため、このWorkflow自身が続けてpublishを行う。
+  # ============================================================
+  create-tag:
+    needs:
+      - prepare
+
     if: |
-      github.event_name == 'workflow_dispatch' ||
-      startsWith(github.ref, 'refs/tags/') ||
-      needs.changes.outputs.buildgradle == 'true'
+      (
+        github.event_name == 'push' &&
+        github.ref == 'refs/heads/main' &&
+        needs.prepare.outputs.buildgradle == 'true'
+      ) ||
+      github.event_name == 'workflow_dispatch'
 
     runs-on: ubuntu-latest
-    concurrency:
-      group: gh-pages-publish
-      cancel-in-progress: false
+
     outputs:
-      tag: ${{ steps.version.outputs.tag }}
+      created: ${{ steps.result.outputs.created }}
 
     steps:
-      - uses: actions/checkout@v7
+      - name: Checkout
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
 
+      - name: Check existing tag
+        id: tagcheck
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          TAG="${{ needs.prepare.outputs.tag }}"
+
+          git fetch --tags --force
+
+          if git ls-remote \
+            --exit-code \
+            --tags origin \
+            "refs/tags/$TAG" >/dev/null 2>&1; then
+
+            echo "Tag $TAG already exists."
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+
+          else
+
+            echo "Tag $TAG does not exist."
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+
+          fi
+
+      - name: Create and Push Tag
+        if: steps.tagcheck.outputs.exists == 'false'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          TAG="${{ needs.prepare.outputs.tag }}"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git tag "$TAG"
+          git push origin "$TAG"
+
+          echo "Created tag: $TAG"
+
+      - name: Set result
+        id: result
+        shell: bash
+        run: |
+          if [ "${{ steps.tagcheck.outputs.exists }}" = "false" ]; then
+            echo "created=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "created=false" >> "$GITHUB_OUTPUT"
+          fi
+
+
+  # ============================================================
+  # Build & Publish
+  #
+  # 実行条件:
+  #
+  # 1. v* タグを直接push
+  # 2. main更新によってタグを新規作成した
+  # 3. workflow_dispatchでタグを新規作成した
+  # ============================================================
+  publish:
+    needs:
+      - prepare
+      - create-tag
+
+    if: |
+      always() &&
+      needs.prepare.result == 'success' &&
+      (
+        (
+          github.event_name == 'push' &&
+          startsWith(github.ref, 'refs/tags/v')
+        ) ||
+        needs.create-tag.outputs.created == 'true'
+      )
+
+    runs-on: ubuntu-latest
+
+    concurrency:
+      group: gh-pages-publish
+      cancel-in-progress: false
+
+    steps:
+      # --------------------------------------------------------
+      # Checkout
+      # --------------------------------------------------------
+      - name: Checkout
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      # --------------------------------------------------------
+      # Release対象タグを確定
+      # --------------------------------------------------------
+      - name: Resolve Release Tag
+        id: release_tag
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/}"
+          else
+            TAG="${{ needs.prepare.outputs.tag }}"
+          fi
+
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+          echo "Release tag: $TAG"
+
+      # --------------------------------------------------------
+      # タグとversionName一致確認
+      # --------------------------------------------------------
+      - name: Validate Tag
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          EXPECTED_TAG="${{ needs.prepare.outputs.tag }}"
+          ACTUAL_TAG="${{ steps.release_tag.outputs.tag }}"
+
+          echo "Expected: $EXPECTED_TAG"
+          echo "Actual  : $ACTUAL_TAG"
+
+          if [ "$EXPECTED_TAG" != "$ACTUAL_TAG" ]; then
+            echo "Tag and versionName do not match."
+            exit 1
+          fi
+
+      # --------------------------------------------------------
+      # GitHub Release重複確認
+      # --------------------------------------------------------
+      - name: Check existing GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          TAG="${{ steps.release_tag.outputs.tag }}"
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "GitHub Release $TAG already exists."
+            exit 1
+          fi
+
+      # --------------------------------------------------------
+      # Java
+      # --------------------------------------------------------
       - name: Set up JDK 17
         uses: actions/setup-java@v5.6.0
         with:
-          java-version: '17'
+          java-version: "17"
           distribution: temurin
 
+      # --------------------------------------------------------
+      # Gradle
+      # --------------------------------------------------------
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v6
         with:
           gradle-version: 9.4.1
+          cache-disabled: true
 
+      # --------------------------------------------------------
+      # Rust Android Toolchain
+      # --------------------------------------------------------
       - name: Set up Rust Android toolchain
+        shell: bash
         run: |
-          rustup target add aarch64-linux-android armv7-linux-androideabi x86_64-linux-android
+          set -euo pipefail
+
+          rustup target add \
+            aarch64-linux-android \
+            armv7-linux-androideabi \
+            x86_64-linux-android
+
           cargo install cargo-ndk --locked
 
+      # --------------------------------------------------------
+      # Keystore
+      # --------------------------------------------------------
       - name: Decode Keystore
+        shell: bash
         run: |
-          echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 --decode > release.keystore
+          set -euo pipefail
+
+          echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" \
+            | base64 --decode \
+            > release.keystore
+
+          chmod 600 release.keystore
+
+      - name: Show Release Certificate SHA
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          keytool -list -v \
+            -keystore release.keystore \
+            -alias "${{ secrets.RELEASE_KEY_ALIAS }}" \
+            -storepass "${{ secrets.RELEASE_KEYSTORE_PASSWORD }}" \
+            | grep -E "SHA1:|SHA256:"
 
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Get Version Info
-        id: version
+      # ========================================================
+      # APK BUILD
+      # ========================================================
+      - name: Build Release APKs
+        id: build
+        shell: bash
         run: |
-          VERSION_NAME=$(grep "versionName" app/build.gradle | head -n 1 | awk -F'"' '{print $2}' | sed "s/'//g")
-          VERSION_CODE=$(grep "versionCode" app/build.gradle | head -n 1 | awk '{print $NF}')
-
-          if [ -z "$VERSION_NAME" ]; then
-            VERSION_NAME=$(grep "versionName" app/build.gradle | head -n 1 | awk -F"'" '{print $2}')
-          fi
-
-          echo "version_name=$VERSION_NAME" >> $GITHUB_OUTPUT
-          echo "version_code=$VERSION_CODE" >> $GITHUB_OUTPUT
-          echo "tag=v$VERSION_NAME" >> $GITHUB_OUTPUT
-
-          echo "Detected version: $VERSION_NAME ($VERSION_CODE)"
-
-      - name: Cancel if duplicate tag already exists
-        if: github.ref == 'refs/heads/main'
-        run: |
-          TAG_NAME="${{ steps.version.outputs.tag }}"
-          if git ls-remote --tags origin "refs/tags/$TAG_NAME" | grep -q "refs/tags/$TAG_NAME"; then
-            echo "Tag $TAG_NAME already exists on origin."
-            exit 78
-          fi
-
-      - name: Cancel if release already exists
-        if: startsWith(github.ref, 'refs/tags/')
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          TAG_NAME="${{ github.ref_name }}"
-          if gh release view "$TAG_NAME" >/dev/null 2>&1; then
-            echo "Release already exists."
-            exit 78
-          fi
-
-      - name: Create and Push Tag
-        if: github.ref == 'refs/heads/main'
-        run: |
-          TAG_NAME="${{ steps.version.outputs.tag }}"
-          if ! git rev-parse "$TAG_NAME" >/dev/null 2>&1; then
-            git config user.name "github-actions[bot]"
-            git config user.email "github-actions[bot]@users.noreply.github.com"
-            git tag "$TAG_NAME"
-            git push origin "$TAG_NAME"
-          fi
-
-      - name: Build APKs
-        run: ./gradlew assembleRelease
+          set -o pipefail
+          ./gradlew assembleRelease 2>&1 | tee gradle-release-build.log
         env:
           KEYSTORE_PATH: ../release.keystore
           KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.RELEASE_KEY_PASSWORD }}
+
           TURN_URL: ${{ secrets.TURN_URL }}
           TURN_USERNAME: ${{ secrets.TURN_USERNAME }}
           TURN_PASSWORD: ${{ secrets.TURN_PASSWORD }}
 
+      # ========================================================
+      # BUILD失敗時のみタグ削除
+      #
+      # assembleReleaseが失敗
+      # ↓
+      # このステップだけ実行
+      # ↓
+      # リモートタグ削除
+      # ========================================================
+      - name: Delete Tag if Build Failed
+        if: failure() && steps.build.outcome == 'failure'
+        shell: bash
+        run: |
+          TAG="${{ steps.release_tag.outputs.tag }}"
+
+          echo "================================"
+          echo "BUILD FAILED"
+          echo "Deleting tag: $TAG"
+          echo "================================"
+
+          git push origin ":refs/tags/$TAG"
+
+          echo "Deleted tag $TAG from origin."
+
+      # --------------------------------------------------------
+      # APK存在確認
+      # --------------------------------------------------------
+      - name: Verify APKs
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          shopt -s nullglob
+
+          APKS=(app/build/outputs/apk/release/*.apk)
+
+          if [ ${#APKS[@]} -eq 0 ]; then
+            echo "No APK files found."
+            exit 1
+          fi
+
+          echo "Found ${#APKS[@]} APK(s):"
+
+          for APK in "${APKS[@]}"; do
+            echo "  $APK"
+          done
+
+      # --------------------------------------------------------
+      # fdroidserver
+      # --------------------------------------------------------
       - name: Install fdroidserver
+        shell: bash
         run: |
+          set -euo pipefail
+
           sudo apt-get update
+
           sudo apt-get remove -y fdroidserver || true
-          sudo apt-get install -y python3-pip python3-setuptools libjpeg-dev zlib1g-dev
+
+          sudo apt-get install -y \
+            python3-pip \
+            python3-setuptools \
+            python3-venv \
+            pipx \
+            libjpeg-dev \
+            zlib1g-dev \
+            rsync
+
           pipx install fdroidserver
-          echo "/home/runner/.local/bin" >> $GITHUB_PATH
 
-      - name: Update F-Droid Repository
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      # --------------------------------------------------------
+      # 既存gh-pages取得
+      # --------------------------------------------------------
+      - name: Download existing F-Droid Repository
+        shell: bash
         run: |
-          git clone --branch gh-pages --single-branch \
-            https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git old-repo || true
+          set -euo pipefail
 
-          mkdir -p public
-          [ -d old-repo ] && rsync -a --exclude='.git' old-repo/ public/
+          rm -rf old-repo
+          rm -rf public
+
+          if git ls-remote \
+            --exit-code \
+            --heads origin gh-pages >/dev/null 2>&1; then
+
+            git clone \
+              --branch gh-pages \
+              --single-branch \
+              --depth 1 \
+              "https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git" \
+              old-repo
+
+            mkdir -p public
+
+            rsync -a \
+              --exclude=".git" \
+              old-repo/ \
+              public/
+
+          else
+
+            echo "gh-pages does not exist yet."
+
+            mkdir -p public
+
+          fi
+
           mkdir -p public/repo
           mkdir -p public/metadata
-          [ -d fdroid/metadata ] && cp -r fdroid/metadata/. public/metadata/
 
-          cp app/build/outputs/apk/release/*.apk public/repo/
+      # --------------------------------------------------------
+      # Beta / Alpha / RC時は
+      # 現在のStable CurrentVersionを退避
+      # --------------------------------------------------------
+      - name: Preserve Stable F-Droid Version
+        if: needs.prepare.outputs.channel != 'stable'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p stable-metadata-backup
+
+          if [ -d public/metadata ]; then
+
+            for FILE in public/metadata/*.yml; do
+
+              [ -e "$FILE" ] || continue
+
+              BASENAME=$(basename "$FILE")
+
+              CURRENT_VERSION=$(grep '^CurrentVersion:' "$FILE" || true)
+              CURRENT_VERSION_CODE=$(grep '^CurrentVersionCode:' "$FILE" || true)
+
+              {
+                echo "$CURRENT_VERSION"
+                echo "$CURRENT_VERSION_CODE"
+              } > "stable-metadata-backup/$BASENAME"
+
+            done
+
+          fi
+
+      # --------------------------------------------------------
+      # Source metadataコピー
+      # --------------------------------------------------------
+      - name: Copy F-Droid Metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p public/metadata
+
+          if [ -d fdroid/metadata ]; then
+
+            rsync -a \
+              fdroid/metadata/ \
+              public/metadata/
+
+          else
+
+            echo "fdroid/metadata directory does not exist."
+
+          fi
+
+      # --------------------------------------------------------
+      # Beta / RC等ではStable CurrentVersionを復元
+      # --------------------------------------------------------
+      - name: Restore Stable F-Droid Version
+        if: needs.prepare.outputs.channel != 'stable'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [ ! -d stable-metadata-backup ]; then
+            exit 0
+          fi
+
+          for BACKUP in stable-metadata-backup/*.yml; do
+
+            [ -e "$BACKUP" ] || continue
+
+            BASENAME=$(basename "$BACKUP")
+            TARGET="public/metadata/$BASENAME"
+
+            [ -f "$TARGET" ] || continue
+
+            OLD_VERSION=$(grep '^CurrentVersion:' "$BACKUP" || true)
+            OLD_VERSION_CODE=$(grep '^CurrentVersionCode:' "$BACKUP" || true)
+
+            if [ -n "$OLD_VERSION" ]; then
+
+              if grep -q '^CurrentVersion:' "$TARGET"; then
+
+                sed -i \
+                  "s|^CurrentVersion:.*|$OLD_VERSION|" \
+                  "$TARGET"
+
+              else
+
+                echo "$OLD_VERSION" >> "$TARGET"
+
+              fi
+
+            fi
+
+            if [ -n "$OLD_VERSION_CODE" ]; then
+
+              if grep -q '^CurrentVersionCode:' "$TARGET"; then
+
+                sed -i \
+                  "s|^CurrentVersionCode:.*|$OLD_VERSION_CODE|" \
+                  "$TARGET"
+
+              else
+
+                echo "$OLD_VERSION_CODE" >> "$TARGET"
+
+              fi
+
+            fi
+
+          done
+
+      # --------------------------------------------------------
+      # StableならCurrentVersion更新
+      # --------------------------------------------------------
+      - name: Update Stable F-Droid Version
+        if: needs.prepare.outputs.channel == 'stable'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VERSION="${{ needs.prepare.outputs.version_name }}"
+          VERSION_CODE="${{ needs.prepare.outputs.version_code }}"
+
+          for FILE in public/metadata/*.yml; do
+
+            [ -e "$FILE" ] || continue
+
+            echo "Updating stable version in $FILE"
+
+            if grep -q '^CurrentVersion:' "$FILE"; then
+
+              sed -i \
+                "s|^CurrentVersion:.*|CurrentVersion: '$VERSION'|" \
+                "$FILE"
+
+            else
+
+              echo "CurrentVersion: '$VERSION'" >> "$FILE"
+
+            fi
+
+            if grep -q '^CurrentVersionCode:' "$FILE"; then
+
+              sed -i \
+                "s|^CurrentVersionCode:.*|CurrentVersionCode: $VERSION_CODE|" \
+                "$FILE"
+
+            else
+
+              echo "CurrentVersionCode: $VERSION_CODE" >> "$FILE"
+
+            fi
+
+          done
+
+      # --------------------------------------------------------
+      # APK追加
+      # --------------------------------------------------------
+      - name: Add APKs to F-Droid Repository
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mkdir -p public/repo
+
+          cp \
+            app/build/outputs/apk/release/*.apk \
+            public/repo/
+
+          echo "Repository APKs:"
+          ls -lh public/repo/*.apk
+
+      # --------------------------------------------------------
+      # F-Droid config
+      # --------------------------------------------------------
+      - name: Generate F-Droid Configuration
+        shell: bash
+        run: |
+          set -euo pipefail
 
           cd public
 
-          cat <<EOF > config.yml
+          cat > config.yml <<EOF
           repo_url: https://yunfi.f5.si/${{ github.event.repository.name }}/repo
-          repo_name: Palleria Dev Repository
-          repo_description: Development builds for Palleria
+          repo_name: Palleria Repository
+          repo_description: Stable, beta and pre-release builds for Palleria
+
           archive_older: 0
+
           keystore: ../release.keystore
           keystorepass: "${{ secrets.RELEASE_KEYSTORE_PASSWORD }}"
           keypass: "${{ secrets.RELEASE_KEY_PASSWORD }}"
-          keyalias: "${{ secrets.RELEASE_KEY_ALIAS }}"
           repo_keyalias: "${{ secrets.RELEASE_KEY_ALIAS }}"
-          repo_keystorepass: "${{ secrets.RELEASE_KEYSTORE_PASSWORD }}"
-          repo_keypass: "${{ secrets.RELEASE_KEY_PASSWORD }}"
           EOF
 
           chmod 600 config.yml
-          fdroid update --create-metadata --pretty
-          rm config.yml
 
-          cd ..
+      # --------------------------------------------------------
+      # F-Droid update
+      # --------------------------------------------------------
+      - name: Update F-Droid Repository
+        shell: bash
+        run: |
+          set -euo pipefail
 
+          cd public
+
+          fdroid update \
+            --create-metadata \
+            --pretty
+
+          rm -f config.yml
+
+      # --------------------------------------------------------
+      # GitHub Pages
+      # --------------------------------------------------------
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
@@ -189,12 +728,44 @@ jobs:
           force_orphan: false
           keep_files: true
 
+      # --------------------------------------------------------
+      # GitHub Release
+      # --------------------------------------------------------
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: ${{ steps.version.outputs.tag }}
+          tag_name: ${{ steps.release_tag.outputs.tag }}
+
+          name: ${{ steps.release_tag.outputs.tag }}
+
+          prerelease: ${{ needs.prepare.outputs.prerelease }}
+
+          make_latest: ${{ needs.prepare.outputs.prerelease == 'false' }}
+
+          generate_release_notes: true
+
           files: |
             app/build/outputs/apk/release/*.apk
-          generate_release_notes: true
+
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # --------------------------------------------------------
+      # Summary
+      # --------------------------------------------------------
+      - name: Release Summary
+        shell: bash
+        run: |
+          {
+            echo "# Release completed"
+            echo
+            echo "- Version: \`${{ needs.prepare.outputs.version_name }}\`"
+            echo "- Version Code: \`${{ needs.prepare.outputs.version_code }}\`"
+            echo "- Tag: \`${{ steps.release_tag.outputs.tag }}\`"
+            echo "- Channel: \`${{ needs.prepare.outputs.channel }}\`"
+            echo "- Pre-release: \`${{ needs.prepare.outputs.prerelease }}\`"
+            echo
+            echo "## F-Droid"
+            echo
+            echo "https://yunfi.f5.si/${{ github.event.repository.name }}/repo"
+          } >> "$GITHUB_STEP_SUMMARY"

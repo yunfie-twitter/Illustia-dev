@@ -1,15 +1,24 @@
-# Baseline profile hints for startup and critical paths
+# Bootstrap fallback until benchmark/BaselineProfileGenerator refreshes the
+# method-level release profile. Keep only real startup and common navigation
+# classes here; generated rules are the source of truth for release tuning.
 Lcom/yunfie/illustia/MainActivity;
 Lcom/yunfie/illustia/IllustiaApplication;
+Lcom/yunfie/illustia/DummyAppIconSwitcher;
 Lcom/yunfie/illustia/IllustiaViewModel;
 Lcom/yunfie/illustia/CrashHandler;
 Lcom/yunfie/illustia/data/PixivApiClient;
 Lcom/yunfie/illustia/data/IllustiaRepository;
-Lcom/yunfie/illustia/data/ModelsKt;
 Lcom/yunfie/illustia/data/PixivImageProxyKt;
 Lcom/yunfie/illustia/settings/SettingsStore;
+Lcom/yunfie/illustia/settings/store/SettingsStorePersistenceKt;
+Lcom/yunfie/illustia/settings/store/SettingsStorePreferencesKt;
 Lcom/yunfie/illustia/ui/IllustiaAppKt;
+Lcom/yunfie/illustia/ui/app/IllustiaAppRootKt;
+Lcom/yunfie/illustia/ui/app/AppNavHostKt;
+Lcom/yunfie/illustia/ui/app/MainSurfaceKt;
 Lcom/yunfie/illustia/ui/screens/HomeScreenKt;
+Lcom/yunfie/illustia/ui/screens/home/HomeScreenContentKt;
+Lcom/yunfie/illustia/ui/screens/home/HomeScreenTabsKt;
 Lcom/yunfie/illustia/ui/screens/RankingScreenKt;
 Lcom/yunfie/illustia/ui/screens/BookmarkScreenKt;
 Lcom/yunfie/illustia/ui/screens/SearchScreenKt;
@@ -27,8 +36,7 @@ Lcom/yunfie/illustia/ui/screens/AppDataScreenKt;
 Lcom/yunfie/illustia/ui/screens/AboutScreenKt;
 Lcom/yunfie/illustia/ui/screens/AccountSwitchSheetKt;
 Lcom/yunfie/illustia/ui/components/IllustComponentsKt;
-Lcom/yunfie/illustia/ui/components/CommonComponentsKt;
-Lcom/yunfie/illustia/ui/components/MiuixDropdownKt;
+Lcom/yunfie/illustia/ui/components/HeaderComponentsKt;
 Lcom/yunfie/illustia/nativebridge/NativeIntentRouter;
 Lcom/yunfie/illustia/nativebridge/NativeImageStore;
 Ltop/yukonga/miuix/kmp/theme/MiuixThemeKt;

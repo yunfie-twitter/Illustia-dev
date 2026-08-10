@@ -58,6 +58,12 @@ class IllustiaRepository(
         return settings
     }
 
+    suspend fun readStartupSettings(): AppSettings {
+        val settings = settingsStore.readStartup()
+        ensureApiClient(NetworkMode.fromCode(settings.pixivNetworkMode))
+        return settings
+    }
+
     suspend fun saveSettings(settings: AppSettings, baseSettings: AppSettings? = null) {
         val written = settingsStore.write(settings, baseSettings)
         val cached = settingsCacheMutex.withLock {

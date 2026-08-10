@@ -77,6 +77,7 @@ import com.yunfie.illustia.DummyAppIconSwitcher
 import com.yunfie.illustia.account.PalleriaAccount
 import java.io.File
 import java.io.FileOutputStream
+import java.util.concurrent.atomic.AtomicBoolean
 
 private data class SettingsPersistenceRequest(
     val settings: AppSettings,
@@ -103,19 +104,30 @@ internal fun AppSettings.replaceSyncedCollections(
     return withSyncedCollections(synced)
 }
 
+private fun AppSettings.withHydratedRoomCollections(full: AppSettings): AppSettings {
+    return copy(
+        searchHistory = full.searchHistory,
+        favoriteTags = full.favoriteTags,
+        viewHistory = full.viewHistory,
+        accounts = full.accounts,
+    )
+}
+
 open class IllustiaViewModelCore(
     app: Application,
     private val managedDataRepository: ManagedDataRepository = ManagedDataRepository(app.contentResolver),
 ) : AndroidViewModel(app) {
-        private val repository by lazy {
-            IllustiaRepository(
-                SettingsStore(getApplication<Application>().applicationContext),
-            )
-        }
+    private val illustiaApplication = app as? IllustiaApplication
+    private val settingsStore by lazy {
+        illustiaApplication?.settingsStore
+            ?: SettingsStore(getApplication<Application>().applicationContext)
+    }
+    private val repository by lazy {
+        illustiaApplication?.repository ?: IllustiaRepository(settingsStore)
+    }
 
     fun uiRepository(): IllustiaRepository = repository
     private val imageStore by lazy { NativeImageStore(getApplication<Application>().applicationContext) }
-    private val settingsStore by lazy { SettingsStore(getApplication<Application>().applicationContext) }
     private val downloadMutex = Mutex()
     private var searchJob: Job? = null
     private var detailExtrasJob: Job? = null
@@ -158,6 +170,10 @@ open class IllustiaViewModelCore(
     }
     private val _uiState = MutableStateFlow(IllustiaUiState())
     val uiState: StateFlow<IllustiaUiState> = _uiState.asStateFlow()
+    private val deferredStartupDataStarted = AtomicBoolean(false)
+    private val initialSyncRevision = SettingsStore.syncUpdates.value?.revision ?: 0L
+    private val initialPallaSyncStateRevision =
+        SettingsStore.pallaSyncEnabledUpdates.value?.revision ?: 0L
 
     private fun str(resId: Int): String = getApplication<Application>().getString(resId)
     private fun str(resId: Int, vararg args: Any): String = getApplication<Application>().getString(resId, *args)
@@ -179,34 +195,51 @@ open class IllustiaViewModelCore(
             persistSettingsUpdates()
         }
         viewModelScope.launch(Dispatchers.IO) {
-            val initialSyncRevision = SettingsStore.syncUpdates.value?.revision ?: 0L
-            val initialPallaSyncStateRevision =
-                SettingsStore.pallaSyncEnabledUpdates.value?.revision ?: 0L
-            val settings = repository.readSettings()
-            val normalizedSettings = if (settings.useDynamicColor && !isDynamicColorAvailable()) {
-                settings.copy(useDynamicColor = false)
+            val startupSettings = repository.readStartupSettings()
+            val normalizedStartupSettings = if (startupSettings.useDynamicColor && !isDynamicColorAvailable()) {
+                startupSettings.copy(useDynamicColor = false)
             } else {
-                settings
+                startupSettings
             }
-            if (normalizedSettings != settings) {
-                repository.saveSettings(normalizedSettings, settings)
-            }
-            val shouldLock = normalizedSettings.appLockEnabled && settingsStore.hasPinSet()
+            val shouldLock = normalizedStartupSettings.appLockEnabled && settingsStore.hasPinSet()
             _uiState.update {
-                it.withSettings(normalizedSettings).copy(
+                it.withSettings(normalizedStartupSettings).copy(
                     settingsLoaded = true,
                     appLocked = shouldLock,
-                    privacyLocked = normalizedSettings.privacyModeEnabled,
-                    showLockRecoveryDialog = normalizedSettings.appLockFailCount >= 12,
+                    privacyLocked = normalizedStartupSettings.privacyModeEnabled,
+                    showLockRecoveryDialog = normalizedStartupSettings.appLockFailCount >= 12,
                 )
             }
             resumePendingNativeIntentIfReady()
-            if (normalizedSettings.refreshToken.isNotBlank() && !shouldLock && !normalizedSettings.privacyModeEnabled) {
-                refreshCurrentAccountProfile(normalizedSettings)
-                if (normalizedSettings.startupScreen == "home") {
-                    refreshHome()
+        }
+    }
+
+    /** Hydrates Room-backed collections only after the first interactive frame. */
+    fun loadDeferredStartupData() {
+        if (!deferredStartupDataStarted.compareAndSet(false, true)) return
+
+        viewModelScope.launch(Dispatchers.IO) {
+            val fullSettings = repository.readSettings()
+            val normalizedFullSettings = if (fullSettings.useDynamicColor && !isDynamicColorAvailable()) {
+                fullSettings.copy(useDynamicColor = false)
+            } else {
+                fullSettings
+            }
+            if (normalizedFullSettings != fullSettings) {
+                repository.saveSettings(normalizedFullSettings, fullSettings)
+            }
+            _uiState.update { current ->
+                val hydratedSettings = current.settings.withHydratedRoomCollections(normalizedFullSettings)
+                current.withSettings(hydratedSettings).copy(
+                    currentAccount = current.currentAccount ?: hydratedSettings.resolveLoggedInAccount(),
+                )
+            }
+
+            val activeSettings = _uiState.value.settings
+            if (activeSettings.refreshToken.isNotBlank() && !_uiState.value.appLocked && !activeSettings.privacyModeEnabled) {
+                launch {
+                    refreshCurrentAccountProfile(activeSettings)
                 }
-                refreshRecommendedTags()
             }
 
             launch {
@@ -335,6 +368,7 @@ open class IllustiaViewModelCore(
 
     fun updatePallaSyncEnabled(value: Boolean) {
         updateSettings { it.copy(pallaSyncEnabled = value) }
+        illustiaApplication?.setPallaSyncEnabled(value)
     }
 
     fun updatePallaSyncServerUrl(value: String) {

@@ -18,14 +18,25 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.launch
 import com.yunfie.illustia.settings.SettingsStore
+import com.yunfie.illustia.data.IllustiaRepository
 import com.yunfie.illustia.account.PalleriaAccount
 import com.yunfie.illustia.pallasync.PalleriaSyncManager
 import com.google.firebase.crashlytics.FirebaseCrashlytics
 import com.google.firebase.perf.FirebasePerformance
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.atomic.AtomicBoolean
 
 class IllustiaApplication : Application() {
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val postStartupWorkStarted = AtomicBoolean(false)
+
+    val settingsStore: SettingsStore by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        SettingsStore(this)
+    }
+
+    val repository: IllustiaRepository by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
+        IllustiaRepository(settingsStore)
+    }
 
     val sharedHttpClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
@@ -56,29 +67,12 @@ class IllustiaApplication : Application() {
         super.onCreate()
         CrashHandler.instance.init(this)
         val appContext = applicationContext
-        val httpClient = sharedHttpClient
         val cacheDirectory = cacheDir.resolve("image_cache").toOkioPath()
         val configuredCacheMb = SettingsStore.readImageCacheSizeMbSync(appContext)
-        appScope.launch {
-            val recoveredPallaSync = runCatching {
-                pallaSyncCoordinator.recoverInterruptedActivation()
-            }.getOrDefault(false)
-            val settings = SettingsStore(appContext).read()
-            PalleriaAccount.reconcile(appContext, settings.accounts)
-            FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(settings.sendTelemetry)
-            FirebasePerformance.getInstance().isPerformanceCollectionEnabled = settings.sendTelemetry
-            RankingWidgetProvider.publishPreview(appContext)
-            IllustWidgetProvider.publishPreview(appContext)
-            if (recoveredPallaSync || settings.pallaSyncEnabled) {
-                pallaSyncCoordinator.startBackgroundSync()
-            } else {
-                pallaSyncCoordinator.stopBackgroundSync()
-            }
-        }
         SingletonImageLoader.setSafe {
             ImageLoader.Builder(appContext)
                 .components {
-                    add(OkHttpNetworkFetcherFactory(callFactory = { httpClient }))
+                    add(OkHttpNetworkFetcherFactory(callFactory = { sharedHttpClient }))
                     add(AnimatedImageDecoder.Factory())
                     add(GifDecoder.Factory())
                 }
@@ -94,6 +88,33 @@ class IllustiaApplication : Application() {
                         .build()
                 }
                 .build()
+        }
+    }
+
+    /** Starts non-critical process maintenance after the first app frame is available. */
+    fun startPostStartupWork() {
+        if (!postStartupWorkStarted.compareAndSet(false, true)) return
+
+        appScope.launch {
+            val appContext = applicationContext
+            val recoveredPallaSync = runCatching {
+                pallaSyncCoordinator.recoverInterruptedActivation()
+            }.getOrDefault(false)
+            val settings = repository.readSettings()
+            PalleriaAccount.reconcile(appContext, settings.accounts)
+            FirebaseCrashlytics.getInstance().setCrashlyticsCollectionEnabled(settings.sendTelemetry)
+            FirebasePerformance.getInstance().isPerformanceCollectionEnabled = settings.sendTelemetry
+            RankingWidgetProvider.publishPreview(appContext)
+            IllustWidgetProvider.publishPreview(appContext)
+            setPallaSyncEnabled(recoveredPallaSync || settings.pallaSyncEnabled)
+        }
+    }
+
+    fun setPallaSyncEnabled(enabled: Boolean) {
+        if (enabled) {
+            pallaSyncCoordinator.startBackgroundSync()
+        } else {
+            pallaSyncCoordinator.stopBackgroundSync()
         }
     }
 }

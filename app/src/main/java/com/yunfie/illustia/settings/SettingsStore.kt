@@ -1,11 +1,12 @@
 package com.yunfie.illustia.settings
 
 import android.content.Context
+import android.content.ComponentName
 import android.content.SharedPreferences
+import android.content.pm.PackageManager
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
-import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.security.crypto.EncryptedSharedPreferences
@@ -17,7 +18,6 @@ import com.yunfie.illustia.settings.db.SavedIllustPageEntity
 import com.yunfie.illustia.settings.db.SavedIllustWithPages
 import com.yunfie.illustia.settings.store.DATASTORE_NAME
 import com.yunfie.illustia.settings.store.LEGACY_PREFS_NAME
-import com.yunfie.illustia.settings.store.PRIVACY_MODE_ENABLED
 import com.yunfie.illustia.settings.store.PALLA_SYNC_ENABLED
 import com.yunfie.illustia.settings.store.PALLA_SYNC_SERVER_URL
 import com.yunfie.illustia.settings.store.KEY_APP_LANGUAGE
@@ -29,6 +29,7 @@ import com.yunfie.illustia.settings.store.hasUnlockCodeSet as hasUnlockCodeSetIm
 import com.yunfie.illustia.settings.store.isValidUnlockCode as isValidUnlockCodeImpl
 import com.yunfie.illustia.settings.store.migrateSettingsIfNeeded as migrateSettingsIfNeededImpl
 import com.yunfie.illustia.settings.store.readAppSettings as readAppSettingsImpl
+import com.yunfie.illustia.settings.store.readStartupAppSettings as readStartupAppSettingsImpl
 import com.yunfie.illustia.settings.store.savedIllustStorageBytes as savedIllustStorageBytesImpl
 import com.yunfie.illustia.settings.store.savePinHash as savePinHashImpl
 import com.yunfie.illustia.settings.store.saveUnlockCodeHash as saveUnlockCodeHashImpl
@@ -44,8 +45,6 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -78,6 +77,10 @@ class SettingsStore(context: Context) {
 
     suspend fun read(): AppSettings {
         return readAppSettingsImpl(dataStore, sensitivePreferences, dao)
+    }
+
+    suspend fun readStartup(): AppSettings {
+        return readStartupAppSettingsImpl(dataStore, sensitivePreferences)
     }
 
     suspend fun write(settings: AppSettings, baseSettings: AppSettings? = null): AppSettings {
@@ -119,7 +122,8 @@ class SettingsStore(context: Context) {
             legacyPreferences.edit()
                 .putInt(KEY_IMAGE_CACHE_SIZE_MB, rebased.imageCacheSizeMb)
                 .putString(KEY_APP_LANGUAGE, rebased.appLanguage)
-                .apply()
+                .putBoolean(KEY_STARTUP_PRIVACY_MODE, rebased.privacyModeEnabled)
+                .commit()
 
             rebased
         }
@@ -336,15 +340,23 @@ class SettingsStore(context: Context) {
 
         fun isPrivacyModeEnabledSync(context: Context): Boolean {
             val appContext = context.applicationContext
-            return runCatching {
-                runBlocking(Dispatchers.IO) {
-                    dataStoreFor(appContext).data
-                        .catch { error ->
-                            if (error is java.io.IOException) emit(emptyPreferences()) else throw error
-                        }
-                        .first()[PRIVACY_MODE_ENABLED]
-                }
-            }.getOrNull() ?: false
+            val startupPreferences =
+                appContext.getSharedPreferences(LEGACY_PREFS_NAME, Context.MODE_PRIVATE)
+            if (startupPreferences.contains(KEY_STARTUP_PRIVACY_MODE)) {
+                return startupPreferences.getBoolean(KEY_STARTUP_PRIVACY_MODE, false)
+            }
+
+            // One-time compatibility path for installs created before the startup mirror.
+            // The dummy launcher alias was already the persisted privacy-mode indicator.
+            val enabled = runCatching {
+                appContext.packageManager.getComponentEnabledSetting(
+                    ComponentName(appContext, DUMMY_LAUNCHER_ALIAS),
+                ) == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+            }.getOrDefault(false)
+            startupPreferences.edit()
+                .putBoolean(KEY_STARTUP_PRIVACY_MODE, enabled)
+                .commit()
+            return enabled
         }
 
         fun readImageCacheSizeMbSync(context: Context): Int {
@@ -355,6 +367,8 @@ class SettingsStore(context: Context) {
         }
 
         private const val KEY_IMAGE_CACHE_SIZE_MB = "startup_image_cache_size_mb"
+        private const val KEY_STARTUP_PRIVACY_MODE = "startup_privacy_mode_enabled"
+        private const val DUMMY_LAUNCHER_ALIAS = "com.yunfie.illustia.MainActivityDummy"
         private const val DEFAULT_IMAGE_CACHE_SIZE_MB = 300
         private const val MIN_IMAGE_CACHE_SIZE_MB = 100
         private const val MAX_IMAGE_CACHE_SIZE_MB = 1000

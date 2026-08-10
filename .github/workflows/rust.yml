@@ -12,6 +12,10 @@ on:
       - "rust/**"
       - ".github/workflows/rust.yml"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -20,6 +24,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
+        shell: bash
         working-directory: rust/pixiv-api
 
     steps:
@@ -30,16 +35,11 @@ jobs:
         with:
           components: rustfmt, clippy
 
-      - name: Cache Cargo
-        uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: rust/pixiv-api
-
       - name: Check formatting
-        run: cargo fmt --check
+        run: cargo fmt --check 2>&1 | tee cargo-fmt.log
 
       - name: Run Clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        run: cargo clippy --all-targets --all-features -- -D warnings 2>&1 | tee cargo-clippy.log
 
       - name: Run tests
-        run: cargo test --all-features
+        run: cargo test --all-features 2>&1 | tee cargo-test.log

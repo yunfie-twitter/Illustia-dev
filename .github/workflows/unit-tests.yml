@@ -1,0 +1,75 @@
+name: Android unit tests
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - "app/**"
+      - "benchmark/**"
+      - "rust/**"
+      - "gradle/**"
+      - "build.gradle"
+      - "settings.gradle"
+      - "gradle.properties"
+      - "gradlew"
+      - ".github/workflows/unit-tests.yml"
+  pull_request:
+    branches: ["main"]
+    paths:
+      - "app/**"
+      - "benchmark/**"
+      - "rust/**"
+      - "gradle/**"
+      - "build.gradle"
+      - "settings.gradle"
+      - "gradle.properties"
+      - "gradlew"
+      - ".github/workflows/unit-tests.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: unit-tests-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit-tests:
+    name: Run Android unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v7
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v5.6.0
+        with:
+          java-version: "17"
+          distribution: temurin
+
+      - name: Install stable Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Set up Rust Android toolchain
+        run: |
+          rustup target add \
+            aarch64-linux-android \
+            armv7-linux-androideabi \
+            x86_64-linux-android
+          cargo install cargo-ndk --locked
+
+      - name: Grant execute permission for Gradle wrapper
+        run: chmod +x gradlew
+
+      - name: Run unit tests
+        shell: bash
+        run: |
+          set -o pipefail
+          ./gradlew :app:testDebugUnitTest \
+            --stacktrace \
+            --no-build-cache \
+            --no-daemon 2>&1 \
+            | tee gradle-unit-tests.log

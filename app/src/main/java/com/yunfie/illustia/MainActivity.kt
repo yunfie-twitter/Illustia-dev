@@ -27,17 +27,17 @@ import androidx.activity.viewModels
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.LocalTextStyle
 import androidx.core.os.LocaleListCompat
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
@@ -49,6 +49,7 @@ import com.yunfie.illustia.settings.isAppDarkTheme
 import com.yunfie.illustia.settings.rememberAppThemeColors
 import com.yunfie.illustia.settings.appLanguageLocaleList
 import com.yunfie.illustia.ui.IllustiaApp
+import top.yukonga.miuix.kmp.basic.Surface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.theme.defaultTextStyles
 import top.yukonga.miuix.kmp.theme.TextStyles
@@ -105,7 +106,7 @@ class MainActivity : FragmentActivity() {
                 )
 
                 android.animation.AnimatorSet().apply {
-                    duration = 360L
+                    duration = 160L
                     interpolator = AccelerateDecelerateInterpolator()
                     playTogether(alpha, scaleX, scaleY, translateY)
                     addListener(object : android.animation.AnimatorListenerAdapter() {
@@ -137,19 +138,23 @@ class MainActivity : FragmentActivity() {
         androidx.lifecycle.ProcessLifecycleOwner.get().lifecycle.addObserver(lifecycleObserver)
 
         setContent {
-            val settings by viewModel.settingsState.collectAsStateWithLifecycle()
-            val appLocked by viewModel.appLockedState.collectAsStateWithLifecycle()
+            val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+            val settings = uiState.settings
+            val appLocked = uiState.appLocked
+            val settingsLoaded = uiState.settingsLoaded
             val systemDark = isSystemInDarkTheme()
             val themeColors = rememberAppThemeColors(settings)
 
-            LaunchedEffect(settings.secureWindow) {
+            LaunchedEffect(settingsLoaded, settings.secureWindow) {
+                if (!settingsLoaded) return@LaunchedEffect
                 applySecureWindow(settings.secureWindow)
             }
 
             // Force FLAG_SECURE while locked so the app is obscured in recents
             // and screenshots are blocked, regardless of secureWindow setting.
             // Also clear the clipboard to prevent sensitive data leakage.
-            LaunchedEffect(appLocked, settings.secureWindow, settings.appLockEnabled) {
+            LaunchedEffect(settingsLoaded, appLocked, settings.secureWindow, settings.appLockEnabled) {
+                if (!settingsLoaded) return@LaunchedEffect
                 if (appLocked && settings.appLockEnabled) {
                     window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
                     val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
@@ -159,11 +164,13 @@ class MainActivity : FragmentActivity() {
                 }
             }
 
-            LaunchedEffect(settings.appLanguage) {
+            LaunchedEffect(settingsLoaded, settings.appLanguage) {
+                if (!settingsLoaded) return@LaunchedEffect
                 applyAppLanguage(settings.appLanguage)
             }
 
-            LaunchedEffect(settings.themeMode, systemDark) {
+            LaunchedEffect(settingsLoaded, settings.themeMode, systemDark) {
+                if (!settingsLoaded) return@LaunchedEffect
                 val isDarkTheme = isAppDarkTheme(settings.themeMode, systemDark)
                 enableEdgeToEdge(
                     statusBarStyle = if (isDarkTheme) SystemBarStyle.dark(Color.TRANSPARENT) else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
@@ -171,22 +178,24 @@ class MainActivity : FragmentActivity() {
                 )
             }
 
-            LaunchedEffect(settings.pallaSyncEnabled) {
-                val syncCoordinator =
-                    (application as IllustiaApplication).pallaSyncCoordinator
-                if (settings.pallaSyncEnabled) {
-                    syncCoordinator.startBackgroundSync()
-                } else {
-                    syncCoordinator.stopBackgroundSync()
-                }
-            }
-
-            LaunchedEffect(settings.privacyModeEnabled, settings.hideRecents, settings.dummyAppName, settings.dummyIconVariant) {
+            LaunchedEffect(settingsLoaded, settings.privacyModeEnabled, settings.hideRecents, settings.dummyAppName, settings.dummyIconVariant) {
+                if (!settingsLoaded) return@LaunchedEffect
                 updateRecentsTaskDescription(settings)
             }
 
-            LaunchedEffect(settings.privacyModeEnabled, settings.dummyAppName, settings.dummyIconVariant) {
+            LaunchedEffect(settingsLoaded, settings.privacyModeEnabled, settings.dummyAppName, settings.dummyIconVariant) {
+                if (!settingsLoaded) return@LaunchedEffect
                 viewModel.applyDummyIconSettings(this@MainActivity)
+            }
+
+            LaunchedEffect(settingsLoaded) {
+                if (!settingsLoaded) return@LaunchedEffect
+                androidx.compose.runtime.withFrameNanos { }
+                window.decorView.post {
+                    viewModel.loadDeferredStartupData()
+                    (application as IllustiaApplication).startPostStartupWork()
+                    reportFullyDrawn()
+                }
             }
 
             val fontFamily = remember(settings.appFont) {
@@ -199,7 +208,14 @@ class MainActivity : FragmentActivity() {
                 CompositionLocalProvider(
                     LocalTextStyle provides LocalTextStyle.current.merge(TextStyle(fontFamily = fontFamily)),
                 ) {
-                    IllustiaApp(viewModel)
+                    if (settingsLoaded) {
+                        IllustiaApp(viewModel)
+                    } else {
+                        Surface(
+                            modifier = Modifier.fillMaxSize(),
+                            color = MiuixTheme.colorScheme.surface,
+                        ) { }
+                    }
                 }
             }
         }

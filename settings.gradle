@@ -40,3 +40,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "Illustia"
 include ":app"
+include ":benchmark"

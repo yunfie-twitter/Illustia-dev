@@ -2,10 +2,13 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id "com.android.application"
+    id "androidx.baselineprofile"
     id "org.jetbrains.kotlin.android"
     id "org.jetbrains.kotlin.kapt"
     id "org.jetbrains.kotlin.plugin.compose"
     id "org.jetbrains.kotlin.plugin.serialization"
+    id "org.jlleitschuh.gradle.ktlint"
+    id "dev.detekt"
     id 'com.google.firebase.crashlytics'
     id 'com.google.firebase.firebase-perf'
     id 'com.google.gms.google-services'
@@ -20,8 +23,8 @@ android {
         applicationId "com.yunfie.illustia"
         minSdk 29
         targetSdk 36
-        versionCode 39
-        versionName "5.3.0"
+        versionCode 40
+        versionName "5.4.0-beta.1"
     }
 
     signingConfigs {
@@ -70,6 +73,40 @@ android {
         unitTests.all {
             useJUnitPlatform()
         }
+    }
+}
+
+ktlint {
+    version = "1.8.0"
+    android = true
+    outputToConsole = true
+    ignoreFailures = false
+    filter {
+        exclude("**/generated/**")
+    }
+}
+
+detekt {
+    toolVersion = "2.0.0-alpha.5"
+    buildUponDefaultConfig = true
+    parallel = true
+    ignoreFailures = false
+}
+
+def supportedKtlintCheckTasks = [
+    "runKtlintCheckOverMainSourceSet",
+    "runKtlintCheckOverTestSourceSet",
+    "runKtlintCheckOverKotlinScripts",
+    "ktlintMainSourceSetCheck",
+    "ktlintTestSourceSetCheck",
+    "ktlintKotlinScriptCheck",
+] as Set
+
+tasks.configureEach { task ->
+    if ((task.name.startsWith("runKtlintCheckOver") ||
+        (task.name.startsWith("ktlint") && task.name.endsWith("SourceSetCheck"))) &&
+        !supportedKtlintCheckTasks.contains(task.name)) {
+        task.enabled = false
     }
 }
 
@@ -160,6 +197,8 @@ kotlin {
 }
 
 dependencies {
+    baselineProfile project(":benchmark")
+
     implementation platform("androidx.compose:compose-bom:2026.06.01")
     implementation "androidx.compose.material:material"
     implementation "androidx.activity:activity-compose:1.13.0"

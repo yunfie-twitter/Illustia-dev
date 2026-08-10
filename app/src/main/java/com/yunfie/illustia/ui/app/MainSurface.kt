@@ -136,7 +136,7 @@ internal fun MainSurface(
                 }
                 HorizontalPager(
                         state = pagerState,
-                        beyondViewportPageCount = 1,
+                        beyondViewportPageCount = 0,
                         userScrollEnabled = appState.settings.swipeToSwitchWorks &&
                             !isSearchResultMode &&
                             !(selectedTab == AppTab.ShortsFeed && appState.settings.disableHorizontalSwipeInShortsFeed),
