@@ -3,44 +3,34 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-        classpath "org.bouncycastle:bcpkix-jdk18on:1.85"
-        classpath "org.bouncycastle:bcprov-jdk18on:1.85"
-        classpath "org.bouncycastle:bcutil-jdk18on:1.85"
-        classpath "io.netty:netty-codec:4.1.136.Final"
-        classpath "io.netty:netty-codec-http:4.1.136.Final"
-        classpath "io.netty:netty-codec-http2:4.1.136.Final"
-        classpath "io.netty:netty-common:4.1.136.Final"
-        classpath "io.netty:netty-handler:4.1.136.Final"
-        classpath "io.netty:netty-handler-proxy:4.1.136.Final"
-        classpath "org.jdom:jdom2:2.0.6.1"
-        classpath "org.apache.httpcomponents:httpclient:4.5.14"
-        classpath "org.apache.commons:commons-lang3:3.20.0"
-        classpath "org.bitbucket.b_c:jose4j:0.9.6"
+        // Project buildscript plugins do not share the Settings classloader.
+        // Keep these security overrides in both scopes; versions live in gradle.properties.
+        def bcVersion = providers.gradleProperty("security.bouncycastleVersion").get()
+        def nettyVersion = providers.gradleProperty("security.nettyVersion").get()
+        classpath "org.bouncycastle:bcpkix-jdk18on:${bcVersion}"
+        classpath "org.bouncycastle:bcprov-jdk18on:${bcVersion}"
+        classpath "org.bouncycastle:bcutil-jdk18on:${bcVersion}"
+        classpath "io.netty:netty-codec:${nettyVersion}"
+        classpath "io.netty:netty-codec-http:${nettyVersion}"
+        classpath "io.netty:netty-codec-http2:${nettyVersion}"
+        classpath "io.netty:netty-common:${nettyVersion}"
+        classpath "io.netty:netty-handler:${nettyVersion}"
+        classpath "io.netty:netty-handler-proxy:${nettyVersion}"
+        classpath "org.jdom:jdom2:${providers.gradleProperty('security.jdomVersion').get()}"
+        classpath "org.apache.httpcomponents:httpclient:${providers.gradleProperty('security.httpClientVersion').get()}"
+        classpath "org.apache.commons:commons-lang3:${providers.gradleProperty('security.commonsLangVersion').get()}"
+        classpath "org.bitbucket.b_c:jose4j:${providers.gradleProperty('security.jose4jVersion').get()}"
     }
 }
 
 plugins {
-    id "com.android.application" version "9.2.1" apply false
-    id "com.android.test" version "9.2.1" apply false
-    id "androidx.baselineprofile" version "1.5.0-beta01" apply false
-    id "org.jetbrains.kotlin.plugin.compose" version "2.4.0" apply false
-    id "org.jetbrains.kotlin.android" version "2.4.0" apply false
-    id "org.jetbrains.kotlin.plugin.serialization" version "2.4.0" apply false
-    id "org.jlleitschuh.gradle.ktlint" version "14.2.0" apply false
-    id "dev.detekt" version "2.0.0-alpha.5" apply false
-    id 'com.google.gms.google-services' version '4.5.0' apply false
-    id 'com.google.firebase.crashlytics' version '3.0.7' apply false
-    id 'com.google.firebase.firebase-perf' version '2.0.2' apply false
-}
-
-allprojects {
-    configurations.configureEach { configuration ->
-        if (!configuration.name.startsWith("ktlint") && !configuration.name.startsWith("detekt")) {
-            configuration.resolutionStrategy.eachDependency { DependencyResolveDetails details ->
-                if (details.requested.group == 'org.jetbrains.kotlin') {
-                    details.useVersion '2.3.20'
-                }
-            }
-        }
-    }
+    alias(libs.plugins.android.application) apply false
+    alias(libs.plugins.android.test) apply false
+    alias(libs.plugins.baseline.profile) apply false
+    alias(libs.plugins.kotlin.compose) apply false
+    alias(libs.plugins.kotlin.android) apply false
+    alias(libs.plugins.kotlin.serialization) apply false
+    alias(libs.plugins.ksp) apply false
+    alias(libs.plugins.ktlint) apply false
+    alias(libs.plugins.detekt) apply false
 }

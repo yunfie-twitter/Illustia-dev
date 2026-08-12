@@ -14,9 +14,10 @@ import android.widget.RemoteViews
 import com.yunfie.illustia.IllustiaApplication
 import com.yunfie.illustia.MainActivity
 import com.yunfie.illustia.R
-import com.yunfie.illustia.models.Illust
 import com.yunfie.illustia.data.IllustiaRepository
 import com.yunfie.illustia.data.proxyPixivImageUrl
+import com.yunfie.illustia.models.Illust
+import com.yunfie.illustia.platform.PlatformCapabilities
 import com.yunfie.illustia.settings.SettingsStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -32,25 +33,39 @@ class RankingWidgetProvider : AppWidgetProvider() {
         enqueueRefresh(context, AppWidgetManager.getInstance(context))
     }
 
-    override fun onUpdate(context: Context, appWidgetManager: AppWidgetManager, appWidgetIds: IntArray) {
+    override fun onUpdate(
+        context: Context,
+        appWidgetManager: AppWidgetManager,
+        appWidgetIds: IntArray,
+    ) {
         super.onUpdate(context, appWidgetManager, appWidgetIds)
         enqueueUpdate(context, appWidgetManager, appWidgetIds)
     }
 
-    override fun onReceive(context: Context, intent: Intent) {
+    override fun onReceive(
+        context: Context,
+        intent: Intent,
+    ) {
         super.onReceive(context, intent)
         if (intent.action == ACTION_REFRESH_RANKING_WIDGET) {
             enqueueRefresh(context, AppWidgetManager.getInstance(context))
         }
     }
 
-    private fun enqueueRefresh(context: Context, manager: AppWidgetManager) {
+    private fun enqueueRefresh(
+        context: Context,
+        manager: AppWidgetManager,
+    ) {
         val ids = manager.getAppWidgetIds(ComponentName(context, RankingWidgetProvider::class.java))
         if (ids.isEmpty()) return
         enqueueUpdate(context, manager, ids)
     }
 
-    private fun enqueueUpdate(context: Context, manager: AppWidgetManager, appWidgetIds: IntArray) {
+    private fun enqueueUpdate(
+        context: Context,
+        manager: AppWidgetManager,
+        appWidgetIds: IntArray,
+    ) {
         val pendingResult = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
@@ -65,7 +80,7 @@ class RankingWidgetProvider : AppWidgetProvider() {
         const val ACTION_REFRESH_RANKING_WIDGET = "com.yunfie.illustia.widget.ACTION_REFRESH_RANKING_WIDGET"
 
         suspend fun publishPreview(context: Context) {
-            if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.VANILLA_ICE_CREAM) return
+            if (!PlatformCapabilities.supportsWidgetPreview()) return
 
             val manager = AppWidgetManager.getInstance(context)
             runCatching {
@@ -93,26 +108,30 @@ private suspend fun buildPreview(context: Context): RemoteViews {
             R.id.widget_item_3,
         ).forEachIndexed { index, rootId ->
             val rank = index + 1
-            val thumbId = when (index) {
-                0 -> R.id.widget_item_1_thumb
-                1 -> R.id.widget_item_2_thumb
-                else -> R.id.widget_item_3_thumb
-            }
-            val titleId = when (index) {
-                0 -> R.id.widget_item_1_title
-                1 -> R.id.widget_item_2_title
-                else -> R.id.widget_item_3_title
-            }
-            val artistId = when (index) {
-                0 -> R.id.widget_item_1_artist
-                1 -> R.id.widget_item_2_artist
-                else -> R.id.widget_item_3_artist
-            }
-            val rankId = when (index) {
-                0 -> R.id.widget_item_1_rank
-                1 -> R.id.widget_item_2_rank
-                else -> R.id.widget_item_3_rank
-            }
+            val thumbId =
+                when (index) {
+                    0 -> R.id.widget_item_1_thumb
+                    1 -> R.id.widget_item_2_thumb
+                    else -> R.id.widget_item_3_thumb
+                }
+            val titleId =
+                when (index) {
+                    0 -> R.id.widget_item_1_title
+                    1 -> R.id.widget_item_2_title
+                    else -> R.id.widget_item_3_title
+                }
+            val artistId =
+                when (index) {
+                    0 -> R.id.widget_item_1_artist
+                    1 -> R.id.widget_item_2_artist
+                    else -> R.id.widget_item_3_artist
+                }
+            val rankId =
+                when (index) {
+                    0 -> R.id.widget_item_1_rank
+                    1 -> R.id.widget_item_2_rank
+                    else -> R.id.widget_item_3_rank
+                }
             views.setViewVisibility(rootId, android.view.View.VISIBLE)
             views.setTextViewText(rankId, rank.toString())
             views.setTextViewText(titleId, context.getString(R.string.widget_ranking_title))
@@ -156,17 +175,20 @@ private class RankingWidgetUpdater(
             repository.login(settings.refreshToken)
             repository.loadRanking("day")
         }.onSuccess { page ->
-            val entries = coroutineScope {
-                page.items.take(3).mapIndexed { index, illust ->
-                    async {
-                        WidgetEntry(
-                            rank = index + 1,
-                            illust = illust,
-                            bitmap = loadThumbnail(illust),
-                        )
-                    }
-                }.map { it.await() }
-            }
+            val entries =
+                coroutineScope {
+                    page.items
+                        .take(3)
+                        .mapIndexed { index, illust ->
+                            async {
+                                WidgetEntry(
+                                    rank = index + 1,
+                                    illust = illust,
+                                    bitmap = loadThumbnail(illust),
+                                )
+                            }
+                        }.map { it.await() }
+                }
             renderLoggedIn(appWidgetIds, entries)
         }.onFailure {
             renderError(appWidgetIds)
@@ -213,7 +235,10 @@ private class RankingWidgetUpdater(
         }
     }
 
-    private fun renderLoggedIn(appWidgetIds: IntArray, entries: List<WidgetEntry>) {
+    private fun renderLoggedIn(
+        appWidgetIds: IntArray,
+        entries: List<WidgetEntry>,
+    ) {
         appWidgetIds.forEach { appWidgetId ->
             val views = RemoteViews(context.packageName, R.layout.ranking_widget)
             bindLoggedIn(views, entries)
@@ -233,35 +258,39 @@ private class RankingWidgetUpdater(
         views.setOnClickPendingIntent(R.id.widget_login_button, intent)
     }
 
-    private fun bindLoggedIn(views: RemoteViews, entries: List<WidgetEntry>) {
+    private fun bindLoggedIn(
+        views: RemoteViews,
+        entries: List<WidgetEntry>,
+    ) {
         views.setViewVisibility(R.id.widget_status, android.view.View.GONE)
         views.setViewVisibility(R.id.widget_logged_out_container, android.view.View.GONE)
         views.setViewVisibility(R.id.widget_logged_in_container, android.view.View.VISIBLE)
         clearRankedItems(views)
 
-        val slots = listOf(
-            RankingWidgetSlot(
-                rootId = R.id.widget_item_1,
-                rankId = R.id.widget_item_1_rank,
-                thumbId = R.id.widget_item_1_thumb,
-                titleId = R.id.widget_item_1_title,
-                artistId = R.id.widget_item_1_artist,
-            ),
-            RankingWidgetSlot(
-                rootId = R.id.widget_item_2,
-                rankId = R.id.widget_item_2_rank,
-                thumbId = R.id.widget_item_2_thumb,
-                titleId = R.id.widget_item_2_title,
-                artistId = R.id.widget_item_2_artist,
-            ),
-            RankingWidgetSlot(
-                rootId = R.id.widget_item_3,
-                rankId = R.id.widget_item_3_rank,
-                thumbId = R.id.widget_item_3_thumb,
-                titleId = R.id.widget_item_3_title,
-                artistId = R.id.widget_item_3_artist,
-            ),
-        )
+        val slots =
+            listOf(
+                RankingWidgetSlot(
+                    rootId = R.id.widget_item_1,
+                    rankId = R.id.widget_item_1_rank,
+                    thumbId = R.id.widget_item_1_thumb,
+                    titleId = R.id.widget_item_1_title,
+                    artistId = R.id.widget_item_1_artist,
+                ),
+                RankingWidgetSlot(
+                    rootId = R.id.widget_item_2,
+                    rankId = R.id.widget_item_2_rank,
+                    thumbId = R.id.widget_item_2_thumb,
+                    titleId = R.id.widget_item_2_title,
+                    artistId = R.id.widget_item_2_artist,
+                ),
+                RankingWidgetSlot(
+                    rootId = R.id.widget_item_3,
+                    rankId = R.id.widget_item_3_rank,
+                    thumbId = R.id.widget_item_3_thumb,
+                    titleId = R.id.widget_item_3_title,
+                    artistId = R.id.widget_item_3_artist,
+                ),
+            )
 
         slots.forEachIndexed { index, slot ->
             val entry = entries.getOrNull(index)
@@ -296,15 +325,17 @@ private class RankingWidgetUpdater(
     private suspend fun loadThumbnail(illust: Illust): Bitmap? {
         val proxyBaseUrl = SettingsStore(context.applicationContext).read().pixivImageProxyBaseUrl
         val imageUrl = proxyPixivImageUrl(illust.thumbnailUrl, proxyBaseUrl)
-        val request = Request.Builder()
-            .url(imageUrl)
-            .headers(
-                Headers.Builder()
-                    .add("Referer", "https://www.pixiv.net/")
-                    .add("User-Agent", "PixivAndroidApp/6.184.0 (Android 14; Illustia)")
-                    .build(),
-            )
-            .build()
+        val request =
+            Request
+                .Builder()
+                .url(imageUrl)
+                .headers(
+                    Headers
+                        .Builder()
+                        .add("Referer", "https://www.pixiv.net/")
+                        .add("User-Agent", "PixivAndroidApp/6.184.0 (Android 14; Illustia)")
+                        .build(),
+                ).build()
         return runCatching {
             val response = (context.applicationContext as IllustiaApplication).sharedHttpClient.newCall(request).execute()
             response.use {
@@ -330,9 +361,10 @@ private data class RankingWidgetSlot(
 )
 
 private fun launchAppIntent(context: Context): PendingIntent {
-    val intent = Intent(context, MainActivity::class.java).apply {
-        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-    }
+    val intent =
+        Intent(context, MainActivity::class.java).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
     return PendingIntent.getActivity(
         context,
         1001,
@@ -342,9 +374,10 @@ private fun launchAppIntent(context: Context): PendingIntent {
 }
 
 private fun refreshPendingIntent(context: Context): PendingIntent {
-    val intent = Intent(context, RankingWidgetProvider::class.java).apply {
-        action = RankingWidgetProvider.ACTION_REFRESH_RANKING_WIDGET
-    }
+    val intent =
+        Intent(context, RankingWidgetProvider::class.java).apply {
+            action = RankingWidgetProvider.ACTION_REFRESH_RANKING_WIDGET
+        }
     return PendingIntent.getBroadcast(
         context,
         1002,
@@ -353,10 +386,14 @@ private fun refreshPendingIntent(context: Context): PendingIntent {
     )
 }
 
-private fun artworkPendingIntent(context: Context, illustId: Long): PendingIntent {
-    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://www.pixiv.net/artworks/$illustId")).apply {
-        addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
-    }
+private fun artworkPendingIntent(
+    context: Context,
+    illustId: Long,
+): PendingIntent {
+    val intent =
+        Intent(Intent.ACTION_VIEW, Uri.parse("https://www.pixiv.net/artworks/$illustId")).apply {
+            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        }
     val requestCode = (illustId xor (illustId ushr 32)).toInt()
     return PendingIntent.getActivity(
         context,
@@ -365,4 +402,3 @@ private fun artworkPendingIntent(context: Context, illustId: Long): PendingInten
         PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
     )
 }
-

@@ -4,7 +4,10 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -26,14 +29,14 @@ import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
 import com.yunfie.illustia.ui.components.Section
 import com.yunfie.illustia.ui.components.SettingLinkRow
 import com.yunfie.illustia.ui.components.SettingSwitchRow
-import java.time.LocalDate
-import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import java.time.LocalDate
 
 @Composable
 fun DataSettingsScreen(
@@ -45,14 +48,16 @@ fun DataSettingsScreen(
     val scrollBehavior = MiuixScrollBehavior()
     var showCacheDeleteConfirm by remember { mutableStateOf(false) }
     var pendingImportUri by remember { mutableStateOf<Uri?>(null) }
-    val exportLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.CreateDocument("application/json"),
-        onResult = { uri -> uri?.let(viewModel::exportManagedData) },
-    )
-    val importLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.OpenDocument(),
-        onResult = { uri -> pendingImportUri = uri },
-    )
+    val exportLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.CreateDocument("application/json"),
+            onResult = { uri -> uri?.let(viewModel::exportManagedData) },
+        )
+    val importLauncher =
+        rememberLauncherForActivityResult(
+            contract = ActivityResultContracts.OpenDocument(),
+            onResult = { uri -> pendingImportUri = uri },
+        )
 
     if (showCacheDeleteConfirm) {
         MiuixConfirmDialog(
@@ -97,71 +102,93 @@ fun DataSettingsScreen(
         },
     ) { scaffoldPadding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .background(MiuixTheme.colorScheme.surface),
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                end = 16.dp,
-                top = scaffoldPadding.calculateTopPadding() + 16.dp,
-                bottom = 96.dp,
-            ),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .background(MiuixTheme.colorScheme.surface),
+            contentPadding =
+                PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = scaffoldPadding.calculateTopPadding() + 16.dp,
+                    bottom = 96.dp,
+                ),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            item { Section(stringResource(R.string.data_section_history)) {
-                ElevatedPanel(contentPadding = PaddingValues(0.dp)) {
-                    SettingSwitchRow(stringResource(R.string.data_save_view_history), state.settings.saveViewHistory, viewModel::updateSaveViewHistory, stringResource(R.string.data_save_view_history_desc))
-                    DividerLine()
-                    SettingSwitchRow(stringResource(R.string.data_save_search_history), state.settings.saveSearchHistory, viewModel::updateSaveSearchHistory, stringResource(R.string.data_save_search_history_desc))
-                }
-            }}
-
-            item { Section(stringResource(R.string.data_section_transfer)) {
-                ElevatedPanel(contentPadding = PaddingValues(0.dp)) {
-                    SettingLinkRow(stringResource(R.string.data_export)) {
-                        exportLauncher.launch("illustia-data-${LocalDate.now()}.json")
+            item {
+                Section(stringResource(R.string.data_section_history)) {
+                    ElevatedPanel(contentPadding = PaddingValues(0.dp)) {
+                        SettingSwitchRow(
+                            stringResource(R.string.data_save_view_history),
+                            state.settings.saveViewHistory,
+                            viewModel::updateSaveViewHistory,
+                            stringResource(R.string.data_save_view_history_desc),
+                        )
+                        DividerLine()
+                        SettingSwitchRow(
+                            stringResource(R.string.data_save_search_history),
+                            state.settings.saveSearchHistory,
+                            viewModel::updateSaveSearchHistory,
+                            stringResource(R.string.data_save_search_history_desc),
+                        )
                     }
-                    DividerLine()
-                    SettingLinkRow(stringResource(R.string.data_import)) {
-                        importLauncher.launch(arrayOf("application/json", "text/json", "text/plain"))
+                }
+            }
+
+            item {
+                Section(stringResource(R.string.data_section_transfer)) {
+                    ElevatedPanel(contentPadding = PaddingValues(0.dp)) {
+                        SettingLinkRow(stringResource(R.string.data_export)) {
+                            exportLauncher.launch("illustia-data-${LocalDate.now()}.json")
+                        }
+                        DividerLine()
+                        SettingLinkRow(stringResource(R.string.data_import)) {
+                            importLauncher.launch(arrayOf("application/json", "text/json", "text/plain"))
+                        }
                     }
-                }
-                Text(
-                    text = stringResource(R.string.data_import_export_note),
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                    style = MiuixTheme.textStyles.footnote1,
-                    modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                )
-            }}
-
-            item { Section(stringResource(R.string.data_section_cleanup)) {
-                ElevatedPanel(contentPadding = PaddingValues(0.dp)) {
-                    SettingLinkRow(stringResource(R.string.data_delete_cache)) { showCacheDeleteConfirm = true }
-                }
-            }}
-
-            item { Section(stringResource(R.string.data_section_privacy_telemetry)) {
-                ElevatedPanel(contentPadding = PaddingValues(0.dp)) {
-                    SettingSwitchRow(
-                        title = stringResource(R.string.data_send_telemetry),
-                        checked = state.settings.sendTelemetry,
-                        onCheckedChange = viewModel::updateSendTelemetry,
-                        summary = stringResource(R.string.data_send_telemetry_desc),
+                    Text(
+                        text = stringResource(R.string.data_import_export_note),
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        style = MiuixTheme.textStyles.footnote1,
+                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
                     )
                 }
-            }}
+            }
 
-            item { Section(stringResource(R.string.pallasync_section_title)) {
-                ElevatedPanel(contentPadding = PaddingValues(0.dp)) {
-                    SettingLinkRow(
-                        title = stringResource(R.string.pallasync_settings_title),
-                        summary = stringResource(R.string.pallasync_enable_desc)
-                    ) {
-                        viewModel.openPallaSyncSettings()
+            item {
+                Section(stringResource(R.string.data_section_cleanup)) {
+                    ElevatedPanel(contentPadding = PaddingValues(0.dp)) {
+                        SettingLinkRow(stringResource(R.string.data_delete_cache)) { showCacheDeleteConfirm = true }
                     }
                 }
-            }}
+            }
+
+            item {
+                Section(stringResource(R.string.data_section_privacy_telemetry)) {
+                    ElevatedPanel(contentPadding = PaddingValues(0.dp)) {
+                        SettingSwitchRow(
+                            title = stringResource(R.string.data_send_telemetry),
+                            checked = state.settings.sendTelemetry,
+                            onCheckedChange = viewModel::updateSendTelemetry,
+                            summary = stringResource(R.string.data_send_telemetry_desc),
+                        )
+                    }
+                }
+            }
+
+            item {
+                Section(stringResource(R.string.pallasync_section_title)) {
+                    ElevatedPanel(contentPadding = PaddingValues(0.dp)) {
+                        SettingLinkRow(
+                            title = stringResource(R.string.pallasync_settings_title),
+                            summary = stringResource(R.string.pallasync_enable_desc),
+                        ) {
+                            viewModel.openPallaSyncSettings()
+                        }
+                    }
+                }
+            }
         }
     }
 }

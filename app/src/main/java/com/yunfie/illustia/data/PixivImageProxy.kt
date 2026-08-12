@@ -12,14 +12,18 @@ data class PixivImageProxy(
 
 private const val PALLERIA_WEBP_PROXY_BASE_URL = "https://proxy.yunfi.f5.si/image.webp?url="
 
-val PixivImageProxyOptions = listOf(
-    PixivImageProxy("Palleria", "https://i.yunfi.f5.si/"),
-    PixivImageProxy("Palleria(Webp)", PALLERIA_WEBP_PROXY_BASE_URL),
-    PixivImageProxy("suimoe.com", "https://i.suimoe.com/"),
-    PixivImageProxy("pixiv.re", "https://i.pixiv.re/"),
-)
+val PixivImageProxyOptions =
+    listOf(
+        PixivImageProxy("Palleria", "https://i.yunfi.f5.si/"),
+        PixivImageProxy("Palleria(Webp)", PALLERIA_WEBP_PROXY_BASE_URL),
+        PixivImageProxy("suimoe.com", "https://i.suimoe.com/"),
+        PixivImageProxy("pixiv.re", "https://i.pixiv.re/"),
+    )
 
-fun proxyPixivImageUrl(url: String, proxyBaseUrl: String): String {
+fun proxyPixivImageUrl(
+    url: String,
+    proxyBaseUrl: String,
+): String {
     if (url.isBlank() || proxyBaseUrl.isBlank()) return url
 
     val sourcePrefix = url.pixivImagePrefixOrNull() ?: return url
@@ -34,12 +38,11 @@ fun proxyPixivImageUrl(url: String, proxyBaseUrl: String): String {
     return proxy + "/" + url.removePrefix(sourcePrefix)
 }
 
-private fun String.pixivImagePrefixOrNull(): String? {
-    return when {
+private fun String.pixivImagePrefixOrNull(): String? =
+    when {
         startsWith("https://i.pximg.net/") -> "https://i.pximg.net/"
         startsWith("http://i.pximg.net/") -> "http://i.pximg.net/"
         startsWith("https://i-f.pximg.net/") -> "https://i-f.pximg.net/"
         startsWith("http://i-f.pximg.net/") -> "http://i-f.pximg.net/"
         else -> null
     }
-}

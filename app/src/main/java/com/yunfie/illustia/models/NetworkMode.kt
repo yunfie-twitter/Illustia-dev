@@ -3,10 +3,13 @@ package com.yunfie.illustia.models
 import androidx.compose.runtime.Immutable
 
 @Immutable
-enum class NetworkMode(val code: String) {
+enum class NetworkMode(
+    val code: String,
+) {
     Compat("compat"),
     Ech("ech"),
-    Standard("standard");
+    Standard("standard"),
+    ;
 
     companion object {
         fun fromCode(code: String?): NetworkMode {

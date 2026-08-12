@@ -17,17 +17,19 @@ internal data class RoomSettingsData(
     val accounts: List<AccountEntity> = emptyList(),
 )
 
-internal inline fun <reified T : Enum<T>> enumValueOrDefault(value: String?, default: T): T {
-    return runCatching {
+internal inline fun <reified T : Enum<T>> enumValueOrDefault(
+    value: String?,
+    default: T,
+): T =
+    runCatching {
         value?.let { enumValueOf<T>(it) }
     }.getOrNull() ?: default
-}
 
-internal fun encodeStringList(values: List<String>): String {
-    return JSONArray().apply {
-        values.forEach { put(it) }
-    }.toString()
-}
+internal fun encodeStringList(values: List<String>): String =
+    JSONArray()
+        .apply {
+            values.forEach { put(it) }
+        }.toString()
 
 internal fun decodeStringList(value: String?): List<String> {
     if (value.isNullOrBlank()) return emptyList()
@@ -40,17 +42,17 @@ internal fun decodeStringList(value: String?): List<String> {
     }
 }
 
-internal fun decodeLegacyStringList(value: String?): List<String> {
-    return value.orEmpty()
+internal fun decodeLegacyStringList(value: String?): List<String> =
+    value
+        .orEmpty()
         .split(HISTORY_SEPARATOR)
         .filter { it.isNotBlank() }
-}
 
-internal fun encodeLongList(values: List<Long>): String {
-    return JSONArray().apply {
-        values.forEach { put(it) }
-    }.toString()
-}
+internal fun encodeLongList(values: List<Long>): String =
+    JSONArray()
+        .apply {
+            values.forEach { put(it) }
+        }.toString()
 
 internal fun decodeLongList(value: String?): List<Long> {
     if (value.isNullOrBlank()) return emptyList()
@@ -74,29 +76,33 @@ internal fun decodeHistoryIllusts(value: String?): List<Illust> {
             }.filterNotNull()
         }.getOrDefault(emptyList())
     } else {
-        value.split(HISTORY_SEPARATOR)
+        value
+            .split(HISTORY_SEPARATOR)
             .filter { it.isNotBlank() }
             .mapNotNull(::decodeLegacyHistoryIllust)
     }
 }
 
-internal fun encodeAccountTokens(accounts: List<StoredAccount>): String {
-    return JSONObject().apply {
-        accounts.forEach { account ->
-            put(account.userId.toString(), account.refreshToken)
-        }
-    }.toString()
-}
+internal fun encodeAccountTokens(accounts: List<StoredAccount>): String =
+    JSONObject()
+        .apply {
+            accounts.forEach { account ->
+                put(account.userId.toString(), account.refreshToken)
+            }
+        }.toString()
 
 internal fun decodeAccountTokens(value: String): Map<Long, String> {
     if (value.isBlank()) return emptyMap()
     return runCatching {
         val json = JSONObject(value)
-        json.keys().asSequence().mapNotNull { key ->
-            val userId = key.toLongOrNull() ?: return@mapNotNull null
-            val token = json.optString(key)
-            if (token.isBlank()) null else userId to token
-        }.toMap()
+        json
+            .keys()
+            .asSequence()
+            .mapNotNull { key ->
+                val userId = key.toLongOrNull() ?: return@mapNotNull null
+                val token = json.optString(key)
+                if (token.isBlank()) null else userId to token
+            }.toMap()
     }.getOrDefault(emptyMap())
 }
 
@@ -131,8 +137,8 @@ internal fun decodeAccounts(value: String): List<StoredAccount> {
     }
 }
 
-internal fun illustFromEntity(entity: ViewHistoryEntity): Illust {
-    return Illust(
+internal fun illustFromEntity(entity: ViewHistoryEntity): Illust =
+    Illust(
         id = entity.id,
         title = entity.title,
         type = entity.type.ifBlank { "illust" },
@@ -151,7 +157,6 @@ internal fun illustFromEntity(entity: ViewHistoryEntity): Illust {
         pageCount = entity.pageCount,
         isBookmarked = false,
     )
-}
 
 internal fun historyIllustFromJson(item: JSONObject): Illust? {
     val id = item.optLong("id", 0L).takeIf { it > 0L } ?: return null
@@ -202,8 +207,7 @@ internal fun decodeLegacyHistoryIllust(value: String): Illust? {
     )
 }
 
-internal fun String.decodeBase64Field(): String {
-    return runCatching {
+internal fun String.decodeBase64Field(): String =
+    runCatching {
         String(Base64.decode(this, Base64.URL_SAFE or Base64.NO_WRAP))
     }.getOrDefault("")
-}

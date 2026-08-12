@@ -23,6 +23,7 @@ pub struct Illust {
     pub tags: Vec<String>,
     pub page_count: i32,
     pub is_bookmarked: bool,
+    pub total_bookmarks: i32,
     pub total_comments: Option<i32>,
     pub series: Option<IllustSeries>,
 }

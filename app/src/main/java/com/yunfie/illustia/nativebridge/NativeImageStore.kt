@@ -5,24 +5,26 @@ import android.content.Context
 import android.content.Intent
 import android.media.MediaScannerConnection
 import android.net.Uri
-import android.os.Build
 import android.os.Environment
 import android.provider.DocumentsContract
 import android.provider.MediaStore
 import android.webkit.MimeTypeMap
 import androidx.documentfile.provider.DocumentFile
-import java.io.File
-import java.io.InputStream
-import java.util.Collections
-import java.util.concurrent.CopyOnWriteArrayList
-import java.util.Locale
+import com.yunfie.illustia.platform.PlatformCapabilities
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.runBlocking
+import java.io.File
+import java.io.InputStream
+import java.util.Collections
+import java.util.Locale
+import java.util.concurrent.CopyOnWriteArrayList
 
-class NativeImageStore(private val context: Context) {
+class NativeImageStore(
+    private val context: Context,
+) {
     private val preferences = context.getSharedPreferences("illustia", Context.MODE_PRIVATE)
     private val flutterPreferences = context.getSharedPreferences("FlutterSharedPreferences", Context.MODE_PRIVATE)
     private val savingNames = Collections.synchronizedSet(mutableSetOf<String>())
@@ -47,7 +49,10 @@ class NativeImageStore(private val context: Context) {
         }
     }
 
-    fun exists(name: String, sourceUrl: String = ""): Boolean {
+    fun exists(
+        name: String,
+        sourceUrl: String = "",
+    ): Boolean {
         val displayName = if (sourceUrl.isBlank()) name else name.withImageExtension(sourceUrl, null)
         return when (saveMode()) {
             SAVE_MODE_SAF -> existsInTree(displayName)
@@ -56,25 +61,31 @@ class NativeImageStore(private val context: Context) {
         }
     }
 
-    fun currentPath(): String? {
-        return when (saveMode()) {
-            SAVE_MODE_SAF -> context.contentResolver.persistedUriPermissions
-                .firstOrNull { it.isReadPermission && it.isWritePermission }
-                ?.uri
-                ?.toString()
-            SAVE_MODE_DIRECT -> baseDirectPath().absolutePath
-            else -> "${Environment.DIRECTORY_PICTURES}/Palleria"
-        }
-    }
+    fun currentPath(): String? =
+        when (saveMode()) {
+            SAVE_MODE_SAF -> {
+                context.contentResolver.persistedUriPermissions
+                    .firstOrNull { it.isReadPermission && it.isWritePermission }
+                    ?.uri
+                    ?.toString()
+            }
 
-    fun createChooseFolderIntent(): Intent {
-        return Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
+            SAVE_MODE_DIRECT -> {
+                baseDirectPath().absolutePath
+            }
+
+            else -> {
+                "${Environment.DIRECTORY_PICTURES}/Palleria"
+            }
+        }
+
+    fun createChooseFolderIntent(): Intent =
+        Intent(Intent.ACTION_OPEN_DOCUMENT_TREE).apply {
             addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
             addFlags(Intent.FLAG_GRANT_WRITE_URI_PERMISSION)
             addFlags(Intent.FLAG_GRANT_PERSISTABLE_URI_PERMISSION)
             addFlags(Intent.FLAG_GRANT_PREFIX_URI_PERMISSION)
         }
-    }
 
     fun persistTreeUri(uri: Uri) {
         val flags = Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_GRANT_WRITE_URI_PERMISSION
@@ -82,13 +93,14 @@ class NativeImageStore(private val context: Context) {
         context.contentResolver.persistedUriPermissions
             .filter { it.uri != uri && it.isReadPermission && it.isWritePermission }
             .forEach { context.contentResolver.releasePersistableUriPermission(it.uri, flags) }
-        preferences.edit()
+        preferences
+            .edit()
             .putInt(KEY_SAVE_MODE, SAVE_MODE_SAF)
             .apply()
     }
 
-    fun persistReadOnlyTreeUri(uri: Uri): Boolean {
-        return runCatching {
+    fun persistReadOnlyTreeUri(uri: Uri): Boolean =
+        runCatching {
             context.contentResolver.takePersistableUriPermission(
                 uri,
                 Intent.FLAG_GRANT_READ_URI_PERMISSION,
@@ -97,29 +109,32 @@ class NativeImageStore(private val context: Context) {
             require(tree != null && tree.exists() && tree.isDirectory && tree.canRead())
             true
         }.getOrDefault(false)
-    }
 
     fun currentPathLabel(): String {
         if (saveMode() != SAVE_MODE_SAF) return currentPath().orEmpty()
-        val uri = context.contentResolver.persistedUriPermissions
-            .firstOrNull { it.isReadPermission && it.isWritePermission }
-            ?.uri
-            ?: return currentPath().orEmpty()
-        val documentId = runCatching { DocumentsContract.getTreeDocumentId(uri) }.getOrNull()
-            ?: return uri.toString()
-        val (volume, path) = documentId.split(':', limit = 2).let {
-            it.first() to it.getOrElse(1) { "" }
-        }
-        val root = if (volume.equals("primary", ignoreCase = true)) {
-            Environment.getExternalStorageDirectory().absolutePath
-        } else {
-            volume
-        }
+        val uri =
+            context.contentResolver.persistedUriPermissions
+                .firstOrNull { it.isReadPermission && it.isWritePermission }
+                ?.uri
+                ?: return currentPath().orEmpty()
+        val documentId =
+            runCatching { DocumentsContract.getTreeDocumentId(uri) }.getOrNull()
+                ?: return uri.toString()
+        val (volume, path) =
+            documentId.split(':', limit = 2).let {
+                it.first() to it.getOrElse(1) { "" }
+            }
+        val root =
+            if (volume.equals("primary", ignoreCase = true)) {
+                Environment.getExternalStorageDirectory().absolutePath
+            } else {
+                volume
+            }
         return listOf(root, path).filter { it.isNotBlank() }.joinToString(File.separator)
     }
 
-    fun listSavedImages(selectedFolderUri: String? = null): List<NativeSavedImage> {
-        return runCatching {
+    fun listSavedImages(selectedFolderUri: String? = null): List<NativeSavedImage> =
+        runCatching {
             if (!selectedFolderUri.isNullOrBlank()) {
                 val root = DocumentFile.fromTreeUri(context, Uri.parse(selectedFolderUri))
                 root?.let(::listDocumentImages).orEmpty()
@@ -131,87 +146,91 @@ class NativeImageStore(private val context: Context) {
                 }
             }
         }.getOrDefault(emptyList())
-    }
 
-    fun folderLabel(uriValue: String): String {
-        return runCatching {
+    fun folderLabel(uriValue: String): String =
+        runCatching {
             val uri = Uri.parse(uriValue)
             DocumentFile.fromTreeUri(context, uri)?.name
                 ?: DocumentsContract.getTreeDocumentId(uri).substringAfterLast(':')
         }.getOrDefault("")
-    }
 
     private fun listMediaStoreImages(): List<NativeSavedImage> {
         val base = "${Environment.DIRECTORY_PICTURES}/Palleria/"
-        val projection = arrayOf(
-            MediaStore.Images.Media._ID,
-            MediaStore.Images.Media.DISPLAY_NAME,
-            MediaStore.Images.Media.DATE_MODIFIED,
-        )
+        val projection =
+            arrayOf(
+                MediaStore.Images.Media._ID,
+                MediaStore.Images.Media.DISPLAY_NAME,
+                MediaStore.Images.Media.DATE_MODIFIED,
+            )
         val selection = "${MediaStore.Images.Media.RELATIVE_PATH} LIKE ?"
-        return context.contentResolver.query(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            projection,
-            selection,
-            arrayOf("$base%"),
-            "${MediaStore.Images.Media.DATE_MODIFIED} DESC",
-        )?.use { cursor ->
-            val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
-            val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
-            val modifiedColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_MODIFIED)
-            buildList {
-                while (cursor.moveToNext()) {
-                    val uri = Uri.withAppendedPath(
-                        MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-                        cursor.getLong(idColumn).toString(),
-                    )
-                    add(
-                        NativeSavedImage(
-                            uri = uri.toString(),
-                            name = cursor.getString(nameColumn).orEmpty(),
-                            modifiedAtMillis = cursor.getLong(modifiedColumn) * 1_000L,
-                        ),
-                    )
-                }
-            }
-        }.orEmpty()
-    }
-
-    private fun listDocumentImages(root: DocumentFile): List<NativeSavedImage> = runBlocking {
-        val result = CopyOnWriteArrayList<NativeSavedImage>()
-
-        suspend fun walk(directory: DocumentFile) {
-            if (result.size >= MAX_LISTED_IMAGES) return
-            val items = directory.listFiles()
-            coroutineScope {
-                val files = items.filter { it.isFile && it.isSupportedImage() }
-                files.forEach { item ->
-                    if (result.size < MAX_LISTED_IMAGES) {
-                        result.add(
-                            NativeSavedImage(
-                                uri = item.uri.toString(),
-                                name = item.name.orEmpty(),
-                                modifiedAtMillis = item.lastModified(),
+        return context.contentResolver
+            .query(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                projection,
+                selection,
+                arrayOf("$base%"),
+                "${MediaStore.Images.Media.DATE_MODIFIED} DESC",
+            )?.use { cursor ->
+                val idColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media._ID)
+                val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DISPLAY_NAME)
+                val modifiedColumn = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATE_MODIFIED)
+                buildList {
+                    while (cursor.moveToNext()) {
+                        val uri =
+                            Uri.withAppendedPath(
+                                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                                cursor.getLong(idColumn).toString(),
                             )
+                        add(
+                            NativeSavedImage(
+                                uri = uri.toString(),
+                                name = cursor.getString(nameColumn).orEmpty(),
+                                modifiedAtMillis = cursor.getLong(modifiedColumn) * 1_000L,
+                            ),
                         )
                     }
                 }
-                val dirs = items.filter { it.isDirectory }
-                dirs.map {
-                    async(Dispatchers.IO) {
-                        walk(it)
-                    }
-                }.awaitAll()
-            }
-        }
-
-        walk(root)
-        result.sortedByDescending(NativeSavedImage::modifiedAtMillis)
+            }.orEmpty()
     }
+
+    private fun listDocumentImages(root: DocumentFile): List<NativeSavedImage> =
+        runBlocking {
+            val result = CopyOnWriteArrayList<NativeSavedImage>()
+
+            suspend fun walk(directory: DocumentFile) {
+                if (result.size >= MAX_LISTED_IMAGES) return
+                val items = directory.listFiles()
+                coroutineScope {
+                    val files = items.filter { it.isFile && it.isSupportedImage() }
+                    files.forEach { item ->
+                        if (result.size < MAX_LISTED_IMAGES) {
+                            result.add(
+                                NativeSavedImage(
+                                    uri = item.uri.toString(),
+                                    name = item.name.orEmpty(),
+                                    modifiedAtMillis = item.lastModified(),
+                                ),
+                            )
+                        }
+                    }
+                    val dirs = items.filter { it.isDirectory }
+                    dirs
+                        .map {
+                            async(Dispatchers.IO) {
+                                walk(it)
+                            }
+                        }.awaitAll()
+                }
+            }
+
+            walk(root)
+            result.sortedByDescending(NativeSavedImage::modifiedAtMillis)
+        }
 
     private fun listFileImages(root: File): List<NativeSavedImage> {
         if (!root.isDirectory) return emptyList()
-        return root.walkTopDown()
+        return root
+            .walkTopDown()
             .filter { it.isFile && it.extension.lowercase(Locale.ROOT) in SUPPORTED_EXTENSIONS }
             .take(MAX_LISTED_IMAGES)
             .map {
@@ -220,28 +239,29 @@ class NativeImageStore(private val context: Context) {
                     name = it.name,
                     modifiedAtMillis = it.lastModified(),
                 )
-            }
-            .sortedByDescending(NativeSavedImage::modifiedAtMillis)
+            }.sortedByDescending(NativeSavedImage::modifiedAtMillis)
             .toList()
     }
 
     private fun DocumentFile.isSupportedImage(): Boolean {
-        val extension = name
-            ?.substringAfterLast('.', missingDelimiterValue = "")
-            ?.lowercase(Locale.ROOT)
-            .orEmpty()
+        val extension =
+            name
+                ?.substringAfterLast('.', missingDelimiterValue = "")
+                ?.lowercase(Locale.ROOT)
+                .orEmpty()
         return type?.startsWith("image/") == true || extension in SUPPORTED_EXTENSIONS
     }
 
     private fun saveMode(): Int {
         val nativeMode = preferences.getInt(KEY_SAVE_MODE, UNKNOWN_MODE)
-        val configuredMode = if (nativeMode != UNKNOWN_MODE) {
-            nativeMode
-        } else {
-            flutterPreferences.getLong("flutter.save_mode", SAVE_MODE_MEDIASTORE.toLong()).toInt()
-        }
+        val configuredMode =
+            if (nativeMode != UNKNOWN_MODE) {
+                nativeMode
+            } else {
+                flutterPreferences.getLong("flutter.save_mode", SAVE_MODE_MEDIASTORE.toLong()).toInt()
+            }
         // RELATIVE_PATH and IS_PENDING are only available with scoped storage.
-        return if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q && configuredMode == SAVE_MODE_MEDIASTORE) {
+        return if (!PlatformCapabilities.supportsScopedMediaStore() && configuredMode == SAVE_MODE_MEDIASTORE) {
             SAVE_MODE_DIRECT
         } else {
             configuredMode
@@ -259,21 +279,24 @@ class NativeImageStore(private val context: Context) {
         val normalizedMimeType = imageMimeType(responseMimeType, sourceUrl)
         val relativePath = mediaRelativePath(displayName)
         if (clearOld) deleteOldMediaStoreEntry(displayName, relativePath)
-        val contentValues = ContentValues().apply {
-            put(MediaStore.MediaColumns.DISPLAY_NAME, displayName.substringAfterLast('/'))
-            put(MediaStore.MediaColumns.MIME_TYPE, normalizedMimeType)
-            put(MediaStore.MediaColumns.RELATIVE_PATH, relativePath)
-            put(MediaStore.MediaColumns.IS_PENDING, 1)
-        }
-        val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
-            ?: throw IllegalStateException("MediaStoreへの登録に失敗しました。")
+        val contentValues =
+            ContentValues().apply {
+                put(MediaStore.MediaColumns.DISPLAY_NAME, displayName.substringAfterLast('/'))
+                put(MediaStore.MediaColumns.MIME_TYPE, normalizedMimeType)
+                put(MediaStore.MediaColumns.RELATIVE_PATH, relativePath)
+                put(MediaStore.MediaColumns.IS_PENDING, 1)
+            }
+        val uri =
+            resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, contentValues)
+                ?: throw IllegalStateException("MediaStoreへの登録に失敗しました。")
         runCatching {
             resolver.openOutputStream(uri, "w")?.use { output ->
                 input.use { it.copyTo(output) }
             } ?: throw IllegalStateException("ファイルの書き込みに失敗しました。")
-            ContentValues().apply {
-                put(MediaStore.MediaColumns.IS_PENDING, 0)
-            }.also { resolver.update(uri, it, null, null) }
+            ContentValues()
+                .apply {
+                    put(MediaStore.MediaColumns.IS_PENDING, 0)
+                }.also { resolver.update(uri, it, null, null) }
         }.onFailure {
             resolver.delete(uri, null, null)
             throw it
@@ -332,13 +355,14 @@ class NativeImageStore(private val context: Context) {
         val relativePath = mediaRelativePath(displayName)
         val selection = "${MediaStore.Images.Media.RELATIVE_PATH} = ? AND ${MediaStore.Images.Media.DISPLAY_NAME} = ?"
         val args = arrayOf(relativePath.ensureTrailingSlash(), displayName.substringAfterLast('/'))
-        return context.contentResolver.query(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            arrayOf(MediaStore.Images.Media._ID),
-            selection,
-            args,
-            null,
-        )?.use { it.moveToFirst() } == true
+        return context.contentResolver
+            .query(
+                MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
+                arrayOf(MediaStore.Images.Media._ID),
+                selection,
+                args,
+                null,
+            )?.use { it.moveToFirst() } == true
     }
 
     private fun existsInTree(displayName: String): Boolean {
@@ -349,7 +373,10 @@ class NativeImageStore(private val context: Context) {
         return DocumentFile.fromSingleUri(context, uri)?.exists() == true
     }
 
-    private fun deleteOldMediaStoreEntry(displayName: String, relativePath: String) {
+    private fun deleteOldMediaStoreEntry(
+        displayName: String,
+        relativePath: String,
+    ) {
         val resolver = context.contentResolver
         val selection = "${MediaStore.Images.Media.RELATIVE_PATH} = ? AND ${MediaStore.Images.Media.DISPLAY_NAME} = ?"
         val args = arrayOf(relativePath.ensureTrailingSlash(), displayName.substringAfterLast('/'))
@@ -361,17 +388,19 @@ class NativeImageStore(private val context: Context) {
     }
 
     private fun writableTree(): DocumentFile? {
-        val uri = context.contentResolver.persistedUriPermissions
-            .firstOrNull { it.isReadPermission && it.isWritePermission }
-            ?.uri
-            ?: return null
+        val uri =
+            context.contentResolver.persistedUriPermissions
+                .firstOrNull { it.isReadPermission && it.isWritePermission }
+                ?.uri
+                ?: return null
         return DocumentFile.fromTreeUri(context, uri)
     }
 
     private fun baseDirectPath(): File {
-        val path = preferences.getString(KEY_STORE_PATH, null)
-            ?: flutterPreferences.getString("flutter.store_path", null)
-            ?: File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Palleria").absolutePath
+        val path =
+            preferences.getString(KEY_STORE_PATH, null)
+                ?: flutterPreferences.getString("flutter.store_path", null)
+                ?: File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES), "Palleria").absolutePath
         return File(path)
     }
 
@@ -384,7 +413,10 @@ class NativeImageStore(private val context: Context) {
         }
     }
 
-    private fun imageMimeType(responseMimeType: String?, sourceUrl: String): String {
+    private fun imageMimeType(
+        responseMimeType: String?,
+        sourceUrl: String,
+    ): String {
         val type = responseMimeType?.substringBefore(";")?.lowercase(Locale.ROOT)
         if (type in SUPPORTED_MIME_TYPES) return type!!
         return when (sourceUrl.imageExtension()) {
@@ -395,31 +427,36 @@ class NativeImageStore(private val context: Context) {
         }
     }
 
-    private fun String.withImageExtension(sourceUrl: String, responseMimeType: String?): String {
+    private fun String.withImageExtension(
+        sourceUrl: String,
+        responseMimeType: String?,
+    ): String {
         val current = substringAfterLast('.', missingDelimiterValue = "").lowercase(Locale.ROOT)
         if (current in SUPPORTED_EXTENSIONS) return this
-        val extension = when (responseMimeType) {
-            "image/png" -> "png"
-            "image/webp" -> "webp"
-            "image/gif" -> "gif"
-            else -> sourceUrl.imageExtension().takeIf { it in SUPPORTED_EXTENSIONS } ?: "jpg"
-        }
+        val extension =
+            when (responseMimeType) {
+                "image/png" -> "png"
+                "image/webp" -> "webp"
+                "image/gif" -> "gif"
+                else -> sourceUrl.imageExtension().takeIf { it in SUPPORTED_EXTENSIONS } ?: "jpg"
+            }
         return "$this.$extension"
     }
 
     private fun String.imageExtension(): String {
-        val urlExtension = runCatching {
-            Uri.parse(this).lastPathSegment
-                ?.substringAfterLast('.', missingDelimiterValue = "")
-                ?.lowercase(Locale.ROOT)
-                .orEmpty()
-        }.getOrDefault("")
+        val urlExtension =
+            runCatching {
+                Uri
+                    .parse(this)
+                    .lastPathSegment
+                    ?.substringAfterLast('.', missingDelimiterValue = "")
+                    ?.lowercase(Locale.ROOT)
+                    .orEmpty()
+            }.getOrDefault("")
         return MimeTypeMap.getFileExtensionFromUrl(this).takeIf { it.isNotBlank() } ?: urlExtension
     }
 
-    private fun String.ensureTrailingSlash(): String {
-        return if (endsWith('/')) this else "$this/"
-    }
+    private fun String.ensureTrailingSlash(): String = if (endsWith('/')) this else "$this/"
 
     companion object {
         private const val UNKNOWN_MODE = -1

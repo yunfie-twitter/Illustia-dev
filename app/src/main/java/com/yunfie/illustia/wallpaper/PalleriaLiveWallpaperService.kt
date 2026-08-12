@@ -1,14 +1,15 @@
 package com.yunfie.illustia.wallpaper
 
+import android.content.BroadcastReceiver
+import android.content.Context
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.RectF
-import android.content.BroadcastReceiver
-import android.content.Context
-import android.content.Intent
+import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.service.wallpaper.WallpaperService
@@ -21,9 +22,6 @@ import com.yunfie.illustia.nativebridge.NativeImageStore
 import com.yunfie.illustia.nativebridge.NativeSavedImage
 import com.yunfie.illustia.settings.AppSettings
 import com.yunfie.illustia.settings.SettingsStore
-import android.net.Uri
-import kotlin.math.max
-import kotlin.math.min
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -31,6 +29,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.max
+import kotlin.math.min
 
 class PalleriaLiveWallpaperService : WallpaperService() {
     companion object {
@@ -55,24 +55,33 @@ class PalleriaLiveWallpaperService : WallpaperService() {
         private var lastTapAt = 0L
         private var lastOffset = Float.NaN
         private var pendingScreenChange = false
-        private val settingsChangedReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                if (visible) loadNext(forceDifferent = false)
+        private val settingsChangedReceiver =
+            object : BroadcastReceiver() {
+                override fun onReceive(
+                    context: Context?,
+                    intent: Intent?,
+                ) {
+                    if (visible) loadNext(forceDifferent = false)
+                }
             }
-        }
-        private val screenOnReceiver = object : BroadcastReceiver() {
-            override fun onReceive(context: Context?, intent: Intent?) {
-                pendingScreenChange = true
-                renderSurface()
+        private val screenOnReceiver =
+            object : BroadcastReceiver() {
+                override fun onReceive(
+                    context: Context?,
+                    intent: Intent?,
+                ) {
+                    pendingScreenChange = true
+                    renderSurface()
+                }
             }
-        }
 
-        private val intervalRunnable = object : Runnable {
-            override fun run() {
-                if (!visible) return
-                loadNext(forceDifferent = true)
+        private val intervalRunnable =
+            object : Runnable {
+                override fun run() {
+                    if (!visible) return
+                    loadNext(forceDifferent = true)
+                }
             }
-        }
 
         override fun onCreate(surfaceHolder: SurfaceHolder) {
             super.onCreate(surfaceHolder)
@@ -97,7 +106,12 @@ class PalleriaLiveWallpaperService : WallpaperService() {
             renderSurface()
         }
 
-        override fun onSurfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+        override fun onSurfaceChanged(
+            holder: SurfaceHolder,
+            format: Int,
+            width: Int,
+            height: Int,
+        ) {
             super.onSurfaceChanged(holder, format, width, height)
             updateSurface(holder, width, height)
             renderSurface()
@@ -183,45 +197,54 @@ class PalleriaLiveWallpaperService : WallpaperService() {
         private fun loadNext(forceDifferent: Boolean) {
             if (!visible || !surfaceReady) return
             loadJob?.cancel()
-            loadJob = scope.launch {
-                val result = withContext(Dispatchers.IO) {
-                    val store = SettingsStore(applicationContext)
-                    val settings = store.read()
-                    if (settings.privacyModeEnabled) {
-                        return@withContext WallpaperLoadResult(settings, null, null)
-                    }
-                    val imageStore = NativeImageStore(applicationContext)
-                    val selectedFolder = settings.liveWallpaperSourceFolder
-                        .takeIf {
-                            settings.liveWallpaperSource == "selected_folder" ||
-                                settings.liveWallpaperSource == "folder"
+            loadJob =
+                scope.launch {
+                    val result =
+                        withContext(Dispatchers.IO) {
+                            val store = SettingsStore(applicationContext)
+                            val settings = store.read()
+                            if (settings.privacyModeEnabled) {
+                                return@withContext WallpaperLoadResult(settings, null, null)
+                            }
+                            val imageStore = NativeImageStore(applicationContext)
+                            val selectedFolder =
+                                settings.liveWallpaperSourceFolder
+                                    .takeIf {
+                                        settings.liveWallpaperSource == "selected_folder" ||
+                                            settings.liveWallpaperSource == "folder"
+                                    }
+                            val candidates = imageStore.listSavedImages(selectedFolder)
+                            val selected = selectCandidate(candidates, settings, currentPath, forceDifferent)
+                            val bitmap =
+                                selected
+                                    ?.uri
+                                    ?.let { decodeSampledBitmap(applicationContext, it, surfaceWidth, surfaceHeight) }
+                            WallpaperLoadResult(settings, selected?.uri, bitmap)
                         }
-                    val candidates = imageStore.listSavedImages(selectedFolder)
-                    val selected = selectCandidate(candidates, settings, currentPath, forceDifferent)
-                    val bitmap = selected?.uri
-                        ?.let { decodeSampledBitmap(applicationContext, it, surfaceWidth, surfaceHeight) }
-                    WallpaperLoadResult(settings, selected?.uri, bitmap)
-                }
 
-                if (!visible || !surfaceReady) {
-                    result.bitmap?.recycle()
-                    return@launch
+                    if (!visible || !surfaceReady) {
+                        result.bitmap?.recycle()
+                        return@launch
+                    }
+                    currentSettings = result.settings
+                    if (result.bitmap == null) {
+                        currentPath = null
+                        current?.recycle()
+                        current = null
+                        drawFallback(result.settings)
+                    } else {
+                        currentPath = result.path
+                        showBitmap(result.bitmap, result.settings)
+                    }
+                    scheduleNext(result.settings)
                 }
-                currentSettings = result.settings
-                if (result.bitmap == null) {
-                    currentPath = null
-                    current?.recycle()
-                    current = null
-                    drawFallback(result.settings)
-                } else {
-                    currentPath = result.path
-                    showBitmap(result.bitmap, result.settings)
-                }
-                scheduleNext(result.settings)
-            }
         }
 
-        private fun updateSurface(holder: SurfaceHolder, width: Int = 0, height: Int = 0) {
+        private fun updateSurface(
+            holder: SurfaceHolder,
+            width: Int = 0,
+            height: Int = 0,
+        ) {
             val frame = holder.surfaceFrame
             surfaceWidth = width.takeIf { it > 0 }
                 ?: frame.width().takeIf { it > 0 }
@@ -251,7 +274,10 @@ class PalleriaLiveWallpaperService : WallpaperService() {
             scheduleNext(settings)
         }
 
-        private fun showBitmap(bitmap: Bitmap, settings: AppSettings) {
+        private fun showBitmap(
+            bitmap: Bitmap,
+            settings: AppSettings,
+        ) {
             previous?.recycle()
             previous = current
             current = bitmap
@@ -265,19 +291,20 @@ class PalleriaLiveWallpaperService : WallpaperService() {
             }
             val startedAt = System.currentTimeMillis()
             val duration = 500L
-            val animate = object : Runnable {
-                override fun run() {
-                    if (!visible || current !== bitmap) return
-                    val progress = ((System.currentTimeMillis() - startedAt).toFloat() / duration).coerceIn(0f, 1f)
-                    drawCrossfade(previous, bitmap, progress, settings)
-                    if (progress < 1f) {
-                        handler.postDelayed(this, 16L)
-                    } else {
-                        previous?.recycle()
-                        previous = null
+            val animate =
+                object : Runnable {
+                    override fun run() {
+                        if (!visible || current !== bitmap) return
+                        val progress = ((System.currentTimeMillis() - startedAt).toFloat() / duration).coerceIn(0f, 1f)
+                        drawCrossfade(previous, bitmap, progress, settings)
+                        if (progress < 1f) {
+                            handler.postDelayed(this, 16L)
+                        } else {
+                            previous?.recycle()
+                            previous = null
+                        }
                     }
                 }
-            }
             handler.post(animate)
         }
 
@@ -291,7 +318,12 @@ class PalleriaLiveWallpaperService : WallpaperService() {
             }
         }
 
-        private fun drawCrossfade(old: Bitmap?, next: Bitmap, progress: Float, settings: AppSettings) {
+        private fun drawCrossfade(
+            old: Bitmap?,
+            next: Bitmap,
+            progress: Float,
+            settings: AppSettings,
+        ) {
             withCanvas { canvas ->
                 drawBackground(canvas, next, settings)
                 old?.let {
@@ -304,7 +336,11 @@ class PalleriaLiveWallpaperService : WallpaperService() {
             }
         }
 
-        private fun drawFrame(bitmap: Bitmap, alpha: Float, settings: AppSettings? = null) {
+        private fun drawFrame(
+            bitmap: Bitmap,
+            alpha: Float,
+            settings: AppSettings? = null,
+        ) {
             val resolved = settings ?: return
             withCanvas { canvas ->
                 drawBackground(canvas, bitmap, resolved)
@@ -334,17 +370,28 @@ class PalleriaLiveWallpaperService : WallpaperService() {
             return Bitmap.createScaledBitmap(bitmap, blurredWidth, blurredHeight, true)
         }
 
-        private fun drawBackground(canvas: Canvas, bitmap: Bitmap, settings: AppSettings) {
+        private fun drawBackground(
+            canvas: Canvas,
+            bitmap: Bitmap,
+            settings: AppSettings,
+        ) {
             when (settings.liveWallpaperBackground) {
-                "white" -> canvas.drawColor(Color.WHITE)
-                "dominant" -> canvas.drawColor(NativeImageAnalysis.dominantColor(bitmap))
+                "white" -> {
+                    canvas.drawColor(Color.WHITE)
+                }
+
+                "dominant" -> {
+                    canvas.drawColor(NativeImageAnalysis.dominantColor(bitmap))
+                }
+
                 "blur" -> {
                     canvas.drawColor(Color.BLACK)
-                    val blurred = if (bitmap === current && currentBlurred != null && !currentBlurred!!.isRecycled) {
-                        currentBlurred!!
-                    } else {
-                        createBlurred(bitmap)
-                    }
+                    val blurred =
+                        if (bitmap === current && currentBlurred != null && !currentBlurred!!.isRecycled) {
+                            currentBlurred!!
+                        } else {
+                            createBlurred(bitmap)
+                        }
                     paint.alpha = 190
                     drawScaled(canvas, blurred, "cover")
                     paint.alpha = 255
@@ -352,27 +399,36 @@ class PalleriaLiveWallpaperService : WallpaperService() {
                         blurred.recycle()
                     }
                 }
-                else -> canvas.drawColor(Color.BLACK)
+
+                else -> {
+                    canvas.drawColor(Color.BLACK)
+                }
             }
         }
 
-        private fun drawScaled(canvas: Canvas, bitmap: Bitmap, mode: String) {
+        private fun drawScaled(
+            canvas: Canvas,
+            bitmap: Bitmap,
+            mode: String,
+        ) {
             val sourceWidth = bitmap.width.toFloat()
             val sourceHeight = bitmap.height.toFloat()
-            val scale = when (mode) {
-                "contain" -> min(surfaceWidth / sourceWidth, surfaceHeight / sourceHeight)
-                "fit_width" -> surfaceWidth / sourceWidth
-                "fit_height" -> surfaceHeight / sourceHeight
-                else -> max(surfaceWidth / sourceWidth, surfaceHeight / sourceHeight)
-            }
+            val scale =
+                when (mode) {
+                    "contain" -> min(surfaceWidth / sourceWidth, surfaceHeight / sourceHeight)
+                    "fit_width" -> surfaceWidth / sourceWidth
+                    "fit_height" -> surfaceHeight / sourceHeight
+                    else -> max(surfaceWidth / sourceWidth, surfaceHeight / sourceHeight)
+                }
             val width = sourceWidth * scale
             val height = sourceHeight * scale
-            val destination = RectF(
-                (surfaceWidth - width) / 2f,
-                (surfaceHeight - height) / 2f,
-                (surfaceWidth + width) / 2f,
-                (surfaceHeight + height) / 2f,
-            )
+            val destination =
+                RectF(
+                    (surfaceWidth - width) / 2f,
+                    (surfaceHeight - height) / 2f,
+                    (surfaceWidth + width) / 2f,
+                    (surfaceHeight + height) / 2f,
+                )
             canvas.drawBitmap(bitmap, null, destination, paint)
         }
 
@@ -401,11 +457,12 @@ internal fun selectCandidate(
     forceDifferent: Boolean,
 ): NativeSavedImage? {
     if (candidates.isEmpty()) return null
-    val ordered = when (settings.liveWallpaperOrder) {
-        "newest" -> candidates.sortedByDescending { it.modifiedAtMillis }
-        "oldest" -> candidates.sortedBy { it.modifiedAtMillis }
-        else -> candidates.shuffled()
-    }
+    val ordered =
+        when (settings.liveWallpaperOrder) {
+            "newest" -> candidates.sortedByDescending { it.modifiedAtMillis }
+            "oldest" -> candidates.sortedBy { it.modifiedAtMillis }
+            else -> candidates.shuffled()
+        }
     if (!forceDifferent || ordered.size == 1) return ordered.first()
     val currentIndex = ordered.indexOfFirst { it.uri == currentPath }
     return when {
@@ -415,7 +472,12 @@ internal fun selectCandidate(
     }
 }
 
-private fun decodeSampledBitmap(context: Context, uriValue: String, width: Int, height: Int): Bitmap? {
+private fun decodeSampledBitmap(
+    context: Context,
+    uriValue: String,
+    width: Int,
+    height: Int,
+): Bitmap? {
     val uri = runCatching { Uri.parse(uriValue) }.getOrNull() ?: return null
     val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
     runCatching {

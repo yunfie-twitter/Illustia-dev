@@ -70,6 +70,7 @@ impl IllustDto {
             tags: self.tags.into_iter().filter_map(|tag| tag.name).collect(),
             page_count: self.page_count,
             is_bookmarked: self.is_bookmarked,
+            total_bookmarks: self.total_bookmarks,
             total_comments: self.total_comments,
             series: self.series.map(|series| IllustSeries {
                 id: series.id,

@@ -2,21 +2,29 @@ package com.yunfie.illustia.settings.store
 
 import android.content.SharedPreferences
 import android.util.Log
+import java.security.GeneralSecurityException
 import java.security.MessageDigest
 import java.security.SecureRandom
 import javax.crypto.SecretKeyFactory
 import javax.crypto.spec.PBEKeySpec
 
-internal fun savePinHash(prefs: SharedPreferences, pin: String) {
+internal fun savePinHash(
+    prefs: SharedPreferences,
+    pin: String,
+) {
     val salt = generateSalt()
     val hash = pbkdf2(pin, salt)
-    prefs.edit()
+    prefs
+        .edit()
         .putString(KEY_PIN_HASH, hash)
         .putString(KEY_PIN_SALT, salt)
         .apply()
 }
 
-internal fun verifyPinHash(prefs: SharedPreferences, pin: String): Boolean {
+internal fun verifyPinHash(
+    prefs: SharedPreferences,
+    pin: String,
+): Boolean {
     val storedHash = prefs.getString(KEY_PIN_HASH, null) ?: return false
     val salt = prefs.getString(KEY_PIN_SALT, null)
     if (salt == null) {
@@ -30,44 +38,49 @@ internal fun verifyPinHash(prefs: SharedPreferences, pin: String): Boolean {
     return constantTimeEquals(computed.toByteArray(), storedHash.toByteArray())
 }
 
-internal fun hasPinSet(prefs: SharedPreferences): Boolean {
-    return prefs.getString(KEY_PIN_HASH, null) != null
-}
+internal fun hasPinSet(prefs: SharedPreferences): Boolean = prefs.getString(KEY_PIN_HASH, null) != null
 
 internal fun clearPinHash(prefs: SharedPreferences) {
-    prefs.edit()
+    prefs
+        .edit()
         .remove(KEY_PIN_HASH)
         .remove(KEY_PIN_SALT)
         .apply()
 }
 
-internal fun saveUnlockCodeHash(prefs: SharedPreferences, code: String) {
+internal fun saveUnlockCodeHash(
+    prefs: SharedPreferences,
+    code: String,
+) {
     val salt = generateSalt()
     val hash = pbkdf2(code, salt)
-    prefs.edit()
+    prefs
+        .edit()
         .putString(KEY_UNLOCK_CODE_HASH, hash)
         .putString(KEY_UNLOCK_CODE_SALT, salt)
         .apply()
 }
 
-internal fun verifyUnlockCodeHash(prefs: SharedPreferences, code: String): Boolean {
+internal fun verifyUnlockCodeHash(
+    prefs: SharedPreferences,
+    code: String,
+): Boolean {
     return try {
         val storedHash = prefs.getString(KEY_UNLOCK_CODE_HASH, null) ?: return false
         val salt = prefs.getString(KEY_UNLOCK_CODE_SALT, null) ?: return false
         val computed = pbkdf2(code, salt)
         constantTimeEquals(computed.toByteArray(), storedHash.toByteArray())
-    } catch (e: Exception) {
-        Log.e("SettingsStore", "verifyUnlockCode error", e)
+    } catch (expectedFailure: GeneralSecurityException) {
+        Log.e("SettingsStore", "verifyUnlockCode error", expectedFailure)
         false
     }
 }
 
-internal fun hasUnlockCodeSet(prefs: SharedPreferences): Boolean {
-    return prefs.getString(KEY_UNLOCK_CODE_HASH, null) != null
-}
+internal fun hasUnlockCodeSet(prefs: SharedPreferences): Boolean = prefs.getString(KEY_UNLOCK_CODE_HASH, null) != null
 
 internal fun clearUnlockCodeHash(prefs: SharedPreferences) {
-    prefs.edit()
+    prefs
+        .edit()
         .remove(KEY_UNLOCK_CODE_HASH)
         .remove(KEY_UNLOCK_CODE_SALT)
         .apply()
@@ -75,10 +88,27 @@ internal fun clearUnlockCodeHash(prefs: SharedPreferences) {
 
 internal fun isValidUnlockCode(code: String): Boolean {
     if (code.length !in 4..20) return false
-    val allowedChars = setOf(
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-        '+', '-', '*', '×', '/', '÷', '.', '=',
-    )
+    val allowedChars =
+        setOf(
+            '0',
+            '1',
+            '2',
+            '3',
+            '4',
+            '5',
+            '6',
+            '7',
+            '8',
+            '9',
+            '+',
+            '-',
+            '*',
+            '×',
+            '/',
+            '÷',
+            '.',
+            '=',
+        )
     return code.all { it in allowedChars }
 }
 
@@ -88,13 +118,17 @@ private fun generateSalt(): String {
     return bytes.joinToString("") { "%02x".format(it) }
 }
 
-private fun pbkdf2(value: String, salt: String): String {
-    val spec = PBEKeySpec(
-        value.toCharArray(),
-        salt.toByteArray(Charsets.UTF_8),
-        PBKDF2_ITERATIONS,
-        PBKDF2_KEY_LENGTH,
-    )
+private fun pbkdf2(
+    value: String,
+    salt: String,
+): String {
+    val spec =
+        PBEKeySpec(
+            value.toCharArray(),
+            salt.toByteArray(Charsets.UTF_8),
+            PBKDF2_ITERATIONS,
+            PBKDF2_KEY_LENGTH,
+        )
     val factory = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA256")
     val hash = factory.generateSecret(spec).encoded
     return hash.joinToString("") { "%02x".format(it) }
@@ -106,6 +140,7 @@ private fun sha256(input: String): String {
     return hashBytes.joinToString("") { "%02x".format(it) }
 }
 
-private fun constantTimeEquals(a: ByteArray, b: ByteArray): Boolean {
-    return MessageDigest.isEqual(a, b)
-}
+private fun constantTimeEquals(
+    a: ByteArray,
+    b: ByteArray,
+): Boolean = MessageDigest.isEqual(a, b)

@@ -9,5 +9,5 @@ data class PallaSyncDeviceEntity(
     val chainId: String,
     val deviceName: String,
     val publicKey: String,
-    val joinedAtMs: Long
+    val joinedAtMs: Long,
 )

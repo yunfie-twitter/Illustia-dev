@@ -23,11 +23,12 @@ class SettingsStoreStartupTest {
             val marker = "startup-room-marker"
 
             try {
-                val updated = original.copy(
-                    privacyModeEnabled = true,
-                    searchHistory = listOf(marker),
-                    favoriteTags = listOf(marker),
-                )
+                val updated =
+                    original.copy(
+                        privacyModeEnabled = true,
+                        searchHistory = listOf(marker),
+                        favoriteTags = listOf(marker),
+                    )
                 store.write(updated, original)
 
                 SettingsStore.isPrivacyModeEnabledSync(context).shouldBeTrue()

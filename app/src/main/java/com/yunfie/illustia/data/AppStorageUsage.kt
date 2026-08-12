@@ -6,6 +6,7 @@ import android.content.Context
 import android.os.Build
 import android.os.Process
 import androidx.annotation.RequiresApi
+import com.yunfie.illustia.platform.PlatformCapabilities
 import java.io.File
 
 data class AppStorageUsage(
@@ -33,25 +34,26 @@ data class AppStorageUsage(
  * Reads storage figures for this app only. Call from a worker thread: the platform query can take
  * several seconds on some devices.
  */
-fun Context.readAppStorageUsage(): AppStorageUsage {
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+fun Context.readAppStorageUsage(): AppStorageUsage =
+    if (PlatformCapabilities.supportsStorageStats()) {
         runCatching { readPlatformStorageUsage() }.getOrElse { readStorageUsageManually() }
     } else {
         readStorageUsageManually()
     }
-}
 
 @RequiresApi(Build.VERSION_CODES.O)
 private fun Context.readPlatformStorageUsage(): AppStorageUsage {
-    val manager = getSystemService(StorageStatsManager::class.java)
-        ?: return readStorageUsageManually()
-    val stats = manager.queryStatsForPackage(
-        applicationInfo.storageUuid,
-        packageName,
-        Process.myUserHandle(),
-    )
+    val manager =
+        getSystemService(StorageStatsManager::class.java)
+            ?: return readStorageUsageManually()
+    val stats =
+        manager.queryStatsForPackage(
+            applicationInfo.storageUuid,
+            packageName,
+            Process.myUserHandle(),
+        )
 
-    return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
+    return if (PlatformCapabilities.supportsDetailedStorageStats()) {
         stats.toDetailedUsage()
     } else {
         AppStorageUsage(
@@ -63,8 +65,8 @@ private fun Context.readPlatformStorageUsage(): AppStorageUsage {
 }
 
 @RequiresApi(Build.VERSION_CODES.VANILLA_ICE_CREAM)
-private fun StorageStats.toDetailedUsage(): AppStorageUsage {
-    return AppStorageUsage(
+private fun StorageStats.toDetailedUsage(): AppStorageUsage =
+    AppStorageUsage(
         appBytes = appBytes,
         dataBytes = dataBytes,
         cacheBytes = cacheBytes,
@@ -75,28 +77,30 @@ private fun StorageStats.toDetailedUsage(): AppStorageUsage {
         referenceProfileBytes = getAppBytesByDataType(StorageStats.APP_DATA_TYPE_FILE_TYPE_REFERENCE_PROFILE),
         currentProfileBytes = getAppBytesByDataType(StorageStats.APP_DATA_TYPE_FILE_TYPE_CURRENT_PROFILE),
     )
-}
 
 @Suppress("DEPRECATION")
 private fun Context.readStorageUsageManually(): AppStorageUsage {
     val appInfo = applicationInfo
-    val appFiles = buildList {
-        add(File(appInfo.sourceDir))
-        appInfo.splitSourceDirs?.mapTo(this, ::File)
-        appInfo.nativeLibraryDir?.let { add(File(it)) }
-        obbDirs.filterNotNull().forEach(::add)
-    }
-    val cacheFiles = buildList {
-        add(cacheDir)
-        add(codeCacheDir)
-        externalCacheDirs.filterNotNull().forEach(::add)
-    }
-    val dataFiles = buildList {
-        add(dataDir)
-        getExternalFilesDirs(null).filterNotNull().forEach(::add)
-        externalCacheDirs.filterNotNull().forEach(::add)
-        externalMediaDirs.filterNotNull().forEach(::add)
-    }
+    val appFiles =
+        buildList {
+            add(File(appInfo.sourceDir))
+            appInfo.splitSourceDirs?.mapTo(this, ::File)
+            appInfo.nativeLibraryDir?.let { add(File(it)) }
+            obbDirs.filterNotNull().forEach(::add)
+        }
+    val cacheFiles =
+        buildList {
+            add(cacheDir)
+            add(codeCacheDir)
+            externalCacheDirs.filterNotNull().forEach(::add)
+        }
+    val dataFiles =
+        buildList {
+            add(dataDir)
+            getExternalFilesDirs(null).filterNotNull().forEach(::add)
+            externalCacheDirs.filterNotNull().forEach(::add)
+            externalMediaDirs.filterNotNull().forEach(::add)
+        }
 
     return AppStorageUsage(
         appBytes = appFiles.distinctBy(File::getAbsolutePath).sumOf(File::safeSize),
@@ -105,12 +109,11 @@ private fun Context.readStorageUsageManually(): AppStorageUsage {
     )
 }
 
-private fun File.safeSize(): Long {
-    return runCatching {
+private fun File.safeSize(): Long =
+    runCatching {
         when {
             !exists() -> 0L
             isFile -> length()
             else -> walkTopDown().filter(File::isFile).sumOf(File::length)
         }
     }.getOrDefault(0L)
-}

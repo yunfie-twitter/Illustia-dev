@@ -5,7 +5,6 @@ import io.kotest.matchers.booleans.shouldBeTrue
 import org.junit.jupiter.api.Test
 
 class SearchWorkTypeTest {
-
     @Test
     fun `all artwork option accepts illustrations manga and ugoira`() {
         SearchWorkType.Artworks.acceptsIllustType("illust").shouldBeTrue()

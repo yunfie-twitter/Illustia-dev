@@ -1,8 +1,8 @@
 package com.yunfie.illustia.pallasync.data
 
+import androidx.room.ColumnInfo
 import androidx.room.Entity
 import androidx.room.PrimaryKey
-import androidx.room.ColumnInfo
 
 @Entity(tableName = "pallasync_chain_state")
 data class ChainStateEntity(

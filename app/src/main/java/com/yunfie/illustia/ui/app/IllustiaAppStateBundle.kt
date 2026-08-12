@@ -19,24 +19,28 @@ internal class IllustiaAppStateBundle(
     val watchlistItems = state.watchlistItems
     val followingUsers = state.followingUsers
 
-    val homeChrome = HomeChromeState(
-        homeKind = state.homeKind,
-        homeNextUrl = state.homeNextUrl,
-        timelineNextUrl = state.timelineNextUrl,
-    )
-    val novelChrome = NovelChromeState(
-        novelNextUrl = state.novelNextUrl,
-    )
-    val rankingChrome = RankingChromeState(
-        rankingMode = state.rankingMode,
-        rankingNextUrl = state.rankingNextUrl,
-    )
-    val bookmarkChrome = BookmarkChromeState(
-        bookmarkNextUrl = state.bookmarkNextUrl,
-        timelineNextUrl = state.timelineNextUrl,
-        watchlistNextUrl = state.watchlistNextUrl,
-        activeWatchlistTag = state.activeWatchlistTag,
-        followingUsersNextUrl = state.followingUsersNextUrl,
-        selectedTab = state.bookmarkSelectedTab,
-    )
+    val homeChrome =
+        HomeChromeState(
+            homeKind = state.homeKind,
+            homeNextUrl = state.homeNextUrl,
+            timelineNextUrl = state.timelineNextUrl,
+        )
+    val novelChrome =
+        NovelChromeState(
+            novelNextUrl = state.novelNextUrl,
+        )
+    val rankingChrome =
+        RankingChromeState(
+            rankingMode = state.rankingMode,
+            rankingNextUrl = state.rankingNextUrl,
+        )
+    val bookmarkChrome =
+        BookmarkChromeState(
+            bookmarkNextUrl = state.bookmarkNextUrl,
+            timelineNextUrl = state.timelineNextUrl,
+            watchlistNextUrl = state.watchlistNextUrl,
+            activeWatchlistTag = state.activeWatchlistTag,
+            followingUsersNextUrl = state.followingUsersNextUrl,
+            selectedTab = state.bookmarkSelectedTab,
+        )
 }

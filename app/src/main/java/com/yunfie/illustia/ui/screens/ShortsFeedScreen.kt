@@ -16,13 +16,13 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -31,9 +31,9 @@ import com.yunfie.illustia.IllustiaViewModel
 import com.yunfie.illustia.R
 import com.yunfie.illustia.models.Illust
 import com.yunfie.illustia.ui.components.PixivImage
-import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Favorites
 import top.yukonga.miuix.kmp.icon.extended.FavoritesFill
@@ -49,13 +49,15 @@ fun ShortsFeedScreen(
 ) {
     val context = LocalContext.current
     val shareLabel = stringResource(R.string.action_share)
-    val initialPage = remember(items, currentIllustId) {
-        items.indexOfFirst { it.id == currentIllustId }.coerceAtLeast(0)
-    }
-    val pagerState = rememberPagerState(
-        initialPage = initialPage,
-        pageCount = { items.size },
-    )
+    val initialPage =
+        remember(items, currentIllustId) {
+            items.indexOfFirst { it.id == currentIllustId }.coerceAtLeast(0)
+        }
+    val pagerState =
+        rememberPagerState(
+            initialPage = initialPage,
+            pageCount = { items.size },
+        )
 
     LaunchedEffect(pagerState.currentPage, items) {
         items.getOrNull(pagerState.currentPage)?.let {
@@ -80,13 +82,14 @@ fun ShortsFeedScreen(
             VerticalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
                 val illust = items[page]
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black)
-                        .combinedClickable(
-                            onClick = { viewModel.openIllust(illust) },
-                            onLongClick = { viewModel.onIllustLongPress(illust) },
-                        ),
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .background(Color.Black)
+                            .combinedClickable(
+                                onClick = { viewModel.openIllust(illust) },
+                                onLongClick = { viewModel.onIllustLongPress(illust) },
+                            ),
                 ) {
                     PixivImage(
                         url = illust.imageUrl.ifBlank { illust.previewUrl },
@@ -96,15 +99,15 @@ fun ShortsFeedScreen(
                         modifier = Modifier.fillMaxSize(),
                     )
                     Box(
-                        modifier = Modifier
-                            .align(Alignment.BottomCenter)
-                            .fillMaxWidth()
-                            .background(
-                                Brush.verticalGradient(
-                                    listOf(Color.Transparent, Color.Black.copy(alpha = 0.82f)),
-                                ),
-                            )
-                            .padding(start = 20.dp, end = 92.dp, top = 72.dp, bottom = 24.dp),
+                        modifier =
+                            Modifier
+                                .align(Alignment.BottomCenter)
+                                .fillMaxWidth()
+                                .background(
+                                    Brush.verticalGradient(
+                                        listOf(Color.Transparent, Color.Black.copy(alpha = 0.82f)),
+                                    ),
+                                ).padding(start = 20.dp, end = 92.dp, top = 72.dp, bottom = 24.dp),
                     ) {
                         Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
                             Text(
@@ -128,9 +131,10 @@ fun ShortsFeedScreen(
                         }
                     }
                     Column(
-                        modifier = Modifier
-                            .align(Alignment.BottomEnd)
-                            .padding(end = 10.dp, bottom = 40.dp),
+                        modifier =
+                            Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(end = 10.dp, bottom = 40.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
@@ -160,10 +164,11 @@ fun ShortsFeedScreen(
                         }
                         IconButton(
                             onClick = {
-                                val intent = Intent(Intent.ACTION_SEND).apply {
-                                    type = "text/plain"
-                                    putExtra(Intent.EXTRA_TEXT, "https://www.pixiv.net/artworks/${illust.id}")
-                                }
+                                val intent =
+                                    Intent(Intent.ACTION_SEND).apply {
+                                        type = "text/plain"
+                                        putExtra(Intent.EXTRA_TEXT, "https://www.pixiv.net/artworks/${illust.id}")
+                                    }
                                 context.startActivity(Intent.createChooser(intent, shareLabel))
                             },
                             modifier = Modifier.size(64.dp),

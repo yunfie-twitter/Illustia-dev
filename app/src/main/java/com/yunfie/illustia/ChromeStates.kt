@@ -30,4 +30,3 @@ data class PixivWebLoginRequest(
     val authorizationUrl: String,
     val codeVerifier: String,
 )
-

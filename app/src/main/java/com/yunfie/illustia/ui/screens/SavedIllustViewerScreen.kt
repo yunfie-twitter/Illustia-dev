@@ -29,8 +29,15 @@ import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
-fun SavedIllustViewerScreen(state: IllustiaUiState, viewModel: IllustiaViewModel, onBack: () -> Unit) {
-    PredictiveBackGestureHandler(onBack = { viewModel.closeSavedIllustViewer(); onBack() })
+fun SavedIllustViewerScreen(
+    state: IllustiaUiState,
+    viewModel: IllustiaViewModel,
+    onBack: () -> Unit,
+) {
+    PredictiveBackGestureHandler(onBack = {
+        viewModel.closeSavedIllustViewer()
+        onBack()
+    })
     val item = state.selectedSavedIllustId?.let { id -> state.savedIllusts.firstOrNull { it.illustId == id } }
     val imageUrl = item?.localCoverPath?.takeIf { it.isNotBlank() } ?: item?.thumbUrl.orEmpty()
     val scrollBehavior = MiuixScrollBehavior()
@@ -41,31 +48,45 @@ fun SavedIllustViewerScreen(state: IllustiaUiState, viewModel: IllustiaViewModel
                 title = item?.title ?: stringResource(R.string.offline_library_title),
                 largeTitle = item?.title ?: stringResource(R.string.offline_library_title),
                 scrollBehavior = scrollBehavior,
-                navigationIcon = { HeaderIcon(MiuixIcons.Back, onClick = { viewModel.closeSavedIllustViewer(); onBack() }) },
+                navigationIcon = {
+                    HeaderIcon(MiuixIcons.Back, onClick = {
+                        viewModel.closeSavedIllustViewer()
+                        onBack()
+                    })
+                },
             )
         },
     ) { padding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .background(MiuixTheme.colorScheme.surface),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .background(MiuixTheme.colorScheme.surface),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = padding.calculateTopPadding() + 16.dp, bottom = 96.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(item?.artistName.orEmpty(), color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
-                    Text(item?.pageCount?.let { stringResource(R.string.data_items_count, it) }.orEmpty(), color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
+                    Text(
+                        item
+                            ?.pageCount
+                            ?.let {
+                                stringResource(R.string.data_items_count, it)
+                            }.orEmpty(),
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    )
                 }
             }
             item {
                 AsyncImage(
                     model = imageUrl,
                     contentDescription = item?.title,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(420.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .height(420.dp),
                 )
             }
         }

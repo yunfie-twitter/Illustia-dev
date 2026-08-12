@@ -9,11 +9,27 @@ import org.junit.jupiter.api.Test
 import kotlin.random.Random
 
 class SettingsStorePrivacyModePropertyTest {
-
-    private val allowedChars = listOf(
-        '0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
-        '+', '-', '*', '×', '/', '÷', '.', '='
-    )
+    private val allowedChars =
+        listOf(
+            '0',
+            '1',
+            '2',
+            '3',
+            '4',
+            '5',
+            '6',
+            '7',
+            '8',
+            '9',
+            '+',
+            '-',
+            '*',
+            '×',
+            '/',
+            '÷',
+            '.',
+            '=',
+        )
 
     private val context: Context
         get() = ApplicationProvider.getApplicationContext<Context>()
@@ -62,11 +78,10 @@ class SettingsStorePrivacyModePropertyTest {
         }
     }
 
-    private fun randomCode(length: Int): String {
-        return buildString(length) {
+    private fun randomCode(length: Int): String =
+        buildString(length) {
             repeat(length) {
                 append(allowedChars.random())
             }
         }
-    }
 }

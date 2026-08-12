@@ -12,6 +12,9 @@ import com.yunfie.illustia.models.StoredAccount
 
 private const val DEFAULT_SEED_COLOR = 0xFF42A5F5L
 
+val DEFAULT_NAVIGATION_ORDER = listOf("home", "search", "bookmarks", "ranking", "more")
+val DEFAULT_DETAIL_SECTION_ORDER = listOf("artist", "tags", "description", "related")
+
 @Immutable
 data class AppSettings(
     val refreshToken: String = "",
@@ -51,6 +54,15 @@ data class AppSettings(
     val swipeToSwitchWorks: Boolean = true,
     val secureWindow: Boolean = false,
     val amoledMode: Boolean = false,
+    val navigationOrder: List<String> = DEFAULT_NAVIGATION_ORDER,
+    val hiddenNavigationTabs: List<String> = emptyList(),
+    val navigationStyle: String = "standard",
+    val artworkThemeEnabled: Boolean = false,
+    val showCardTitle: Boolean = true,
+    val showCardArtist: Boolean = true,
+    val showCardTags: Boolean = false,
+    val showCardBookmarkCount: Boolean = false,
+    val detailSectionOrder: List<String> = DEFAULT_DETAIL_SECTION_ORDER,
     val skipConfirmOnDetailSave: Boolean = false,
     val showAiBadge: Boolean = true,
     val followOnLike: Boolean = false,
@@ -97,7 +109,7 @@ data class AppSettings(
     val accounts: List<StoredAccount> = emptyList(),
     val activeAccountIndex: Int = -1,
     val privacyModeEnabled: Boolean = false,
-    val privacyModeAutoLockTiming: String = "immediate",  // immediate|30s|1m|5m|10m|disabled
+    val privacyModeAutoLockTiming: String = "immediate", // immediate|30s|1m|5m|10m|disabled
     val hideRecents: Boolean = true,
     val hideNotifications: Boolean = false,
     val dummyAppName: String = "",

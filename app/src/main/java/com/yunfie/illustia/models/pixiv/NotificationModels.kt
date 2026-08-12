@@ -23,6 +23,12 @@ data class NotificationContent(
     val rightImage: String?,
 )
 
-data class NotificationViewMore(val unreadExists: Boolean, val title: String?)
+data class NotificationViewMore(
+    val unreadExists: Boolean,
+    val title: String?,
+)
 
-data class PixivStamp(val id: Long, val url: String)
+data class PixivStamp(
+    val id: Long,
+    val url: String,
+)

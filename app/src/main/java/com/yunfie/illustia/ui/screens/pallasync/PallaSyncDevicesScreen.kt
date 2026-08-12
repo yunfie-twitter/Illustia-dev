@@ -82,16 +82,18 @@ fun PallaSyncDevicesScreen(
         },
     ) { scaffoldPadding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .background(MiuixTheme.colorScheme.surface),
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                end = 16.dp,
-                top = scaffoldPadding.calculateTopPadding() + 16.dp,
-                bottom = 96.dp,
-            ),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .background(MiuixTheme.colorScheme.surface),
+            contentPadding =
+                PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = scaffoldPadding.calculateTopPadding() + 16.dp,
+                    bottom = 96.dp,
+                ),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             item {

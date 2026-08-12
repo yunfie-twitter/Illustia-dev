@@ -1,11 +1,14 @@
 package com.yunfie.illustia.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,12 +31,29 @@ import com.yunfie.illustia.ui.components.MiuixConfirmDialog
 import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
 import com.yunfie.illustia.ui.components.adaptiveIllustColumns
 import com.yunfie.illustia.visibleWithSettings
-import top.yukonga.miuix.kmp.basic.*
+import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.InputField
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.SearchBar
+import top.yukonga.miuix.kmp.basic.Surface
+import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.*
+import top.yukonga.miuix.kmp.icon.extended.All
+import top.yukonga.miuix.kmp.icon.extended.Back
+import top.yukonga.miuix.kmp.icon.extended.Background
+import top.yukonga.miuix.kmp.icon.extended.Close
+import top.yukonga.miuix.kmp.icon.extended.Delete
+import top.yukonga.miuix.kmp.icon.extended.Filter
+import top.yukonga.miuix.kmp.icon.extended.Import
+import top.yukonga.miuix.kmp.icon.extended.Search
+import top.yukonga.miuix.kmp.icon.extended.Settings
+import top.yukonga.miuix.kmp.icon.extended.Show
+import top.yukonga.miuix.kmp.icon.extended.Theme
+import top.yukonga.miuix.kmp.icon.extended.Trim
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.foundation.lazy.grid.items as gridItems
 
 private enum class ViewHistoryDeleteTarget {
     All,
@@ -57,15 +77,20 @@ fun ViewHistoryScreen(
     val hasSelection = selectedIds.isNotEmpty()
     val selectedCountText = stringResource(R.string.data_items_count, selectedIds.size)
 
-    val visibleHistory = remember(state.settings.viewHistory, state.settings, searchQuery) {
-        val history = state.settings.viewHistory.visibleWithSettings(state.settings)
-        val query = searchQuery.trim()
-        if (query.isEmpty()) history else history.filter { illust ->
-            illust.title.contains(query, ignoreCase = true) ||
-                illust.artistName.contains(query, ignoreCase = true) ||
-                illust.tags.any { it.contains(query, ignoreCase = true) }
+    val visibleHistory =
+        remember(state.settings.viewHistory, state.settings, searchQuery) {
+            val history = state.settings.viewHistory.visibleWithSettings(state.settings)
+            val query = searchQuery.trim()
+            if (query.isEmpty()) {
+                history
+            } else {
+                history.filter { illust ->
+                    illust.title.contains(query, ignoreCase = true) ||
+                        illust.artistName.contains(query, ignoreCase = true) ||
+                        illust.tags.any { it.contains(query, ignoreCase = true) }
+                }
+            }
         }
-    }
 
     LaunchedEffect(visibleHistory) {
         val availableIds = visibleHistory.asSequence().map { it.id }.toSet()
@@ -79,14 +104,16 @@ fun ViewHistoryScreen(
     }
 
     deleteTarget?.let { target ->
-        val title = when (target) {
-            ViewHistoryDeleteTarget.All -> stringResource(R.string.data_delete_view_history)
-            ViewHistoryDeleteTarget.Selected -> stringResource(R.string.view_history_delete_selected)
-        }
-        val summary = when (target) {
-            ViewHistoryDeleteTarget.All -> stringResource(R.string.data_delete_view_history_desc)
-            ViewHistoryDeleteTarget.Selected -> stringResource(R.string.view_history_delete_selected_desc, selectedCountText)
-        }
+        val title =
+            when (target) {
+                ViewHistoryDeleteTarget.All -> stringResource(R.string.data_delete_view_history)
+                ViewHistoryDeleteTarget.Selected -> stringResource(R.string.view_history_delete_selected)
+            }
+        val summary =
+            when (target) {
+                ViewHistoryDeleteTarget.All -> stringResource(R.string.data_delete_view_history_desc)
+                ViewHistoryDeleteTarget.Selected -> stringResource(R.string.view_history_delete_selected_desc, selectedCountText)
+            }
         MiuixConfirmDialog(
             show = true,
             title = title,
@@ -132,80 +159,81 @@ fun ViewHistoryScreen(
         LazyVerticalGrid(
             state = gridState,
             columns = GridCells.Fixed(adaptiveIllustColumns(state.settings)),
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .background(MiuixTheme.colorScheme.surface),
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                end = 16.dp,
-                top = scaffoldPadding.calculateTopPadding() + 14.dp,
-                bottom = 96.dp,
-            ),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .background(MiuixTheme.colorScheme.surface),
+            contentPadding =
+                PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = scaffoldPadding.calculateTopPadding() + 14.dp,
+                    bottom = 96.dp,
+                ),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-
-        if (showSearch) {
-            item(span = { GridItemSpan(maxLineSpan) }, contentType = "history_search") {
-                SearchBar(
-                    inputField = {
-                        InputField(
-                            query = searchQuery,
-                            onQueryChange = { searchQuery = it },
-                            onSearch = { showSearch = false },
-                            expanded = showSearch,
-                            onExpandedChange = { showSearch = it },
-                            label = stringResource(R.string.view_history_search_hint),
-                        )
-                    },
-                    expanded = showSearch,
-                    onExpandedChange = { showSearch = it },
-                    modifier = Modifier.fillMaxWidth(),
-                    outsideEndAction = {
-                        HeaderIcon(
-                            icon = MiuixIcons.Close,
-                            onClick = {
-                                searchQuery = ""
-                                showSearch = false
-                            },
-                        )
-                    },
-                ) {}
-            }
-        }
-
-        if (visibleHistory.isEmpty()) {
-            item(span = { GridItemSpan(maxLineSpan) }) {
-                EmptyState(stringResource(R.string.search_empty_illust))
-            }
-        }
-
-        gridItems(visibleHistory, key = { it.id }, contentType = { "illust_card" }) { illust ->
-            val isSelected = illust.id in selectedIds
-            LaunchedEffect(illust.id) {
-                if (illust.artistId == 0L) {
-                    viewModel.lazyLoadPartialIllust(illust.id)
+            if (showSearch) {
+                item(span = { GridItemSpan(maxLineSpan) }, contentType = "history_search") {
+                    SearchBar(
+                        inputField = {
+                            InputField(
+                                query = searchQuery,
+                                onQueryChange = { searchQuery = it },
+                                onSearch = { showSearch = false },
+                                expanded = showSearch,
+                                onExpandedChange = { showSearch = it },
+                                label = stringResource(R.string.view_history_search_hint),
+                            )
+                        },
+                        expanded = showSearch,
+                        onExpandedChange = { showSearch = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        outsideEndAction = {
+                            HeaderIcon(
+                                icon = MiuixIcons.Close,
+                                onClick = {
+                                    searchQuery = ""
+                                    showSearch = false
+                                },
+                            )
+                        },
+                    ) {}
                 }
             }
-            IllustCard(
-                illust = illust,
-                isSelected = isSelected,
-                onBookmark = { viewModel.toggleBookmark(illust) },
-                onClick = {
-                    if (hasSelection) {
-                        selectedIds = if (isSelected) selectedIds - illust.id else selectedIds + illust.id
-                    } else {
-                        viewModel.openIllust(illust)
+
+            if (visibleHistory.isEmpty()) {
+                item(span = { GridItemSpan(maxLineSpan) }) {
+                    EmptyState(stringResource(R.string.search_empty_illust))
+                }
+            }
+
+            gridItems(visibleHistory, key = { it.id }, contentType = { "illust_card" }) { illust ->
+                val isSelected = illust.id in selectedIds
+                LaunchedEffect(illust.id) {
+                    if (illust.artistId == 0L) {
+                        viewModel.lazyLoadPartialIllust(illust.id)
                     }
-                },
-                onLongClick = {
-                    selectedIds = if (isSelected) selectedIds - illust.id else selectedIds + illust.id
-                },
-                highQualityImages = feedHighQuality,
-                showAiBadge = showAiBadge,
-            )
+                }
+                IllustCard(
+                    illust = illust,
+                    isSelected = isSelected,
+                    onBookmark = { viewModel.toggleBookmark(illust) },
+                    onClick = {
+                        if (hasSelection) {
+                            selectedIds = if (isSelected) selectedIds - illust.id else selectedIds + illust.id
+                        } else {
+                            viewModel.openIllust(illust)
+                        }
+                    },
+                    onLongClick = {
+                        selectedIds = if (isSelected) selectedIds - illust.id else selectedIds + illust.id
+                    },
+                    highQualityImages = feedHighQuality,
+                    showAiBadge = showAiBadge,
+                )
+            }
         }
-    }
     }
 }

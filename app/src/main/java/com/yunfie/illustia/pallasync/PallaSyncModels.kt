@@ -23,17 +23,17 @@ data class DataPayload(
     val context: Map<String, Long>,
     val lamport: Long,
     val created_at_ms: Long,
-    val body: JsonElement
+    val body: JsonElement,
 )
 
 @Serializable
 data class FavoriteTagBody(
-    val tag: String
+    val tag: String,
 )
 
 @Serializable
 data class SearchHistoryBody(
-    val query: String
+    val query: String,
 )
 
 @Serializable

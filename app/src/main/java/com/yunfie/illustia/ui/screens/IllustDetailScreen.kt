@@ -1,9 +1,9 @@
 package com.yunfie.illustia.ui.screens
 
 import android.content.ClipData
-import android.content.Intent
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -15,7 +15,14 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
@@ -30,7 +37,6 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -50,6 +56,7 @@ import androidx.compose.ui.unit.sp
 import com.yunfie.illustia.R
 import com.yunfie.illustia.models.Illust
 import com.yunfie.illustia.models.pixiv.Comment
+import com.yunfie.illustia.models.pixiv.UgoiraPlayback
 import com.yunfie.illustia.nativebridge.NativeIntentEvent
 import com.yunfie.illustia.nativebridge.NativeIntentRouter
 import com.yunfie.illustia.ui.components.AvatarImage
@@ -65,10 +72,19 @@ import com.yunfie.illustia.ui.components.PixivImage
 import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
 import com.yunfie.illustia.ui.components.miuixClickable
 import com.yunfie.illustia.ui.components.performAppHapticFeedback
-import com.yunfie.illustia.models.pixiv.UgoiraPlayback
-import top.yukonga.miuix.kmp.basic.*
+import kotlinx.coroutines.delay
+import top.yukonga.miuix.kmp.basic.FloatingActionButton
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.Surface
+import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.*
+import top.yukonga.miuix.kmp.icon.extended.Background
+import top.yukonga.miuix.kmp.icon.extended.Favorites
+import top.yukonga.miuix.kmp.icon.extended.FavoritesFill
+import top.yukonga.miuix.kmp.icon.extended.Import
+import top.yukonga.miuix.kmp.icon.extended.Show
+import top.yukonga.miuix.kmp.icon.extended.Theme
 import top.yukonga.miuix.kmp.menu.WindowIconDropdownMenu
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
@@ -106,6 +122,7 @@ fun IllustDetailScreen(
     prefetchImages: Boolean,
     confirmOnLongPressSave: Boolean,
     skipConfirmOnDetailSave: Boolean,
+    detailSectionOrder: List<String>,
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
@@ -117,7 +134,7 @@ fun IllustDetailScreen(
     val isArtworkMuted = isArtistMuted || isTagMuted
     var revealMutedArtwork by remember(illust.id, isArtistMuted, isTagMuted) { mutableStateOf(!isArtworkMuted) }
     val pixivUrl = remember(illust.id) { "https://www.pixiv.net/artworks/${illust.id}" }
-    
+
     // 詳細画面を開く際の重さを軽減するために、関連作品だけを遅延レンダリングする
     var showHeavyContent by remember { mutableStateOf(false) }
     LaunchedEffect(illust.id) {
@@ -154,7 +171,11 @@ fun IllustDetailScreen(
         )
     }
 
-    fun requestSave(url: String, filename: String, requireConfirm: Boolean) {
+    fun requestSave(
+        url: String,
+        filename: String,
+        requireConfirm: Boolean,
+    ) {
         if (requireConfirm) {
             pendingSave = url to filename
         } else {
@@ -176,11 +197,84 @@ fun IllustDetailScreen(
         }
     }
 
+    val mutedArtworkTitle =
+        if (isArtistMuted) {
+            stringResource(R.string.detail_muted_artist)
+        } else {
+            stringResource(R.string.detail_muted_work)
+        }
+    val mutedArtworkSummary =
+        if (isArtistMuted) {
+            stringResource(
+                R.string.detail_muted_artist_blur,
+                illust.artistName.ifBlank { stringResource(R.string.detail_muted_artist_blur_default) },
+            )
+        } else {
+            stringResource(R.string.detail_muted_work_blur)
+        }
+    val detailHeaderContent: @Composable (Boolean, Modifier) -> Unit = { expanded, modifier ->
+        IllustDetailHeader(
+            illust = illust,
+            highQualityImages = highQualityImages,
+            detailQuality = detailQuality,
+            prefetchImages = prefetchImages,
+            confirmOnLongPressSave = confirmOnLongPressSave,
+            skipConfirmOnDetailSave = skipConfirmOnDetailSave,
+            pixivUrl = pixivUrl,
+            onBack = onBack,
+            onOpenImage = onOpenImage,
+            onDoubleTapImage = ::likeFromDoubleTap,
+            onSaveImage = { url, name, confirm -> requestSave(url, name, confirm) },
+            onSaveAllImages = onSaveAllImages,
+            onMuteIllust = onMuteIllust,
+            onMuteUser = onMuteUser,
+            onMessage = onMessage,
+            loadUgoiraPlayback = loadUgoiraPlayback,
+            showImage = true,
+            maskMutedArtwork = isArtworkMuted && !revealMutedArtwork,
+            onRevealMutedArtwork = { revealMutedArtwork = true },
+            mutedArtworkTitle = mutedArtworkTitle,
+            mutedArtworkSummary = mutedArtworkSummary,
+            expanded = expanded,
+            modifier = modifier,
+        )
+    }
+    val detailInfoContent: @Composable () -> Unit = {
+        IllustDetailInfo(
+            illust = illust,
+            isArtistFollowed = isArtistFollowed,
+            isArtistMuted = isArtistMuted,
+            onOpenUser = { onOpenUser(illust.artistId) },
+            onOpenUserById = onOpenUser,
+            onOpenIllustById = onOpenIllustById,
+            onOpenComments = onOpenComments,
+            onOpenSeries = onOpenSeries,
+            onToggleFollow = {
+                if (isArtistFollowed) showUnfollowConfirm = true else onToggleFollow()
+            },
+            onUnmuteUser = onUnmuteUser,
+            onSearchTag = onSearchTag,
+            onLongPressTag = onLongPressTag,
+            sectionOrder = detailSectionOrder,
+            relatedContent = {
+                if (showHeavyContent) {
+                    RelatedIllustsList(
+                        relatedIllusts = relatedIllusts,
+                        onOpenIllust = onOpenIllust,
+                        onLongPressIllust = onLongPressIllust,
+                    )
+                } else {
+                    LoadingIndicator(modifier = Modifier.padding(vertical = 24.dp))
+                }
+            },
+        )
+    }
+
     Scaffold(
         containerColor = MiuixTheme.colorScheme.surface,
         floatingActionButton = {
-                FloatingActionButton(
-                    onClick = {
+            FloatingActionButton(
+                onClick = {
                     if (illust.isBookmarked) {
                         performAppHapticFeedback(context, haptic, hapticMode)
                         onBookmark()
@@ -203,99 +297,58 @@ fun IllustDetailScreen(
         },
     ) { scaffoldPadding ->
         Box(modifier = Modifier.fillMaxSize()) {
-        Surface(
-            modifier = Modifier.fillMaxSize().padding(bottom = scaffoldPadding.calculateBottomPadding().coerceAtLeast(0.dp)),
-            color = MiuixTheme.colorScheme.surface,
-        ) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(MiuixTheme.colorScheme.surface),
-            contentPadding = PaddingValues(bottom = 96.dp),
-        ) {
-            item {
-                IllustDetailHeader(
-                    illust = illust,
-                    highQualityImages = highQualityImages,
-                    detailQuality = detailQuality,
-                    prefetchImages = prefetchImages,
-                    confirmOnLongPressSave = confirmOnLongPressSave,
-                    skipConfirmOnDetailSave = skipConfirmOnDetailSave,
-                    pixivUrl = pixivUrl,
-                    onBack = onBack,
-                    onOpenImage = onOpenImage,
-                    onDoubleTapImage = ::likeFromDoubleTap,
-                    onSaveImage = { url, name, confirm -> requestSave(url, name, confirm) },
-                    onSaveAllImages = onSaveAllImages,
-                    onMuteIllust = onMuteIllust,
-                    onMuteUser = onMuteUser,
-                    onMessage = onMessage,
-                    loadUgoiraPlayback = loadUgoiraPlayback,
-                    showImage = true,
-                    maskMutedArtwork = isArtworkMuted && !revealMutedArtwork,
-                    onRevealMutedArtwork = { revealMutedArtwork = true },
-                    mutedArtworkTitle = if (isArtistMuted) {
-                        stringResource(R.string.detail_muted_artist)
+            Surface(
+                modifier = Modifier.fillMaxSize().padding(bottom = scaffoldPadding.calculateBottomPadding().coerceAtLeast(0.dp)),
+                color = MiuixTheme.colorScheme.surface,
+            ) {
+                BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                    val useTwoPaneLayout = maxWidth >= 840.dp && maxWidth > maxHeight
+                    if (useTwoPaneLayout) {
+                        Row(modifier = Modifier.fillMaxSize()) {
+                            detailHeaderContent(true, Modifier.weight(1.1f).fillMaxHeight())
+                            LazyColumn(
+                                modifier =
+                                    Modifier
+                                        .weight(0.9f)
+                                        .fillMaxHeight()
+                                        .background(MiuixTheme.colorScheme.surface),
+                                contentPadding = PaddingValues(bottom = 96.dp),
+                            ) {
+                                item { detailInfoContent() }
+                            }
+                        }
                     } else {
-                        stringResource(R.string.detail_muted_work)
-                    },
-                    mutedArtworkSummary = if (isArtistMuted) {
-                        stringResource(
-                            R.string.detail_muted_artist_blur,
-                            illust.artistName.ifBlank { stringResource(R.string.detail_muted_artist_blur_default) },
-                        )
-                    } else {
-                        stringResource(R.string.detail_muted_work_blur)
-                    },
-                )
-            }
-            item {
-                IllustDetailInfo(
-                    illust = illust,
-                    isArtistFollowed = isArtistFollowed,
-                    isArtistMuted = isArtistMuted,
-                    onOpenUser = { onOpenUser(illust.artistId) },
-                    onOpenUserById = onOpenUser,
-                    onOpenIllustById = onOpenIllustById,
-                    onOpenComments = onOpenComments,
-                    onOpenSeries = onOpenSeries,
-                    onToggleFollow = {
-                        if (isArtistFollowed) showUnfollowConfirm = true else onToggleFollow()
-                    },
-                    onUnmuteUser = onUnmuteUser,
-                    onSearchTag = onSearchTag,
-                    onLongPressTag = onLongPressTag,
-                )
-            }
-            
-            if (showHeavyContent) {
-                item {
-                    RelatedIllustsList(
-                        relatedIllusts = relatedIllusts,
-                        onOpenIllust = onOpenIllust,
-                        onLongPressIllust = onLongPressIllust,
+                        LazyColumn(
+                            modifier =
+                                Modifier
+                                    .fillMaxSize()
+                                    .background(MiuixTheme.colorScheme.surface),
+                            contentPadding = PaddingValues(bottom = 96.dp),
+                        ) {
+                            item { detailHeaderContent(false, Modifier) }
+                            item { detailInfoContent() }
+                        }
+                    }
+                }
+                AnimatedVisibility(
+                    visible = showLikeAnimation,
+                    modifier = Modifier.align(Alignment.Center),
+                    enter =
+                        fadeIn() +
+                            scaleIn(
+                                initialScale = 0.25f,
+                                animationSpec = spring(dampingRatio = 0.42f, stiffness = 420f),
+                            ),
+                    exit = fadeOut() + scaleOut(targetScale = 1.35f),
+                ) {
+                    Icon(
+                        imageVector = MiuixIcons.FavoritesFill,
+                        contentDescription = null,
+                        tint = MiuixTheme.colorScheme.error,
+                        modifier = Modifier.size(112.dp),
                     )
                 }
             }
         }
-        AnimatedVisibility(
-            visible = showLikeAnimation,
-            modifier = Modifier.align(Alignment.Center),
-            enter = fadeIn() + scaleIn(
-                initialScale = 0.25f,
-                animationSpec = spring(dampingRatio = 0.42f, stiffness = 420f),
-            ),
-            exit = fadeOut() + scaleOut(targetScale = 1.35f),
-        ) {
-            Icon(
-                imageVector = MiuixIcons.FavoritesFill,
-                contentDescription = null,
-                tint = MiuixTheme.colorScheme.error,
-                modifier = Modifier.size(112.dp),
-            )
-        }
-        }
     }
 }
-}
-

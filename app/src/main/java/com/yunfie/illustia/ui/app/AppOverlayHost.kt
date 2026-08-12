@@ -2,7 +2,11 @@ package com.yunfie.illustia.ui.app
 
 import android.content.Intent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -18,8 +22,8 @@ import androidx.compose.ui.unit.dp
 import com.yunfie.illustia.IllustiaViewModel
 import com.yunfie.illustia.R
 import com.yunfie.illustia.ui.components.BottomSheetInsideMargin
-import com.yunfie.illustia.ui.components.LocalBottomSheetBackgroundColor
 import com.yunfie.illustia.ui.components.LoadingIndicator
+import com.yunfie.illustia.ui.components.LocalBottomSheetBackgroundColor
 import com.yunfie.illustia.ui.components.MiuixConfirmDialog
 import com.yunfie.illustia.ui.components.TagPreviewBottomSheet
 import com.yunfie.illustia.ui.components.overlayActionButtonColors
@@ -150,12 +154,14 @@ internal fun AppOverlayHost(
     }
 
     appState.state.longPressedTag?.let { preview ->
-        val isFavorite = appState.settings.favoriteTags.any {
-            it.equals(preview.tag, ignoreCase = true)
-        }
-        val isMuted = appState.settings.mutedTags.any {
-            it.equals(preview.tag, ignoreCase = true)
-        }
+        val isFavorite =
+            appState.settings.favoriteTags.any {
+                it.equals(preview.tag, ignoreCase = true)
+            }
+        val isMuted =
+            appState.settings.mutedTags.any {
+                it.equals(preview.tag, ignoreCase = true)
+            }
         TagPreviewBottomSheet(
             preview = preview,
             isFavorite = isFavorite,
@@ -171,8 +177,11 @@ internal fun AppOverlayHost(
             },
             onToggleMute = {
                 viewModel.closeTagOptions()
-                if (isMuted) viewModel.unmuteTag(preview.tag)
-                else viewModel.muteTag(preview.tag)
+                if (isMuted) {
+                    viewModel.unmuteTag(preview.tag)
+                } else {
+                    viewModel.muteTag(preview.tag)
+                }
             },
         )
     }
@@ -205,36 +214,39 @@ internal fun AppOverlayHost(
                             )
                         }
                         WindowIconDropdownMenu(
-                            entry = DropdownEntry(
-                                items = listOf(
-                                    DropdownItem(
-                                        text = shareLabel,
-                                        onClick = {
-                                            runCatching {
-                                                val intent = Intent(Intent.ACTION_SEND).apply {
-                                                    type = "text/plain"
-                                                    putExtra(Intent.EXTRA_TEXT, "$shareTitle\n$profileUrl")
-                                                }
-                                                context.startActivity(Intent.createChooser(intent, shareLabel))
-                                            }.onFailure { viewModel.showMessage(shareFailedMessage) }
-                                        },
-                                    ),
-                                    DropdownItem(
-                                        text = stringResource(R.string.user_tab_related),
-                                        onClick = {
-                                            showRelatedUsers = true
-                                            viewModel.loadSelectedRelatedUsers()
-                                        },
-                                    ),
-                                    DropdownItem(
-                                        text = stringResource(R.string.dialog_mute),
-                                        onClick = {
-                                            viewModel.muteUser(user.id)
-                                            viewModel.closeUser()
-                                        },
-                                    ),
+                            entry =
+                                DropdownEntry(
+                                    items =
+                                        listOf(
+                                            DropdownItem(
+                                                text = shareLabel,
+                                                onClick = {
+                                                    runCatching {
+                                                        val intent =
+                                                            Intent(Intent.ACTION_SEND).apply {
+                                                                type = "text/plain"
+                                                                putExtra(Intent.EXTRA_TEXT, "$shareTitle\n$profileUrl")
+                                                            }
+                                                        context.startActivity(Intent.createChooser(intent, shareLabel))
+                                                    }.onFailure { viewModel.showMessage(shareFailedMessage) }
+                                                },
+                                            ),
+                                            DropdownItem(
+                                                text = stringResource(R.string.user_tab_related),
+                                                onClick = {
+                                                    showRelatedUsers = true
+                                                    viewModel.loadSelectedRelatedUsers()
+                                                },
+                                            ),
+                                            DropdownItem(
+                                                text = stringResource(R.string.dialog_mute),
+                                                onClick = {
+                                                    viewModel.muteUser(user.id)
+                                                    viewModel.closeUser()
+                                                },
+                                            ),
+                                        ),
                                 ),
-                            ),
                         ) {
                             Icon(
                                 imageVector = MiuixIcons.More,
@@ -271,7 +283,9 @@ internal fun AppOverlayHost(
                     onToggleFollow = { viewModel.toggleFollow(user) },
                     onMuteUser = { viewModel.muteUser(user.id) },
                     onMessage = viewModel::showMessage,
-                    isMuted = appState.state.settings.mutedUsers.contains(user.id),
+                    isMuted =
+                        appState.state.settings.mutedUsers
+                            .contains(user.id),
                     onUnmuteUser = { viewModel.unmuteUser(user.id) },
                     gridState = viewModel.userProfileGridState(user.id),
                     showHeaderControls = false,
@@ -324,10 +338,11 @@ internal fun AppOverlayHost(
         MiuixConfirmDialog(
             show = true,
             title = stringResource(R.string.dialog_unbookmark_title),
-            summary = stringResource(
-                R.string.dialog_unbookmark_confirm,
-                illust.title.ifBlank { stringResource(R.string.detail_muted_artist_blur_default) },
-            ),
+            summary =
+                stringResource(
+                    R.string.dialog_unbookmark_confirm,
+                    illust.title.ifBlank { stringResource(R.string.detail_muted_artist_blur_default) },
+                ),
             confirmText = stringResource(R.string.action_remove_bookmark),
             destructive = true,
             onConfirm = viewModel::confirmBookmarkRemoval,

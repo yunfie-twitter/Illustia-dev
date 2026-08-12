@@ -1,12 +1,12 @@
 package com.yunfie.illustia.ui.app
 
+import androidx.compose.animation.ContentTransform
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.animation.ContentTransform
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -43,9 +43,9 @@ import com.yunfie.illustia.ui.screens.IllustSeriesScreen
 import com.yunfie.illustia.ui.screens.ImageSettingsScreen
 import com.yunfie.illustia.ui.screens.ImageViewerScreen
 import com.yunfie.illustia.ui.screens.MuteSettingsScreen
+import com.yunfie.illustia.ui.screens.NotificationScreen
 import com.yunfie.illustia.ui.screens.NovelReaderScreen
 import com.yunfie.illustia.ui.screens.NovelScreen
-import com.yunfie.illustia.ui.screens.NotificationScreen
 import com.yunfie.illustia.ui.screens.OfflineLibraryScreen
 import com.yunfie.illustia.ui.screens.OnboardingScreen
 import com.yunfie.illustia.ui.screens.PinSetupScreen
@@ -79,381 +79,395 @@ internal fun AppNavHost(
     onSearchTag: (String) -> Unit,
     onTabSelected: (Int, AppTab) -> Unit,
 ) {
-    val entryProvider = entryProvider<NavKey> {
-        entry(AppRoute.Main) {
-            MainSurface(
-                appState = appState,
-                viewModel = viewModel,
-                selectedTab = selectedTab,
-                pagerState = pagerState,
-                homeScrollBehavior = homeScrollBehavior,
-                onTabSelected = onTabSelected,
-                onSearch = {
-                    if (appState.settings.shortsFeedEnabled) {
-                        onNavigate(AppRoute.Search)
-                    } else {
-                        onTabSelected(mainTabs(false).indexOf(AppTab.Search), AppTab.Search)
-                    }
-                },
-                onOpenNovels = {
-                    onNavigate(AppRoute.NovelList)
-                },
-                onOpenComments = { illustId ->
-                    onSelectedCommentTargetChange(illustId to CommentArtworkType.ILLUST)
-                },
-                onOpenWatchlistSeries = { seriesId ->
-                    onSelectedWatchlistSeriesIdChange(seriesId)
-                    onNavigate(AppRoute.IllustSeries)
-                },
-            )
-        }
-        entry(AppRoute.Search) {
-            SearchScreen(state = appState.state, viewModel = viewModel)
-        }
-        entry<AppRoute.TagSearch>(
-            metadata = artworkPageTransitionMetadata(),
-        ) {
-            SearchScreen(
-                state = appState.state,
-                viewModel = viewModel,
-                onBackFromResults = onPopRoute,
-            )
-        }
-        entry(AppRoute.Onboarding) {
-            var showTokenLoginSheet by remember { mutableStateOf(false) }
-            OnboardingScreen(
-                state = appState.state,
-                viewModel = viewModel,
-                onRefreshTokenLogin = { showTokenLoginSheet = true },
-                showTokenLogin = showTokenLoginSheet,
-                onTokenLoginDismiss = { showTokenLoginSheet = false },
-            )
-        }
-        entry<AppRoute.Detail>(
-            metadata = artworkPageTransitionMetadata(),
-        ) { route ->
-            val selectedIllust = appState.state.selectedIllust
-            val snapshot = if (selectedIllust?.id == route.illustId) {
-                DetailEntrySnapshot(
-                    illust = selectedIllust,
-                    relatedIllusts = appState.state.relatedIllusts,
-                    firstComment = appState.state.selectedIllustFirstComment,
-                    user = appState.state.selectedIllustUser,
-                )
-            } else {
-                detailSnapshots[route.illustId]
-            }
-            snapshot?.let { detail ->
-                val illust = detail.illust
-                IllustDetailScreen(
-                    illust = illust,
-                    relatedIllusts = detail.relatedIllusts,
-                    firstComment = detail.firstComment,
-                    onBack = onPopRoute,
-                    onBookmark = { viewModel.toggleBookmark(illust) },
-                    onOpenUser = viewModel::openUser,
-                    onOpenComments = {
-                        onSelectedCommentTargetChange(illust.id to CommentArtworkType.ILLUST)
-                    },
-                    onOpenSeries = illust.series?.id?.let { seriesId ->
-                        {
-                            onSelectedWatchlistSeriesIdChange(seriesId)
-                            onNavigate(AppRoute.IllustSeries)
+    val entryProvider =
+        entryProvider<NavKey> {
+            entry(AppRoute.Main) {
+                MainSurface(
+                    appState = appState,
+                    viewModel = viewModel,
+                    selectedTab = selectedTab,
+                    pagerState = pagerState,
+                    homeScrollBehavior = homeScrollBehavior,
+                    onTabSelected = onTabSelected,
+                    onSearch = {
+                        if (appState.settings.shortsFeedEnabled) {
+                            onNavigate(AppRoute.Search)
+                        } else {
+                            onTabSelected(mainTabs(appState.settings).indexOf(AppTab.Search), AppTab.Search)
                         }
                     },
-                    onOpenImage = { page -> viewModel.openImageViewer(illust, page) },
-                    onSearchTag = onSearchTag,
-                    onLongPressTag = { tag ->
-                        viewModel.openTagOptions(
-                            rawTag = tag,
-                            imageUrl = illust.squareImageUrl.ifBlank {
-                                illust.thumbnailUrl.ifBlank { illust.imageUrl }
-                            },
-                        )
+                    onOpenNovels = {
+                        onNavigate(AppRoute.NovelList)
                     },
-                    isArtistFollowed = detail.user?.isFollowed == true,
-                    isArtistMuted = appState.state.settings.mutedUsers.contains(illust.artistId),
-                    isTagMuted = illust.isMutedByTags(appState.state.settings),
-                    onToggleFollow = {
-                        detail.user?.let { viewModel.toggleFollow(it) }
-                            ?: viewModel.openUser(illust.artistId)
+                    onOpenComments = { illustId ->
+                        onSelectedCommentTargetChange(illustId to CommentArtworkType.ILLUST)
                     },
-                    onUnmuteUser = { viewModel.unmuteUser(illust.artistId) },
-                    onMuteIllust = { viewModel.muteIllust(illust.id) },
-                    onMuteUser = { viewModel.muteUser(illust.artistId) },
-                    onMuteTag = { tag -> viewModel.muteTag(tag) },
-                    onOpenIllust = viewModel::openIllust,
-                    onLongPressIllust = viewModel::onIllustLongPress,
-                    onOpenIllustById = viewModel::openIllust,
-                    onSaveImage = viewModel::saveImage,
-                    onSaveAllImages = viewModel::saveImages,
-                    onMessage = viewModel::showMessage,
-                    loadUgoiraPlayback = viewModel::loadUgoiraPlayback,
-                    highQualityImages = appState.state.settings.highQualityImages,
-                    detailQuality = if (illust.type == "manga") {
-                        appState.state.settings.mangaDetailQuality
-                    } else {
-                        appState.state.settings.illustDetailQuality
+                    onOpenWatchlistSeries = { seriesId ->
+                        onSelectedWatchlistSeriesIdChange(seriesId)
+                        onNavigate(AppRoute.IllustSeries)
                     },
-                    prefetchImages = appState.state.settings.prefetchImages,
-                    confirmOnLongPressSave = appState.state.settings.confirmOnLongPressSave,
-                    skipConfirmOnDetailSave = appState.state.settings.skipConfirmOnDetailSave,
-                )
-            } ?: Box(
-                modifier = Modifier.fillMaxSize().background(MiuixTheme.colorScheme.surface),
-                contentAlignment = Alignment.Center,
-            ) { LoadingIndicator() }
-        }
-        entry(
-            AppRoute.ImageViewer,
-            metadata = artworkPageTransitionMetadata(),
-        ) {
-            appState.state.imageViewerIllust?.let { illust ->
-                ImageViewerScreen(
-                    illust = illust,
-                    startPage = appState.state.imageViewerStartPage,
-                    onBack = onPopRoute,
-                    isBookmarked = illust.isBookmarked,
-                    onBookmark = { viewModel.toggleBookmark(illust) },
-                    onMessage = viewModel::showMessage,
-                    fullscreenQuality = appState.state.settings.fullscreenQuality,
-                    prefetchImages = appState.state.settings.prefetchImages,
-                    mangaReaderMode = appState.state.settings.mangaReaderMode,
-                    onPageChanged = viewModel::updateImageViewerPage,
-                    loadUgoiraPlayback = viewModel::loadUgoiraPlayback,
                 )
             }
-        }
-        entry(AppRoute.NovelList) {
-            NovelScreen(
-                items = appState.novelItems,
-                loadState = appState.loadState,
-                nextUrl = appState.novelChrome.novelNextUrl,
-                settings = appState.settings,
-                viewModel = viewModel,
-                onBack = onPopRoute,
-            )
-        }
-        entry(AppRoute.NovelReader) {
-            NovelReaderScreen(
-                novel = appState.state.selectedNovel,
-                text = appState.state.selectedNovelText,
-                loadState = appState.loadState,
-                viewModel = viewModel,
-                onBack = onPopRoute,
-                onRetry = {
-                    appState.state.selectedNovel?.let(viewModel::openNovel)
-                },
-            )
-        }
-        entry(AppRoute.Settings) {
-            SettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
-        }
-        entry(AppRoute.GeneralSettings) {
-            GeneralSettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
-        }
-        entry(AppRoute.ExperimentalSettings) {
-            ExperimentalSettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
-        }
-        entry(AppRoute.ImageSettings) {
-            ImageSettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
-        }
-        entry(AppRoute.BookmarkSettings) {
-            BookmarkSettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
-        }
-        entry(AppRoute.AccountSettings) {
-            AccountSettingsScreen(
-                state = appState.state,
-                viewModel = viewModel,
-                onBack = onPopRoute,
-                onOpenPallaSync = { onNavigate(AppRoute.PallaSyncSettings) }
-            )
-        }
-        entry(AppRoute.PallaSyncSettings) {
-            com.yunfie.illustia.ui.screens.pallasync.PallaSyncSettingsScreen(
-                state = appState.state,
-                viewModel = viewModel,
-                onBack = onPopRoute,
-                onPairDevice = { onNavigate(AppRoute.DevicePairing) },
-                onDeviceClick = { deviceId, deviceName ->
-                    onNavigate(AppRoute.DeviceViewHistory(deviceId, deviceName))
+            entry(AppRoute.Search) {
+                SearchScreen(state = appState.state, viewModel = viewModel)
+            }
+            entry<AppRoute.TagSearch>(
+                metadata = artworkPageTransitionMetadata(),
+            ) {
+                SearchScreen(
+                    state = appState.state,
+                    viewModel = viewModel,
+                    onBackFromResults = onPopRoute,
+                )
+            }
+            entry(AppRoute.Onboarding) {
+                var showTokenLoginSheet by remember { mutableStateOf(false) }
+                OnboardingScreen(
+                    state = appState.state,
+                    viewModel = viewModel,
+                    onRefreshTokenLogin = { showTokenLoginSheet = true },
+                    showTokenLogin = showTokenLoginSheet,
+                    onTokenLoginDismiss = { showTokenLoginSheet = false },
+                )
+            }
+            entry<AppRoute.Detail>(
+                metadata = artworkPageTransitionMetadata(),
+            ) { route ->
+                val selectedIllust = appState.state.selectedIllust
+                val snapshot =
+                    if (selectedIllust?.id == route.illustId) {
+                        DetailEntrySnapshot(
+                            illust = selectedIllust,
+                            relatedIllusts = appState.state.relatedIllusts,
+                            firstComment = appState.state.selectedIllustFirstComment,
+                            user = appState.state.selectedIllustUser,
+                        )
+                    } else {
+                        detailSnapshots[route.illustId]
+                    }
+                snapshot?.let { detail ->
+                    val illust = detail.illust
+                    IllustDetailScreen(
+                        illust = illust,
+                        relatedIllusts = detail.relatedIllusts,
+                        firstComment = detail.firstComment,
+                        onBack = onPopRoute,
+                        onBookmark = { viewModel.toggleBookmark(illust) },
+                        onOpenUser = viewModel::openUser,
+                        onOpenComments = {
+                            onSelectedCommentTargetChange(illust.id to CommentArtworkType.ILLUST)
+                        },
+                        onOpenSeries =
+                            illust.series?.id?.let { seriesId ->
+                                {
+                                    onSelectedWatchlistSeriesIdChange(seriesId)
+                                    onNavigate(AppRoute.IllustSeries)
+                                }
+                            },
+                        onOpenImage = { page -> viewModel.openImageViewer(illust, page) },
+                        onSearchTag = onSearchTag,
+                        onLongPressTag = { tag ->
+                            viewModel.openTagOptions(
+                                rawTag = tag,
+                                imageUrl =
+                                    illust.squareImageUrl.ifBlank {
+                                        illust.thumbnailUrl.ifBlank { illust.imageUrl }
+                                    },
+                            )
+                        },
+                        isArtistFollowed = detail.user?.isFollowed == true,
+                        isArtistMuted =
+                            appState.state.settings.mutedUsers
+                                .contains(illust.artistId),
+                        isTagMuted = illust.isMutedByTags(appState.state.settings),
+                        onToggleFollow = {
+                            detail.user?.let { viewModel.toggleFollow(it) }
+                                ?: viewModel.openUser(illust.artistId)
+                        },
+                        onUnmuteUser = { viewModel.unmuteUser(illust.artistId) },
+                        onMuteIllust = { viewModel.muteIllust(illust.id) },
+                        onMuteUser = { viewModel.muteUser(illust.artistId) },
+                        onMuteTag = { tag -> viewModel.muteTag(tag) },
+                        onOpenIllust = viewModel::openIllust,
+                        onLongPressIllust = viewModel::onIllustLongPress,
+                        onOpenIllustById = viewModel::openIllust,
+                        onSaveImage = viewModel::saveImage,
+                        onSaveAllImages = viewModel::saveImages,
+                        onMessage = viewModel::showMessage,
+                        loadUgoiraPlayback = viewModel::loadUgoiraPlayback,
+                        highQualityImages = appState.state.settings.highQualityImages,
+                        detailQuality =
+                            if (illust.type == "manga") {
+                                appState.state.settings.mangaDetailQuality
+                            } else {
+                                appState.state.settings.illustDetailQuality
+                            },
+                        prefetchImages = appState.state.settings.prefetchImages,
+                        confirmOnLongPressSave = appState.state.settings.confirmOnLongPressSave,
+                        skipConfirmOnDetailSave = appState.state.settings.skipConfirmOnDetailSave,
+                        detailSectionOrder = appState.state.settings.detailSectionOrder,
+                    )
+                } ?: Box(
+                    modifier = Modifier.fillMaxSize().background(MiuixTheme.colorScheme.surface),
+                    contentAlignment = Alignment.Center,
+                ) { LoadingIndicator() }
+            }
+            entry(
+                AppRoute.ImageViewer,
+                metadata = artworkPageTransitionMetadata(),
+            ) {
+                appState.state.imageViewerIllust?.let { illust ->
+                    ImageViewerScreen(
+                        illust = illust,
+                        startPage = appState.state.imageViewerStartPage,
+                        onBack = onPopRoute,
+                        isBookmarked = illust.isBookmarked,
+                        onBookmark = { viewModel.toggleBookmark(illust) },
+                        onMessage = viewModel::showMessage,
+                        fullscreenQuality = appState.state.settings.fullscreenQuality,
+                        prefetchImages = appState.state.settings.prefetchImages,
+                        mangaReaderMode = appState.state.settings.mangaReaderMode,
+                        onPageChanged = viewModel::updateImageViewerPage,
+                        loadUgoiraPlayback = viewModel::loadUgoiraPlayback,
+                    )
                 }
-            )
-        }
-        entry(AppRoute.PallaSyncDevices) {
-            com.yunfie.illustia.ui.screens.pallasync.PallaSyncDevicesScreen(
-                state = appState.state,
-                onBack = onPopRoute,
-                onDeviceClick = { deviceId, deviceName ->
-                    onNavigate(AppRoute.DeviceViewHistory(deviceId, deviceName))
-                },
-            )
-        }
-        entry(AppRoute.DevicePairing) {
-            com.yunfie.illustia.ui.screens.pallasync.DevicePairingScreen(
-                serverUrl = appState.state.settings.pallaSyncServerUrl,
-                onBack = onPopRoute,
-                onPairSuccess = {
-                    onPopRoute()
-                }
-            )
-        }
-        entry(AppRoute.AccountLoginMethod) {
-            AccountLoginMethodScreen(
-                onBack = onPopRoute,
-                onWebLogin = viewModel::openWebLogin,
-                onRefreshTokenLogin = { onShowTokenLoginChange(true) },
-            )
-        }
-        entry(AppRoute.DataSettings) {
-            DataSettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
-        }
-        entry(AppRoute.ViewHistory) {
-            ViewHistoryScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
-        }
-        entry(AppRoute.Notifications) {
-            NotificationScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
-        }
-        entry(AppRoute.MuteSettings) {
-            MuteSettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
-        }
-        entry(AppRoute.AppData) {
-            AppDataScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
-        }
-        entry(AppRoute.DownloadQueue) {
-            DownloadQueueScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
-        }
-        entry(AppRoute.OfflineLibrary) {
-            OfflineLibraryScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
-        }
-        entry(AppRoute.SavedIllustViewer) {
-            SavedIllustViewerScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
-        }
-        entry(AppRoute.About) {
-            AboutScreen(onBack = onPopRoute)
-        }
-        entry(AppRoute.FavoriteTags) {
-            FavoriteTagsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
-        }
-        entry(AppRoute.WatchlistSeries) {
-            WatchlistSeriesScreen(
-                viewModel = viewModel,
-                onBack = onPopRoute,
-                onOpenSeries = { seriesId ->
-                    onSelectedWatchlistSeriesIdChange(seriesId)
-                    onNavigate(AppRoute.IllustSeries)
-                },
-            )
-        }
-        entry(AppRoute.IllustSeries) {
-            val currentSeriesId = selectedWatchlistSeriesId
-            if (currentSeriesId != null) {
-                IllustSeriesScreen(
-                    seriesId = currentSeriesId,
+            }
+            entry(AppRoute.NovelList) {
+                NovelScreen(
+                    items = appState.novelItems,
+                    loadState = appState.loadState,
+                    nextUrl = appState.novelChrome.novelNextUrl,
+                    settings = appState.settings,
                     viewModel = viewModel,
                     onBack = onPopRoute,
-                    onOpenIllust = { illustId -> viewModel.openIllust(illustId) },
                 )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MiuixTheme.colorScheme.surface),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    LoadingIndicator()
+            }
+            entry(AppRoute.NovelReader) {
+                NovelReaderScreen(
+                    novel = appState.state.selectedNovel,
+                    text = appState.state.selectedNovelText,
+                    loadState = appState.loadState,
+                    viewModel = viewModel,
+                    onBack = onPopRoute,
+                    onRetry = {
+                        appState.state.selectedNovel?.let(viewModel::openNovel)
+                    },
+                )
+            }
+            entry(AppRoute.Settings) {
+                SettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
+            }
+            entry(AppRoute.GeneralSettings) {
+                GeneralSettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
+            }
+            entry(AppRoute.ExperimentalSettings) {
+                ExperimentalSettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
+            }
+            entry(AppRoute.ImageSettings) {
+                ImageSettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
+            }
+            entry(AppRoute.BookmarkSettings) {
+                BookmarkSettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
+            }
+            entry(AppRoute.AccountSettings) {
+                AccountSettingsScreen(
+                    state = appState.state,
+                    viewModel = viewModel,
+                    onBack = onPopRoute,
+                    onOpenPallaSync = { onNavigate(AppRoute.PallaSyncSettings) },
+                )
+            }
+            entry(AppRoute.PallaSyncSettings) {
+                com.yunfie.illustia.ui.screens.pallasync.PallaSyncSettingsScreen(
+                    state = appState.state,
+                    viewModel = viewModel,
+                    onBack = onPopRoute,
+                    onPairDevice = { onNavigate(AppRoute.DevicePairing) },
+                    onDeviceClick = { deviceId, deviceName ->
+                        onNavigate(AppRoute.DeviceViewHistory(deviceId, deviceName))
+                    },
+                )
+            }
+            entry(AppRoute.PallaSyncDevices) {
+                com.yunfie.illustia.ui.screens.pallasync.PallaSyncDevicesScreen(
+                    state = appState.state,
+                    onBack = onPopRoute,
+                    onDeviceClick = { deviceId, deviceName ->
+                        onNavigate(AppRoute.DeviceViewHistory(deviceId, deviceName))
+                    },
+                )
+            }
+            entry(AppRoute.DevicePairing) {
+                com.yunfie.illustia.ui.screens.pallasync.DevicePairingScreen(
+                    serverUrl = appState.state.settings.pallaSyncServerUrl,
+                    onBack = onPopRoute,
+                    onPairSuccess = {
+                        onPopRoute()
+                    },
+                )
+            }
+            entry(AppRoute.AccountLoginMethod) {
+                AccountLoginMethodScreen(
+                    onBack = onPopRoute,
+                    onWebLogin = viewModel::openWebLogin,
+                    onRefreshTokenLogin = { onShowTokenLoginChange(true) },
+                )
+            }
+            entry(AppRoute.DataSettings) {
+                DataSettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
+            }
+            entry(AppRoute.ViewHistory) {
+                ViewHistoryScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
+            }
+            entry(AppRoute.Notifications) {
+                NotificationScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
+            }
+            entry(AppRoute.MuteSettings) {
+                MuteSettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
+            }
+            entry(AppRoute.AppData) {
+                AppDataScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
+            }
+            entry(AppRoute.DownloadQueue) {
+                DownloadQueueScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
+            }
+            entry(AppRoute.OfflineLibrary) {
+                OfflineLibraryScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
+            }
+            entry(AppRoute.SavedIllustViewer) {
+                SavedIllustViewerScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
+            }
+            entry(AppRoute.About) {
+                AboutScreen(onBack = onPopRoute)
+            }
+            entry(AppRoute.FavoriteTags) {
+                FavoriteTagsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
+            }
+            entry(AppRoute.WatchlistSeries) {
+                WatchlistSeriesScreen(
+                    viewModel = viewModel,
+                    onBack = onPopRoute,
+                    onOpenSeries = { seriesId ->
+                        onSelectedWatchlistSeriesIdChange(seriesId)
+                        onNavigate(AppRoute.IllustSeries)
+                    },
+                )
+            }
+            entry(AppRoute.IllustSeries) {
+                val currentSeriesId = selectedWatchlistSeriesId
+                if (currentSeriesId != null) {
+                    IllustSeriesScreen(
+                        seriesId = currentSeriesId,
+                        viewModel = viewModel,
+                        onBack = onPopRoute,
+                        onOpenIllust = { illustId -> viewModel.openIllust(illustId) },
+                    )
+                } else {
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .background(MiuixTheme.colorScheme.surface),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        LoadingIndicator()
+                    }
                 }
             }
-        }
-        entry<AppRoute.UserProfile> { route ->
-            val selectedUser = appState.state.selectedUser
-            if (selectedUser?.id == route.userId) {
-                val user = selectedUser
-                UserProfileScreen(
-                    user = user,
-                    settings = appState.state.settings,
-                    illusts = appState.state.selectedUserIllusts,
-                    bookmarks = appState.state.selectedUserBookmarks,
-                    relatedUsers = appState.state.selectedRelatedUsers,
-                    hasMore = appState.state.selectedUserNextUrl != null,
-                    bookmarkHasMore = appState.state.selectedUserBookmarksNextUrl != null,
-                    relatedUsersHasMore = appState.state.selectedRelatedUsersNextUrl != null,
-                    relatedUsersLoading = appState.state.selectedRelatedUsersLoading,
-                    onBack = {
-                        if (appState.state.userPageFromSheet) {
-                            viewModel.collapseUserPageToSheet()
-                        } else {
-                            viewModel.hideUserPage()
-                            onPopRoute()
-                        }
-                    },
-                    onOpenIllust = { illust ->
+            entry<AppRoute.UserProfile> { route ->
+                val selectedUser = appState.state.selectedUser
+                if (selectedUser?.id == route.userId) {
+                    val user = selectedUser
+                    UserProfileScreen(
+                        user = user,
+                        settings = appState.state.settings,
+                        illusts = appState.state.selectedUserIllusts,
+                        bookmarks = appState.state.selectedUserBookmarks,
+                        relatedUsers = appState.state.selectedRelatedUsers,
+                        hasMore = appState.state.selectedUserNextUrl != null,
+                        bookmarkHasMore = appState.state.selectedUserBookmarksNextUrl != null,
+                        relatedUsersHasMore = appState.state.selectedRelatedUsersNextUrl != null,
+                        relatedUsersLoading = appState.state.selectedRelatedUsersLoading,
+                        onBack = {
+                            if (appState.state.userPageFromSheet) {
+                                viewModel.collapseUserPageToSheet()
+                            } else {
+                                viewModel.hideUserPage()
+                                onPopRoute()
+                            }
+                        },
+                        onOpenIllust = { illust ->
+                            viewModel.openIllust(illust)
+                        },
+                        onBookmark = viewModel::toggleBookmark,
+                        onLoadMore = viewModel::loadMoreUserIllusts,
+                        onLoadBookmarks = viewModel::loadSelectedUserBookmarks,
+                        onLoadMoreBookmarks = viewModel::loadMoreSelectedUserBookmarks,
+                        onLoadRelatedUsers = viewModel::loadSelectedRelatedUsers,
+                        onLoadMoreRelatedUsers = viewModel::loadMoreSelectedRelatedUsers,
+                        onOpenRelatedUser = viewModel::openUserPage,
+                        onToggleFollow = { viewModel.toggleFollow(user) },
+                        onMuteUser = { viewModel.muteUser(user.id) },
+                        onMessage = viewModel::showMessage,
+                        isMuted =
+                            appState.state.settings.mutedUsers
+                                .contains(user.id),
+                        onUnmuteUser = { viewModel.unmuteUser(user.id) },
+                        gridState = viewModel.userProfileGridState(user.id),
+                        showHeaderControls = true,
+                    )
+                } else {
+                    Box(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .background(MiuixTheme.colorScheme.surface),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        LoadingIndicator()
+                    }
+                }
+            }
+            entry(AppRoute.AppLockSetup) {
+                AppLockSetupScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
+            }
+            entry(AppRoute.AppLockPinEntry) {
+                PinSetupScreen(
+                    isChange = appState.state.settings.appLockEnabled,
+                    viewModel = viewModel,
+                    onBack = onPopRoute,
+                )
+            }
+            entry(AppRoute.PrivacyModeSettings) {
+                PrivacyModeSettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
+            }
+            entry<AppRoute.DeviceViewHistory> { route ->
+                com.yunfie.illustia.ui.screens.pallasync.DeviceViewHistoryScreen(
+                    deviceId = route.deviceId,
+                    deviceName = route.deviceName,
+                    state = appState.state,
+                    viewModel = viewModel,
+                    onBack = onPopRoute,
+                    onIllustClick = { illust ->
                         viewModel.openIllust(illust)
+                        onNavigate(AppRoute.Detail(illust.id))
                     },
-                    onBookmark = viewModel::toggleBookmark,
-                    onLoadMore = viewModel::loadMoreUserIllusts,
-                    onLoadBookmarks = viewModel::loadSelectedUserBookmarks,
-                    onLoadMoreBookmarks = viewModel::loadMoreSelectedUserBookmarks,
-                    onLoadRelatedUsers = viewModel::loadSelectedRelatedUsers,
-                    onLoadMoreRelatedUsers = viewModel::loadMoreSelectedRelatedUsers,
-                    onOpenRelatedUser = viewModel::openUserPage,
-                    onToggleFollow = { viewModel.toggleFollow(user) },
-                    onMuteUser = { viewModel.muteUser(user.id) },
-                    onMessage = viewModel::showMessage,
-                    isMuted = appState.state.settings.mutedUsers.contains(user.id),
-                    onUnmuteUser = { viewModel.unmuteUser(user.id) },
-                    gridState = viewModel.userProfileGridState(user.id),
-                    showHeaderControls = true,
                 )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MiuixTheme.colorScheme.surface),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    LoadingIndicator()
-                }
             }
         }
-        entry(AppRoute.AppLockSetup) {
-            AppLockSetupScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
-        }
-        entry(AppRoute.AppLockPinEntry) {
-            PinSetupScreen(
-                isChange = appState.state.settings.appLockEnabled,
-                viewModel = viewModel,
-                onBack = onPopRoute,
-            )
-        }
-        entry(AppRoute.PrivacyModeSettings) {
-            PrivacyModeSettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
-        }
-        entry<AppRoute.DeviceViewHistory> { route ->
-            com.yunfie.illustia.ui.screens.pallasync.DeviceViewHistoryScreen(
-                deviceId = route.deviceId,
-                deviceName = route.deviceName,
-                state = appState.state,
-                viewModel = viewModel,
-                onBack = onPopRoute,
-                onIllustClick = { illust ->
-                    viewModel.openIllust(illust)
-                    onNavigate(AppRoute.Detail(illust.id))
-                },
-            )
-        }
-    }
 
-    val entries = rememberDecoratedNavEntries(
-        backStack = backStack,
-        entryProvider = entryProvider,
-    )
+    val entries =
+        rememberDecoratedNavEntries(
+            backStack = backStack,
+            entryProvider = entryProvider,
+        )
     NavDisplay(
         entries = entries,
         onBack = onPopRoute,
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MiuixTheme.colorScheme.surface),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MiuixTheme.colorScheme.surface),
     )
 
     AppOverlayHost(

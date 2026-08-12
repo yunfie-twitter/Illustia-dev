@@ -1,8 +1,9 @@
 package com.yunfie.illustia.data.pixiv
 
 import com.yunfie.illustia.data.IllustiaRepository
-import com.yunfie.illustia.models.pixiv.Illusts
 import com.yunfie.illustia.models.pixiv.IllustSeriesWithIdModel
+import com.yunfie.illustia.models.pixiv.Illusts
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -36,8 +37,10 @@ class IllustSeriesStore(
                     errorMessage = null,
                 )
             }
-        } catch (error: Throwable) {
-            _state.update { it.copy(isLoading = false, errorMessage = error.toString(), watchlistAdded = false) }
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (expectedFailure: Exception) {
+            _state.update { it.copy(isLoading = false, errorMessage = expectedFailure.toString(), watchlistAdded = false) }
         }
     }
 
@@ -52,8 +55,10 @@ class IllustSeriesStore(
                     errorMessage = null,
                 )
             }
-        } catch (error: Throwable) {
-            _state.update { it.copy(errorMessage = error.toString()) }
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (expectedFailure: Exception) {
+            _state.update { it.copy(errorMessage = expectedFailure.toString()) }
         }
     }
 
@@ -61,7 +66,9 @@ class IllustSeriesStore(
         try {
             repository.watchlistMangaAdd(illustSeriesId)
             _state.update { it.copy(watchlistAdded = true) }
-        } catch (_: Throwable) {
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (_: Exception) {
         }
     }
 
@@ -69,7 +76,9 @@ class IllustSeriesStore(
         try {
             repository.watchlistMangaDelete(illustSeriesId)
             _state.update { it.copy(watchlistAdded = false) }
-        } catch (_: Throwable) {
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (_: Exception) {
         }
     }
 }

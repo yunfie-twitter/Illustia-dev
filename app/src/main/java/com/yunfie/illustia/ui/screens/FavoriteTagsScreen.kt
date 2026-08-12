@@ -6,12 +6,20 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -21,10 +29,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -32,28 +40,37 @@ import com.yunfie.illustia.IllustiaUiState
 import com.yunfie.illustia.IllustiaViewModel
 import com.yunfie.illustia.R
 import com.yunfie.illustia.models.LoadState
-import com.yunfie.illustia.ui.components.EmptyState
 import com.yunfie.illustia.ui.components.AutoLoadMoreEffect
+import com.yunfie.illustia.ui.components.EmptyState
 import com.yunfie.illustia.ui.components.HeaderIcon
 import com.yunfie.illustia.ui.components.IllustCard
 import com.yunfie.illustia.ui.components.IllustCardSkeleton
-import com.yunfie.illustia.ui.components.MainNavigationContentPadding
 import com.yunfie.illustia.ui.components.MiuixConfirmDialog
 import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
 import com.yunfie.illustia.ui.components.StateBanner
 import com.yunfie.illustia.ui.components.adaptiveIllustColumns
+import com.yunfie.illustia.ui.components.adaptiveMainNavigationContentPadding
 import com.yunfie.illustia.ui.components.miuixClickable
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.PullToRefresh
+import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TopAppBar
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
-import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.*
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.icon.extended.Back
+import top.yukonga.miuix.kmp.icon.extended.Background
+import top.yukonga.miuix.kmp.icon.extended.Close
+import top.yukonga.miuix.kmp.icon.extended.Copy
+import top.yukonga.miuix.kmp.icon.extended.Import
+import top.yukonga.miuix.kmp.icon.extended.Refresh
+import top.yukonga.miuix.kmp.icon.extended.Settings
+import top.yukonga.miuix.kmp.icon.extended.Show
+import top.yukonga.miuix.kmp.icon.extended.Theme
 import top.yukonga.miuix.kmp.squircle.squircleSurface
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.foundation.lazy.grid.items as gridItems
 
 @Composable
 fun FavoriteTagsScreen(
@@ -100,7 +117,9 @@ fun FavoriteTagsScreen(
         )
     }
 
-    val subtitle = selectedTag?.let { "#$it / ${stringResource(R.string.data_items_count, state.watchlistItems.size)}" } ?: stringResource(R.string.favorite_tags_no_selection)
+    val subtitle =
+        selectedTag?.let { "#$it / ${stringResource(R.string.data_items_count, state.watchlistItems.size)}" }
+            ?: stringResource(R.string.favorite_tags_no_selection)
 
     val scrollBehavior = MiuixScrollBehavior()
     Scaffold(
@@ -123,30 +142,32 @@ fun FavoriteTagsScreen(
             )
         },
     ) { scaffoldPadding ->
-    PullToRefresh(
-        isRefreshing = state.loadState == LoadState.Loading && state.watchlistItems.isNotEmpty(),
-        onRefresh = { selectedTag?.let(viewModel::loadWatchlistTag) },
-        modifier = Modifier.fillMaxSize(),
-    ) {
-        AutoLoadMoreEffect(
-            enabled = state.settings.autoLoadMore,
-            nextUrl = state.watchlistNextUrl,
-            isLoading = state.loadState == LoadState.Loading,
-            onLoadMore = viewModel::loadMoreWatchlist,
-        )
-        LazyVerticalGrid(
+        PullToRefresh(
+            isRefreshing = state.loadState == LoadState.Loading && state.watchlistItems.isNotEmpty(),
+            onRefresh = { selectedTag?.let(viewModel::loadWatchlistTag) },
+            modifier = Modifier.fillMaxSize(),
+        ) {
+            AutoLoadMoreEffect(
+                enabled = state.settings.autoLoadMore,
+                nextUrl = state.watchlistNextUrl,
+                isLoading = state.loadState == LoadState.Loading,
+                onLoadMore = viewModel::loadMoreWatchlist,
+            )
+            LazyVerticalGrid(
                 state = gridState,
                 columns = GridCells.Fixed(adaptiveIllustColumns(state.settings)),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .nestedScroll(scrollBehavior.nestedScrollConnection)
-                    .background(MiuixTheme.colorScheme.surface),
-                contentPadding = PaddingValues(
-                    start = 14.dp,
-                    end = 14.dp,
-                    top = scaffoldPadding.calculateTopPadding() + 8.dp,
-                    bottom = MainNavigationContentPadding,
-                ),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .nestedScroll(scrollBehavior.nestedScrollConnection)
+                        .background(MiuixTheme.colorScheme.surface),
+                contentPadding =
+                    PaddingValues(
+                        start = 14.dp,
+                        end = 14.dp,
+                        top = scaffoldPadding.calculateTopPadding() + 8.dp,
+                        bottom = adaptiveMainNavigationContentPadding(),
+                    ),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
@@ -175,7 +196,9 @@ fun FavoriteTagsScreen(
                     }
 
                     val currentSelectedTag = selectedTag
-                    if (state.watchlistItems.isEmpty() && state.loadState != LoadState.Loading && state.loadState !is LoadState.Error && currentSelectedTag != null) {
+                    if (state.watchlistItems.isEmpty() && state.loadState != LoadState.Loading && state.loadState !is LoadState.Error &&
+                        currentSelectedTag != null
+                    ) {
                         item(span = { GridItemSpan(maxLineSpan) }) {
                             EmptyState(stringResource(R.string.favorite_tags_works_not_found, currentSelectedTag))
                         }
@@ -196,13 +219,14 @@ fun FavoriteTagsScreen(
                         )
                     }
 
-                            if (!state.settings.autoLoadMore && state.watchlistNextUrl != null) {
-                                item(span = { GridItemSpan(maxLineSpan) }) {
-                                    Button(
+                    if (!state.settings.autoLoadMore && state.watchlistNextUrl != null) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            Button(
                                 onClick = viewModel::loadMoreWatchlist,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 12.dp),
+                                modifier =
+                                    Modifier
+                                        .fillMaxWidth()
+                                        .padding(vertical = 12.dp),
                             ) {
                                 Text(stringResource(R.string.action_load_more))
                             }
@@ -267,13 +291,13 @@ private fun TagChip(
         modifier = modifier,
     ) { selected ->
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .squircleSurface(
-                    if (selected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.surfaceContainer,
-                    20.dp,
-                )
-                .miuixClickable(onClick = onSelect),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .squircleSurface(
+                        if (selected) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.surfaceContainer,
+                        20.dp,
+                    ).miuixClickable(onClick = onSelect),
         ) {
             Row(
                 modifier = Modifier.padding(horizontal = 10.dp, vertical = 9.dp),
@@ -290,14 +314,17 @@ private fun TagChip(
                 )
                 // 削除ボタン（×）
                 Box(
-                    modifier = Modifier
-                        .size(18.dp)
-                        .clip(RoundedCornerShape(9.dp))
-                        .background(
-                            if (selected) Color.White.copy(alpha = 0.25f)
-                            else MiuixTheme.colorScheme.surfaceContainerHigh,
-                        )
-                        .miuixClickable(onClick = onDelete),
+                    modifier =
+                        Modifier
+                            .size(18.dp)
+                            .clip(RoundedCornerShape(9.dp))
+                            .background(
+                                if (selected) {
+                                    Color.White.copy(alpha = 0.25f)
+                                } else {
+                                    MiuixTheme.colorScheme.surfaceContainerHigh
+                                },
+                            ).miuixClickable(onClick = onDelete),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
@@ -311,4 +338,3 @@ private fun TagChip(
         }
     }
 }
-

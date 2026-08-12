@@ -17,15 +17,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.res.stringResource
-import com.yunfie.illustia.R
 import com.yunfie.illustia.IllustiaUiState
 import com.yunfie.illustia.IllustiaViewModel
+import com.yunfie.illustia.R
 import com.yunfie.illustia.ui.components.DividerLine
 import com.yunfie.illustia.ui.components.ElevatedPanel
 import com.yunfie.illustia.ui.components.HeaderIcon
@@ -52,25 +52,27 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 private val AUTO_LOCK_VALUES = listOf("immediate", "30s", "1m", "5m", "10m", "disabled")
 
 @Composable
-private fun autoLockLabel(value: String): String = when (value) {
-    "immediate" -> stringResource(R.string.privacy_auto_lock_immediate)
-    "30s"       -> stringResource(R.string.privacy_auto_lock_30s)
-    "1m"        -> stringResource(R.string.privacy_auto_lock_1m)
-    "5m"        -> stringResource(R.string.privacy_auto_lock_5m)
-    "10m"       -> stringResource(R.string.privacy_auto_lock_10m)
-    "disabled"  -> stringResource(R.string.privacy_auto_lock_disabled)
-    else        -> value
-}
+private fun autoLockLabel(value: String): String =
+    when (value) {
+        "immediate" -> stringResource(R.string.privacy_auto_lock_immediate)
+        "30s" -> stringResource(R.string.privacy_auto_lock_30s)
+        "1m" -> stringResource(R.string.privacy_auto_lock_1m)
+        "5m" -> stringResource(R.string.privacy_auto_lock_5m)
+        "10m" -> stringResource(R.string.privacy_auto_lock_10m)
+        "disabled" -> stringResource(R.string.privacy_auto_lock_disabled)
+        else -> value
+    }
 
 // ── Dummy icon variant options ─────────────────────────────────────────────────
 
 private val DUMMY_ICON_VALUES = listOf("ic_launcher_dummy")
 
 @Composable
-private fun dummyIconLabel(value: String): String = when (value) {
-    "ic_launcher_dummy" -> stringResource(R.string.privacy_dummy_icon_calculator)
-    else -> value
-}
+private fun dummyIconLabel(value: String): String =
+    when (value) {
+        "ic_launcher_dummy" -> stringResource(R.string.privacy_dummy_icon_calculator)
+        else -> value
+    }
 
 // ── Screen ─────────────────────────────────────────────────────────────────────
 
@@ -117,19 +119,20 @@ fun PrivacyModeSettingsScreen(
         },
     ) { scaffoldPadding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .background(MiuixTheme.colorScheme.surface),
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                end = 16.dp,
-                top = scaffoldPadding.calculateTopPadding() + 16.dp,
-                bottom = 96.dp,
-            ),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .background(MiuixTheme.colorScheme.surface),
+            contentPadding =
+                PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = scaffoldPadding.calculateTopPadding() + 16.dp,
+                    bottom = 96.dp,
+                ),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-
             // ── Section 1: Enable / Disable ───────────────────────────────────
             item {
                 Section(stringResource(R.string.privacy_mode_title)) {
@@ -145,10 +148,12 @@ fun PrivacyModeSettingsScreen(
                                     viewModel.disablePrivacyMode()
                                 }
                             },
-                            summary = if (state.settings.privacyModeEnabled)
-                                stringResource(R.string.privacy_mode_enabled_desc)
-                            else
-                                stringResource(R.string.privacy_mode_disabled_desc),
+                            summary =
+                                if (state.settings.privacyModeEnabled) {
+                                    stringResource(R.string.privacy_mode_enabled_desc)
+                                } else {
+                                    stringResource(R.string.privacy_mode_disabled_desc)
+                                },
                         )
                     }
                 }
@@ -268,10 +273,11 @@ fun PrivacyModeSettingsScreen(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.NumberPassword,
-                        imeAction = ImeAction.Next,
-                    ),
+                    keyboardOptions =
+                        KeyboardOptions(
+                            keyboardType = KeyboardType.NumberPassword,
+                            imeAction = ImeAction.Next,
+                        ),
                 )
 
                 // New code field
@@ -285,10 +291,11 @@ fun PrivacyModeSettingsScreen(
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                     visualTransformation = PasswordVisualTransformation(),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.NumberPassword,
-                        imeAction = ImeAction.Done,
-                    ),
+                    keyboardOptions =
+                        KeyboardOptions(
+                            keyboardType = KeyboardType.NumberPassword,
+                            imeAction = ImeAction.Done,
+                        ),
                 )
 
                 // Error message (Req 5.7)
@@ -369,10 +376,11 @@ fun PrivacyModeSettingsScreen(
                     label = stringResource(R.string.privacy_dummy_name_field),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Text,
-                        imeAction = ImeAction.Done,
-                    ),
+                    keyboardOptions =
+                        KeyboardOptions(
+                            keyboardType = KeyboardType.Text,
+                            imeAction = ImeAction.Done,
+                        ),
                 )
 
                 // Error message

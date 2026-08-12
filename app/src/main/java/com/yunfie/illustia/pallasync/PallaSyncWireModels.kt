@@ -54,28 +54,45 @@ internal data class PallaSyncPageRecord(
 )
 
 internal sealed interface PallaSyncHttpResult<out T> {
-    data class Success<T>(val value: T) : PallaSyncHttpResult<T>
+    data class Success<T>(
+        val value: T,
+    ) : PallaSyncHttpResult<T>
+
     data object Gone : PallaSyncHttpResult<Nothing>
-    data class Retryable(val message: String) : PallaSyncHttpResult<Nothing>
+
+    data class Retryable(
+        val message: String,
+    ) : PallaSyncHttpResult<Nothing>
+
     data class ProtocolError(
         val message: String,
         val statusCode: Int? = null,
     ) : PallaSyncHttpResult<Nothing>
 }
 
-internal fun classifyPallaSyncHttpStatus(statusCode: Int): PallaSyncHttpResult<Unit>? {
-    return when {
-        statusCode in 200..299 -> null
-        statusCode == 410 -> PallaSyncHttpResult.Gone
-        statusCode == 429 || statusCode >= 500 -> PallaSyncHttpResult.Retryable(
-            "PallaSync server returned HTTP $statusCode",
-        )
-        else -> PallaSyncHttpResult.ProtocolError(
-            "PallaSync server returned HTTP $statusCode",
-            statusCode,
-        )
+internal fun classifyPallaSyncHttpStatus(statusCode: Int): PallaSyncHttpResult<Unit>? =
+    when {
+        statusCode in 200..299 -> {
+            null
+        }
+
+        statusCode == 410 -> {
+            PallaSyncHttpResult.Gone
+        }
+
+        statusCode == 429 || statusCode >= 500 -> {
+            PallaSyncHttpResult.Retryable(
+                "PallaSync server returned HTTP $statusCode",
+            )
+        }
+
+        else -> {
+            PallaSyncHttpResult.ProtocolError(
+                "PallaSync server returned HTTP $statusCode",
+                statusCode,
+            )
+        }
     }
-}
 
 internal object PallaSyncUrls {
     fun normalize(rawUrl: String): PallaSyncHttpResult<HttpUrl> {
@@ -87,8 +104,9 @@ internal object PallaSyncUrls {
             return PallaSyncHttpResult.ProtocolError("PallaSync server URL must not contain a query or fragment")
         }
 
-        val parsed = trimmed.trimEnd('/').toHttpUrlOrNull()
-            ?: return PallaSyncHttpResult.ProtocolError("Invalid PallaSync server URL")
+        val parsed =
+            trimmed.trimEnd('/').toHttpUrlOrNull()
+                ?: return PallaSyncHttpResult.ProtocolError("Invalid PallaSync server URL")
         if (parsed.scheme != "https" && parsed.scheme != "http") {
             return PallaSyncHttpResult.ProtocolError("PallaSync server URL must use HTTP or HTTPS")
         }
@@ -100,22 +118,37 @@ internal object PallaSyncUrls {
 
     fun health(baseUrl: HttpUrl): HttpUrl = endpoint(baseUrl, "health")
 
-    fun devices(baseUrl: HttpUrl, chainId: String): HttpUrl =
-        endpoint(baseUrl, "chains", chainId, "devices")
+    fun devices(
+        baseUrl: HttpUrl,
+        chainId: String,
+    ): HttpUrl = endpoint(baseUrl, "chains", chainId, "devices")
 
-    fun records(baseUrl: HttpUrl, chainId: String, afterSeq: Long, limit: Int): HttpUrl =
-        recordsEndpoint(baseUrl, chainId).newBuilder()
+    fun records(
+        baseUrl: HttpUrl,
+        chainId: String,
+        afterSeq: Long,
+        limit: Int,
+    ): HttpUrl =
+        recordsEndpoint(baseUrl, chainId)
+            .newBuilder()
             .addQueryParameter("after_seq", afterSeq.toString())
             .addQueryParameter("limit", limit.coerceIn(1, 500).toString())
             .build()
 
-    fun recordsEndpoint(baseUrl: HttpUrl, chainId: String): HttpUrl =
-        endpoint(baseUrl, "chains", chainId, "records")
+    fun recordsEndpoint(
+        baseUrl: HttpUrl,
+        chainId: String,
+    ): HttpUrl = endpoint(baseUrl, "chains", chainId, "records")
 
-    fun chain(baseUrl: HttpUrl, chainId: String): HttpUrl =
-        endpoint(baseUrl, "chains", chainId)
+    fun chain(
+        baseUrl: HttpUrl,
+        chainId: String,
+    ): HttpUrl = endpoint(baseUrl, "chains", chainId)
 
-    private fun endpoint(baseUrl: HttpUrl, vararg pathSegments: String): HttpUrl {
+    private fun endpoint(
+        baseUrl: HttpUrl,
+        vararg pathSegments: String,
+    ): HttpUrl {
         val builder = baseUrl.newBuilder()
         builder.addPathSegment("pallasync")
         builder.addPathSegment("v2")

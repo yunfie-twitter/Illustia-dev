@@ -1,7 +1,9 @@
 package com.yunfie.illustia.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -24,10 +26,10 @@ import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
 import com.yunfie.illustia.ui.components.Section
 import com.yunfie.illustia.ui.components.SettingLinkRow
 import com.yunfie.illustia.ui.components.SettingRow
-import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -71,40 +73,58 @@ fun AccountSettingsScreen(
         },
     ) { scaffoldPadding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .background(MiuixTheme.colorScheme.surface),
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                end = 16.dp,
-                top = scaffoldPadding.calculateTopPadding() + 16.dp,
-                bottom = 96.dp,
-            ),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .background(MiuixTheme.colorScheme.surface),
+            contentPadding =
+                PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = scaffoldPadding.calculateTopPadding() + 16.dp,
+                    bottom = 96.dp,
+                ),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            item { Section(stringResource(R.string.account_login_status)) {
-                ElevatedPanel {
-                    SettingRow(stringResource(R.string.account_status)) {
-                        Text(
-                            text = if (state.settings.refreshToken.isBlank()) stringResource(R.string.account_not_logged_in) else stringResource(R.string.account_logged_in),
-                            color = if (state.settings.refreshToken.isBlank()) MiuixTheme.colorScheme.error else MiuixTheme.colorScheme.primary,
-                            style = MiuixTheme.textStyles.body1,
-                            fontWeight = FontWeight.Bold
-                        )
+            item {
+                Section(stringResource(R.string.account_login_status)) {
+                    ElevatedPanel {
+                        SettingRow(stringResource(R.string.account_status)) {
+                            Text(
+                                text =
+                                    if (state.settings.refreshToken.isBlank()) {
+                                        stringResource(
+                                            R.string.account_not_logged_in,
+                                        )
+                                    } else {
+                                        stringResource(R.string.account_logged_in)
+                                    },
+                                color =
+                                    if (state.settings.refreshToken.isBlank()) {
+                                        MiuixTheme.colorScheme.error
+                                    } else {
+                                        MiuixTheme.colorScheme.primary
+                                    },
+                                style = MiuixTheme.textStyles.body1,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                        DividerLine()
+                        SettingLinkRow(stringResource(R.string.account_switch_add)) { viewModel.openAccountLoginMethod() }
+                        DividerLine()
+                        SettingLinkRow(stringResource(R.string.account_logout)) { showLogoutConfirm = true }
                     }
-                    DividerLine()
-                    SettingLinkRow(stringResource(R.string.account_switch_add)) { viewModel.openAccountLoginMethod() }
-                    DividerLine()
-                    SettingLinkRow(stringResource(R.string.account_logout)) { showLogoutConfirm = true }
                 }
-            }}
-            
-            item { Section(stringResource(R.string.pallasync_account_section)) {
-                ElevatedPanel {
-                    SettingLinkRow(stringResource(R.string.pallasync_settings_title)) { onOpenPallaSync() }
+            }
+
+            item {
+                Section(stringResource(R.string.pallasync_account_section)) {
+                    ElevatedPanel {
+                        SettingLinkRow(stringResource(R.string.pallasync_settings_title)) { onOpenPallaSync() }
+                    }
                 }
-            }}
+            }
         }
     }
 }

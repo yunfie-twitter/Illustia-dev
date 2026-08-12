@@ -1,5 +1,7 @@
 package com.yunfie.illustia.ui.screens
 
+import androidx.biometric.BiometricManager
+import androidx.biometric.BiometricPrompt
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -16,8 +18,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -34,15 +36,15 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.biometric.BiometricManager
-import androidx.biometric.BiometricPrompt
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.yunfie.illustia.IllustiaUiState
 import com.yunfie.illustia.IllustiaViewModel
 import com.yunfie.illustia.R
-import com.yunfie.illustia.ui.components.DividerLine
 import com.yunfie.illustia.ui.components.AppHapticEffect
+import com.yunfie.illustia.ui.components.DividerLine
 import com.yunfie.illustia.ui.components.ElevatedPanel
 import com.yunfie.illustia.ui.components.HeaderIcon
 import com.yunfie.illustia.ui.components.LocalAppHapticMode
@@ -51,16 +53,14 @@ import com.yunfie.illustia.ui.components.Section
 import com.yunfie.illustia.ui.components.SettingLinkRow
 import com.yunfie.illustia.ui.components.SettingSwitchRow
 import com.yunfie.illustia.ui.components.performAppHapticFeedback
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
 import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TopAppBar
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.icon.extended.Remove
@@ -68,7 +68,10 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private sealed class PinVerifyAction {
     data object Disable : PinVerifyAction()
-    data class ChangeTiming(val newValue: String) : PinVerifyAction()
+
+    data class ChangeTiming(
+        val newValue: String,
+    ) : PinVerifyAction()
 }
 
 @Composable
@@ -127,21 +130,33 @@ fun AppLockSetupScreen(
             withContext(Dispatchers.Main) {
                 val activity = context as? FragmentActivity ?: return@withContext
                 val executor = ContextCompat.getMainExecutor(context)
-                val prompt = BiometricPrompt(activity, executor, object : BiometricPrompt.AuthenticationCallback() {
-                    override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                        viewModel.updateBiometricEnabled(true)
-                        performAppHapticFeedback(context, haptic, hapticMode, AppHapticEffect.Success)
-                    }
-                    override fun onAuthenticationError(errorCode: Int, errString: CharSequence) {
-                        requestBiometric = false
-                    }
-                })
-                val promptInfo = BiometricPrompt.PromptInfo.Builder()
-                    .setTitle(context.getString(R.string.app_lock_biometric_verify_title))
-                    .setSubtitle(context.getString(R.string.app_lock_biometric_verify_subtitle))
-                    .setNegativeButtonText(context.getString(R.string.action_cancel))
-                    .setAllowedAuthenticators(BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.BIOMETRIC_WEAK)
-                    .build()
+                val prompt =
+                    BiometricPrompt(
+                        activity,
+                        executor,
+                        object : BiometricPrompt.AuthenticationCallback() {
+                            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                                viewModel.updateBiometricEnabled(true)
+                                performAppHapticFeedback(context, haptic, hapticMode, AppHapticEffect.Success)
+                            }
+
+                            override fun onAuthenticationError(
+                                errorCode: Int,
+                                errString: CharSequence,
+                            ) {
+                                requestBiometric = false
+                            }
+                        },
+                    )
+                val promptInfo =
+                    BiometricPrompt.PromptInfo
+                        .Builder()
+                        .setTitle(context.getString(R.string.app_lock_biometric_verify_title))
+                        .setSubtitle(context.getString(R.string.app_lock_biometric_verify_subtitle))
+                        .setNegativeButtonText(context.getString(R.string.action_cancel))
+                        .setAllowedAuthenticators(
+                            BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.BIOMETRIC_WEAK,
+                        ).build()
                 prompt.authenticate(promptInfo)
             }
             requestBiometric = false
@@ -176,8 +191,14 @@ fun AppLockSetupScreen(
                 performAppHapticFeedback(context, haptic, hapticMode, AppHapticEffect.Success)
                 viewModel.resetLockFailCount()
                 when (val action = pendingAction) {
-                    is PinVerifyAction.Disable -> viewModel.disableAppLock()
-                    is PinVerifyAction.ChangeTiming -> viewModel.updateAppLockTiming(action.newValue)
+                    is PinVerifyAction.Disable -> {
+                        viewModel.disableAppLock()
+                    }
+
+                    is PinVerifyAction.ChangeTiming -> {
+                        viewModel.updateAppLockTiming(action.newValue)
+                    }
+
                     null -> {}
                 }
                 dismissPinOverlay()
@@ -201,11 +222,12 @@ fun AppLockSetupScreen(
         if (verifyPin.isNotEmpty()) verifyPin = verifyPin.dropLast(1)
     }
 
-    val verifyTitle = when (pendingAction) {
-        is PinVerifyAction.Disable -> stringResource(R.string.app_lock_verify_disable)
-        is PinVerifyAction.ChangeTiming -> stringResource(R.string.app_lock_verify_change_timing)
-        null -> ""
-    }
+    val verifyTitle =
+        when (pendingAction) {
+            is PinVerifyAction.Disable -> stringResource(R.string.app_lock_verify_disable)
+            is PinVerifyAction.ChangeTiming -> stringResource(R.string.app_lock_verify_change_timing)
+            null -> ""
+        }
 
     Scaffold(
         containerColor = MiuixTheme.colorScheme.surface,
@@ -222,16 +244,18 @@ fun AppLockSetupScreen(
     ) { scaffoldPadding ->
         Box(modifier = Modifier.fillMaxSize()) {
             LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .nestedScroll(scrollBehavior.nestedScrollConnection)
-                    .background(MiuixTheme.colorScheme.surface),
-                contentPadding = PaddingValues(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = scaffoldPadding.calculateTopPadding() + 16.dp,
-                    bottom = 96.dp,
-                ),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .nestedScroll(scrollBehavior.nestedScrollConnection)
+                        .background(MiuixTheme.colorScheme.surface),
+                contentPadding =
+                    PaddingValues(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = scaffoldPadding.calculateTopPadding() + 16.dp,
+                        bottom = 96.dp,
+                    ),
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 item {
@@ -247,10 +271,12 @@ fun AppLockSetupScreen(
                                         viewModel.openAppLockPinEntry()
                                     }
                                 },
-                                summary = if (state.settings.appLockEnabled)
-                                    stringResource(R.string.app_lock_enabled)
-                                else
-                                    stringResource(R.string.app_lock_disabled),
+                                summary =
+                                    if (state.settings.appLockEnabled) {
+                                        stringResource(R.string.app_lock_enabled)
+                                    } else {
+                                        stringResource(R.string.app_lock_disabled)
+                                    },
                             )
                         }
                     }
@@ -276,7 +302,7 @@ fun AppLockSetupScreen(
                                     checked = state.settings.appLockTiming == "return",
                                     onCheckedChange = { enabled ->
                                         showPinOverlay(
-                                            PinVerifyAction.ChangeTiming(if (enabled) "return" else "launch")
+                                            PinVerifyAction.ChangeTiming(if (enabled) "return" else "launch"),
                                         )
                                     },
                                     summary = stringResource(R.string.app_lock_timing_return_desc),
@@ -317,16 +343,18 @@ fun AppLockSetupScreen(
                 exit = fadeOut(),
             ) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MiuixTheme.colorScheme.surface)
-                        .clickable(enabled = false) {},
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .background(MiuixTheme.colorScheme.surface)
+                            .clickable(enabled = false) {},
                     contentAlignment = Alignment.Center,
                 ) {
                     Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 32.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 32.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(24.dp),
                     ) {
@@ -346,16 +374,17 @@ fun AppLockSetupScreen(
                         ) {
                             repeat(6) { index ->
                                 Box(
-                                    modifier = Modifier
-                                        .size(16.dp)
-                                        .clip(CircleShape)
-                                        .background(
-                                            when {
-                                                verifyError -> MiuixTheme.colorScheme.error
-                                                index < verifyPin.length -> MiuixTheme.colorScheme.primary
-                                                else -> MiuixTheme.colorScheme.outline.copy(alpha = 0.3f)
-                                            }
-                                        ),
+                                    modifier =
+                                        Modifier
+                                            .size(16.dp)
+                                            .clip(CircleShape)
+                                            .background(
+                                                when {
+                                                    verifyError -> MiuixTheme.colorScheme.error
+                                                    index < verifyPin.length -> MiuixTheme.colorScheme.primary
+                                                    else -> MiuixTheme.colorScheme.outline.copy(alpha = 0.3f)
+                                                },
+                                            ),
                                 )
                             }
                         }

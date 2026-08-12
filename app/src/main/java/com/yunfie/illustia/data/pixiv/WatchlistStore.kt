@@ -3,6 +3,7 @@ package com.yunfie.illustia.data.pixiv
 import com.yunfie.illustia.data.IllustiaRepository
 import com.yunfie.illustia.models.pixiv.MangaSeriesModel
 import com.yunfie.illustia.models.pixiv.WatchlistMangaModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -35,8 +36,10 @@ class WatchlistStore(
                     errorMessage = null,
                 )
             }
-        } catch (error: Throwable) {
-            _state.update { it.copy(isLoading = false, errorMessage = error.toString()) }
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (expectedFailure: Exception) {
+            _state.update { it.copy(isLoading = false, errorMessage = expectedFailure.toString()) }
         }
     }
 
@@ -53,24 +56,29 @@ class WatchlistStore(
                     errorMessage = null,
                 )
             }
-        } catch (error: Throwable) {
-            _state.update { it.copy(isLoading = false, errorMessage = error.toString()) }
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (expectedFailure: Exception) {
+            _state.update { it.copy(isLoading = false, errorMessage = expectedFailure.toString()) }
         }
     }
 }
 
-private suspend fun WatchlistMangaModel.withThumbnails(repository: IllustiaRepository): WatchlistMangaModel = coroutineScope {
-    val series = series.map { mangaSeries ->
-        async {
-            if (mangaSeries.thumbnailUrl != null || mangaSeries.latestContentId == 0L) {
-                mangaSeries
-            } else {
-                runCatching {
-                    val detail = repository.illustDetail(mangaSeries.latestContentId)
-                    mangaSeries.copy(thumbnailUrl = detail.thumbnailUrl)
-                }.getOrDefault(mangaSeries)
-            }
-        }
-    }.map { it.await() }
-    copy(series = series)
-}
+private suspend fun WatchlistMangaModel.withThumbnails(repository: IllustiaRepository): WatchlistMangaModel =
+    coroutineScope {
+        val series =
+            series
+                .map { mangaSeries ->
+                    async {
+                        if (mangaSeries.thumbnailUrl != null || mangaSeries.latestContentId == 0L) {
+                            mangaSeries
+                        } else {
+                            runCatching {
+                                val detail = repository.illustDetail(mangaSeries.latestContentId)
+                                mangaSeries.copy(thumbnailUrl = detail.thumbnailUrl)
+                            }.getOrDefault(mangaSeries)
+                        }
+                    }
+                }.map { it.await() }
+        copy(series = series)
+    }

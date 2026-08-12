@@ -1,12 +1,17 @@
 package com.yunfie.illustia.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
@@ -26,8 +31,8 @@ import com.yunfie.illustia.models.LoadState
 import com.yunfie.illustia.models.NovelPreview
 import com.yunfie.illustia.models.NovelTextContent
 import com.yunfie.illustia.settings.AppSettings
-import com.yunfie.illustia.ui.components.EmptyState
 import com.yunfie.illustia.ui.components.AutoLoadMoreEffect
+import com.yunfie.illustia.ui.components.EmptyState
 import com.yunfie.illustia.ui.components.LoadingIndicator
 import com.yunfie.illustia.ui.components.PrefetchPixivImages
 import com.yunfie.illustia.ui.components.StateBanner
@@ -44,6 +49,7 @@ import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.icon.extended.Refresh
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+import androidx.compose.foundation.lazy.grid.items as gridItems
 
 @Composable
 fun NovelScreen(
@@ -56,9 +62,14 @@ fun NovelScreen(
 ) {
     val gridState = remember { LazyGridState() }
     val scrollBehavior = MiuixScrollBehavior()
-    val prefetchUrls = remember(items) {
-        items.asSequence().take(12).map { it.coverUrl }.toList()
-    }
+    val prefetchUrls =
+        remember(items) {
+            items
+                .asSequence()
+                .take(12)
+                .map { it.coverUrl }
+                .toList()
+        }
     PrefetchPixivImages(prefetchUrls, enabled = settings.prefetchImages)
     AutoLoadMoreEffect(
         enabled = settings.autoLoadMore,
@@ -101,16 +112,18 @@ fun NovelScreen(
             LazyVerticalGrid(
                 state = gridState,
                 columns = GridCells.Fixed(1),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(MiuixTheme.colorScheme.surface)
-                    .nestedScroll(scrollBehavior.nestedScrollConnection),
-                contentPadding = PaddingValues(
-                    start = 14.dp,
-                    end = 14.dp,
-                    top = scaffoldPadding.calculateTopPadding() + 8.dp,
-                    bottom = 24.dp,
-                ),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(MiuixTheme.colorScheme.surface)
+                        .nestedScroll(scrollBehavior.nestedScrollConnection),
+                contentPadding =
+                    PaddingValues(
+                        start = 14.dp,
+                        end = 14.dp,
+                        top = scaffoldPadding.calculateTopPadding() + 8.dp,
+                        bottom = 24.dp,
+                    ),
                 verticalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 if (items.isEmpty()) {
@@ -152,9 +165,14 @@ fun NovelReaderScreen(
 ) {
     val currentNovel = novel ?: return
     val scrollBehavior = MiuixScrollBehavior()
-    val pages = remember(text?.text) {
-        text?.text?.let(::parseNovelPages).orEmpty().ifEmpty { listOf(NovelPage(emptyList())) }
-    }
+    val pages =
+        remember(text?.text) {
+            text
+                ?.text
+                ?.let(::parseNovelPages)
+                .orEmpty()
+                .ifEmpty { listOf(NovelPage(emptyList())) }
+        }
     val pagerState = rememberPagerState(pageCount = { pages.size })
     val coroutineScope = rememberCoroutineScope()
     val uriHandler = LocalUriHandler.current
@@ -182,14 +200,16 @@ fun NovelReaderScreen(
         when {
             loadState == LoadState.Loading && text == null -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(scaffoldPadding),
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(scaffoldPadding),
                     contentAlignment = Alignment.Center,
                 ) {
                     LoadingIndicator()
                 }
             }
+
             text != null -> {
                 HorizontalPager(
                     state = pagerState,
@@ -213,11 +233,13 @@ fun NovelReaderScreen(
                     )
                 }
             }
+
             else -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(scaffoldPadding),
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .padding(scaffoldPadding),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(

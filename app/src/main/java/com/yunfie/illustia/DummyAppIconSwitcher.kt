@@ -9,11 +9,24 @@ object DummyAppIconSwitcher {
     private const val ALIAS_REAL = "com.yunfie.illustia.MainActivityAlias"
     private const val ALIAS_DUMMY = "com.yunfie.illustia.MainActivityDummy"
 
-    fun apply(context: Context, privacyModeEnabled: Boolean) {
+    fun apply(
+        context: Context,
+        privacyModeEnabled: Boolean,
+    ) {
         val packageManager = context.packageManager
         try {
-            val realState = if (privacyModeEnabled) PackageManager.COMPONENT_ENABLED_STATE_DISABLED else PackageManager.COMPONENT_ENABLED_STATE_ENABLED
-            val dummyState = if (privacyModeEnabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+            val realState =
+                if (privacyModeEnabled) {
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+                } else {
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                }
+            val dummyState =
+                if (privacyModeEnabled) {
+                    PackageManager.COMPONENT_ENABLED_STATE_ENABLED
+                } else {
+                    PackageManager.COMPONENT_ENABLED_STATE_DISABLED
+                }
 
             setComponentStateIfNeeded(
                 packageManager = packageManager,
@@ -35,8 +48,8 @@ object DummyAppIconSwitcher {
                 desiredState = PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
                 enabledByDefault = true,
             )
-        } catch (error: Throwable) {
-            Log.w("DummyAppIconSwitcher", "Failed to switch app icon alias", error)
+        } catch (expectedFailure: RuntimeException) {
+            Log.w("DummyAppIconSwitcher", "Failed to switch app icon alias", expectedFailure)
         }
     }
 
@@ -47,13 +60,17 @@ object DummyAppIconSwitcher {
         enabledByDefault: Boolean,
     ) {
         val currentState = packageManager.getComponentEnabledSetting(componentName)
-        val currentlyEnabled = when (currentState) {
-            PackageManager.COMPONENT_ENABLED_STATE_ENABLED -> true
-            PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
-            PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER,
-            PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED -> false
-            else -> enabledByDefault
-        }
+        val currentlyEnabled =
+            when (currentState) {
+                PackageManager.COMPONENT_ENABLED_STATE_ENABLED -> true
+
+                PackageManager.COMPONENT_ENABLED_STATE_DISABLED,
+                PackageManager.COMPONENT_ENABLED_STATE_DISABLED_USER,
+                PackageManager.COMPONENT_ENABLED_STATE_DISABLED_UNTIL_USED,
+                -> false
+
+                else -> enabledByDefault
+            }
         val shouldBeEnabled = desiredState == PackageManager.COMPONENT_ENABLED_STATE_ENABLED
         if (currentlyEnabled == shouldBeEnabled) return
 

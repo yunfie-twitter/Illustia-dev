@@ -19,7 +19,8 @@ fn parses_illust_page_and_applies_kotlin_compatible_fallbacks() {
                     }],
                     "tags": [{"name": "tag"}],
                     "page_count": 1,
-                    "is_bookmarked": true
+                    "is_bookmarked": true,
+                    "total_bookmarks": 123
                 }],
                 "next_url": "https://example.test/next"
             }"#,
@@ -36,6 +37,7 @@ fn parses_illust_page_and_applies_kotlin_compatible_fallbacks() {
     assert_eq!(illust.image_pages, ["page-large"]);
     assert_eq!(illust.tags, ["tag"]);
     assert!(illust.is_bookmarked);
+    assert_eq!(illust.total_bookmarks, 123);
 }
 
 #[test]

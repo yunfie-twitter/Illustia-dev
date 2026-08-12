@@ -14,11 +14,17 @@ data class IllustWidgetSelection(
     val imagePath: String,
 )
 
-class IllustWidgetStore(context: Context) {
+class IllustWidgetStore(
+    context: Context,
+) {
     private val prefs = context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
 
-    fun save(appWidgetId: Int, selection: IllustWidgetSelection) {
-        prefs.edit()
+    fun save(
+        appWidgetId: Int,
+        selection: IllustWidgetSelection,
+    ) {
+        prefs
+            .edit()
             .putLong(key(appWidgetId, KEY_ILLUST_ID), selection.illustId)
             .putInt(key(appWidgetId, KEY_PAGE_INDEX), selection.pageIndex)
             .putInt(key(appWidgetId, KEY_PAGE_COUNT), selection.pageCount)
@@ -48,14 +54,14 @@ class IllustWidgetStore(context: Context) {
             .mapNotNull { key ->
                 if (!key.startsWith("${KEY_ILLUST_ID}_")) return@mapNotNull null
                 key.substringAfterLast('_').toIntOrNull()
-            }
-            .sorted()
+            }.sorted()
             .mapNotNull { load(it) }
             .firstOrNull()
     }
 
     fun remove(appWidgetId: Int) {
-        prefs.edit()
+        prefs
+            .edit()
             .remove(key(appWidgetId, KEY_ILLUST_ID))
             .remove(key(appWidgetId, KEY_PAGE_INDEX))
             .remove(key(appWidgetId, KEY_PAGE_COUNT))
@@ -66,7 +72,10 @@ class IllustWidgetStore(context: Context) {
             .apply()
     }
 
-    private fun key(appWidgetId: Int, name: String) = "${name}_$appWidgetId"
+    private fun key(
+        appWidgetId: Int,
+        name: String,
+    ) = "${name}_$appWidgetId"
 
     companion object {
         private const val PREFS_NAME = "illust_widget_store"

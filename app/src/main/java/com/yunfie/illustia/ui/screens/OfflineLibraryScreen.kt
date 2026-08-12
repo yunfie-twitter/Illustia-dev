@@ -27,7 +27,11 @@ import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
-fun OfflineLibraryScreen(state: IllustiaUiState, viewModel: IllustiaViewModel, onBack: () -> Unit) {
+fun OfflineLibraryScreen(
+    state: IllustiaUiState,
+    viewModel: IllustiaViewModel,
+    onBack: () -> Unit,
+) {
     PredictiveBackGestureHandler(onBack = onBack)
     LaunchedEffect(Unit) { viewModel.loadSavedLibrary() }
 
@@ -50,18 +54,20 @@ fun OfflineLibraryScreen(state: IllustiaUiState, viewModel: IllustiaViewModel, o
             illusts = savedIllusts,
             emptyMessage = stringResource(R.string.offline_library_empty),
             onOpenIllust = { viewModel.openIllust(it) },
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .background(MiuixTheme.colorScheme.surface),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .background(MiuixTheme.colorScheme.surface),
             columns = columns,
             showBookmarkButton = false,
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                end = 16.dp,
-                top = padding.calculateTopPadding() + 14.dp,
-                bottom = 96.dp,
-            ),
+            contentPadding =
+                PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = padding.calculateTopPadding() + 14.dp,
+                    bottom = 96.dp,
+                ),
         )
     }
 }

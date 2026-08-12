@@ -56,6 +56,7 @@ jobs:
         run: |
           set -o pipefail
           ./gradlew \
+            :app:checkQualityBaselineBudgets \
             :app:ktlintMainSourceSetCheck \
             :app:ktlintTestSourceSetCheck \
             :app:detekt \

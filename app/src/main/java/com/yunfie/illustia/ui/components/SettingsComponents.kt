@@ -12,17 +12,19 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.yunfie.illustia.R
 import top.yukonga.miuix.kmp.basic.BasicComponent
@@ -31,24 +33,25 @@ import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.DropdownItem
-import top.yukonga.miuix.kmp.basic.Switch
-import androidx.compose.foundation.layout.size
-import androidx.compose.ui.graphics.vector.ImageVector
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.SmallTitle
+import top.yukonga.miuix.kmp.basic.Switch
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.icon.extended.ChevronForward
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.preference.OverlaySpinnerPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.PressFeedbackType
 
 @Composable
-fun Section(title: String, content: @Composable ColumnScope.() -> Unit) {
+fun Section(
+    title: String,
+    content: @Composable ColumnScope.() -> Unit,
+) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         SmallTitle(
             text = title,
@@ -65,17 +68,18 @@ fun SettingRow(
     summary: String? = null,
     icon: ImageVector? = null,
     modifier: Modifier = Modifier,
-    action: @Composable () -> Unit
+    action: @Composable () -> Unit,
 ) {
     BasicComponent(
         title = title,
         summary = summary,
         modifier = modifier.fillMaxWidth(),
-        startAction = icon?.let {
-            {
-                PreferenceIcon(it)
-            }
-        },
+        startAction =
+            icon?.let {
+                {
+                    PreferenceIcon(it)
+                }
+            },
         endActions = {
             action()
         },
@@ -87,17 +91,18 @@ fun SettingLinkRow(
     title: String,
     summary: String? = null,
     icon: ImageVector? = null,
-    onClick: () -> Unit
+    onClick: () -> Unit,
 ) {
     BasicComponent(
         title = title,
         summary = summary,
         modifier = Modifier.fillMaxWidth(),
-        startAction = icon?.let {
-            {
-                PreferenceIcon(it)
-            }
-        },
+        startAction =
+            icon?.let {
+                {
+                    PreferenceIcon(it)
+                }
+            },
         endActions = {
             Icon(
                 imageVector = MiuixIcons.ChevronForward,
@@ -117,9 +122,10 @@ private fun PreferenceIcon(icon: ImageVector) {
         imageVector = icon,
         contentDescription = null,
         tint = MiuixTheme.colorScheme.onSurface,
-        modifier = Modifier
-            .size(28.dp)
-            .padding(end = 12.dp)
+        modifier =
+            Modifier
+                .size(28.dp)
+                .padding(end = 12.dp),
     )
 }
 
@@ -133,10 +139,11 @@ fun ElevatedPanel(
         modifier = modifier.fillMaxWidth(),
         cornerRadius = 18.dp,
         insideMargin = PaddingValues(0.dp),
-        colors = CardDefaults.defaultColors(
-            color = MiuixTheme.colorScheme.surfaceContainer,
-            contentColor = MiuixTheme.colorScheme.onSurfaceContainer,
-        ),
+        colors =
+            CardDefaults.defaultColors(
+                color = MiuixTheme.colorScheme.surfaceContainer,
+                contentColor = MiuixTheme.colorScheme.onSurfaceContainer,
+            ),
     ) {
         Column(
             modifier = Modifier.padding(contentPadding),
@@ -147,10 +154,14 @@ fun ElevatedPanel(
 }
 
 @Composable
-fun HeroPanel(title: String, body: String) {
-    val modifier = Modifier
-        .padding(horizontal = 18.dp, vertical = 10.dp)
-        .fillMaxWidth()
+fun HeroPanel(
+    title: String,
+    body: String,
+) {
+    val modifier =
+        Modifier
+            .padding(horizontal = 18.dp, vertical = 10.dp)
+            .fillMaxWidth()
     val content: @Composable ColumnScope.() -> Unit = {
         Text(text = title, fontWeight = FontWeight.Black, color = MiuixTheme.colorScheme.onPrimaryContainer)
         Spacer(modifier = Modifier.height(8.dp))
@@ -160,10 +171,11 @@ fun HeroPanel(title: String, body: String) {
         modifier = modifier,
         cornerRadius = 24.dp,
         insideMargin = PaddingValues(20.dp),
-        colors = CardDefaults.defaultColors(
-            color = MiuixTheme.colorScheme.primaryContainer,
-            contentColor = MiuixTheme.colorScheme.onPrimaryContainer,
-        ),
+        colors =
+            CardDefaults.defaultColors(
+                color = MiuixTheme.colorScheme.primaryContainer,
+                contentColor = MiuixTheme.colorScheme.onPrimaryContainer,
+            ),
         content = content,
     )
 }
@@ -203,7 +215,11 @@ fun MiuixConfirmDialog(
                 colors = overlayActionButtonColors(),
                 insideMargin = PaddingValues(horizontal = 8.dp, vertical = 12.dp),
             ) {
-                Text(confirmText, color = if (destructive) MiuixTheme.colorScheme.error else MiuixTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                Text(
+                    confirmText,
+                    color = if (destructive) MiuixTheme.colorScheme.error else MiuixTheme.colorScheme.primary,
+                    fontWeight = FontWeight.Bold,
+                )
             }
         }
     }
@@ -224,11 +240,12 @@ fun <T> SettingDropdownRow(
     val onSelectedIndexChange: (Int) -> Unit = { index ->
         values.getOrNull(index)?.let(onSelect)
     }
-    val startAction: (@Composable () -> Unit)? = icon?.let { preferenceIcon ->
-        {
-            PreferenceIcon(preferenceIcon)
+    val startAction: (@Composable () -> Unit)? =
+        icon?.let { preferenceIcon ->
+            {
+                PreferenceIcon(preferenceIcon)
+            }
         }
-    }
 
     if (dialogButtonString != null) {
         OverlaySpinnerPreference(
@@ -267,11 +284,12 @@ fun SettingSwitchRow(
         title = title,
         summary = summary,
         modifier = Modifier.fillMaxWidth(),
-        startAction = icon?.let {
-            {
-                PreferenceIcon(it)
-            }
-        },
+        startAction =
+            icon?.let {
+                {
+                    PreferenceIcon(it)
+                }
+            },
         endActions = {
             Switch(
                 checked = checked,
@@ -279,11 +297,12 @@ fun SettingSwitchRow(
                 enabled = enabled,
             )
         },
-        onClick = if (enabled) {
-            { onCheckedChange(!checked) }
-        } else {
-            null
-        },
+        onClick =
+            if (enabled) {
+                { onCheckedChange(!checked) }
+            } else {
+                null
+            },
         role = Role.Switch,
         enabled = enabled,
     )
@@ -310,13 +329,14 @@ fun <T> ChoiceRow(
                     Button(
                         onClick = { onSelect(value) },
                         modifier = Modifier.weight(1f),
-                        colors = if (isSelected) {
-                            ButtonDefaults.buttonColorsPrimary()
-                        } else {
-                            ButtonDefaults.buttonColors(
-                                color = MiuixTheme.colorScheme.surfaceContainer,
-                            )
-                        },
+                        colors =
+                            if (isSelected) {
+                                ButtonDefaults.buttonColorsPrimary()
+                            } else {
+                                ButtonDefaults.buttonColors(
+                                    color = MiuixTheme.colorScheme.surfaceContainer,
+                                )
+                            },
                         insideMargin = PaddingValues(horizontal = 8.dp, vertical = 12.dp),
                     ) {
                         Text(
@@ -352,24 +372,27 @@ fun <T> FlowButtons(
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.fillMaxWidth()) {
                 row.forEach { value ->
                     Card(
-                        modifier = Modifier
-                            .weight(1f)
-                            .combinedClickable(
-                                onClick = { onClick(value) },
-                                role = Role.Button,
-                                onLongClick = onLongClick?.let { longClick ->
-                                    {
-                                        performAppHapticFeedback(context, haptic, hapticMode)
-                                        longClick(value)
-                                    }
-                                },
-                            ),
+                        modifier =
+                            Modifier
+                                .weight(1f)
+                                .combinedClickable(
+                                    onClick = { onClick(value) },
+                                    role = Role.Button,
+                                    onLongClick =
+                                        onLongClick?.let { longClick ->
+                                            {
+                                                performAppHapticFeedback(context, haptic, hapticMode)
+                                                longClick(value)
+                                            }
+                                        },
+                                ),
                         cornerRadius = 16.dp,
                         insideMargin = PaddingValues(horizontal = 8.dp, vertical = 10.dp),
-                        colors = CardDefaults.defaultColors(
-                            color = MiuixTheme.colorScheme.surfaceContainer,
-                            contentColor = MiuixTheme.colorScheme.onSurface,
-                        ),
+                        colors =
+                            CardDefaults.defaultColors(
+                                color = MiuixTheme.colorScheme.surfaceContainer,
+                                contentColor = MiuixTheme.colorScheme.onSurface,
+                            ),
                         pressFeedbackType = PressFeedbackType.Sink,
                     ) {
                         androidx.compose.foundation.layout.Box(
@@ -389,7 +412,11 @@ fun <T> FlowButtons(
 }
 
 @Composable
-fun SectionHeader(title: String, action: String? = null, onAction: (() -> Unit)? = null) {
+fun SectionHeader(
+    title: String,
+    action: String? = null,
+    onAction: (() -> Unit)? = null,
+) {
     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
         SmallTitle(
             text = title,

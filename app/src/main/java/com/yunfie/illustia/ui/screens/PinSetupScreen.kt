@@ -77,12 +77,13 @@ fun PinSetupScreen(
         }
     }
 
-    val title = when (step) {
-        1 -> stringResource(R.string.app_lock_enter_current)
-        2 -> stringResource(R.string.app_lock_enter_new)
-        3 -> stringResource(R.string.app_lock_confirm_new)
-        else -> ""
-    }
+    val title =
+        when (step) {
+            1 -> stringResource(R.string.app_lock_enter_current)
+            2 -> stringResource(R.string.app_lock_enter_new)
+            3 -> stringResource(R.string.app_lock_confirm_new)
+            else -> ""
+        }
 
     val mismatchError = stringResource(R.string.app_lock_mismatch)
     val incorrectError = stringResource(R.string.app_lock_incorrect)
@@ -114,6 +115,7 @@ fun PinSetupScreen(
                     }
                 }
             }
+
             2 -> {
                 if (newPin.length >= 6) return
                 newPin += digit
@@ -121,6 +123,7 @@ fun PinSetupScreen(
                     step = 3
                 }
             }
+
             3 -> {
                 if (confirmPin.length >= 6) return
                 confirmPin += digit
@@ -158,24 +161,27 @@ fun PinSetupScreen(
         }
     }
 
-    val displayPin = when (step) {
-        1 -> pin
-        2 -> newPin
-        3 -> confirmPin
-        else -> ""
-    }
+    val displayPin =
+        when (step) {
+            1 -> pin
+            2 -> newPin
+            3 -> confirmPin
+            else -> ""
+        }
     val translateX = if (shake) 12.dp else 0.dp
 
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MiuixTheme.colorScheme.surface),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MiuixTheme.colorScheme.surface),
         contentAlignment = Alignment.Center,
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 32.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
@@ -194,16 +200,17 @@ fun PinSetupScreen(
             ) {
                 repeat(6) { index ->
                     Box(
-                        modifier = Modifier
-                            .size(16.dp)
-                            .clip(CircleShape)
-                            .background(
-                                when {
-                                    error.isNotBlank() -> MiuixTheme.colorScheme.error
-                                    index < displayPin.length -> MiuixTheme.colorScheme.primary
-                                    else -> MiuixTheme.colorScheme.outline.copy(alpha = 0.3f)
-                                }
-                            ),
+                        modifier =
+                            Modifier
+                                .size(16.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    when {
+                                        error.isNotBlank() -> MiuixTheme.colorScheme.error
+                                        index < displayPin.length -> MiuixTheme.colorScheme.primary
+                                        else -> MiuixTheme.colorScheme.outline.copy(alpha = 0.3f)
+                                    },
+                                ),
                     )
                 }
             }
@@ -233,11 +240,12 @@ private fun NumberPad(
     onDigit: (Char) -> Unit,
     onDelete: () -> Unit,
 ) {
-    val rows = listOf(
-        listOf('1', '2', '3'),
-        listOf('4', '5', '6'),
-        listOf('7', '8', '9'),
-    )
+    val rows =
+        listOf(
+            listOf('1', '2', '3'),
+            listOf('4', '5', '6'),
+            listOf('7', '8', '9'),
+        )
 
     Column(
         verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -254,9 +262,10 @@ private fun NumberPad(
             Box(modifier = Modifier.size(72.dp))
             PadButton(label = "0", onClick = { onDigit('0') })
             Box(
-                modifier = Modifier
-                    .size(72.dp)
-                    .clickable { onDelete() },
+                modifier =
+                    Modifier
+                        .size(72.dp)
+                        .clickable { onDelete() },
                 contentAlignment = Alignment.Center,
             ) {
                 Icon(
@@ -271,13 +280,17 @@ private fun NumberPad(
 }
 
 @Composable
-private fun PadButton(label: String, onClick: () -> Unit) {
+private fun PadButton(
+    label: String,
+    onClick: () -> Unit,
+) {
     Box(
-        modifier = Modifier
-            .size(72.dp)
-            .clip(CircleShape)
-            .background(MiuixTheme.colorScheme.surfaceContainer)
-            .clickable { onClick() },
+        modifier =
+            Modifier
+                .size(72.dp)
+                .clip(CircleShape)
+                .background(MiuixTheme.colorScheme.surfaceContainer)
+                .clickable { onClick() },
         contentAlignment = Alignment.Center,
     ) {
         Text(

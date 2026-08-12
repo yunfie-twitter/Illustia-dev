@@ -33,20 +33,26 @@ import com.yunfie.illustia.data.readAppStorageUsage
 import com.yunfie.illustia.ui.components.DividerLine
 import com.yunfie.illustia.ui.components.ElevatedPanel
 import com.yunfie.illustia.ui.components.HeaderIcon
-import com.yunfie.illustia.ui.components.MainNavigationContentPadding
 import com.yunfie.illustia.ui.components.MiuixConfirmDialog
 import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
 import com.yunfie.illustia.ui.components.Section
 import com.yunfie.illustia.ui.components.SettingLinkRow
 import com.yunfie.illustia.ui.components.SettingRow
+import com.yunfie.illustia.ui.components.adaptiveMainNavigationContentPadding
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.*
+import top.yukonga.miuix.kmp.icon.extended.Back
+import top.yukonga.miuix.kmp.icon.extended.Background
+import top.yukonga.miuix.kmp.icon.extended.Copy
+import top.yukonga.miuix.kmp.icon.extended.Import
+import top.yukonga.miuix.kmp.icon.extended.Settings
+import top.yukonga.miuix.kmp.icon.extended.Show
+import top.yukonga.miuix.kmp.icon.extended.Theme
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private enum class AppDataDeleteTarget {
@@ -111,135 +117,169 @@ fun AppDataScreen(
         },
     ) { scaffoldPadding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .background(MiuixTheme.colorScheme.surface),
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                end = 16.dp,
-                top = scaffoldPadding.calculateTopPadding() + 16.dp,
-                bottom = MainNavigationContentPadding,
-            ),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .background(MiuixTheme.colorScheme.surface),
+            contentPadding =
+                PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = scaffoldPadding.calculateTopPadding() + 16.dp,
+                    bottom = adaptiveMainNavigationContentPadding(),
+                ),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-
-        item {
-            val loadingSize = stringResource(R.string.data_storage_calculating)
-            Section(stringResource(R.string.data_storage_section)) {
-                ElevatedPanel {
-                    SettingRow(
-                        title = stringResource(R.string.data_storage_total),
-                        summary = storageUsage?.totalBytes?.readableBytes() ?: loadingSize,
-                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
-                    ) {
-                        Text(
-                            text = stringResource(R.string.data_storage_total_badge),
-                            color = MiuixTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                    DividerLine()
-                    SettingRow(
-                        title = stringResource(R.string.data_storage_app),
-                        summary = storageUsage?.appBytes?.readableBytes() ?: loadingSize,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.data_storage_app_badge),
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                    DividerLine()
-                    SettingRow(
-                        title = stringResource(R.string.data_storage_user_data),
-                        summary = storageUsage?.userDataBytes?.readableBytes() ?: loadingSize,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.data_storage_user_data_badge),
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                    DividerLine()
-                    SettingRow(
-                        title = stringResource(R.string.data_cache),
-                        summary = storageUsage?.cacheBytes?.readableBytes() ?: loadingSize,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.data_cache_badge),
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.6f),
-                            fontWeight = FontWeight.Bold,
-                        )
-                    }
-                }
-            }
-        }
-
-        storageUsage?.takeIf(AppStorageUsage::hasCodeBreakdown)?.let { usage ->
             item {
-                Section(stringResource(R.string.data_storage_code_breakdown)) {
+                val loadingSize = stringResource(R.string.data_storage_calculating)
+                Section(stringResource(R.string.data_storage_section)) {
                     ElevatedPanel {
-                        StorageDetailRow(stringResource(R.string.data_storage_apk), usage.apkBytes)
+                        SettingRow(
+                            title = stringResource(R.string.data_storage_total),
+                            summary = storageUsage?.totalBytes?.readableBytes() ?: loadingSize,
+                            modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                        ) {
+                            Text(
+                                text = stringResource(R.string.data_storage_total_badge),
+                                color = MiuixTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
                         DividerLine()
-                        StorageDetailRow(stringResource(R.string.data_storage_optimized_code), usage.optimizedCodeBytes)
+                        SettingRow(
+                            title = stringResource(R.string.data_storage_app),
+                            summary = storageUsage?.appBytes?.readableBytes() ?: loadingSize,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.data_storage_app_badge),
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
                         DividerLine()
-                        StorageDetailRow(stringResource(R.string.data_storage_dex_metadata), usage.dexMetadataBytes)
+                        SettingRow(
+                            title = stringResource(R.string.data_storage_user_data),
+                            summary = storageUsage?.userDataBytes?.readableBytes() ?: loadingSize,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.data_storage_user_data_badge),
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
                         DividerLine()
-                        StorageDetailRow(stringResource(R.string.data_storage_native_libraries), usage.nativeLibraryBytes)
+                        SettingRow(
+                            title = stringResource(R.string.data_cache),
+                            summary = storageUsage?.cacheBytes?.readableBytes() ?: loadingSize,
+                        ) {
+                            Text(
+                                text = stringResource(R.string.data_cache_badge),
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.6f),
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                    }
+                }
+            }
+
+            storageUsage?.takeIf(AppStorageUsage::hasCodeBreakdown)?.let { usage ->
+                item {
+                    Section(stringResource(R.string.data_storage_code_breakdown)) {
+                        ElevatedPanel {
+                            StorageDetailRow(stringResource(R.string.data_storage_apk), usage.apkBytes)
+                            DividerLine()
+                            StorageDetailRow(stringResource(R.string.data_storage_optimized_code), usage.optimizedCodeBytes)
+                            DividerLine()
+                            StorageDetailRow(stringResource(R.string.data_storage_dex_metadata), usage.dexMetadataBytes)
+                            DividerLine()
+                            StorageDetailRow(stringResource(R.string.data_storage_native_libraries), usage.nativeLibraryBytes)
+                            DividerLine()
+                            StorageDetailRow(stringResource(R.string.data_storage_reference_profile), usage.referenceProfileBytes)
+                            DividerLine()
+                            StorageDetailRow(stringResource(R.string.data_storage_current_profile), usage.currentProfileBytes)
+                        }
+                    }
+                }
+            }
+
+            item {
+                Section(stringResource(R.string.app_data_section_overview)) {
+                    ElevatedPanel {
+                        SettingRow(
+                            stringResource(R.string.data_view_history),
+                            stringResource(R.string.data_items_count, state.settings.viewHistory.size),
+                        ) {
+                            Text(
+                                stringResource(R.string.data_view_history_badge),
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
                         DividerLine()
-                        StorageDetailRow(stringResource(R.string.data_storage_reference_profile), usage.referenceProfileBytes)
+                        SettingRow(
+                            stringResource(R.string.data_search_history),
+                            stringResource(R.string.data_items_count, state.settings.searchHistory.size),
+                        ) {
+                            Text(
+                                stringResource(R.string.data_search_history_badge),
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
                         DividerLine()
-                        StorageDetailRow(stringResource(R.string.data_storage_current_profile), usage.currentProfileBytes)
+                        SettingRow(
+                            stringResource(R.string.data_watchlist_tags),
+                            stringResource(R.string.data_items_count, state.settings.favoriteTags.size),
+                        ) {
+                            Text(
+                                stringResource(R.string.data_watchlist_tags_badge),
+                                color = MiuixTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                        DividerLine()
+                        SettingRow(stringResource(R.string.data_mute_data), stringResource(R.string.data_items_count, mutedTotal)) {
+                            Text(
+                                stringResource(R.string.data_mute_data_badge),
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                fontWeight = FontWeight.Bold,
+                            )
+                        }
+                    }
+                }
+            }
+
+            item {
+                Section(stringResource(R.string.data_section_cleanup)) {
+                    ElevatedPanel(contentPadding = PaddingValues(0.dp)) {
+                        SettingLinkRow(stringResource(R.string.data_delete_cache)) { deleteTarget = AppDataDeleteTarget.Cache }
+                        DividerLine()
+                        SettingLinkRow(stringResource(R.string.data_delete_view_history)) { deleteTarget = AppDataDeleteTarget.ViewHistory }
+                        DividerLine()
+                        SettingLinkRow(stringResource(R.string.data_delete_search_history)) {
+                            deleteTarget =
+                                AppDataDeleteTarget.SearchHistory
+                        }
+                        DividerLine()
+                        SettingLinkRow(stringResource(R.string.data_delete_watchlist_tags)) {
+                            deleteTarget =
+                                AppDataDeleteTarget.FavoriteTags
+                        }
+                        DividerLine()
+                        SettingLinkRow(stringResource(R.string.data_delete_mute_data)) { deleteTarget = AppDataDeleteTarget.MuteData }
                     }
                 }
             }
         }
-
-        item {
-            Section(stringResource(R.string.app_data_section_overview)) {
-                ElevatedPanel {
-                    SettingRow(stringResource(R.string.data_view_history), stringResource(R.string.data_items_count, state.settings.viewHistory.size)) {
-                        Text(stringResource(R.string.data_view_history_badge), color = MiuixTheme.colorScheme.onSurfaceVariantSummary, fontWeight = FontWeight.Bold)
-                    }
-                    DividerLine()
-                    SettingRow(stringResource(R.string.data_search_history), stringResource(R.string.data_items_count, state.settings.searchHistory.size)) {
-                        Text(stringResource(R.string.data_search_history_badge), color = MiuixTheme.colorScheme.onSurfaceVariantSummary, fontWeight = FontWeight.Bold)
-                    }
-                    DividerLine()
-                    SettingRow(stringResource(R.string.data_watchlist_tags), stringResource(R.string.data_items_count, state.settings.favoriteTags.size)) {
-                        Text(stringResource(R.string.data_watchlist_tags_badge), color = MiuixTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
-                    }
-                    DividerLine()
-                    SettingRow(stringResource(R.string.data_mute_data), stringResource(R.string.data_items_count, mutedTotal)) {
-                        Text(stringResource(R.string.data_mute_data_badge), color = MiuixTheme.colorScheme.onSurfaceVariantSummary, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-        }
-
-        item {
-            Section(stringResource(R.string.data_section_cleanup)) {
-                ElevatedPanel(contentPadding = PaddingValues(0.dp)) {
-                    SettingLinkRow(stringResource(R.string.data_delete_cache)) { deleteTarget = AppDataDeleteTarget.Cache }
-                    DividerLine()
-                    SettingLinkRow(stringResource(R.string.data_delete_view_history)) { deleteTarget = AppDataDeleteTarget.ViewHistory }
-                    DividerLine()
-                    SettingLinkRow(stringResource(R.string.data_delete_search_history)) { deleteTarget = AppDataDeleteTarget.SearchHistory }
-                    DividerLine()
-                    SettingLinkRow(stringResource(R.string.data_delete_watchlist_tags)) { deleteTarget = AppDataDeleteTarget.FavoriteTags }
-                    DividerLine()
-                    SettingLinkRow(stringResource(R.string.data_delete_mute_data)) { deleteTarget = AppDataDeleteTarget.MuteData }
-                }
-            }
-        }
-
-    }
     }
 }
 
 @Composable
-private fun StorageDetailRow(title: String, bytes: Long?) {
+private fun StorageDetailRow(
+    title: String,
+    bytes: Long?,
+) {
     SettingRow(
         title = title,
         summary = (bytes ?: 0L).readableBytes(),
@@ -252,25 +292,23 @@ private fun StorageDetailRow(title: String, bytes: Long?) {
     }
 }
 
-private fun AppDataDeleteTarget.confirmTitle(context: Context): String {
-    return when (this) {
+private fun AppDataDeleteTarget.confirmTitle(context: Context): String =
+    when (this) {
         AppDataDeleteTarget.Cache -> context.getString(R.string.data_delete_cache)
         AppDataDeleteTarget.ViewHistory -> context.getString(R.string.data_delete_view_history)
         AppDataDeleteTarget.SearchHistory -> context.getString(R.string.data_delete_search_history)
         AppDataDeleteTarget.FavoriteTags -> context.getString(R.string.data_delete_watchlist_tags)
         AppDataDeleteTarget.MuteData -> context.getString(R.string.data_delete_mute_data)
     }
-}
 
-private fun AppDataDeleteTarget.confirmSummary(context: Context): String {
-    return when (this) {
+private fun AppDataDeleteTarget.confirmSummary(context: Context): String =
+    when (this) {
         AppDataDeleteTarget.Cache -> context.getString(R.string.data_delete_cache_desc)
         AppDataDeleteTarget.ViewHistory -> context.getString(R.string.data_delete_view_history_desc)
         AppDataDeleteTarget.SearchHistory -> context.getString(R.string.data_delete_search_history_desc)
         AppDataDeleteTarget.FavoriteTags -> context.getString(R.string.data_delete_watchlist_tags_desc)
         AppDataDeleteTarget.MuteData -> context.getString(R.string.data_delete_mute_data_desc)
     }
-}
 
 private fun Long.readableBytes(): String {
     if (this <= 0L) return "0 B"

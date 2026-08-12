@@ -113,9 +113,10 @@ fun UserProfileScreen(
     val selectTab: (Int) -> Unit = { index ->
         coroutineScope.launch { pagerState.animateScrollToPage(index) }
     }
-    val contentModifier = modifier
-        .then(if (contentHeight != null) Modifier.height(contentHeight) else Modifier.fillMaxSize())
-        .background(backgroundColor)
+    val contentModifier =
+        modifier
+            .then(if (contentHeight != null) Modifier.height(contentHeight) else Modifier.fillMaxSize())
+            .background(backgroundColor)
 
     val content: @Composable (Modifier) -> Unit = { pageModifier ->
         UserProfilePagerContent(

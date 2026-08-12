@@ -3,6 +3,7 @@ package com.yunfie.illustia.data.pixiv
 import com.yunfie.illustia.data.IllustiaRepository
 import com.yunfie.illustia.models.pixiv.Comment
 import com.yunfie.illustia.models.pixiv.CommentResponse
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,15 +35,29 @@ class CommentStore(
     suspend fun fetch() {
         _state.update { it.copy(isLoading = true, errorMessage = null) }
         try {
-            val response = when {
-                type == CommentArtworkType.ILLUST && isReplay -> repository.illustCommentReplies(parentCommentId ?: error("parentCommentId is required"))
-                type == CommentArtworkType.ILLUST -> repository.illustComments(id)
-                type == CommentArtworkType.NOVEL && isReplay -> repository.novelCommentReplies(parentCommentId ?: error("parentCommentId is required"))
-                else -> repository.novelComments(id)
-            }
+            val response =
+                when {
+                    type == CommentArtworkType.ILLUST && isReplay -> {
+                        repository.illustCommentReplies(parentCommentId ?: error("parentCommentId is required"))
+                    }
+
+                    type == CommentArtworkType.ILLUST -> {
+                        repository.illustComments(id)
+                    }
+
+                    type == CommentArtworkType.NOVEL && isReplay -> {
+                        repository.novelCommentReplies(parentCommentId ?: error("parentCommentId is required"))
+                    }
+
+                    else -> {
+                        repository.novelComments(id)
+                    }
+                }
             applyResponse(response)
-        } catch (error: Throwable) {
-            _state.update { it.copy(isLoading = false, errorMessage = error.toString()) }
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (expectedFailure: Exception) {
+            _state.update { it.copy(isLoading = false, errorMessage = expectedFailure.toString()) }
         }
     }
 
@@ -51,12 +66,17 @@ class CommentStore(
         try {
             val response = repository.nextCommentPage(nextUrl)
             applyResponse(response, append = true)
-        } catch (error: Throwable) {
-            _state.update { it.copy(isLoading = false, errorMessage = error.toString()) }
+        } catch (cancellation: CancellationException) {
+            throw cancellation
+        } catch (expectedFailure: Exception) {
+            _state.update { it.copy(isLoading = false, errorMessage = expectedFailure.toString()) }
         }
     }
 
-    suspend fun postComment(text: String, replyToId: Long? = null) {
+    suspend fun postComment(
+        text: String,
+        replyToId: Long? = null,
+    ) {
         val trimmed = text.trim()
         if (trimmed.isEmpty()) return
         when (type) {
@@ -65,7 +85,10 @@ class CommentStore(
         }
     }
 
-    private fun applyResponse(response: CommentResponse, append: Boolean = false) {
+    private fun applyResponse(
+        response: CommentResponse,
+        append: Boolean = false,
+    ) {
         _state.update { current ->
             current.copy(
                 comments = if (append) current.comments + response.comments else response.comments,

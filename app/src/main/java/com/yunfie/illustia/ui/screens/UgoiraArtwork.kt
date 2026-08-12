@@ -42,9 +42,9 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import com.yunfie.illustia.R
 import com.yunfie.illustia.models.pixiv.UgoiraPlayback
 import com.yunfie.illustia.models.pixiv.normalizedUgoiraDelayMillis
-import com.yunfie.illustia.R
 import com.yunfie.illustia.ui.components.LoadingIndicator
 import com.yunfie.illustia.ui.components.PixivImage
 import kotlinx.coroutines.Dispatchers
@@ -70,9 +70,10 @@ internal fun UgoiraArtwork(
     val animationScope = rememberCoroutineScope()
     var reloadKey by remember { mutableIntStateOf(0) }
     val playbackResult by produceState<Result<UgoiraPlayback>?>(initialValue = null, reloadKey) {
-        value = withContext(Dispatchers.IO) {
-            runCatching { loadPlayback() }
-        }
+        value =
+            withContext(Dispatchers.IO) {
+                runCatching { loadPlayback() }
+            }
     }
     val playback = playbackResult?.getOrNull()
     var currentFrameStep by remember(playback, reloadKey) { mutableLongStateOf(0L) }
@@ -84,19 +85,26 @@ internal fun UgoiraArtwork(
     var viewportSize by remember { mutableStateOf(IntSize.Zero) }
     val zoomAnimation = remember { arrayOfNulls<Job>(1) }
 
-    val currentFrameIndex = if (playback?.frames?.isNotEmpty() == true) {
-        (currentFrameStep % playback.frames.size).toInt()
-    } else {
-        0
-    }
+    val currentFrameIndex =
+        if (playback?.frames?.isNotEmpty() == true) {
+            (currentFrameStep % playback.frames.size).toInt()
+        } else {
+            0
+        }
 
-    fun notifyZoomChanged(previous: Float, current: Float) {
+    fun notifyZoomChanged(
+        previous: Float,
+        current: Float,
+    ) {
         val wasZoomed = previous > 1.02f
         val zoomed = current > 1.02f
         if (wasZoomed != zoomed) onZoomChanged(zoomed)
     }
 
-    fun clampedOffset(candidate: Offset, atScale: Float): Offset {
+    fun clampedOffset(
+        candidate: Offset,
+        atScale: Float,
+    ): Offset {
         val maxX = viewportSize.width * (atScale - 1f) / 2f
         val maxY = viewportSize.height * (atScale - 1f) / 2f
         return Offset(
@@ -105,27 +113,32 @@ internal fun UgoiraArtwork(
         )
     }
 
-    fun animateTo(targetScale: Float, targetOffset: Offset) {
+    fun animateTo(
+        targetScale: Float,
+        targetOffset: Offset,
+    ) {
         val startScale = scale
         val startOffset = offset
         zoomAnimation[0]?.cancel()
-        zoomAnimation[0] = animationScope.launch {
-            animate(
-                initialValue = 0f,
-                targetValue = 1f,
-                animationSpec = tween(260, easing = FastOutSlowInEasing),
-            ) { progress, _ ->
-                val previous = scale
-                scale = startScale + (targetScale - startScale) * progress
-                offset = Offset(
-                    startOffset.x + (targetOffset.x - startOffset.x) * progress,
-                    startOffset.y + (targetOffset.y - startOffset.y) * progress,
-                )
-                localScale = scale
-                localOffset = offset
-                notifyZoomChanged(previous, scale)
+        zoomAnimation[0] =
+            animationScope.launch {
+                animate(
+                    initialValue = 0f,
+                    targetValue = 1f,
+                    animationSpec = tween(260, easing = FastOutSlowInEasing),
+                ) { progress, _ ->
+                    val previous = scale
+                    scale = startScale + (targetScale - startScale) * progress
+                    offset =
+                        Offset(
+                            startOffset.x + (targetOffset.x - startOffset.x) * progress,
+                            startOffset.y + (targetOffset.y - startOffset.y) * progress,
+                        )
+                    localScale = scale
+                    localOffset = offset
+                    notifyZoomChanged(previous, scale)
+                }
             }
-        }
     }
 
     LaunchedEffect(zoomEnabled) {
@@ -150,74 +163,80 @@ internal fun UgoiraArtwork(
     }
 
     Box(
-        modifier = modifier
-            .fillMaxSize()
-            .background(Color.Black),
+        modifier =
+            modifier
+                .fillMaxSize()
+                .background(Color.Black),
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .clipToBounds()
-                .onSizeChanged { viewportSize = it }
-                .pointerInput(previewUrl, zoomEnabled, onTap) {
-                    detectTapGestures(
-                        onTap = { onTap?.invoke() },
-                        onDoubleTap = if (zoomEnabled) {
-                            {
-                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                if (scale > 1.02f) {
-                                    animateTo(1f, Offset.Zero)
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .clipToBounds()
+                    .onSizeChanged { viewportSize = it }
+                    .pointerInput(previewUrl, zoomEnabled, onTap) {
+                        detectTapGestures(
+                            onTap = { onTap?.invoke() },
+                            onDoubleTap =
+                                if (zoomEnabled) {
+                                    {
+                                        haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        if (scale > 1.02f) {
+                                            animateTo(1f, Offset.Zero)
+                                        } else {
+                                            animateTo(2.5f, Offset.Zero)
+                                        }
+                                    }
                                 } else {
-                                    animateTo(2.5f, Offset.Zero)
+                                    null
+                                },
+                        )
+                    }.then(
+                        if (zoomEnabled) {
+                            Modifier.pointerInput(previewUrl) {
+                                detectTransformGestures { centroid, pan, zoom, _ ->
+                                    zoomAnimation[0]?.cancel()
+                                    val previousScale = localScale
+                                    val nextScale = (localScale * zoom).coerceIn(1f, 6f)
+                                    val appliedZoom = nextScale / localScale
+                                    val viewportCenter =
+                                        Offset(
+                                            viewportSize.width / 2f,
+                                            viewportSize.height / 2f,
+                                        )
+                                    val focalPoint = centroid - viewportCenter
+                                    val transformedOffset =
+                                        localOffset + pan +
+                                            (focalPoint - localOffset) * (1f - appliedZoom)
+
+                                    localScale = nextScale
+                                    localOffset =
+                                        if (localScale > 1.02f) {
+                                            clampedOffset(transformedOffset, localScale)
+                                        } else {
+                                            Offset.Zero
+                                        }
+                                    scale = localScale
+                                    offset = localOffset
+                                    notifyZoomChanged(previousScale, localScale)
                                 }
                             }
                         } else {
-                            null
+                            Modifier
                         },
-                    )
-                }
-                .then(
-                    if (zoomEnabled) {
-                        Modifier.pointerInput(previewUrl) {
-                            detectTransformGestures { centroid, pan, zoom, _ ->
-                                zoomAnimation[0]?.cancel()
-                                val previousScale = localScale
-                                val nextScale = (localScale * zoom).coerceIn(1f, 6f)
-                                val appliedZoom = nextScale / localScale
-                                val viewportCenter = Offset(
-                                    viewportSize.width / 2f,
-                                    viewportSize.height / 2f,
-                                )
-                                val focalPoint = centroid - viewportCenter
-                                val transformedOffset = localOffset + pan +
-                                    (focalPoint - localOffset) * (1f - appliedZoom)
-
-                                localScale = nextScale
-                                localOffset = if (localScale > 1.02f) {
-                                    clampedOffset(transformedOffset, localScale)
-                                } else {
-                                    Offset.Zero
-                                }
-                                scale = localScale
-                                offset = localOffset
-                                notifyZoomChanged(previousScale, localScale)
-                            }
-                        }
-                    } else {
-                        Modifier
-                    },
-                ),
+                    ),
         ) {
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .graphicsLayer {
-                        transformOrigin = TransformOrigin.Center
-                        scaleX = scale
-                        scaleY = scale
-                        translationX = offset.x
-                        translationY = offset.y
-                    },
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            transformOrigin = TransformOrigin.Center
+                            scaleX = scale
+                            scaleY = scale
+                            translationX = offset.x
+                            translationY = offset.y
+                        },
             ) {
                 val contentScale = if (zoomEnabled) ContentScale.Fit else ContentScale.FillWidth
                 PixivImage(
@@ -230,12 +249,14 @@ internal fun UgoiraArtwork(
                 if (playback != null && playback.frames.isNotEmpty()) {
                     val currentFrame = playback.frames[currentFrameIndex]
                     val renderedFrameStep = currentFrameStep
-                    val frameRequest = remember(context, currentFrame.filePath) {
-                        ImageRequest.Builder(context)
-                            .data(currentFrame.filePath)
-                            .crossfade(false)
-                            .build()
-                    }
+                    val frameRequest =
+                        remember(context, currentFrame.filePath) {
+                            ImageRequest
+                                .Builder(context)
+                                .data(currentFrame.filePath)
+                                .crossfade(false)
+                                .build()
+                        }
                     AsyncImage(
                         model = frameRequest,
                         contentDescription = contentDescription,
@@ -251,9 +272,10 @@ internal fun UgoiraArtwork(
         when {
             playbackResult == null -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.18f)),
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.18f)),
                     contentAlignment = Alignment.Center,
                 ) {
                     LoadingIndicator()
@@ -262,12 +284,13 @@ internal fun UgoiraArtwork(
 
             playback != null && playback.frames.isNotEmpty() -> {
                 Box(
-                    modifier = Modifier
-                        .align(Alignment.BottomEnd)
-                        .padding(12.dp)
-                        .clip(RoundedCornerShape(999.dp))
-                        .background(Color.Black.copy(alpha = 0.45f))
-                        .padding(horizontal = 10.dp, vertical = 5.dp),
+                    modifier =
+                        Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(12.dp)
+                            .clip(RoundedCornerShape(999.dp))
+                            .background(Color.Black.copy(alpha = 0.45f))
+                            .padding(horizontal = 10.dp, vertical = 5.dp),
                 ) {
                     Text(
                         text = "UGOIRA ${currentFrameIndex + 1}/${playback.frames.size}",
@@ -279,9 +302,10 @@ internal fun UgoiraArtwork(
 
             playbackResult?.isFailure == true -> {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.Black.copy(alpha = 0.18f)),
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .background(Color.Black.copy(alpha = 0.18f)),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(

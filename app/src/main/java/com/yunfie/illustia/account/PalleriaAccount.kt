@@ -14,7 +14,10 @@ object PalleriaAccount {
     const val MANUAL_SYNC = "manual"
     private const val SYNC_INTERVAL_SECONDS = 15L * 60L
 
-    fun requestSync(account: Account, manual: Boolean = true) {
+    fun requestSync(
+        account: Account,
+        manual: Boolean = true,
+    ) {
         ContentResolver.requestSync(
             account,
             AUTHORITY,
@@ -26,7 +29,10 @@ object PalleriaAccount {
         )
     }
 
-    fun reconcile(context: Context, accounts: List<StoredAccount>) {
+    fun reconcile(
+        context: Context,
+        accounts: List<StoredAccount>,
+    ) {
         val manager = AccountManager.get(context)
         val expectedIds = accounts.map { it.userId.toString() }.toSet()
 
@@ -39,13 +45,15 @@ object PalleriaAccount {
 
         accounts.forEach { stored ->
             val userId = stored.userId.toString()
-            val existing = manager.getAccountsByType(TYPE).firstOrNull {
-                manager.getUserData(it, USER_ID) == userId
-            }
+            val existing =
+                manager.getAccountsByType(TYPE).firstOrNull {
+                    manager.getUserData(it, USER_ID) == userId
+                }
             val desiredName = stored.account.ifBlank { stored.name }.ifBlank { userId }
-            val account = existing ?: Account(desiredName, TYPE).also {
-                manager.addAccountExplicitly(it, null, Bundle().apply { putString(USER_ID, userId) })
-            }
+            val account =
+                existing ?: Account(desiredName, TYPE).also {
+                    manager.addAccountExplicitly(it, null, Bundle().apply { putString(USER_ID, userId) })
+                }
             manager.setUserData(account, USER_ID, userId)
             ContentResolver.setIsSyncable(account, AUTHORITY, 1)
             if (existing == null) {

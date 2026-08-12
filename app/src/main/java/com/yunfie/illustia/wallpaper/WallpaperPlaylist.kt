@@ -18,14 +18,18 @@ import kotlin.random.Random
 object WallpaperPlaylistScheduler {
     private const val ACTION = "com.yunfie.illustia.wallpaper.ROTATE"
 
-    fun setEnabled(context: Context, enabled: Boolean) {
+    fun setEnabled(
+        context: Context,
+        enabled: Boolean,
+    ) {
         val alarm = context.getSystemService(AlarmManager::class.java)
-        val operation = PendingIntent.getBroadcast(
-            context,
-            7401,
-            Intent(context, WallpaperPlaylistReceiver::class.java).setAction(ACTION),
-            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
-        )
+        val operation =
+            PendingIntent.getBroadcast(
+                context,
+                7401,
+                Intent(context, WallpaperPlaylistReceiver::class.java).setAction(ACTION),
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+            )
         alarm.cancel(operation)
         if (enabled && LiveWallpaperSupport.isSupported()) {
             context.sendBroadcast(Intent(context, WallpaperPlaylistReceiver::class.java).setAction(ACTION))
@@ -40,7 +44,10 @@ object WallpaperPlaylistScheduler {
 }
 
 class WallpaperPlaylistReceiver : BroadcastReceiver() {
-    override fun onReceive(context: Context, intent: Intent) {
+    override fun onReceive(
+        context: Context,
+        intent: Intent,
+    ) {
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {

@@ -63,10 +63,14 @@ fun TagPreviewBottomSheet(
                     colors = overlayActionButtonColors(),
                 ) {
                     Text(
-                        text = stringResource(
-                            if (isFavorite) R.string.tag_sheet_remove_favorite
-                            else R.string.tag_sheet_add_favorite,
-                        ),
+                        text =
+                            stringResource(
+                                if (isFavorite) {
+                                    R.string.tag_sheet_remove_favorite
+                                } else {
+                                    R.string.tag_sheet_add_favorite
+                                },
+                            ),
                         color = MiuixTheme.colorScheme.primary,
                     )
                 }
@@ -76,15 +80,20 @@ fun TagPreviewBottomSheet(
                     colors = overlayActionButtonColors(),
                 ) {
                     Text(
-                        text = stringResource(
-                            if (isMuted) R.string.tag_sheet_unmute
-                            else R.string.tag_sheet_mute,
-                        ),
-                        color = if (isMuted) {
-                            MiuixTheme.colorScheme.primary
-                        } else {
-                            MiuixTheme.colorScheme.error
-                        },
+                        text =
+                            stringResource(
+                                if (isMuted) {
+                                    R.string.tag_sheet_unmute
+                                } else {
+                                    R.string.tag_sheet_mute
+                                },
+                            ),
+                        color =
+                            if (isMuted) {
+                                MiuixTheme.colorScheme.primary
+                            } else {
+                                MiuixTheme.colorScheme.error
+                            },
                     )
                 }
             }
@@ -95,15 +104,17 @@ fun TagPreviewBottomSheet(
 @Composable
 private fun TagPreviewHero(preview: TagPreview) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(190.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(190.dp),
         cornerRadius = 24.dp,
         insideMargin = PaddingValues(0.dp),
-        colors = CardDefaults.defaultColors(
-            color = MiuixTheme.colorScheme.primaryContainer,
-            contentColor = Color.White,
-        ),
+        colors =
+            CardDefaults.defaultColors(
+                color = MiuixTheme.colorScheme.primaryContainer,
+                contentColor = Color.White,
+            ),
     ) {
         Box(modifier = Modifier.fillMaxSize()) {
             preview.imageUrl?.let { imageUrl ->
@@ -116,30 +127,32 @@ private fun TagPreviewHero(preview: TagPreview) {
                 )
             }
             Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        if (preview.imageUrl != null) {
-                            Brush.verticalGradient(
-                                listOf(
-                                    Color.Black.copy(alpha = 0.04f),
-                                    Color.Black.copy(alpha = 0.82f),
-                                ),
-                            )
-                        } else {
-                            Brush.linearGradient(
-                                listOf(
-                                    MiuixTheme.colorScheme.primary,
-                                    MiuixTheme.colorScheme.primaryContainer,
-                                ),
-                            )
-                        },
-                    ),
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(
+                            if (preview.imageUrl != null) {
+                                Brush.verticalGradient(
+                                    listOf(
+                                        Color.Black.copy(alpha = 0.04f),
+                                        Color.Black.copy(alpha = 0.82f),
+                                    ),
+                                )
+                            } else {
+                                Brush.linearGradient(
+                                    listOf(
+                                        MiuixTheme.colorScheme.primary,
+                                        MiuixTheme.colorScheme.primaryContainer,
+                                    ),
+                                )
+                            },
+                        ),
             )
             Column(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(20.dp),
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(20.dp),
                 verticalArrangement = Arrangement.spacedBy(5.dp),
             ) {
                 Text(

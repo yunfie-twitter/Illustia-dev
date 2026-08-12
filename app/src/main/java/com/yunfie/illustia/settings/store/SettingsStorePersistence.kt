@@ -65,12 +65,14 @@ internal suspend fun clearSensitiveSettings(
     database: IllustiaDatabase,
     dao: SettingsDao,
 ) {
-    sensitivePreferences.edit()
+    sensitivePreferences
+        .edit()
         .remove(KEY_REFRESH_TOKEN)
         .remove(KEY_ACCOUNTS)
         .remove(KEY_ACCOUNT_TOKENS)
         .apply()
-    legacyPreferences.edit()
+    legacyPreferences
+        .edit()
         .remove(KEY_REFRESH_TOKEN)
         .remove(KEY_ACCOUNTS)
         .remove(KEY_ACCOUNT_TOKENS)

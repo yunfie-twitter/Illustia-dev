@@ -54,14 +54,19 @@ fun CollapsingHeader(
     modifier: Modifier = Modifier,
 ) {
     // 折り畳み判定: index > 0 か、index == 0 でも閾値超えたら折り畳み
-    val isCollapsed = remember(firstIndex, scrollOffset) {
-        firstIndex > 0 || scrollOffset > collapseThresholdPx
-    }
+    val isCollapsed =
+        remember(firstIndex, scrollOffset) {
+            firstIndex > 0 || scrollOffset > collapseThresholdPx
+        }
 
     // 大ヘッダーの透明度 (スクロールに応じて 1f → 0f)
     val expandAlpha by animateFloatAsState(
-        targetValue = if (isCollapsed) 0f
-        else (1f - scrollOffset.toFloat() / collapseThresholdPx.toFloat()).coerceIn(0f, 1f),
+        targetValue =
+            if (isCollapsed) {
+                0f
+            } else {
+                (1f - scrollOffset.toFloat() / collapseThresholdPx.toFloat()).coerceIn(0f, 1f)
+            },
         animationSpec = tween(durationMillis = 160),
         label = "collapsingHeader-expandAlpha",
     )
@@ -77,10 +82,11 @@ fun CollapsingHeader(
     Box(modifier = modifier.fillMaxWidth()) {
         // ── 大ヘッダー ──────────────────────────────────
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .graphicsLayer { alpha = expandAlpha }
-                .padding(horizontal = 4.dp, vertical = 2.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer { alpha = expandAlpha }
+                    .padding(horizontal = 4.dp, vertical = 2.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
@@ -104,14 +110,14 @@ fun CollapsingHeader(
 
         // ── ミニヘッダー (sticky) ──────────────────────
         Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .graphicsLayer { alpha = miniAlpha }
-                .background(scheme.background.copy(alpha = 0.9f))
-                .then(
-                    if (onTitleClick != null) Modifier.miuixClickable(onClick = onTitleClick) else Modifier,
-                )
-                .padding(horizontal = 8.dp, vertical = 6.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .graphicsLayer { alpha = miniAlpha }
+                    .background(scheme.background.copy(alpha = 0.9f))
+                    .then(
+                        if (onTitleClick != null) Modifier.miuixClickable(onClick = onTitleClick) else Modifier,
+                    ).padding(horizontal = 8.dp, vertical = 6.dp),
             contentAlignment = Alignment.Center,
         ) {
             Text(

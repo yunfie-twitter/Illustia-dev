@@ -16,56 +16,68 @@ import android.content.res.Configuration
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.net.Uri
-import android.os.Build
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.view.Display
 import android.view.WindowManager
 import android.view.animation.AccelerateDecelerateInterpolator
-import androidx.fragment.app.FragmentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
-import androidx.appcompat.app.AppCompatDelegate
 import androidx.annotation.RequiresApi
-import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
+import androidx.appcompat.app.AppCompatDelegate
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material.LocalTextStyle
-import androidx.core.os.LocaleListCompat
-import androidx.lifecycle.DefaultLifecycleObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.core.os.LocaleListCompat
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
+import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.DefaultLifecycleObserver
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.SingletonImageLoader
+import coil3.network.httpHeaders
+import coil3.request.ImageRequest
+import coil3.request.SuccessResult
+import coil3.toBitmap
+import com.yunfie.illustia.data.NativeImageAnalysis
+import com.yunfie.illustia.data.proxyPixivImageUrl
 import com.yunfie.illustia.nativebridge.NativeIntentRouter
-import com.yunfie.illustia.settings.SettingsStore
+import com.yunfie.illustia.platform.PlatformCapabilities
 import com.yunfie.illustia.settings.AppFont
+import com.yunfie.illustia.settings.SettingsStore
+import com.yunfie.illustia.settings.appLanguageLocaleList
 import com.yunfie.illustia.settings.isAppDarkTheme
 import com.yunfie.illustia.settings.rememberAppThemeColors
-import com.yunfie.illustia.settings.appLanguageLocaleList
 import com.yunfie.illustia.ui.IllustiaApp
+import com.yunfie.illustia.ui.components.PixivImageHeaders
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.Surface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.theme.defaultTextStyles
 import top.yukonga.miuix.kmp.theme.TextStyles
+import top.yukonga.miuix.kmp.theme.defaultTextStyles
 
 class MainActivity : FragmentActivity() {
     private companion object {
-        const val MIN_HANOFF_API = 37
         const val LEGACY_STORAGE_PERMISSION_REQUEST_CODE = 25
     }
 
     private val viewModel by viewModels<IllustiaViewModel> {
-        androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.getInstance(application)
+        androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory
+            .getInstance(application)
     }
     private var lastHandledClipboardText: String? = null
     private var appliedRefreshRateHint: Float? = null
@@ -82,40 +94,61 @@ class MainActivity : FragmentActivity() {
 
         // core-splashscreen の互換実装を使い、API 25 以降で同じフェードアウトにする。
         splashScreen.setOnExitAnimationListener { splashScreenView ->
-            android.animation.ObjectAnimator.ofFloat(
-                splashScreenView.view,
-                android.view.View.ALPHA,
-                1f,
-                0f,
-            ).apply {
-                duration = 220L
-                interpolator = AccelerateDecelerateInterpolator()
-                addListener(object : android.animation.AnimatorListenerAdapter() {
-                    override fun onAnimationEnd(animation: android.animation.Animator) {
-                        splashScreenView.remove()
-                    }
-                })
-                start()
-            }
+            android.animation.ObjectAnimator
+                .ofFloat(
+                    splashScreenView.view,
+                    android.view.View.ALPHA,
+                    1f,
+                    0f,
+                ).apply {
+                    duration = 220L
+                    interpolator = AccelerateDecelerateInterpolator()
+                    addListener(
+                        object : android.animation.AnimatorListenerAdapter() {
+                            override fun onAnimationEnd(animation: android.animation.Animator) {
+                                splashScreenView.remove()
+                            }
+                        },
+                    )
+                    start()
+                }
         }
         val isDark = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
         enableEdgeToEdge(
-            statusBarStyle = if (isDark) SystemBarStyle.dark(Color.TRANSPARENT) else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
-            navigationBarStyle = if (isDark) SystemBarStyle.dark(Color.TRANSPARENT) else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+            statusBarStyle =
+                if (isDark) {
+                    SystemBarStyle.dark(
+                        Color.TRANSPARENT,
+                    )
+                } else {
+                    SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+                },
+            navigationBarStyle =
+                if (isDark) {
+                    SystemBarStyle.dark(
+                        Color.TRANSPARENT,
+                    )
+                } else {
+                    SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+                },
         )
         super.onCreate(savedInstanceState)
         requestLegacyStoragePermissionIfNeeded()
         applyAppLanguage(SettingsStore.readStoredAppLanguage(applicationContext))
 
         // Observe app lifecycle for lock-on-return
-        val lifecycleObserver = object : DefaultLifecycleObserver {
-            override fun onStop(owner: LifecycleOwner) {
-                if (viewModel.shouldLockOnReturn()) {
-                    viewModel.lockApp()
+        val lifecycleObserver =
+            object : DefaultLifecycleObserver {
+                override fun onStop(owner: LifecycleOwner) {
+                    if (viewModel.shouldLockOnReturn()) {
+                        viewModel.lockApp()
+                    }
                 }
             }
-        }
-        androidx.lifecycle.ProcessLifecycleOwner.get().lifecycle.addObserver(lifecycleObserver)
+        androidx.lifecycle.ProcessLifecycleOwner
+            .get()
+            .lifecycle
+            .addObserver(lifecycleObserver)
 
         setContent {
             val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -123,7 +156,35 @@ class MainActivity : FragmentActivity() {
             val appLocked = uiState.appLocked
             val settingsLoaded = uiState.settingsLoaded
             val systemDark = isSystemInDarkTheme()
-            val themeColors = rememberAppThemeColors(settings)
+            var artworkAccent by remember { mutableStateOf<Int?>(null) }
+            val selectedArtwork = uiState.selectedIllust
+            LaunchedEffect(
+                settings.artworkThemeEnabled,
+                selectedArtwork?.id,
+                settings.pixivImageProxyBaseUrl,
+            ) {
+                artworkAccent = null
+                if (!settings.artworkThemeEnabled || selectedArtwork == null) return@LaunchedEffect
+                runCatching {
+                    val url = selectedArtwork.previewUrl.ifBlank { selectedArtwork.imageUrl }
+                    val request =
+                        ImageRequest
+                            .Builder(this@MainActivity)
+                            .data(proxyPixivImageUrl(url, settings.pixivImageProxyBaseUrl))
+                            .httpHeaders(PixivImageHeaders)
+                            .size(160)
+                            .build()
+                    val result = SingletonImageLoader.get(this@MainActivity).execute(request)
+                    if (result is SuccessResult) {
+                        withContext(Dispatchers.Default) {
+                            NativeImageAnalysis.dominantColor(result.image.toBitmap())
+                        }
+                    } else {
+                        null
+                    }
+                }.getOrNull()?.let { artworkAccent = it }
+            }
+            val themeColors = rememberAppThemeColors(settings, artworkAccent)
 
             LaunchedEffect(settingsLoaded, settings.secureWindow) {
                 if (!settingsLoaded) return@LaunchedEffect
@@ -138,7 +199,7 @@ class MainActivity : FragmentActivity() {
                 if (appLocked && settings.appLockEnabled) {
                     window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
                     val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+                    if (PlatformCapabilities.supportsClipboardClear()) {
                         clipboard?.clearPrimaryClip()
                     } else {
                         @Suppress("DEPRECATION")
@@ -158,12 +219,32 @@ class MainActivity : FragmentActivity() {
                 if (!settingsLoaded) return@LaunchedEffect
                 val isDarkTheme = isAppDarkTheme(settings.themeMode, systemDark)
                 enableEdgeToEdge(
-                    statusBarStyle = if (isDarkTheme) SystemBarStyle.dark(Color.TRANSPARENT) else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
-                    navigationBarStyle = if (isDarkTheme) SystemBarStyle.dark(Color.TRANSPARENT) else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT),
+                    statusBarStyle =
+                        if (isDarkTheme) {
+                            SystemBarStyle.dark(
+                                Color.TRANSPARENT,
+                            )
+                        } else {
+                            SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+                        },
+                    navigationBarStyle =
+                        if (isDarkTheme) {
+                            SystemBarStyle.dark(
+                                Color.TRANSPARENT,
+                            )
+                        } else {
+                            SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)
+                        },
                 )
             }
 
-            LaunchedEffect(settingsLoaded, settings.privacyModeEnabled, settings.hideRecents, settings.dummyAppName, settings.dummyIconVariant) {
+            LaunchedEffect(
+                settingsLoaded,
+                settings.privacyModeEnabled,
+                settings.hideRecents,
+                settings.dummyAppName,
+                settings.dummyIconVariant,
+            ) {
                 if (!settingsLoaded) return@LaunchedEffect
                 updateRecentsTaskDescription(settings)
             }
@@ -183,12 +264,14 @@ class MainActivity : FragmentActivity() {
                 }
             }
 
-            val fontFamily = remember(settings.appFont) {
-                resolveAppFontFamily(settings.appFont)
-            }
-            val textStyles = remember(settings.appFont) {
-                resolveAppTextStyles(fontFamily)
-            }
+            val fontFamily =
+                remember(settings.appFont) {
+                    resolveAppFontFamily(settings.appFont)
+                }
+            val textStyles =
+                remember(settings.appFont) {
+                    resolveAppTextStyles(fontFamily)
+                }
             MiuixTheme(colors = themeColors, textStyles = textStyles) {
                 CompositionLocalProvider(
                     LocalTextStyle provides LocalTextStyle.current.merge(TextStyle(fontFamily = fontFamily)),
@@ -227,38 +310,43 @@ class MainActivity : FragmentActivity() {
         viewModel.handleIncomingIntent(intent)
     }
 
-    @RequiresApi(MIN_HANOFF_API)
+    @RequiresApi(PlatformCapabilities.HANDOFF_API)
     override fun onHandoffActivityDataRequested(handoffRequestInfo: HandoffActivityDataRequestInfo): HandoffActivityData {
         val state = viewModel.uiState.value
         val activityComponent = ComponentName(this, MainActivity::class.java)
         val handoffUri = currentHandoffUri(state)
-        val fallbackUri = when {
-            state.appLocked || state.privacyLocked -> Uri.parse("https://www.pixiv.net/")
-            handoffUri?.host == "users" -> Uri.parse("https://www.pixiv.net/users/${handoffUri.lastPathSegment}")
-            handoffUri?.host == "illusts" -> Uri.parse("https://www.pixiv.net/artworks/${handoffUri.lastPathSegment}")
-            else -> Uri.parse("https://www.pixiv.net/")
-        }
-        val extras = PersistableBundle().apply {
-            handoffUri?.let { putString(NativeIntentRouter.EXTRA_HANDOFF_URI, it.toString()) }
-        }
-        return HandoffActivityData.Builder(activityComponent)
+        val fallbackUri =
+            when {
+                state.appLocked || state.privacyLocked -> Uri.parse("https://www.pixiv.net/")
+                handoffUri?.host == "users" -> Uri.parse("https://www.pixiv.net/users/${handoffUri.lastPathSegment}")
+                handoffUri?.host == "illusts" -> Uri.parse("https://www.pixiv.net/artworks/${handoffUri.lastPathSegment}")
+                else -> Uri.parse("https://www.pixiv.net/")
+            }
+        val extras =
+            PersistableBundle().apply {
+                handoffUri?.let { putString(NativeIntentRouter.EXTRA_HANDOFF_URI, it.toString()) }
+            }
+        return HandoffActivityData
+            .Builder(activityComponent)
             .setExtras(extras)
             .setFallbackUri(fallbackUri)
             .build()
     }
 
     private fun enableHandoffIfSupported() {
-        if (Build.VERSION.SDK_INT < MIN_HANOFF_API) return
+        if (!PlatformCapabilities.supportsActivityHandoff()) return
 
-        val params = HandoffActivityParams.Builder()
-            .setAllowHandoffWithoutPackageInstalled(true)
-            .build()
+        val params =
+            HandoffActivityParams
+                .Builder()
+                .setAllowHandoffWithoutPackageInstalled(true)
+                .build()
         setHandoffEnabled(true, params)
     }
 
     private fun requestLegacyStoragePermissionIfNeeded() {
         if (
-            Build.VERSION.SDK_INT <= Build.VERSION_CODES.P &&
+            PlatformCapabilities.requiresLegacyStoragePermission() &&
             checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
         ) {
             requestPermissions(
@@ -271,23 +359,37 @@ class MainActivity : FragmentActivity() {
     private fun currentHandoffUri(state: IllustiaUiState): Uri? {
         if (state.appLocked || state.privacyLocked) return null
         return when {
-            state.showUserPage && state.selectedUser != null -> Uri.parse("pixiv://users/${state.selectedUser.id}")
-            state.imageViewerIllust != null -> Uri.parse("pixiv://illusts/${state.imageViewerIllust.id}?page=${state.imageViewerCurrentPage}")
-            state.selectedIllust != null -> Uri.parse("pixiv://illusts/${state.selectedIllust.id}")
-            else -> null
+            state.showUserPage && state.selectedUser != null -> {
+                Uri.parse("pixiv://users/${state.selectedUser.id}")
+            }
+
+            state.imageViewerIllust != null -> {
+                Uri.parse(
+                    "pixiv://illusts/${state.imageViewerIllust.id}?page=${state.imageViewerCurrentPage}",
+                )
+            }
+
+            state.selectedIllust != null -> {
+                Uri.parse("pixiv://illusts/${state.selectedIllust.id}")
+            }
+
+            else -> {
+                null
+            }
         }
     }
 
     private fun openPixivUrlFromClipboardIfNeeded() {
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-        val text = runCatching {
-            clipboard.primaryClip
-                ?.takeIf { it.itemCount > 0 }
-                ?.getItemAt(0)
-                ?.coerceToText(this)
-                ?.toString()
-                ?.trim()
-        }.getOrNull().orEmpty()
+        val text =
+            runCatching {
+                clipboard.primaryClip
+                    ?.takeIf { it.itemCount > 0 }
+                    ?.getItemAt(0)
+                    ?.coerceToText(this)
+                    ?.toString()
+                    ?.trim()
+            }.getOrNull().orEmpty()
         if (text.isBlank() || text == lastHandledClipboardText) return
         if (NativeIntentRouter.parseText(text) == null) return
 
@@ -299,71 +401,81 @@ class MainActivity : FragmentActivity() {
         if (secure) {
             window.addFlags(WindowManager.LayoutParams.FLAG_SECURE)
             // Android 13+ ではタスク切替画面のスクリーンショットも無効化
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (PlatformCapabilities.supportsRecentsScreenshotControl()) {
                 setRecentsScreenshotEnabled(false)
             }
         } else {
             window.clearFlags(WindowManager.LayoutParams.FLAG_SECURE)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (PlatformCapabilities.supportsRecentsScreenshotControl()) {
                 setRecentsScreenshotEnabled(true)
             }
         }
     }
 
     private fun applyAdaptiveRefreshRateHint() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
+        if (!PlatformCapabilities.supportsRefreshRateHint()) return
 
         val display = window.decorView.display ?: return
-        val preferredRefreshRate = when {
-            Build.VERSION.SDK_INT >= 36 && display.hasArrSupport() ->
-                display.getSuggestedFrameRate(Display.FRAME_RATE_CATEGORY_NORMAL)
-            else -> 60f
-        }
+        val preferredRefreshRate =
+            when {
+                PlatformCapabilities.supportsAdaptiveRefreshRate() && display.hasArrSupport() -> {
+                    display.getSuggestedFrameRate(Display.FRAME_RATE_CATEGORY_NORMAL)
+                }
+
+                else -> {
+                    60f
+                }
+            }
 
         if (preferredRefreshRate <= 0f || appliedRefreshRateHint == preferredRefreshRate) return
 
-        window.attributes = window.attributes.apply {
-            this.preferredRefreshRate = preferredRefreshRate
-        }
+        window.attributes =
+            window.attributes.apply {
+                this.preferredRefreshRate = preferredRefreshRate
+            }
         appliedRefreshRateHint = preferredRefreshRate
     }
 
     private fun clearAdaptiveRefreshRateHint() {
-        if (appliedRefreshRateHint == null || Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return
+        if (appliedRefreshRateHint == null || !PlatformCapabilities.supportsRefreshRateHint()) return
 
-        window.attributes = window.attributes.apply {
-            preferredRefreshRate = 0f
-        }
+        window.attributes =
+            window.attributes.apply {
+                preferredRefreshRate = 0f
+            }
         appliedRefreshRateHint = null
     }
 
     private fun updateRecentsTaskDescription(settings: com.yunfie.illustia.settings.AppSettings) {
         if (!settings.privacyModeEnabled) return
 
-        val title = if (settings.hideRecents) {
-            settings.dummyAppName.ifBlank { getString(R.string.app_name_dummy) }
-        } else {
-            getString(R.string.app_name)
-        }
+        val title =
+            if (settings.hideRecents) {
+                settings.dummyAppName.ifBlank { getString(R.string.app_name_dummy) }
+            } else {
+                getString(R.string.app_name)
+            }
 
-        val iconRes = if (settings.hideRecents) {
-            resources.getIdentifier(settings.dummyIconVariant, "mipmap", packageName)
-        } else {
-            R.mipmap.ic_launcher
-        }
+        val iconRes =
+            if (settings.hideRecents) {
+                resources.getIdentifier(settings.dummyIconVariant, "mipmap", packageName)
+            } else {
+                R.mipmap.ic_launcher
+            }
 
-        val iconBitmap = if (iconRes != 0) {
-            BitmapFactory.decodeResource(resources, iconRes)
-        } else {
-            BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
-        }
+        val iconBitmap =
+            if (iconRes != 0) {
+                BitmapFactory.decodeResource(resources, iconRes)
+            } else {
+                BitmapFactory.decodeResource(resources, R.mipmap.ic_launcher)
+            }
 
         val taskDesc = ActivityManager.TaskDescription(title, iconBitmap)
         setTaskDescription(taskDesc)
     }
 
     private fun applyAppLanguage(language: String) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (PlatformCapabilities.supportsPlatformLocaleManager()) {
             val localeManager = getSystemService(LocaleManager::class.java) ?: return
             localeManager.applicationLocales = appLanguageLocaleList(language)
             return
@@ -374,6 +486,15 @@ class MainActivity : FragmentActivity() {
                 when (language) {
                     "ja" -> "ja-JP"
                     "en" -> "en-US"
+                    "ko" -> "ko-KR"
+                    "es" -> "es-ES"
+                    "pt" -> "pt-BR"
+                    "fr" -> "fr-FR"
+                    "de" -> "de-DE"
+                    "ru" -> "ru-RU"
+                    "id" -> "id-ID"
+                    "th" -> "th-TH"
+                    "vi" -> "vi-VN"
                     "zh-Hans" -> "zh-Hans"
                     "zh-Hant" -> "zh-Hant"
                     else -> ""
@@ -382,21 +503,25 @@ class MainActivity : FragmentActivity() {
         )
     }
 
-    private fun resolveAppFontFamily(value: String): FontFamily {
-        return when (AppFont.fromValue(value)) {
-            AppFont.System -> FontFamily.Default
-            AppFont.MiSans -> FontFamily(
-                Font(R.font.mi_sans_light, FontWeight.Light),
-                Font(R.font.mi_sans_regular, FontWeight.Normal),
-                Font(R.font.mi_sans_medium, FontWeight.Medium),
-                Font(R.font.mi_sans_demibold, FontWeight.SemiBold),
-                Font(R.font.mi_sans_bold, FontWeight.Bold),
-                Font(R.font.mi_sans_heavy, FontWeight.Black),
-                Font(R.font.mi_sans_extra_light, FontWeight.ExtraLight),
-                Font(R.font.mi_sans_thin, FontWeight.Thin),
-            )
+    private fun resolveAppFontFamily(value: String): FontFamily =
+        when (AppFont.fromValue(value)) {
+            AppFont.System -> {
+                FontFamily.Default
+            }
+
+            AppFont.MiSans -> {
+                FontFamily(
+                    Font(R.font.mi_sans_light, FontWeight.Light),
+                    Font(R.font.mi_sans_regular, FontWeight.Normal),
+                    Font(R.font.mi_sans_medium, FontWeight.Medium),
+                    Font(R.font.mi_sans_demibold, FontWeight.SemiBold),
+                    Font(R.font.mi_sans_bold, FontWeight.Bold),
+                    Font(R.font.mi_sans_heavy, FontWeight.Black),
+                    Font(R.font.mi_sans_extra_light, FontWeight.ExtraLight),
+                    Font(R.font.mi_sans_thin, FontWeight.Thin),
+                )
+            }
         }
-    }
 
     private fun resolveAppTextStyles(fontFamily: FontFamily): TextStyles {
         val base = defaultTextStyles()

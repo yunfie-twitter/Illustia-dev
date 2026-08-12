@@ -51,7 +51,11 @@ import top.yukonga.miuix.kmp.icon.extended.Refresh
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
-fun NotificationScreen(state: IllustiaUiState, viewModel: IllustiaViewModel, onBack: () -> Unit) {
+fun NotificationScreen(
+    state: IllustiaUiState,
+    viewModel: IllustiaViewModel,
+    onBack: () -> Unit,
+) {
     PredictiveBackGestureHandler(onBack = onBack)
     LaunchedEffect(Unit) {
         if (state.notifications.isEmpty()) viewModel.refreshNotifications()
@@ -71,11 +75,13 @@ fun NotificationScreen(state: IllustiaUiState, viewModel: IllustiaViewModel, onB
     ) { padding ->
         LazyColumn(
             modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
-            contentPadding = PaddingValues(
-                start = 14.dp, end = 14.dp,
-                top = padding.calculateTopPadding() + 12.dp,
-                bottom = 32.dp,
-            ),
+            contentPadding =
+                PaddingValues(
+                    start = 14.dp,
+                    end = 14.dp,
+                    top = padding.calculateTopPadding() + 12.dp,
+                    bottom = 32.dp,
+                ),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             if (state.notifications.isEmpty() && state.notificationsLoading) {
@@ -95,7 +101,10 @@ fun NotificationScreen(state: IllustiaUiState, viewModel: IllustiaViewModel, onB
                     }
                 } else if (notification.viewMore != null) {
                     ViewMoreRow(
-                        title = notification.viewMore.title.orEmpty().ifBlank { stringResource(R.string.notifications_load_more) },
+                        title =
+                            notification.viewMore.title
+                                .orEmpty()
+                                .ifBlank { stringResource(R.string.notifications_load_more) },
                         unread = notification.viewMore.unreadExists,
                         onClick = { viewModel.expandNotification(notification.id) },
                     )
@@ -119,7 +128,11 @@ fun NotificationScreen(state: IllustiaUiState, viewModel: IllustiaViewModel, onB
 }
 
 @Composable
-private fun NotificationCard(notification: PixivNotification, compact: Boolean = false, onClick: () -> Unit) {
+private fun NotificationCard(
+    notification: PixivNotification,
+    compact: Boolean = false,
+    onClick: () -> Unit,
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         cornerRadius = if (compact) 14.dp else 18.dp,
@@ -145,7 +158,11 @@ private fun NotificationCard(notification: PixivNotification, compact: Boolean =
                     )
                 }
                 notification.createdDatetime?.let {
-                    Text(it.toDisplayDate(), style = MiuixTheme.textStyles.footnote1, color = MiuixTheme.colorScheme.onSurfaceVariantSummary)
+                    Text(
+                        it.toDisplayDate(),
+                        style = MiuixTheme.textStyles.footnote1,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    )
                 }
             }
             if (!notification.targetUrl.isNullOrBlank()) {
@@ -177,9 +194,17 @@ private fun NotificationImage(notification: PixivNotification) {
 }
 
 @Composable
-private fun ViewMoreRow(title: String, unread: Boolean, onClick: () -> Unit) {
+private fun ViewMoreRow(
+    title: String,
+    unread: Boolean,
+    onClick: () -> Unit,
+) {
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).miuixClickable(onClick = onClick).padding(14.dp),
+        Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(14.dp))
+            .miuixClickable(onClick = onClick)
+            .padding(14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Center,
     ) {

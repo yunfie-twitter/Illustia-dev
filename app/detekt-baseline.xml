@@ -3,476 +3,111 @@
   <ManuallySuppressedIssues/>
   <CurrentIssues>
     <ID>ComplexCondition:FavoriteTagsScreen.kt:state.watchlistItems.isEmpty() &amp;&amp; state.loadState != LoadState.Loading &amp;&amp; state.loadState !is LoadState.Error &amp;&amp; currentSelectedTag != null</ID>
+    <ID>ComplexCondition:IllustComponents.kt:preferences.showTitle || preferences.showArtist || preferences.showTags || preferences.showBookmarkCount || showBookmarkButton</ID>
     <ID>ComplexCondition:IllustListExtensions.kt:updatedHome === homeItems &amp;&amp; updatedSearch === searchItems &amp;&amp; updatedTimeline === timelineItems &amp;&amp; updatedShortsFeed === shortsFeedItems &amp;&amp; updatedWatchlist === watchlistItems &amp;&amp; updatedRanking === rankingItems &amp;&amp; updatedRelated === relatedIllusts &amp;&amp; updatedHistory === settings.viewHistory &amp;&amp; updatedBookmarks === bookmarkItems &amp;&amp; updatedUserIllusts === selectedUserIllusts &amp;&amp; updatedUserBookmarks === selectedUserBookmarks &amp;&amp; updatedSelected === selectedIllust</ID>
     <ID>ComplexCondition:IllustiaAppRoot.kt:!state.settingsLoaded || state.settings.refreshToken.isBlank() || state.appLocked || state.privacyLocked</ID>
-    <ID>ComplexCondition:IllustiaViewModelCore.kt:IllustiaViewModelCore$!state.settingsLoaded || state.appLocked || state.privacyLocked || (event is NativeIntentEvent.Text &amp;&amp; state.settings.refreshToken.isBlank())</ID>
-    <ID>ComplexCondition:IllustiaViewModelCore.kt:IllustiaViewModelCore$_uiState.value.settings.autoBookmarkOnDownload &amp;&amp; currentIllust != null &amp;&amp; !currentIllust.isBookmarked &amp;&amp; currentIllust.hasImageUrl(url)</ID>
-    <ID>ComplexCondition:IllustiaViewModelCore.kt:IllustiaViewModelCore$state.settings.refreshToken.isBlank() || state.settings.startupScreen != "home" || state.homeItems.isNotEmpty() || state.loadState == LoadState.Loading</ID>
+    <ID>ComplexCondition:IllustiaAuthFeedModule.kt:IllustiaAuthFeedModule$!state.settingsLoaded || state.appLocked || state.privacyLocked || (event is NativeIntentEvent.Text &amp;&amp; state.settings.refreshToken.isBlank())</ID>
+    <ID>ComplexCondition:IllustiaLibraryNavigationModule.kt:IllustiaLibraryNavigationModule$_uiState.value.settings.autoBookmarkOnDownload &amp;&amp; currentIllust != null &amp;&amp; !currentIllust.isBookmarked &amp;&amp; currentIllust.hasImageUrl(url)</ID>
+    <ID>ComplexCondition:IllustiaSettingsSecurityModule.kt:IllustiaSettingsSecurityModule$state.settings.refreshToken.isBlank() || state.settings.startupScreen != "home" || state.homeItems.isNotEmpty() || state.loadState == LoadState.Loading</ID>
     <ID>ComplexCondition:PallaSyncEventApplier.kt:PallaSyncEventApplier$(bodyKind != null &amp;&amp; bodyKind != kind) || (bodyValue != null &amp;&amp; bodyValue != value)</ID>
-    <ID>ComplexCondition:PalleriaSyncManager.kt:PalleriaSyncManager$page.nextSeq &lt; afterSeq || (page.nextSeq == afterSeq &amp;&amp; (page.hasMore || page.records.isNotEmpty()))</ID>
-    <ID>ComplexCondition:PalleriaSyncManager.kt:PalleriaSyncManager$record.chainId != state.chainId || record.protocolVersion != PALLASYNC_PROTOCOL_VERSION || record.deviceId != deviceId || record.collectionName !in setOf(VIEW_HISTORY_SCHEMA_V1, VIEW_HISTORY_SCHEMA_V2)</ID>
+    <ID>ComplexCondition:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$page.nextSeq &lt; afterSeq || (page.nextSeq == afterSeq &amp;&amp; (page.hasMore || page.records.isNotEmpty()))</ID>
+    <ID>ComplexCondition:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$record.chainId != state.chainId || record.protocolVersion != PALLASYNC_PROTOCOL_VERSION || record.deviceId != deviceId || record.collectionName !in setOf(VIEW_HISTORY_SCHEMA_V1, VIEW_HISTORY_SCHEMA_V2)</ID>
     <ID>ComplexCondition:SearchScreen.kt:state.loadState == LoadState.Loading &amp;&amp; state.searchItems.isEmpty() &amp;&amp; state.searchNovelItems.isEmpty() &amp;&amp; state.userSearchItems.isEmpty()</ID>
     <ID>ConstructorParameterNaming:PallaSyncModels.kt:DataPayload$val created_at_ms: Long</ID>
     <ID>ConstructorParameterNaming:PallaSyncModels.kt:DataPayload$val entity_id: String</ID>
-    <ID>CyclomaticComplexMethod:AppLockScreen.kt:@Composable fun AppLockScreen</ID>
-    <ID>CyclomaticComplexMethod:AppLockSetupScreen.kt:@Composable fun AppLockSetupScreen</ID>
-    <ID>CyclomaticComplexMethod:BookmarkScreen.kt:@Composable fun BookmarkScreen</ID>
-    <ID>CyclomaticComplexMethod:CommentScreen.kt:@Composable fun CommentScreen</ID>
-    <ID>CyclomaticComplexMethod:DevicePairingScreen.kt:@Composable fun DevicePairingScreen</ID>
-    <ID>CyclomaticComplexMethod:FavoriteTagsScreen.kt:@Composable fun FavoriteTagsScreen</ID>
-    <ID>CyclomaticComplexMethod:IllustDetailHeader.kt:@OptIn(ExperimentalFoundationApi::class) @Composable internal fun IllustDetailHeader</ID>
-    <ID>CyclomaticComplexMethod:IllustDetailScreen.kt:@OptIn(ExperimentalFoundationApi::class) @Composable fun IllustDetailScreen</ID>
+    <ID>CyclomaticComplexMethod:AppLanguage.kt:fun appLanguageLabelRes: Int</ID>
+    <ID>CyclomaticComplexMethod:AppLanguage.kt:fun currentAcceptLanguage: String</ID>
+    <ID>CyclomaticComplexMethod:Haptics.kt:fun performAppHapticFeedback</ID>
     <ID>CyclomaticComplexMethod:IllustListExtensions.kt:internal fun IllustiaUiState.withUpdatedIllust: IllustiaUiState</ID>
-    <ID>CyclomaticComplexMethod:IllustiaAppRoot.kt:@Composable internal fun IllustiaAppRoot</ID>
-    <ID>CyclomaticComplexMethod:IllustiaViewModelCore.kt:IllustiaViewModelCore$fun removeAccount</ID>
-    <ID>CyclomaticComplexMethod:IllustiaViewModelCore.kt:IllustiaViewModelCore$private fun IllustiaUiState.hasCachedContent: Boolean</ID>
-    <ID>CyclomaticComplexMethod:ImageSettingsScreen.kt:@Composable fun ImageSettingsScreen</ID>
-    <ID>CyclomaticComplexMethod:ImageViewerScreen.kt:@OptIn(ExperimentalFoundationApi::class) @Composable fun ImageViewerScreen</ID>
+    <ID>CyclomaticComplexMethod:IllustiaLibraryNavigationModule.kt:IllustiaLibraryNavigationModule$fun removeAccount</ID>
+    <ID>CyclomaticComplexMethod:IllustiaViewModelFoundation.kt:IllustiaViewModelFoundation$protected fun IllustiaUiState.hasCachedContent: Boolean</ID>
     <ID>CyclomaticComplexMethod:MainActivity.kt:MainActivity$override fun onCreate</ID>
-    <ID>CyclomaticComplexMethod:MainSurface.kt:@Composable internal fun MainSurface</ID>
+    <ID>CyclomaticComplexMethod:MainActivity.kt:MainActivity$private fun applyAppLanguage</ID>
     <ID>CyclomaticComplexMethod:NovelReaderContent.kt:private fun parseNovelPage: NovelPage</ID>
     <ID>CyclomaticComplexMethod:PallaSyncEventApplier.kt:PallaSyncEventApplier$private fun applyMuteSetting: FoldResult</ID>
     <ID>CyclomaticComplexMethod:PallaSyncEventApplier.kt:PallaSyncEventApplier$private fun applyViewHistory: FoldResult</ID>
-    <ID>CyclomaticComplexMethod:PallaSyncSettingsScreen.kt:@Composable fun PallaSyncSettingsScreen</ID>
-    <ID>CyclomaticComplexMethod:PalleriaSyncManager.kt:PalleriaSyncManager$private suspend fun applyRecordPageLocked: PallaSyncHttpResult&lt;Unit&gt;</ID>
-    <ID>CyclomaticComplexMethod:PalleriaSyncManager.kt:PalleriaSyncManager$private suspend fun fetchDevicesLocked: PallaSyncHttpResult&lt;Unit&gt;</ID>
-    <ID>CyclomaticComplexMethod:PalleriaSyncManager.kt:PalleriaSyncManager$private suspend fun joinChainLocked: Pair&lt;String, HttpUrl&gt;?</ID>
-    <ID>CyclomaticComplexMethod:PalleriaSyncManager.kt:PalleriaSyncManager$private suspend fun synchronizeOnceLocked: SyncCycleOutcome</ID>
-    <ID>CyclomaticComplexMethod:PalleriaSyncManager.kt:PalleriaSyncManager$suspend fun getDeviceViewHistory: List&lt;Illust&gt;</ID>
-    <ID>CyclomaticComplexMethod:PinSetupScreen.kt:@Composable fun PinSetupScreen</ID>
+    <ID>CyclomaticComplexMethod:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$private suspend fun applyRecordPageLocked: PallaSyncHttpResult&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$private suspend fun fetchDevicesLocked: PallaSyncHttpResult&lt;Unit&gt;</ID>
+    <ID>CyclomaticComplexMethod:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$private suspend fun joinChainLocked: Pair&lt;String, HttpUrl&gt;?</ID>
+    <ID>CyclomaticComplexMethod:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$private suspend fun synchronizeOnceLocked: SyncCycleOutcome</ID>
+    <ID>CyclomaticComplexMethod:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$suspend fun getDeviceViewHistory: List&lt;Illust&gt;</ID>
     <ID>CyclomaticComplexMethod:RankingWidgetProvider.kt:private suspend fun buildPreview: RemoteViews</ID>
-    <ID>CyclomaticComplexMethod:ReactionComponents.kt:@Composable fun BookmarkHeartButton</ID>
-    <ID>CyclomaticComplexMethod:SearchResults.kt:@Composable internal fun SearchResultGrid</ID>
-    <ID>CyclomaticComplexMethod:SearchScreen.kt:@Composable fun SearchScreen</ID>
     <ID>CyclomaticComplexMethod:SettingsStorePreferences.kt:internal fun readFromDataStore: AppSettings</ID>
-    <ID>CyclomaticComplexMethod:UgoiraArtwork.kt:@Composable internal fun UgoiraArtwork</ID>
-    <ID>CyclomaticComplexMethod:ViewHistoryScreen.kt:@Composable fun ViewHistoryScreen</ID>
     <ID>EmptyFunctionBlock:AppLockScreen.kt:&lt;no name provided&gt;${}</ID>
-    <ID>EmptyFunctionBlock:IllustiaViewModelCore.kt:IllustiaViewModelCore${ }</ID>
-    <ID>FunctionNaming:AboutScreen.kt:@Composable fun AboutScreen</ID>
-    <ID>FunctionNaming:AccountLoginMethodScreen.kt:@Composable fun AccountLoginMethodScreen</ID>
-    <ID>FunctionNaming:AccountLoginMethodScreen.kt:@Composable private fun LoginMethodCard</ID>
-    <ID>FunctionNaming:AccountSettingsScreen.kt:@Composable fun AccountSettingsScreen</ID>
-    <ID>FunctionNaming:AccountSwitchSheet.kt:@Composable fun AccountSwitchSheet</ID>
-    <ID>FunctionNaming:AccountSwitchSheet.kt:@Composable private fun AccountRow</ID>
-    <ID>FunctionNaming:AccountSwitchSheet.kt:@Composable private fun AddAccountRow</ID>
-    <ID>FunctionNaming:AppDataScreen.kt:@Composable fun AppDataScreen</ID>
-    <ID>FunctionNaming:AppLockScreen.kt:@Composable fun AppLockScreen</ID>
-    <ID>FunctionNaming:AppLockScreenParts.kt:@Composable internal fun NumberPad</ID>
-    <ID>FunctionNaming:AppLockScreenParts.kt:@Composable internal fun PadButton</ID>
-    <ID>FunctionNaming:AppLockSetupScreen.kt:@Composable fun AppLockSetupScreen</ID>
-    <ID>FunctionNaming:AppLockSetupScreenParts.kt:@Composable internal fun VerifyNumberPad</ID>
-    <ID>FunctionNaming:AppLockSetupScreenParts.kt:@Composable internal fun VerifyPadButton</ID>
-    <ID>FunctionNaming:AppNavHost.kt:@Composable internal fun AppNavHost</ID>
-    <ID>FunctionNaming:AppOverlayHost.kt:@Composable internal fun AppOverlayHost</ID>
-    <ID>FunctionNaming:AutoLoadMoreEffect.kt:@Composable fun AutoLoadMoreEffect</ID>
-    <ID>FunctionNaming:BookmarkScreen.kt:@Composable fun BookmarkScreen</ID>
-    <ID>FunctionNaming:BookmarkSettingsScreen.kt:@Composable fun BookmarkSettingsScreen</ID>
-    <ID>FunctionNaming:BookmarkTabs.kt:@Composable internal fun BookmarkFollowingTab</ID>
-    <ID>FunctionNaming:BookmarkTabs.kt:@Composable internal fun BookmarkMainTab</ID>
-    <ID>FunctionNaming:BookmarkTabs.kt:@Composable internal fun BookmarkTimelineTab</ID>
-    <ID>FunctionNaming:BookmarkTabs.kt:@Composable internal fun BookmarkWatchlistTab</ID>
-    <ID>FunctionNaming:BookmarkTabs.kt:@Composable internal fun CompactBookmarkTabs</ID>
-    <ID>FunctionNaming:BookmarkTabs.kt:@Composable internal fun RestrictPill</ID>
-    <ID>FunctionNaming:BookmarkTabs.kt:@Composable private fun WatchlistSeriesCard</ID>
-    <ID>FunctionNaming:BookmarkTabs.kt:@Composable private fun WatchlistSeriesCardSkeleton</ID>
-    <ID>FunctionNaming:CalculatorScreen.kt:@Composable fun CalculatorScreen</ID>
-    <ID>FunctionNaming:CalculatorScreenParts.kt:@Composable internal fun CalcRow</ID>
-    <ID>FunctionNaming:CalculatorScreenParts.kt:@Composable internal fun CalculatorButtonGrid</ID>
-    <ID>FunctionNaming:CalculatorScreenParts.kt:@Composable internal fun CalculatorDisplay</ID>
-    <ID>FunctionNaming:CalculatorScreenParts.kt:@Composable internal fun CalculatorHistoryItem</ID>
-    <ID>FunctionNaming:CalculatorScreenParts.kt:@Composable internal fun CalculatorHistorySection</ID>
-    <ID>FunctionNaming:CalculatorScreenParts.kt:@Composable internal fun DigitButton</ID>
-    <ID>FunctionNaming:CalculatorScreenParts.kt:@Composable internal fun EqualsButton</ID>
-    <ID>FunctionNaming:CalculatorScreenParts.kt:@Composable internal fun OperatorButton</ID>
-    <ID>FunctionNaming:CalculatorScreenParts.kt:@Composable internal fun SpecialButton</ID>
-    <ID>FunctionNaming:CalculatorScreenParts.kt:@Composable internal fun WideDigitButton</ID>
-    <ID>FunctionNaming:CommentScreen.kt:@Composable fun CommentScreen</ID>
-    <ID>FunctionNaming:CommentScreen.kt:@Composable private fun CommentRow</ID>
-    <ID>FunctionNaming:CommonCore.kt:@Composable fun AvatarImage</ID>
-    <ID>FunctionNaming:CommonCore.kt:@Composable fun NonAmoledDarkTheme</ID>
-    <ID>FunctionNaming:CommonCore.kt:@OptIn(ExperimentalActivityApi::class) @Composable fun PredictiveBackGestureHandler</ID>
-    <ID>FunctionNaming:DataSettingsScreen.kt:@Composable fun DataSettingsScreen</ID>
-    <ID>FunctionNaming:DevicePairingScreen.kt:@Composable fun DevicePairingScreen</ID>
-    <ID>FunctionNaming:DeviceViewHistoryScreen.kt:@Composable fun DeviceViewHistoryScreen</ID>
-    <ID>FunctionNaming:DownloadQueueScreen.kt:@Composable fun DownloadQueueScreen</ID>
-    <ID>FunctionNaming:DownloadQueueScreen.kt:@Composable private fun ActiveTransferTrack</ID>
-    <ID>FunctionNaming:DownloadQueueScreen.kt:@Composable private fun DownloadQueueCard</ID>
-    <ID>FunctionNaming:DownloadQueueScreen.kt:@Composable private fun DownloadStatusGlyph</ID>
-    <ID>FunctionNaming:DownloadQueueScreen.kt:@Composable private fun QueueEmptyState</ID>
-    <ID>FunctionNaming:DownloadQueueScreen.kt:@Composable private fun QueueSectionHeader</ID>
-    <ID>FunctionNaming:DownloadQueueScreen.kt:@Composable private fun QueueTabs</ID>
-    <ID>FunctionNaming:DownloadQueueScreen.kt:@Composable private fun StatusPill</ID>
-    <ID>FunctionNaming:ExperimentalSettingsScreen.kt:@Composable fun ExperimentalSettingsScreen</ID>
-    <ID>FunctionNaming:FavoriteTagsScreen.kt:@Composable fun FavoriteTagsScreen</ID>
-    <ID>FunctionNaming:FavoriteTagsScreen.kt:@Composable private fun TagChip</ID>
-    <ID>FunctionNaming:FavoriteTagsScreen.kt:@Composable private fun TagChipRow</ID>
-    <ID>FunctionNaming:FeedbackComponents.kt:@Composable fun CenteredLoadingIndicator</ID>
-    <ID>FunctionNaming:FeedbackComponents.kt:@Composable fun DividerLine</ID>
-    <ID>FunctionNaming:FeedbackComponents.kt:@Composable fun EmptyState</ID>
-    <ID>FunctionNaming:FeedbackComponents.kt:@Composable fun HeaderIcon</ID>
-    <ID>FunctionNaming:FeedbackComponents.kt:@Composable fun HeaderOverlayIcon</ID>
-    <ID>FunctionNaming:FeedbackComponents.kt:@Composable fun LoadingIndicator</ID>
-    <ID>FunctionNaming:FeedbackComponents.kt:@Composable fun StateBanner</ID>
-    <ID>FunctionNaming:GeneralSettingsScreen.kt:@Composable fun GeneralSettingsScreen</ID>
-    <ID>FunctionNaming:HeaderComponents.kt:@Composable fun CollapsingHeader</ID>
-    <ID>FunctionNaming:HomeScreen.kt:@Composable fun HomeScreen</ID>
-    <ID>FunctionNaming:HomeScreenContent.kt:@Composable internal fun FeedTabContent</ID>
-    <ID>FunctionNaming:HomeScreenContent.kt:@Composable internal fun FollowingTabContent</ID>
-    <ID>FunctionNaming:HomeScreenContent.kt:@Composable internal fun HomeAccountAvatar</ID>
-    <ID>FunctionNaming:HomeScreenTabs.kt:@Composable internal fun HomeTabRow</ID>
-    <ID>FunctionNaming:IllustComponents.kt:@Composable fun HighlightCard</ID>
-    <ID>FunctionNaming:IllustComponents.kt:@Composable fun IllustCardSkeleton</ID>
-    <ID>FunctionNaming:IllustComponents.kt:@Composable fun IllustGrid</ID>
-    <ID>FunctionNaming:IllustComponents.kt:@Composable fun IllustGridSkeleton</ID>
-    <ID>FunctionNaming:IllustComponents.kt:@Composable private fun IllustCardInfo</ID>
-    <ID>FunctionNaming:IllustComponents.kt:@Composable private fun IllustCardThumbnail</ID>
-    <ID>FunctionNaming:IllustComponents.kt:@OptIn(ExperimentalFoundationApi::class) @Composable fun IllustCard</ID>
-    <ID>FunctionNaming:IllustComponents.kt:@OptIn(ExperimentalFoundationApi::class) @Composable fun IllustListRow</ID>
-    <ID>FunctionNaming:IllustComponents.kt:@OptIn(ExperimentalFoundationApi::class) @Composable fun TagTile</ID>
-    <ID>FunctionNaming:IllustComponents.kt:@OptIn(ExperimentalFoundationApi::class) @Composable private fun IllustCardImpl</ID>
-    <ID>FunctionNaming:IllustDetailHeader.kt:@Composable internal fun MutedArtworkOverlay</ID>
-    <ID>FunctionNaming:IllustDetailHeader.kt:@OptIn(ExperimentalFoundationApi::class) @Composable internal fun IllustDetailHeader</ID>
-    <ID>FunctionNaming:IllustDetailInfo.kt:@Composable internal fun DetailMutedUserPill</ID>
-    <ID>FunctionNaming:IllustDetailInfo.kt:@Composable internal fun IllustDetailInfo</ID>
-    <ID>FunctionNaming:IllustDetailInfo.kt:@Composable private fun CommentEntryButton</ID>
-    <ID>FunctionNaming:IllustDetailInfo.kt:@OptIn(ExperimentalFoundationApi::class) @Composable internal fun RelatedIllustsList</ID>
-    <ID>FunctionNaming:IllustDetailScreen.kt:@OptIn(ExperimentalFoundationApi::class) @Composable fun IllustDetailScreen</ID>
-    <ID>FunctionNaming:IllustSeriesScreen.kt:@Composable fun IllustSeriesScreen</ID>
-    <ID>FunctionNaming:IllustSeriesScreen.kt:@Composable private fun SeriesHeader</ID>
-    <ID>FunctionNaming:IllustWidgetConfigureActivity.kt:@Composable private fun WidgetPagePickerSheet</ID>
-    <ID>FunctionNaming:IllustiaApp.kt:@Composable fun IllustiaApp</ID>
-    <ID>FunctionNaming:IllustiaAppRoot.kt:@Composable internal fun IllustiaAppRoot</ID>
-    <ID>FunctionNaming:ImageSettingsScreen.kt:@Composable fun ImageSettingsScreen</ID>
-    <ID>FunctionNaming:ImageViewerScreen.kt:@OptIn(ExperimentalFoundationApi::class) @Composable fun ImageViewerScreen</ID>
-    <ID>FunctionNaming:ImageViewerScreenParts.kt:@Composable internal fun ZoomablePixivImage</ID>
-    <ID>FunctionNaming:LoginScreens.kt:@Composable fun PixivWebLoginScreen</ID>
-    <ID>FunctionNaming:LoginScreens.kt:@Composable fun RefreshTokenLoginBottomSheet</ID>
-    <ID>FunctionNaming:LoginScreens.kt:@Composable fun ScreenHeader</ID>
-    <ID>FunctionNaming:MainSurface.kt:@Composable internal fun MainSurface</ID>
-    <ID>FunctionNaming:MoreScreen.kt:@Composable fun MoreScreen</ID>
-    <ID>FunctionNaming:MoreScreen.kt:@Composable private fun AccountAvatar</ID>
-    <ID>FunctionNaming:MoreScreen.kt:@Composable private fun ActionList</ID>
-    <ID>FunctionNaming:MoreScreen.kt:@Composable private fun ActionRow</ID>
-    <ID>FunctionNaming:MoreScreen.kt:@Composable private fun Badge</ID>
-    <ID>FunctionNaming:MoreScreen.kt:@Composable private fun IconTile</ID>
-    <ID>FunctionNaming:MoreScreen.kt:@Composable private fun MoreHeader</ID>
-    <ID>FunctionNaming:MuteSettingsScreen.kt:@Composable fun MuteItemRow</ID>
-    <ID>FunctionNaming:MuteSettingsScreen.kt:@Composable fun MuteSettingsScreen</ID>
-    <ID>FunctionNaming:MuteSettingsScreen.kt:@Composable private fun AddMuteTagSheet</ID>
-    <ID>FunctionNaming:NotificationScreen.kt:@Composable fun NotificationScreen</ID>
-    <ID>FunctionNaming:NotificationScreen.kt:@Composable private fun NotificationCard</ID>
-    <ID>FunctionNaming:NotificationScreen.kt:@Composable private fun NotificationImage</ID>
-    <ID>FunctionNaming:NotificationScreen.kt:@Composable private fun ViewMoreRow</ID>
-    <ID>FunctionNaming:NovelCardComponents.kt:@Composable internal fun NovelCard</ID>
-    <ID>FunctionNaming:NovelCardComponents.kt:@Composable internal fun NovelMetaPill</ID>
-    <ID>FunctionNaming:NovelReaderContent.kt:@Composable internal fun NovelReaderPage</ID>
-    <ID>FunctionNaming:NovelScreen.kt:@Composable fun NovelReaderScreen</ID>
-    <ID>FunctionNaming:NovelScreen.kt:@Composable fun NovelScreen</ID>
-    <ID>FunctionNaming:OfflineLibraryScreen.kt:@Composable fun OfflineLibraryScreen</ID>
-    <ID>FunctionNaming:OnboardingArt.kt:@Composable internal fun BookStack</ID>
-    <ID>FunctionNaming:OnboardingArt.kt:@Composable internal fun BookmarkRibbon</ID>
-    <ID>FunctionNaming:OnboardingArt.kt:@Composable internal fun CardHeader</ID>
-    <ID>FunctionNaming:OnboardingArt.kt:@Composable internal fun CircleGlow</ID>
-    <ID>FunctionNaming:OnboardingArt.kt:@Composable internal fun DeviceFrame</ID>
-    <ID>FunctionNaming:OnboardingArt.kt:@Composable internal fun FeedCard</ID>
-    <ID>FunctionNaming:OnboardingArt.kt:@Composable internal fun FloatingBadge</ID>
-    <ID>FunctionNaming:OnboardingArt.kt:@Composable internal fun PagerDots</ID>
-    <ID>FunctionNaming:OnboardingArt.kt:@Composable internal fun RepeatRow</ID>
-    <ID>FunctionNaming:OnboardingArt.kt:@Composable internal fun SyncPanel</ID>
-    <ID>FunctionNaming:OnboardingScenes.kt:@Composable internal fun OnboardingPage</ID>
-    <ID>FunctionNaming:OnboardingScenes.kt:@Composable private fun BookmarkScene</ID>
-    <ID>FunctionNaming:OnboardingScenes.kt:@Composable private fun DiscoveryScene</ID>
-    <ID>FunctionNaming:OnboardingScenes.kt:@Composable private fun SyncScene</ID>
-    <ID>FunctionNaming:OnboardingScreen.kt:@Composable fun OnboardingScreen</ID>
-    <ID>FunctionNaming:OnboardingScreen.kt:@Composable private fun BottomAction</ID>
-    <ID>FunctionNaming:OnboardingScreen.kt:@Composable private fun BrandLockup</ID>
-    <ID>FunctionNaming:OnboardingScreen.kt:@Composable private fun LoginActions</ID>
-    <ID>FunctionNaming:PallaSyncDevicesScreen.kt:@Composable fun PallaSyncDevicesScreen</ID>
-    <ID>FunctionNaming:PallaSyncSettingsScreen.kt:@Composable fun PallaSyncSettingsScreen</ID>
-    <ID>FunctionNaming:PinSetupScreen.kt:@Composable fun PinSetupScreen</ID>
-    <ID>FunctionNaming:PinSetupScreen.kt:@Composable private fun NumberPad</ID>
-    <ID>FunctionNaming:PinSetupScreen.kt:@Composable private fun PadButton</ID>
-    <ID>FunctionNaming:PixivImageComponents.kt:@Composable fun PixivImage</ID>
-    <ID>FunctionNaming:PixivImageComponents.kt:@Composable fun PrefetchPixivImages</ID>
-    <ID>FunctionNaming:PrivacyModeSettingsScreen.kt:@Composable fun PrivacyModeSettingsScreen</ID>
-    <ID>FunctionNaming:RankingScreen.kt:@Composable fun RankingScreen</ID>
-    <ID>FunctionNaming:RankingScreen.kt:@Composable private fun RankingGridContent</ID>
-    <ID>FunctionNaming:RankingScreen.kt:@Composable private fun RankingModeTabs</ID>
-    <ID>FunctionNaming:ReactionComponents.kt:@Composable fun BookmarkHeartButton</ID>
-    <ID>FunctionNaming:ReactionComponents.kt:@Composable fun FollowPill</ID>
-    <ID>FunctionNaming:ReactionComponents.kt:@Composable private fun HeartBurst</ID>
-    <ID>FunctionNaming:SavedIllustViewerScreen.kt:@Composable fun SavedIllustViewerScreen</ID>
-    <ID>FunctionNaming:SearchBrowse.kt:@Composable internal fun BrowseArea</ID>
-    <ID>FunctionNaming:SearchOptions.kt:@Composable internal fun SearchOptionsContent</ID>
-    <ID>FunctionNaming:SearchOptions.kt:@Composable internal fun SearchOptionsSheet</ID>
-    <ID>FunctionNaming:SearchResults.kt:@Composable internal fun SearchResultGrid</ID>
-    <ID>FunctionNaming:SearchResults.kt:@Composable internal fun UserResultCard</ID>
-    <ID>FunctionNaming:SearchScreen.kt:@Composable fun SearchScreen</ID>
-    <ID>FunctionNaming:SearchScreen.kt:@Composable private fun SearchResultsArea</ID>
-    <ID>FunctionNaming:SearchToolbar.kt:@Composable fun SearchToolbar</ID>
-    <ID>FunctionNaming:SettingsComponents.kt:@Composable fun &lt;T&gt; ChoiceRow</ID>
-    <ID>FunctionNaming:SettingsComponents.kt:@Composable fun &lt;T&gt; SettingDropdownRow</ID>
-    <ID>FunctionNaming:SettingsComponents.kt:@Composable fun ElevatedPanel</ID>
-    <ID>FunctionNaming:SettingsComponents.kt:@Composable fun HeroPanel</ID>
-    <ID>FunctionNaming:SettingsComponents.kt:@Composable fun MiuixConfirmDialog</ID>
-    <ID>FunctionNaming:SettingsComponents.kt:@Composable fun Section</ID>
-    <ID>FunctionNaming:SettingsComponents.kt:@Composable fun SectionHeader</ID>
-    <ID>FunctionNaming:SettingsComponents.kt:@Composable fun SettingLinkRow</ID>
-    <ID>FunctionNaming:SettingsComponents.kt:@Composable fun SettingRow</ID>
-    <ID>FunctionNaming:SettingsComponents.kt:@Composable fun SettingSwitchRow</ID>
-    <ID>FunctionNaming:SettingsComponents.kt:@Composable private fun PreferenceIcon</ID>
-    <ID>FunctionNaming:SettingsComponents.kt:@OptIn(ExperimentalFoundationApi::class) @Composable fun &lt;T&gt; FlowButtons</ID>
-    <ID>FunctionNaming:SettingsScreen.kt:@Composable fun SettingsScreen</ID>
-    <ID>FunctionNaming:ShortsFeedScreen.kt:@Composable fun ShortsFeedScreen</ID>
-    <ID>FunctionNaming:TagPreviewBottomSheet.kt:@Composable fun TagPreviewBottomSheet</ID>
-    <ID>FunctionNaming:TagPreviewBottomSheet.kt:@Composable private fun TagPreviewHero</ID>
-    <ID>FunctionNaming:ThemeSettingsComponents.kt:@Composable fun ColorSettingRow</ID>
-    <ID>FunctionNaming:ThemeSettingsComponents.kt:@Composable fun SeedColorPickerDialog</ID>
-    <ID>FunctionNaming:ThemeSettingsComponents.kt:@Composable fun ThemeSwitchSettingRow</ID>
-    <ID>FunctionNaming:ThemeSettingsComponents.kt:@Composable private fun ColorSwatch</ID>
-    <ID>FunctionNaming:UgoiraArtwork.kt:@Composable internal fun UgoiraArtwork</ID>
-    <ID>FunctionNaming:UserProfileComponents.kt:@Composable internal fun RelatedCreatorsSheetContent</ID>
-    <ID>FunctionNaming:UserProfileComponents.kt:@Composable internal fun UserProfilePagerContent</ID>
-    <ID>FunctionNaming:UserProfileComponents.kt:@Composable internal fun UserProfileSmallTopAppBar</ID>
-    <ID>FunctionNaming:UserProfileComponents.kt:@Composable internal fun UserProfileTabs</ID>
-    <ID>FunctionNaming:UserProfileComponents.kt:@Composable internal fun UserProfileTopAppBar</ID>
-    <ID>FunctionNaming:UserProfileComponents.kt:@Composable private fun MutedUserContentNotice</ID>
-    <ID>FunctionNaming:UserProfileComponents.kt:@Composable private fun MutedUserPill</ID>
-    <ID>FunctionNaming:UserProfileComponents.kt:@Composable private fun UserDetailsCard</ID>
-    <ID>FunctionNaming:UserProfileComponents.kt:@Composable private fun UserIllustGridPage</ID>
-    <ID>FunctionNaming:UserProfileComponents.kt:@Composable private fun UserInfoPage</ID>
-    <ID>FunctionNaming:UserProfileComponents.kt:@Composable private fun UserProfileHeader</ID>
-    <ID>FunctionNaming:UserProfileComponents.kt:@Composable private fun UserProfileInfo</ID>
-    <ID>FunctionNaming:UserProfileScreen.kt:@Composable fun UserProfileScreen</ID>
-    <ID>FunctionNaming:ViewHistoryScreen.kt:@Composable fun ViewHistoryScreen</ID>
-    <ID>FunctionNaming:WatchlistSeriesScreen.kt:@Composable fun WatchlistSeriesScreen</ID>
-    <ID>FunctionNaming:WatchlistSeriesScreen.kt:@Composable private fun WatchlistSeriesCard</ID>
-    <ID>FunctionNaming:WatchlistSeriesScreen.kt:@Composable private fun WatchlistSeriesCardSkeleton</ID>
-    <ID>InvalidPackageDeclaration:BookmarkTabs.kt:package com.yunfie.illustia.ui.screens</ID>
-    <ID>InvalidPackageDeclaration:CommentScreen.kt:package com.yunfie.illustia.ui.screens</ID>
-    <ID>InvalidPackageDeclaration:CommonCore.kt:package com.yunfie.illustia.ui.components</ID>
-    <ID>InvalidPackageDeclaration:DownloadNaming.kt:package com.yunfie.illustia</ID>
-    <ID>InvalidPackageDeclaration:FeedbackComponents.kt:package com.yunfie.illustia.ui.components</ID>
-    <ID>InvalidPackageDeclaration:HomeScreen.kt:package com.yunfie.illustia.ui.screens</ID>
-    <ID>InvalidPackageDeclaration:HomeScreenContent.kt:package com.yunfie.illustia.ui.screens</ID>
-    <ID>InvalidPackageDeclaration:HomeScreenTabs.kt:package com.yunfie.illustia.ui.screens</ID>
-    <ID>InvalidPackageDeclaration:IllustDetailHeader.kt:package com.yunfie.illustia.ui.screens</ID>
-    <ID>InvalidPackageDeclaration:IllustDetailInfo.kt:package com.yunfie.illustia.ui.screens</ID>
-    <ID>InvalidPackageDeclaration:IllustSeriesScreen.kt:package com.yunfie.illustia.ui.screens</ID>
-    <ID>InvalidPackageDeclaration:IllustiaViewModelCore.kt:package com.yunfie.illustia</ID>
-    <ID>InvalidPackageDeclaration:NovelCardComponents.kt:package com.yunfie.illustia.ui.screens</ID>
-    <ID>InvalidPackageDeclaration:NovelReaderContent.kt:package com.yunfie.illustia.ui.screens</ID>
-    <ID>InvalidPackageDeclaration:OnboardingArt.kt:package com.yunfie.illustia.ui.screens</ID>
-    <ID>InvalidPackageDeclaration:OnboardingScenes.kt:package com.yunfie.illustia.ui.screens</ID>
-    <ID>InvalidPackageDeclaration:PixivImageComponents.kt:package com.yunfie.illustia.ui.components</ID>
-    <ID>InvalidPackageDeclaration:ReactionComponents.kt:package com.yunfie.illustia.ui.components</ID>
-    <ID>InvalidPackageDeclaration:SearchBrowse.kt:package com.yunfie.illustia.ui.screens</ID>
-    <ID>InvalidPackageDeclaration:SearchOptions.kt:package com.yunfie.illustia.ui.screens</ID>
-    <ID>InvalidPackageDeclaration:SearchResults.kt:package com.yunfie.illustia.ui.screens</ID>
-    <ID>InvalidPackageDeclaration:SearchToolbar.kt:package com.yunfie.illustia.ui.screens</ID>
-    <ID>InvalidPackageDeclaration:ViewModelSnapshots.kt:package com.yunfie.illustia</ID>
-    <ID>InvalidPackageDeclaration:ViewModelSupport.kt:package com.yunfie.illustia</ID>
-    <ID>InvalidPackageDeclaration:WatchlistSeriesScreen.kt:package com.yunfie.illustia.ui.screens</ID>
-    <ID>LargeClass:IllustiaViewModelCore.kt:IllustiaViewModelCore : AndroidViewModel</ID>
-    <ID>LargeClass:PalleriaSyncManager.kt:PalleriaSyncManager</ID>
+    <ID>EmptyFunctionBlock:IllustiaLibraryNavigationModule.kt:IllustiaLibraryNavigationModule${ }</ID>
+    <ID>LargeClass:IllustiaAuthFeedModule.kt:IllustiaAuthFeedModule : IllustiaSettingsSecurityModule</ID>
+    <ID>LargeClass:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator : PallaSyncEventWriter</ID>
     <ID>LargeClass:PixivApiClient.kt:PixivApiClient</ID>
-    <ID>LongMethod:AboutScreen.kt:@Composable fun AboutScreen</ID>
-    <ID>LongMethod:AccountLoginMethodScreen.kt:@Composable private fun LoginMethodCard</ID>
-    <ID>LongMethod:AccountSettingsScreen.kt:@Composable fun AccountSettingsScreen</ID>
-    <ID>LongMethod:AccountSwitchSheet.kt:@Composable private fun AccountRow</ID>
-    <ID>LongMethod:AppDataScreen.kt:@Composable fun AppDataScreen</ID>
-    <ID>LongMethod:AppLockScreen.kt:@Composable fun AppLockScreen</ID>
-    <ID>LongMethod:AppLockSetupScreen.kt:@Composable fun AppLockSetupScreen</ID>
-    <ID>LongMethod:AppNavHost.kt:@Composable internal fun AppNavHost</ID>
-    <ID>LongMethod:AppOverlayHost.kt:@Composable internal fun AppOverlayHost</ID>
-    <ID>LongMethod:BookmarkScreen.kt:@Composable fun BookmarkScreen</ID>
-    <ID>LongMethod:BookmarkTabs.kt:@Composable internal fun BookmarkWatchlistTab</ID>
-    <ID>LongMethod:BookmarkTabs.kt:@Composable private fun WatchlistSeriesCard</ID>
-    <ID>LongMethod:CalculatorScreen.kt:@Composable fun CalculatorScreen</ID>
-    <ID>LongMethod:CalculatorScreenParts.kt:@Composable internal fun CalculatorHistorySection</ID>
-    <ID>LongMethod:CommentScreen.kt:@Composable fun CommentScreen</ID>
-    <ID>LongMethod:DataSettingsScreen.kt:@Composable fun DataSettingsScreen</ID>
-    <ID>LongMethod:DevicePairingScreen.kt:@Composable fun DevicePairingScreen</ID>
-    <ID>LongMethod:DeviceViewHistoryScreen.kt:@Composable fun DeviceViewHistoryScreen</ID>
-    <ID>LongMethod:DownloadQueueScreen.kt:@Composable fun DownloadQueueScreen</ID>
-    <ID>LongMethod:ExperimentalSettingsScreen.kt:@Composable fun ExperimentalSettingsScreen</ID>
-    <ID>LongMethod:FavoriteTagsScreen.kt:@Composable fun FavoriteTagsScreen</ID>
-    <ID>LongMethod:GeneralSettingsScreen.kt:@Composable fun GeneralSettingsScreen</ID>
-    <ID>LongMethod:HeaderComponents.kt:@Composable fun CollapsingHeader</ID>
-    <ID>LongMethod:HomeScreen.kt:@Composable fun HomeScreen</ID>
-    <ID>LongMethod:HomeScreenContent.kt:@Composable internal fun FeedTabContent</ID>
-    <ID>LongMethod:HomeScreenContent.kt:@Composable internal fun FollowingTabContent</ID>
-    <ID>LongMethod:IllustComponents.kt:@OptIn(ExperimentalFoundationApi::class) @Composable fun IllustListRow</ID>
-    <ID>LongMethod:IllustComponents.kt:@OptIn(ExperimentalFoundationApi::class) @Composable private fun IllustCardImpl</ID>
-    <ID>LongMethod:IllustDetailHeader.kt:@OptIn(ExperimentalFoundationApi::class) @Composable internal fun IllustDetailHeader</ID>
-    <ID>LongMethod:IllustDetailInfo.kt:@Composable internal fun IllustDetailInfo</ID>
-    <ID>LongMethod:IllustDetailScreen.kt:@OptIn(ExperimentalFoundationApi::class) @Composable fun IllustDetailScreen</ID>
-    <ID>LongMethod:IllustSeriesScreen.kt:@Composable fun IllustSeriesScreen</ID>
-    <ID>LongMethod:IllustSeriesScreen.kt:@Composable private fun SeriesHeader</ID>
-    <ID>LongMethod:IllustWidgetConfigureActivity.kt:@Composable private fun WidgetPagePickerSheet</ID>
     <ID>LongMethod:IllustWidgetConfigureActivity.kt:IllustWidgetConfigureActivity$override fun onCreate</ID>
-    <ID>LongMethod:IllustiaAppRoot.kt:@Composable internal fun IllustiaAppRoot</ID>
-    <ID>LongMethod:IllustiaViewModelCore.kt:IllustiaViewModelCore$fun openUser</ID>
-    <ID>LongMethod:IllustiaViewModelCore.kt:IllustiaViewModelCore$fun openUserPage</ID>
-    <ID>LongMethod:IllustiaViewModelCore.kt:IllustiaViewModelCore$fun saveOfflineImage</ID>
-    <ID>LongMethod:IllustiaViewModelCore.kt:IllustiaViewModelCore$fun submitSearch</ID>
-    <ID>LongMethod:ImageSettingsScreen.kt:@Composable fun ImageSettingsScreen</ID>
-    <ID>LongMethod:ImageViewerScreen.kt:@OptIn(ExperimentalFoundationApi::class) @Composable fun ImageViewerScreen</ID>
-    <ID>LongMethod:ImageViewerScreenParts.kt:@Composable internal fun ZoomablePixivImage</ID>
-    <ID>LongMethod:LoginScreens.kt:@Composable fun PixivWebLoginScreen</ID>
+    <ID>LongMethod:IllustiaAuthFeedModule.kt:IllustiaAuthFeedModule$override fun submitSearch</ID>
+    <ID>LongMethod:IllustiaDetailProfileModule.kt:IllustiaDetailProfileModule$fun openUser</ID>
+    <ID>LongMethod:IllustiaDetailProfileModule.kt:IllustiaDetailProfileModule$override fun openUserPage</ID>
+    <ID>LongMethod:IllustiaLibraryNavigationModule.kt:IllustiaLibraryNavigationModule$fun saveOfflineImage</ID>
     <ID>LongMethod:MainActivity.kt:MainActivity$override fun onCreate</ID>
-    <ID>LongMethod:MainSurface.kt:@Composable internal fun MainSurface</ID>
-    <ID>LongMethod:MoreScreen.kt:@Composable private fun rememberQuickActions: List&lt;MoreAction&gt;</ID>
-    <ID>LongMethod:MuteSettingsScreen.kt:@Composable fun MuteSettingsScreen</ID>
-    <ID>LongMethod:NotificationScreen.kt:@Composable fun NotificationScreen</ID>
-    <ID>LongMethod:NovelCardComponents.kt:@Composable internal fun NovelCard</ID>
-    <ID>LongMethod:NovelScreen.kt:@Composable fun NovelReaderScreen</ID>
-    <ID>LongMethod:NovelScreen.kt:@Composable fun NovelScreen</ID>
-    <ID>LongMethod:OnboardingScreen.kt:@Composable fun OnboardingScreen</ID>
-    <ID>LongMethod:PallaSyncDevicesScreen.kt:@Composable fun PallaSyncDevicesScreen</ID>
-    <ID>LongMethod:PallaSyncSettingsScreen.kt:@Composable fun PallaSyncSettingsScreen</ID>
-    <ID>LongMethod:PalleriaSyncManager.kt:PalleriaSyncManager$private suspend fun applyRecordPageLocked: PallaSyncHttpResult&lt;Unit&gt;</ID>
-    <ID>LongMethod:PalleriaSyncManager.kt:PalleriaSyncManager$private suspend fun fetchDevicesLocked: PallaSyncHttpResult&lt;Unit&gt;</ID>
-    <ID>LongMethod:PalleriaSyncManager.kt:PalleriaSyncManager$private suspend fun joinChainLocked: Pair&lt;String, HttpUrl&gt;?</ID>
-    <ID>LongMethod:PalleriaSyncManager.kt:PalleriaSyncManager$suspend fun getDeviceViewHistory: List&lt;Illust&gt;</ID>
-    <ID>LongMethod:PinSetupScreen.kt:@Composable fun PinSetupScreen</ID>
-    <ID>LongMethod:PrivacyModeSettingsScreen.kt:@Composable fun PrivacyModeSettingsScreen</ID>
-    <ID>LongMethod:RankingScreen.kt:@Composable fun RankingScreen</ID>
-    <ID>LongMethod:RankingScreen.kt:@Composable private fun RankingGridContent</ID>
-    <ID>LongMethod:ReactionComponents.kt:@Composable fun BookmarkHeartButton</ID>
-    <ID>LongMethod:ReactionComponents.kt:@Composable fun FollowPill</ID>
-    <ID>LongMethod:SearchBrowse.kt:@Composable internal fun BrowseArea</ID>
-    <ID>LongMethod:SearchResults.kt:@Composable internal fun SearchResultGrid</ID>
-    <ID>LongMethod:SearchScreen.kt:@Composable fun SearchScreen</ID>
-    <ID>LongMethod:SearchScreen.kt:@Composable private fun SearchResultsArea</ID>
-    <ID>LongMethod:SearchToolbar.kt:@Composable fun SearchToolbar</ID>
-    <ID>LongMethod:SettingsScreen.kt:@Composable fun SettingsScreen</ID>
+    <ID>LongMethod:PallaSyncSettingsEvents.kt:internal fun buildSettingsSyncEvents: List&lt;PallaSyncPendingEvent&gt;</ID>
+    <ID>LongMethod:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$private suspend fun applyRecordPageLocked: PallaSyncHttpResult&lt;Unit&gt;</ID>
+    <ID>LongMethod:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$private suspend fun fetchDevicesLocked: PallaSyncHttpResult&lt;Unit&gt;</ID>
+    <ID>LongMethod:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$private suspend fun joinChainLocked: Pair&lt;String, HttpUrl&gt;?</ID>
+    <ID>LongMethod:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$private suspend fun synchronizeOnceLocked: SyncCycleOutcome</ID>
+    <ID>LongMethod:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$suspend fun getDeviceViewHistory: List&lt;Illust&gt;</ID>
     <ID>LongMethod:SettingsStorePreferences.kt:internal fun readFromDataStore: AppSettings</ID>
     <ID>LongMethod:SettingsStorePreferences.kt:internal fun readFromSharedPreferences: AppSettings</ID>
     <ID>LongMethod:SettingsStorePreferences.kt:internal fun writeToDataStore</ID>
-    <ID>LongMethod:ShortsFeedScreen.kt:@Composable fun ShortsFeedScreen</ID>
-    <ID>LongMethod:ThemeSettingsComponents.kt:@Composable fun SeedColorPickerDialog</ID>
-    <ID>LongMethod:UgoiraArtwork.kt:@Composable internal fun UgoiraArtwork</ID>
-    <ID>LongMethod:UserProfileComponents.kt:@Composable internal fun RelatedCreatorsSheetContent</ID>
-    <ID>LongMethod:UserProfileComponents.kt:@Composable internal fun UserProfilePagerContent</ID>
-    <ID>LongMethod:UserProfileComponents.kt:@Composable internal fun UserProfileSmallTopAppBar</ID>
-    <ID>LongMethod:UserProfileScreen.kt:@Composable fun UserProfileScreen</ID>
-    <ID>LongMethod:ViewHistoryScreen.kt:@Composable fun ViewHistoryScreen</ID>
-    <ID>LongMethod:WatchlistSeriesScreen.kt:@Composable fun WatchlistSeriesScreen</ID>
-    <ID>LongMethod:WatchlistSeriesScreen.kt:@Composable private fun WatchlistSeriesCard</ID>
     <ID>LoopWithTooManyJumpStatements:IllustiaRepository.kt:IllustiaRepository$while</ID>
     <ID>LoopWithTooManyJumpStatements:NovelReaderContent.kt:for</ID>
-    <ID>LoopWithTooManyJumpStatements:PalleriaSyncManager.kt:PalleriaSyncManager$do</ID>
+    <ID>LoopWithTooManyJumpStatements:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$do</ID>
     <ID>MagicNumber:AppDataScreen.kt:1024.0</ID>
-    <ID>MagicNumber:AppLockScreen.kt:11</ID>
-    <ID>MagicNumber:AppLockScreen.kt:250</ID>
-    <ID>MagicNumber:AppLockScreen.kt:3</ID>
-    <ID>MagicNumber:AppLockScreen.kt:300</ID>
-    <ID>MagicNumber:AppLockScreen.kt:500</ID>
-    <ID>MagicNumber:AppLockScreen.kt:6</ID>
-    <ID>MagicNumber:AppLockScreen.kt:600</ID>
-    <ID>MagicNumber:AppLockScreenParts.kt:0.4f</ID>
-    <ID>MagicNumber:AppLockSetupScreen.kt:100</ID>
-    <ID>MagicNumber:AppLockSetupScreen.kt:11</ID>
-    <ID>MagicNumber:AppLockSetupScreen.kt:250</ID>
-    <ID>MagicNumber:AppLockSetupScreen.kt:3</ID>
-    <ID>MagicNumber:AppLockSetupScreen.kt:300</ID>
-    <ID>MagicNumber:AppLockSetupScreen.kt:400</ID>
-    <ID>MagicNumber:AppLockSetupScreen.kt:6</ID>
     <ID>MagicNumber:AppNavHost.kt:280</ID>
     <ID>MagicNumber:AppNavHost.kt:320</ID>
     <ID>MagicNumber:AppSettings.kt:AppSettings$1024</ID>
     <ID>MagicNumber:AppSettings.kt:AppSettings$5L</ID>
-    <ID>MagicNumber:BookmarkScreen.kt:3</ID>
-    <ID>MagicNumber:BookmarkTabs.kt:0.34f</ID>
-    <ID>MagicNumber:BookmarkTabs.kt:0.58f</ID>
-    <ID>MagicNumber:BookmarkTabs.kt:0.82f</ID>
-    <ID>MagicNumber:BookmarkTabs.kt:1.15f</ID>
-    <ID>MagicNumber:BookmarkTabs.kt:6</ID>
+    <ID>MagicNumber:AppThemeAppearance.kt:0.28f</ID>
     <ID>MagicNumber:CalculatorEngine.kt:CalculatorEngine$1e15</ID>
-    <ID>MagicNumber:CalculatorScreen.kt:280L</ID>
-    <ID>MagicNumber:CalculatorScreen.kt:8</ID>
     <ID>MagicNumber:CrashHandler.kt:CrashHandler$10</ID>
-    <ID>MagicNumber:DevicePairingScreen.kt:24</ID>
-    <ID>MagicNumber:DevicePairingScreen.kt:3</ID>
-    <ID>MagicNumber:DownloadQueueScreen.kt:0xFF2AA876</ID>
-    <ID>MagicNumber:DownloadQueueScreen.kt:360f</ID>
-    <ID>MagicNumber:FavoriteTagsScreen.kt:120</ID>
-    <ID>MagicNumber:FavoriteTagsScreen.kt:160</ID>
-    <ID>MagicNumber:FavoriteTagsScreen.kt:4</ID>
-    <ID>MagicNumber:FavoriteTagsScreen.kt:6</ID>
-    <ID>MagicNumber:HomeScreenContent.kt:6</ID>
-    <ID>MagicNumber:IllustComponents.kt:0.56f</ID>
-    <ID>MagicNumber:IllustComponents.kt:0.75f</ID>
-    <ID>MagicNumber:IllustComponents.kt:0.82f</ID>
-    <ID>MagicNumber:IllustDetailInfo.kt:12</ID>
-    <ID>MagicNumber:IllustDetailInfo.kt:3</ID>
-    <ID>MagicNumber:IllustDetailScreen.kt:240</ID>
-    <ID>MagicNumber:IllustDetailScreen.kt:720</ID>
-    <ID>MagicNumber:IllustSeriesScreen.kt:1.48f</ID>
-    <ID>MagicNumber:IllustSeriesScreen.kt:6</ID>
+    <ID>MagicNumber:Haptics.kt:0.45f</ID>
+    <ID>MagicNumber:Haptics.kt:0.75f</ID>
+    <ID>MagicNumber:Haptics.kt:0.7f</ID>
+    <ID>MagicNumber:Haptics.kt:0.85f</ID>
+    <ID>MagicNumber:Haptics.kt:0.95f</ID>
+    <ID>MagicNumber:Haptics.kt:0.9f</ID>
+    <ID>MagicNumber:Haptics.kt:14L</ID>
+    <ID>MagicNumber:Haptics.kt:20</ID>
+    <ID>MagicNumber:Haptics.kt:24L</ID>
+    <ID>MagicNumber:Haptics.kt:25</ID>
+    <ID>MagicNumber:Haptics.kt:28L</ID>
+    <ID>MagicNumber:Haptics.kt:30L</ID>
+    <ID>MagicNumber:Haptics.kt:40L</ID>
+    <ID>MagicNumber:IllustComponents.kt:1_000</ID>
+    <ID>MagicNumber:IllustComponents.kt:1_000_000</ID>
+    <ID>MagicNumber:IllustComponents.kt:1_000_000f</ID>
+    <ID>MagicNumber:IllustComponents.kt:1_000f</ID>
     <ID>MagicNumber:IllustWidgetConfigureActivity.kt:IllustWidgetConfigureActivity$92</ID>
     <ID>MagicNumber:IllustWidgetProvider.kt:IllustWidgetProvider.Companion$32</ID>
-    <ID>MagicNumber:IllustiaAppRoot.kt:120</ID>
-    <ID>MagicNumber:IllustiaAppRoot.kt:2400L</ID>
-    <ID>MagicNumber:IllustiaAppRoot.kt:350</ID>
     <ID>MagicNumber:IllustiaApplication.kt:IllustiaApplication$0.06</ID>
     <ID>MagicNumber:IllustiaApplication.kt:IllustiaApplication$1024</ID>
+    <ID>MagicNumber:IllustiaDetailProfileModule.kt:IllustiaDetailProfileModule$350</ID>
+    <ID>MagicNumber:IllustiaLibraryNavigationModule.kt:IllustiaLibraryNavigationModule$140</ID>
+    <ID>MagicNumber:IllustiaLibraryNavigationModule.kt:IllustiaLibraryNavigationModule$32</ID>
     <ID>MagicNumber:IllustiaRepository.kt:IllustiaRepository$400</ID>
     <ID>MagicNumber:IllustiaRepository.kt:IllustiaRepository$401</ID>
-    <ID>MagicNumber:IllustiaViewModelCore.kt:IllustiaViewModelCore$100</ID>
-    <ID>MagicNumber:IllustiaViewModelCore.kt:IllustiaViewModelCore$1000</ID>
-    <ID>MagicNumber:IllustiaViewModelCore.kt:IllustiaViewModelCore$1000L</ID>
-    <ID>MagicNumber:IllustiaViewModelCore.kt:IllustiaViewModelCore$140</ID>
-    <ID>MagicNumber:IllustiaViewModelCore.kt:IllustiaViewModelCore$1440</ID>
-    <ID>MagicNumber:IllustiaViewModelCore.kt:IllustiaViewModelCore$15</ID>
-    <ID>MagicNumber:IllustiaViewModelCore.kt:IllustiaViewModelCore$2_048</ID>
-    <ID>MagicNumber:IllustiaViewModelCore.kt:IllustiaViewModelCore$3</ID>
-    <ID>MagicNumber:IllustiaViewModelCore.kt:IllustiaViewModelCore$30</ID>
-    <ID>MagicNumber:IllustiaViewModelCore.kt:IllustiaViewModelCore$32</ID>
-    <ID>MagicNumber:IllustiaViewModelCore.kt:IllustiaViewModelCore$350</ID>
-    <ID>MagicNumber:IllustiaViewModelCore.kt:IllustiaViewModelCore$4</ID>
-    <ID>MagicNumber:IllustiaViewModelCore.kt:IllustiaViewModelCore$400</ID>
-    <ID>MagicNumber:IllustiaViewModelCore.kt:IllustiaViewModelCore$401</ID>
-    <ID>MagicNumber:IllustiaViewModelCore.kt:IllustiaViewModelCore$50</ID>
-    <ID>MagicNumber:IllustiaViewModelCore.kt:IllustiaViewModelCore$6</ID>
-    <ID>MagicNumber:ImageSettingsScreen.kt:100</ID>
-    <ID>MagicNumber:ImageSettingsScreen.kt:1000</ID>
-    <ID>MagicNumber:ImageSettingsScreen.kt:12</ID>
-    <ID>MagicNumber:ImageSettingsScreen.kt:1440</ID>
-    <ID>MagicNumber:ImageSettingsScreen.kt:15</ID>
-    <ID>MagicNumber:ImageSettingsScreen.kt:180</ID>
-    <ID>MagicNumber:ImageSettingsScreen.kt:20</ID>
-    <ID>MagicNumber:ImageSettingsScreen.kt:3</ID>
-    <ID>MagicNumber:ImageSettingsScreen.kt:30</ID>
-    <ID>MagicNumber:ImageSettingsScreen.kt:300</ID>
-    <ID>MagicNumber:ImageSettingsScreen.kt:360</ID>
-    <ID>MagicNumber:ImageSettingsScreen.kt:4</ID>
-    <ID>MagicNumber:ImageSettingsScreen.kt:5</ID>
-    <ID>MagicNumber:ImageSettingsScreen.kt:500</ID>
-    <ID>MagicNumber:ImageSettingsScreen.kt:6</ID>
-    <ID>MagicNumber:ImageSettingsScreen.kt:60</ID>
-    <ID>MagicNumber:ImageSettingsScreen.kt:720</ID>
-    <ID>MagicNumber:ImageViewerScreen.kt:4000</ID>
-    <ID>MagicNumber:ImageViewerScreenParts.kt:0.5f</ID>
-    <ID>MagicNumber:ImageViewerScreenParts.kt:1.02f</ID>
-    <ID>MagicNumber:ImageViewerScreenParts.kt:2.5f</ID>
-    <ID>MagicNumber:ImageViewerScreenParts.kt:260</ID>
-    <ID>MagicNumber:LoginScreens.kt:0.82f</ID>
-    <ID>MagicNumber:MainActivity.kt:MainActivity$160L</ID>
-    <ID>MagicNumber:MainSurface.kt:1800L</ID>
+    <ID>MagicNumber:IllustiaSettingsSecurityModule.kt:IllustiaSettingsSecurityModule$100</ID>
+    <ID>MagicNumber:IllustiaSettingsSecurityModule.kt:IllustiaSettingsSecurityModule$1000</ID>
+    <ID>MagicNumber:IllustiaSettingsSecurityModule.kt:IllustiaSettingsSecurityModule$1000L</ID>
+    <ID>MagicNumber:IllustiaSettingsSecurityModule.kt:IllustiaSettingsSecurityModule$1440</ID>
+    <ID>MagicNumber:IllustiaSettingsSecurityModule.kt:IllustiaSettingsSecurityModule$15</ID>
+    <ID>MagicNumber:IllustiaSettingsSecurityModule.kt:IllustiaSettingsSecurityModule$2_048</ID>
+    <ID>MagicNumber:IllustiaSettingsSecurityModule.kt:IllustiaSettingsSecurityModule$3</ID>
+    <ID>MagicNumber:IllustiaSettingsSecurityModule.kt:IllustiaSettingsSecurityModule$30</ID>
+    <ID>MagicNumber:IllustiaSettingsSecurityModule.kt:IllustiaSettingsSecurityModule$4</ID>
+    <ID>MagicNumber:IllustiaSettingsSecurityModule.kt:IllustiaSettingsSecurityModule$50</ID>
+    <ID>MagicNumber:IllustiaSettingsSecurityModule.kt:IllustiaSettingsSecurityModule$6</ID>
+    <ID>MagicNumber:IllustiaViewModelFoundation.kt:IllustiaViewModelFoundation$30</ID>
+    <ID>MagicNumber:IllustiaViewModelFoundation.kt:IllustiaViewModelFoundation$4</ID>
+    <ID>MagicNumber:IllustiaViewModelFoundation.kt:IllustiaViewModelFoundation$400</ID>
+    <ID>MagicNumber:IllustiaViewModelFoundation.kt:IllustiaViewModelFoundation$401</ID>
+    <ID>MagicNumber:MainActivity.kt:MainActivity$220L</ID>
     <ID>MagicNumber:MoreScreen.kt:99</ID>
     <ID>MagicNumber:NativeImageAnalysis.kt:NativeImageAnalysis$0.58</ID>
-    <ID>MagicNumber:NovelCardComponents.kt:0.76f</ID>
-    <ID>MagicNumber:OnboardingArt.kt:0.42f</ID>
-    <ID>MagicNumber:OnboardingArt.kt:0.46f</ID>
-    <ID>MagicNumber:OnboardingArt.kt:0.66f</ID>
-    <ID>MagicNumber:OnboardingArt.kt:0.72f</ID>
-    <ID>MagicNumber:OnboardingScenes.kt:3</ID>
-    <ID>MagicNumber:PallaSyncDevicesScreen.kt:2_000</ID>
-    <ID>MagicNumber:PallaSyncSettingsScreen.kt:1000</ID>
-    <ID>MagicNumber:PallaSyncSettingsScreen.kt:2000</ID>
     <ID>MagicNumber:PallaSyncWireModels.kt:200</ID>
     <ID>MagicNumber:PallaSyncWireModels.kt:299</ID>
     <ID>MagicNumber:PallaSyncWireModels.kt:410</ID>
@@ -493,38 +128,21 @@
     <ID>MagicNumber:PalleriaLiveWallpaperService.kt:PalleriaLiveWallpaperService.PalleriaEngine$38</ID>
     <ID>MagicNumber:PalleriaLiveWallpaperService.kt:PalleriaLiveWallpaperService.PalleriaEngine$44</ID>
     <ID>MagicNumber:PalleriaLiveWallpaperService.kt:PalleriaLiveWallpaperService.PalleriaEngine$60_000L</ID>
-    <ID>MagicNumber:PalleriaSyncManager.kt:PalleriaSyncManager$4</ID>
-    <ID>MagicNumber:PalleriaSyncManager.kt:PalleriaSyncManager$400</ID>
-    <ID>MagicNumber:PalleriaSyncManager.kt:PalleriaSyncManager$8</ID>
-    <ID>MagicNumber:PalleriaSyncManager.kt:PalleriaSyncManager.Companion$100</ID>
-    <ID>MagicNumber:PinSetupScreen.kt:3</ID>
-    <ID>MagicNumber:PinSetupScreen.kt:400</ID>
-    <ID>MagicNumber:PinSetupScreen.kt:6</ID>
+    <ID>MagicNumber:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$4</ID>
+    <ID>MagicNumber:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$400</ID>
+    <ID>MagicNumber:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$8</ID>
+    <ID>MagicNumber:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator.Companion$100</ID>
     <ID>MagicNumber:PixivApiClient.kt:PixivApiClient$10</ID>
     <ID>MagicNumber:PixivApiUrlPolicy.kt:443</ID>
-    <ID>MagicNumber:RankingScreen.kt:0.035f</ID>
-    <ID>MagicNumber:RankingScreen.kt:0.22f</ID>
-    <ID>MagicNumber:RankingScreen.kt:6</ID>
+    <ID>MagicNumber:ProfileGridLayout.kt:1_200</ID>
+    <ID>MagicNumber:ProfileGridLayout.kt:3</ID>
+    <ID>MagicNumber:ProfileGridLayout.kt:4</ID>
+    <ID>MagicNumber:ProfileGridLayout.kt:5</ID>
+    <ID>MagicNumber:ProfileGridLayout.kt:600</ID>
+    <ID>MagicNumber:ProfileGridLayout.kt:840</ID>
     <ID>MagicNumber:RankingWidgetProvider.kt:1001</ID>
     <ID>MagicNumber:RankingWidgetProvider.kt:1002</ID>
     <ID>MagicNumber:RankingWidgetProvider.kt:3L</ID>
-    <ID>MagicNumber:ReactionComponents.kt:1.5f</ID>
-    <ID>MagicNumber:ReactionComponents.kt:100</ID>
-    <ID>MagicNumber:ReactionComponents.kt:120</ID>
-    <ID>MagicNumber:ReactionComponents.kt:140</ID>
-    <ID>MagicNumber:ReactionComponents.kt:150</ID>
-    <ID>MagicNumber:ReactionComponents.kt:160</ID>
-    <ID>MagicNumber:ReactionComponents.kt:200</ID>
-    <ID>MagicNumber:ReactionComponents.kt:220</ID>
-    <ID>MagicNumber:ReactionComponents.kt:420</ID>
-    <ID>MagicNumber:ReactionComponents.kt:600</ID>
-    <ID>MagicNumber:ReactionComponents.kt:8</ID>
-    <ID>MagicNumber:SearchBrowse.kt:3</ID>
-    <ID>MagicNumber:SearchBrowse.kt:8</ID>
-    <ID>MagicNumber:SearchResults.kt:3</ID>
-    <ID>MagicNumber:SearchScreen.kt:200</ID>
-    <ID>MagicNumber:SearchScreen.kt:250</ID>
-    <ID>MagicNumber:SettingsComponents.kt:3</ID>
     <ID>MagicNumber:SettingsStoreCodec.kt:5</ID>
     <ID>MagicNumber:SettingsStoreCodec.kt:6</ID>
     <ID>MagicNumber:SettingsStorePreferences.kt:0xFF42A5F5L</ID>
@@ -533,233 +151,18 @@
     <ID>MagicNumber:SettingsStorePreferences.kt:4</ID>
     <ID>MagicNumber:SettingsStoreSecurity.kt:20</ID>
     <ID>MagicNumber:SettingsStoreSecurity.kt:4</ID>
-    <ID>MagicNumber:ShortsFeedScreen.kt:0xFFFF4D67</ID>
     <ID>MagicNumber:ThemeSettingsComponents.kt:0xFFFFFF</ID>
-    <ID>MagicNumber:ThemeSettingsComponents.kt:4</ID>
-    <ID>MagicNumber:UgoiraArtwork.kt:1.02f</ID>
-    <ID>MagicNumber:UgoiraArtwork.kt:2.5f</ID>
-    <ID>MagicNumber:UgoiraArtwork.kt:260</ID>
-    <ID>MagicNumber:UserProfileComponents.kt:140</ID>
-    <ID>MagicNumber:UserProfileComponents.kt:180</ID>
-    <ID>MagicNumber:UserProfileComponents.kt:200</ID>
-    <ID>MagicNumber:UserProfileComponents.kt:220</ID>
-    <ID>MagicNumber:UserProfileComponents.kt:280</ID>
-    <ID>MagicNumber:UserProfileComponents.kt:320</ID>
     <ID>MagicNumber:UuidV7.kt:UuidV7$0x3FFFFFFFFFFFFFFFL</ID>
     <ID>MagicNumber:UuidV7.kt:UuidV7$0xFF</ID>
     <ID>MagicNumber:UuidV7.kt:UuidV7$0xFFF</ID>
     <ID>MagicNumber:UuidV7.kt:UuidV7$7</ID>
     <ID>MagicNumber:UuidV7.kt:UuidV7$8</ID>
     <ID>MagicNumber:WallpaperPlaylist.kt:WallpaperPlaylistScheduler$6</ID>
-    <ID>MagicNumber:WatchlistSeriesScreen.kt:0.34f</ID>
-    <ID>MagicNumber:WatchlistSeriesScreen.kt:0.58f</ID>
-    <ID>MagicNumber:WatchlistSeriesScreen.kt:0.82f</ID>
-    <ID>MagicNumber:WatchlistSeriesScreen.kt:1.15f</ID>
-    <ID>MagicNumber:WatchlistSeriesScreen.kt:6</ID>
     <ID>MatchingDeclarationName:BookmarkScreen.kt:FollowingUserSort</ID>
     <ID>MatchingDeclarationName:HomeScreenTabs.kt:HomeTab</ID>
     <ID>MatchingDeclarationName:OkHttpAwait.kt:PixivApiException : IOException</ID>
     <ID>MatchingDeclarationName:SettingsStoreCodec.kt:RoomSettingsData</ID>
     <ID>MatchingDeclarationName:SyncedCollections.kt:SyncedCollectionsSnapshot</ID>
-    <ID>MaxLineLength:AboutScreen.kt:Text("API 33", color = MiuixTheme.colorScheme.onSurfaceVariantSummary, fontWeight = FontWeight.Bold, style = MiuixTheme.textStyles.footnote1)</ID>
-    <ID>MaxLineLength:AboutScreen.kt:Text("GPLv3", color = MiuixTheme.colorScheme.onSurfaceVariantSummary, fontWeight = FontWeight.Bold, style = MiuixTheme.textStyles.footnote1)</ID>
-    <ID>MaxLineLength:AboutScreen.kt:Text(stringResource(R.string.about_latest), color = MiuixTheme.colorScheme.primary, fontWeight = FontWeight.Bold, style = MiuixTheme.textStyles.footnote1)</ID>
-    <ID>MaxLineLength:AccountSettingsScreen.kt:color = if (state.settings.refreshToken.isBlank()) MiuixTheme.colorScheme.error else MiuixTheme.colorScheme.primary</ID>
-    <ID>MaxLineLength:AccountSettingsScreen.kt:text = if (state.settings.refreshToken.isBlank()) stringResource(R.string.account_not_logged_in) else stringResource(R.string.account_logged_in)</ID>
-    <ID>MaxLineLength:AppDataScreen.kt:SettingLinkRow(stringResource(R.string.data_delete_cache)) { deleteTarget = AppDataDeleteTarget.Cache }</ID>
-    <ID>MaxLineLength:AppDataScreen.kt:SettingLinkRow(stringResource(R.string.data_delete_mute_data)) { deleteTarget = AppDataDeleteTarget.MuteData }</ID>
-    <ID>MaxLineLength:AppDataScreen.kt:SettingLinkRow(stringResource(R.string.data_delete_search_history)) { deleteTarget = AppDataDeleteTarget.SearchHistory }</ID>
-    <ID>MaxLineLength:AppDataScreen.kt:SettingLinkRow(stringResource(R.string.data_delete_view_history)) { deleteTarget = AppDataDeleteTarget.ViewHistory }</ID>
-    <ID>MaxLineLength:AppDataScreen.kt:SettingLinkRow(stringResource(R.string.data_delete_watchlist_tags)) { deleteTarget = AppDataDeleteTarget.FavoriteTags }</ID>
-    <ID>MaxLineLength:AppDataScreen.kt:SettingRow</ID>
-    <ID>MaxLineLength:AppDataScreen.kt:Text(stringResource(R.string.data_cache_badge), color = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.6f), fontWeight = FontWeight.Bold)</ID>
-    <ID>MaxLineLength:AppDataScreen.kt:Text(stringResource(R.string.data_mute_data_badge), color = MiuixTheme.colorScheme.onSurfaceVariantSummary, fontWeight = FontWeight.Bold)</ID>
-    <ID>MaxLineLength:AppDataScreen.kt:Text(stringResource(R.string.data_search_history_badge), color = MiuixTheme.colorScheme.onSurfaceVariantSummary, fontWeight = FontWeight.Bold)</ID>
-    <ID>MaxLineLength:AppDataScreen.kt:Text(stringResource(R.string.data_view_history_badge), color = MiuixTheme.colorScheme.onSurfaceVariantSummary, fontWeight = FontWeight.Bold)</ID>
-    <ID>MaxLineLength:AppDataScreen.kt:Text(stringResource(R.string.data_watchlist_tags_badge), color = MiuixTheme.colorScheme.primary, fontWeight = FontWeight.Bold)</ID>
-    <ID>MaxLineLength:AppLockScreen.kt:.</ID>
-    <ID>MaxLineLength:AppLockScreen.kt:manager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.BIOMETRIC_WEAK) == BiometricManager.BIOMETRIC_SUCCESS</ID>
-    <ID>MaxLineLength:AppLockSetupScreen.kt:.</ID>
-    <ID>MaxLineLength:BookmarkScreen.kt:Icon(MiuixIcons.Filter, contentDescription = androidx.compose.ui.res.stringResource(R.string.action_sort))</ID>
-    <ID>MaxLineLength:BookmarkScreen.kt:Icon(MiuixIcons.Refresh, contentDescription = androidx.compose.ui.res.stringResource(R.string.dialog_reload))</ID>
-    <ID>MaxLineLength:BookmarkScreen.kt:text = if (followingUserSort == FollowingUserSort.Name) "✓ $nameLabel" else nameLabel</ID>
-    <ID>MaxLineLength:BookmarkScreen.kt:text = if (followingUserSort == FollowingUserSort.Newest) "✓ $newestLabel" else newestLabel</ID>
-    <ID>MaxLineLength:BookmarkScreen.kt:text = if (followingUserSort == FollowingUserSort.Oldest) "✓ $oldestLabel" else oldestLabel</ID>
-    <ID>MaxLineLength:BookmarkSettingsScreen.kt:SettingSwitchRow(stringResource(R.string.bookmark_auto_tag), state.settings.autoTagOnBookmark, viewModel::updateAutoTagOnBookmark, stringResource(R.string.bookmark_auto_tag_desc))</ID>
-    <ID>MaxLineLength:BookmarkSettingsScreen.kt:SettingSwitchRow(stringResource(R.string.bookmark_bookmark_on_download), state.settings.autoBookmarkOnDownload, viewModel::updateAutoBookmarkOnDownload, stringResource(R.string.bookmark_bookmark_on_download_desc))</ID>
-    <ID>MaxLineLength:BookmarkSettingsScreen.kt:SettingSwitchRow(stringResource(R.string.bookmark_confirm_on_long_press), state.settings.confirmOnLongPressSave, viewModel::updateConfirmOnLongPressSave, stringResource(R.string.bookmark_confirm_on_long_press_desc))</ID>
-    <ID>MaxLineLength:BookmarkSettingsScreen.kt:SettingSwitchRow(stringResource(R.string.bookmark_download_on_bookmark), state.settings.autoDownloadOnBookmark, viewModel::updateAutoDownloadOnBookmark, stringResource(R.string.bookmark_download_on_bookmark_desc))</ID>
-    <ID>MaxLineLength:BookmarkSettingsScreen.kt:SettingSwitchRow(stringResource(R.string.bookmark_follow_on_like), state.settings.followOnLike, viewModel::updateFollowOnLike, stringResource(R.string.bookmark_follow_on_like_desc))</ID>
-    <ID>MaxLineLength:BookmarkSettingsScreen.kt:SettingSwitchRow(stringResource(R.string.bookmark_private_default), state.settings.privateBookmarkDefault, viewModel::updatePrivateBookmarkDefault, stringResource(R.string.bookmark_private_default_desc))</ID>
-    <ID>MaxLineLength:BookmarkSettingsScreen.kt:SettingSwitchRow(stringResource(R.string.bookmark_skip_confirm_on_detail), state.settings.skipConfirmOnDetailSave, viewModel::updateSkipConfirmOnDetailSave, stringResource(R.string.bookmark_skip_confirm_on_detail_desc))</ID>
-    <ID>MaxLineLength:BookmarkTabs.kt:Button(onClick = viewModel::loadMoreBookmarks, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_load_more)) }</ID>
-    <ID>MaxLineLength:BookmarkTabs.kt:Button(onClick = viewModel::loadMoreFollowingUsers, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_load_more)) }</ID>
-    <ID>MaxLineLength:BookmarkTabs.kt:Button(onClick = viewModel::loadMoreTimeline, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.action_load_more)) }</ID>
-    <ID>MaxLineLength:BookmarkTabs.kt:IllustCard(illust = illust, onBookmark = onBookmark, onClick = onClick, onLongClick = onLongClick, highQualityImages = feedHighQuality, showAiBadge = showAiBadge)</ID>
-    <ID>MaxLineLength:BookmarkTabs.kt:contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 8.dp, bottom = MainNavigationContentPadding)</ID>
-    <ID>MaxLineLength:BookmarkTabs.kt:gridItems</ID>
-    <ID>MaxLineLength:BookmarkTabs.kt:item(span = { GridItemSpan(maxLineSpan) }) { EmptyState(stringResource(R.string.watchlist_series_empty)) }</ID>
-    <ID>MaxLineLength:CalculatorEngineProperty9Test.kt:CalculatorEngineProperty9Test$private val invalidChars = ('a'..'z') + ('A'..'Z') + listOf('!', '@', '#', '$', '%', '^', '&amp;', '*', '(', ')', '=', '?', '~')</ID>
-    <ID>MaxLineLength:CalculatorScreen.kt:slideOutVertically(animationSpec = tween(durationMillis = 250, easing = FastOutSlowInEasing)) { -it / 8 }</ID>
-    <ID>MaxLineLength:CommentScreen.kt:androidx.compose.foundation.layout</ID>
-    <ID>MaxLineLength:CommentStore.kt:CommentStore$type == CommentArtworkType.ILLUST &amp;&amp; isReplay -&gt; repository.illustCommentReplies(parentCommentId ?: error("parentCommentId is required"))</ID>
-    <ID>MaxLineLength:CommentStore.kt:CommentStore$type == CommentArtworkType.NOVEL &amp;&amp; isReplay -&gt; repository.novelCommentReplies(parentCommentId ?: error("parentCommentId is required"))</ID>
-    <ID>MaxLineLength:DataSettingsScreen.kt:SettingSwitchRow(stringResource(R.string.data_save_search_history), state.settings.saveSearchHistory, viewModel::updateSaveSearchHistory, stringResource(R.string.data_save_search_history_desc))</ID>
-    <ID>MaxLineLength:DataSettingsScreen.kt:SettingSwitchRow(stringResource(R.string.data_save_view_history), state.settings.saveViewHistory, viewModel::updateSaveViewHistory, stringResource(R.string.data_save_view_history_desc))</ID>
-    <ID>MaxLineLength:DevicePairingScreen.kt:Toast.makeText(context, R.string.error_pallasync_join_chain_failed, Toast.LENGTH_SHORT).show()</ID>
-    <ID>MaxLineLength:DevicePairingScreen.kt:Toast.makeText(context, R.string.error_pallasync_seed_phrase_word_count, Toast.LENGTH_SHORT).show()</ID>
-    <ID>MaxLineLength:DevicePairingScreen.kt:Toast.makeText(context, R.string.msg_pallasync_chain_joined, Toast.LENGTH_SHORT).show()</ID>
-    <ID>MaxLineLength:DevicePairingScreen.kt:bmp.setPixel(x, y, if (bitMatrix.get(x, y)) android.graphics.Color.BLACK else android.graphics.Color.WHITE)</ID>
-    <ID>MaxLineLength:DummyAppIconSwitcher.kt:DummyAppIconSwitcher$val dummyState = if (privacyModeEnabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else PackageManager.COMPONENT_ENABLED_STATE_DISABLED</ID>
-    <ID>MaxLineLength:DummyAppIconSwitcher.kt:DummyAppIconSwitcher$val realState = if (privacyModeEnabled) PackageManager.COMPONENT_ENABLED_STATE_DISABLED else PackageManager.COMPONENT_ENABLED_STATE_ENABLED</ID>
-    <ID>MaxLineLength:FavoriteTagsScreen.kt:if</ID>
-    <ID>MaxLineLength:FavoriteTagsScreen.kt:val subtitle = selectedTag?.let { "#$it / ${stringResource(R.string.data_items_count, state.watchlistItems.size)}" } ?: stringResource(R.string.favorite_tags_no_selection)</ID>
-    <ID>MaxLineLength:IllustComponents.kt:colors = CardDefaults.defaultColors(color = Color.Transparent, contentColor = MiuixTheme.colorScheme.onBackground)</ID>
-    <ID>MaxLineLength:IllustComponents.kt:colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.surfaceContainer, contentColor = MiuixTheme.colorScheme.onBackground)</ID>
-    <ID>MaxLineLength:IllustComponents.kt:contentPadding: PaddingValues = PaddingValues(start = 16.dp, end = 16.dp, top = 14.dp, bottom = MainNavigationContentPadding)</ID>
-    <ID>MaxLineLength:IllustDetailHeader.kt:Icon(MiuixIcons.More, contentDescription = moreLabel, tint = headerIconTint, modifier = Modifier.size(24.dp))</ID>
-    <ID>MaxLineLength:IllustDetailHeader.kt:Text("${pagerState.currentPage + 1} / ${imageUrls.size}", color = MiuixTheme.colorScheme.onSurface, style = MiuixTheme.textStyles.footnote1, fontWeight = FontWeight.Bold)</ID>
-    <ID>MaxLineLength:IllustDetailHeader.kt:onSaveImage(illust.originalImageUrl ?: illust.imageUrl, "illustia_${illust.id}", !skipConfirmOnDetailSave)</ID>
-    <ID>MaxLineLength:IllustDetailHeader.kt:onSaveImage(imageUrls[page], "illustia_${illust.id}_p$page", confirmOnLongPressSave)</ID>
-    <ID>MaxLineLength:IllustDetailHeader.kt:putExtra(Intent.EXTRA_TEXT, "${illust.title} by ${illust.artistName}\n$pixivUrl")</ID>
-    <ID>MaxLineLength:IllustDetailInfo.kt:Text("${illust.pageCount}P", color = MiuixTheme.colorScheme.onSurfaceVariantSummary, fontWeight = FontWeight.Bold, style = MiuixTheme.textStyles.footnote1)</ID>
-    <ID>MaxLineLength:IllustDetailInfo.kt:Text("ID ${illust.id}", color = MiuixTheme.colorScheme.onSurfaceVariantSummary, fontWeight = FontWeight.Bold, style = MiuixTheme.textStyles.footnote1)</ID>
-    <ID>MaxLineLength:IllustDetailInfo.kt:Text(illust.title, color = MiuixTheme.colorScheme.onBackground, style = MiuixTheme.textStyles.title2, fontWeight = FontWeight.Black)</ID>
-    <ID>MaxLineLength:IllustDetailInfo.kt:Text(illust.type, color = MiuixTheme.colorScheme.onSurfaceVariantSummary, fontWeight = FontWeight.Bold, style = MiuixTheme.textStyles.footnote1)</ID>
-    <ID>MaxLineLength:IllustDetailInfo.kt:text = illust.series.title?.takeIf { it.isNotBlank() } ?: stringResource(R.string.detail_series)</ID>
-    <ID>MaxLineLength:IllustDetailInfo.kt:text = stringResource(R.string.detail_illust_id) + " ${illust.id} " + stringResource(R.string.detail_resolution) + " ${if (illust.originalImageUrl != null) "original" else "large"}"</ID>
-    <ID>MaxLineLength:IllustDetailInfo.kt:url = related.squareImageUrl.ifBlank { related.mediumImageUrl.ifBlank { related.imageUrl } }</ID>
-    <ID>MaxLineLength:IllustDetailScreen.kt:modifier = Modifier.fillMaxSize().padding(bottom = scaffoldPadding.calculateBottomPadding().coerceAtLeast(0.dp))</ID>
-    <ID>MaxLineLength:IllustSeriesScreen.kt:.</ID>
-    <ID>MaxLineLength:IllustSeriesScreen.kt:text = if (watchlistAdded) stringResource(R.string.action_remove_bookmark) else stringResource(R.string.action_add)</ID>
-    <ID>MaxLineLength:IllustWidgetConfigureActivity.kt:IllustWidgetConfigureActivity$Icon(MiuixIcons.Close, contentDescription = stringResource(R.string.action_close))</ID>
-    <ID>MaxLineLength:IllustWidgetConfigureActivity.kt:LazyRow</ID>
-    <ID>MaxLineLength:IllustWidgetConfigureActivity.kt:var selected by rememberSaveable(illust.id) { mutableIntStateOf(initialPageIndex.coerceIn(0, urls.lastIndex.coerceAtLeast(0))) }</ID>
-    <ID>MaxLineLength:IllustWidgetProvider.kt:IllustWidgetProvider.Companion$private</ID>
-    <ID>MaxLineLength:IllustiaViewModelCore.kt:IllustiaViewModelCore$_uiState.update { it.copy(imageViewerIllust = illust, imageViewerStartPage = page, imageViewerCurrentPage = page) }</ID>
-    <ID>MaxLineLength:IllustiaViewModelCore.kt:IllustiaViewModelCore$_uiState.update { it.copy(loadState = LoadState.Error(cleanErrorMessage(error, str(R.string.error_cache_delete_failed)))) }</ID>
-    <ID>MaxLineLength:IllustiaViewModelCore.kt:IllustiaViewModelCore$_uiState.update { it.copy(loadState = LoadState.Error(cleanErrorMessage(error, str(R.string.error_save_failed)))) }</ID>
-    <ID>MaxLineLength:IllustiaViewModelCore.kt:IllustiaViewModelCore$_uiState.update { it.copy(message = if (tag in current) str(R.string.msg_watchlist_tag_removed, tag) else str(R.string.msg_watchlist_tag_added, tag)) }</ID>
-    <ID>MaxLineLength:IllustiaViewModelCore.kt:IllustiaViewModelCore$_uiState.update { it.copy(notificationsLoading = false, message = cleanErrorMessage(error, getApplication&lt;Application&gt;().getString(R.string.error_notifications_load_failed))) }</ID>
-    <ID>MaxLineLength:IllustiaViewModelCore.kt:IllustiaViewModelCore$_uiState.update { it.copy(selectedIllust = illust, selectedIllustUser = null, selectedIllustFirstComment = null, relatedIllusts = emptyList()) }</ID>
-    <ID>MaxLineLength:IllustiaViewModelCore.kt:IllustiaViewModelCore$if</ID>
-    <ID>MaxLineLength:IllustiaViewModelCore.kt:IllustiaViewModelCore$it.copy(expandedNotifications = it.expandedNotifications + (notificationId to page.notifications))</ID>
-    <ID>MaxLineLength:IllustiaViewModelCore.kt:IllustiaViewModelCore$it.copy(message = cleanErrorMessage(error, getApplication&lt;Application&gt;().getString(R.string.error_novel_load_failed)))</ID>
-    <ID>MaxLineLength:IllustiaViewModelCore.kt:IllustiaViewModelCore$it.copy(notificationsLoading = false, message = cleanErrorMessage(error, getApplication&lt;Application&gt;().getString(R.string.error_notifications_load_failed)))</ID>
-    <ID>MaxLineLength:IllustiaViewModelCore.kt:IllustiaViewModelCore$selectedIllustUser = if (state.selectedIllustUser?.id == user.id) updated else state.selectedIllustUser</ID>
-    <ID>MaxLineLength:IllustiaViewModelCore.kt:IllustiaViewModelCore$selectedUserBookmarks = it.selectedUserBookmarks.appendIllusts(page.items.visibleWithSettings(it.settings))</ID>
-    <ID>MaxLineLength:IllustiaViewModelCore.kt:IllustiaViewModelCore$selectedUserIllusts = it.selectedUserIllusts.appendIllusts(page.items.visibleWithSettings(it.settings))</ID>
-    <ID>MaxLineLength:IllustiaViewModelCore.kt:IllustiaViewModelCore$showMessage(cleanErrorMessage(error, getApplication&lt;Application&gt;().getString(R.string.error_notification_open_failed)))</ID>
-    <ID>MaxLineLength:IllustiaViewModelCore.kt:IllustiaViewModelCore$updateSettings { it.copy(accounts = mutable, activeAccountIndex = mutable.indexOfFirst { it.refreshToken == token }) }</ID>
-    <ID>MaxLineLength:ImageSettingsScreen.kt:SettingSwitchRow(stringResource(R.string.image_high_quality), state.settings.highQualityImages, viewModel::updateHighQuality, stringResource(R.string.image_high_quality_desc))</ID>
-    <ID>MaxLineLength:ImageSettingsScreen.kt:SettingSwitchRow(stringResource(R.string.image_prefetch), state.settings.prefetchImages, viewModel::updatePrefetchImages, stringResource(R.string.image_prefetch_desc))</ID>
-    <ID>MaxLineLength:ImageSettingsScreen.kt:context.startActivity(Intent(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER))</ID>
-    <ID>MaxLineLength:ImageSettingsScreen.kt:label = { if (it == "vertical") stringResource(R.string.viewer_comic_mode) else stringResource(R.string.viewer_page_mode) }</ID>
-    <ID>MaxLineLength:ImageSettingsScreen.kt:selected = if (isCustomActive) currentProxy else currentProxy</ID>
-    <ID>MaxLineLength:ImageSettingsScreen.kt:summary = saveLocation.ifBlank { stringResource(R.string.image_default_save_location_fallback) }</ID>
-    <ID>MaxLineLength:ImageSettingsScreen.kt:val</ID>
-    <ID>MaxLineLength:ImageSettingsScreen.kt:val isCustomActive = currentProxy.isNotBlank() &amp;&amp; PixivImageProxyOptions.none { it.baseUrl == currentProxy }</ID>
-    <ID>MaxLineLength:ImageViewerScreen.kt:tint = if (isBookmarked) MiuixTheme.colorScheme.primary else MiuixTheme.colorScheme.onSurface</ID>
-    <ID>MaxLineLength:ImageViewerScreen.kt:val pagerState = rememberPagerState(initialPage = startPage.coerceIn(0, imageUrls.lastIndex.coerceAtLeast(0)), pageCount = { imageUrls.size })</ID>
-    <ID>MaxLineLength:LoginScreens.kt:&lt;no name provided&gt;$webError</ID>
-    <ID>MaxLineLength:LoginScreens.kt:Text(stringResource(R.string.error_generic), style = MiuixTheme.textStyles.title3, fontWeight = FontWeight.Bold)</ID>
-    <ID>MaxLineLength:LoginScreens.kt:Text(webError.orEmpty(), color = MiuixTheme.colorScheme.onSurfaceVariantSummary, style = MiuixTheme.textStyles.body2, lineHeight = 20.sp)</ID>
-    <ID>MaxLineLength:MainActivity.kt:MainActivity$LaunchedEffect</ID>
-    <ID>MaxLineLength:MainActivity.kt:MainActivity$navigationBarStyle = if (isDark) SystemBarStyle.dark(Color.TRANSPARENT) else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)</ID>
-    <ID>MaxLineLength:MainActivity.kt:MainActivity$navigationBarStyle = if (isDarkTheme) SystemBarStyle.dark(Color.TRANSPARENT) else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)</ID>
-    <ID>MaxLineLength:MainActivity.kt:MainActivity$override</ID>
-    <ID>MaxLineLength:MainActivity.kt:MainActivity$state.imageViewerIllust != null -&gt; Uri.parse("pixiv://illusts/${state.imageViewerIllust.id}?page=${state.imageViewerCurrentPage}")</ID>
-    <ID>MaxLineLength:MainActivity.kt:MainActivity$statusBarStyle = if (isDark) SystemBarStyle.dark(Color.TRANSPARENT) else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)</ID>
-    <ID>MaxLineLength:MainActivity.kt:MainActivity$statusBarStyle = if (isDarkTheme) SystemBarStyle.dark(Color.TRANSPARENT) else SystemBarStyle.light(Color.TRANSPARENT, Color.TRANSPARENT)</ID>
-    <ID>MaxLineLength:MainActivity.kt:MainActivity$val isDark = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES</ID>
-    <ID>MaxLineLength:NativeImageStore.kt:NativeImageStore$?:</ID>
-    <ID>MaxLineLength:NativeImageStore.kt:NativeImageStore$parent = parent.findFile(segment)?.takeIf { it.isDirectory } ?: parent.createDirectory(segment) ?: return false</ID>
-    <ID>MaxLineLength:NativeImageStore.kt:NativeImageStore$resolver.delete(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, selection, arrayOf(relativePath.ensureTrailingSlash(), oldName))</ID>
-    <ID>MaxLineLength:NotificationScreen.kt:NotificationCard(child, compact = true, onClick = { viewModel.openNotificationTarget(child.targetUrl) })</ID>
-    <ID>MaxLineLength:NotificationScreen.kt:Row</ID>
-    <ID>MaxLineLength:NotificationScreen.kt:Text(it.toDisplayDate(), style = MiuixTheme.textStyles.footnote1, color = MiuixTheme.colorScheme.onSurfaceVariantSummary)</ID>
-    <ID>MaxLineLength:NotificationScreen.kt:if (!notification.isRead) Box(Modifier.size(7.dp).clip(CircleShape).background(MiuixTheme.colorScheme.primary))</ID>
-    <ID>MaxLineLength:NotificationScreen.kt:item { Box(Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) { LoadingIndicator() } }</ID>
-    <ID>MaxLineLength:NotificationScreen.kt:title = notification.viewMore.title.orEmpty().ifBlank { stringResource(R.string.notifications_load_more) }</ID>
-    <ID>MaxLineLength:NovelReaderContent.kt:blocks += NovelPixivImageBlock(trimmed.removePrefix("[pixivimage:").removeSuffix("]").toLongOrNull() ?: continue)</ID>
-    <ID>MaxLineLength:OnboardingScenes.kt:FeedCard(widthFactor = 0.72f, accent = slide.accent.copy(alpha = 0.75f), tint = MiuixTheme.colorScheme.onSurfaceVariantSummary)</ID>
-    <ID>MaxLineLength:OnboardingScenes.kt:FeedCard(widthFactor = 0.94f, accent = slide.accent.copy(alpha = 0.85f), tint = MiuixTheme.colorScheme.onSurface)</ID>
-    <ID>MaxLineLength:PallaSyncDao.kt:PallaSyncDao$@Query("UPDATE pallasync_outbox SET status = 'queued' WHERE chain_id = :chainId AND device_seq = 0 AND status != 'accepted'")</ID>
-    <ID>MaxLineLength:PallaSyncSettingsScreen.kt:Text(logMsg, style = MiuixTheme.textStyles.body2, color = MiuixTheme.colorScheme.onBackgroundVariant)</ID>
-    <ID>MaxLineLength:PallaSyncSettingsScreen.kt:Toast.makeText(context, R.string.error_pallasync_create_chain_failed, Toast.LENGTH_SHORT).show()</ID>
-    <ID>MaxLineLength:PallaSyncSettingsScreen.kt:Toast.makeText(context, R.string.error_pallasync_invalid_server_url, Toast.LENGTH_SHORT).show()</ID>
-    <ID>MaxLineLength:PallaSyncSettingsScreen.kt:var devices by remember { mutableStateOf&lt;List&lt;com.yunfie.illustia.pallasync.data.PallaSyncDeviceEntity&gt;&gt;(emptyList()) }</ID>
-    <ID>MaxLineLength:PalleriaLiveWallpaperService.kt:PalleriaLiveWallpaperService.PalleriaEngine$canvas.drawColor(if (settings.liveWallpaperBackground == "white") Color.WHITE else Color.rgb(15, 18, 24))</ID>
-    <ID>MaxLineLength:PalleriaSyncManager.kt:PalleriaSyncManager$else -&gt; return@execute PallaSyncHttpResult.ProtocolError("Relay page did not include a valid has-more header")</ID>
-    <ID>MaxLineLength:PalleriaSyncManager.kt:PalleriaSyncManager$is PallaSyncHttpResult.ProtocolError -&gt; return SyncCycleOutcome.ProtocolError.also { log(pulled.message) }</ID>
-    <ID>MaxLineLength:PalleriaSyncManager.kt:PalleriaSyncManager$is PallaSyncHttpResult.ProtocolError -&gt; return SyncCycleOutcome.ProtocolError.also { log(pushed.message) }</ID>
-    <ID>MaxLineLength:PixivApiClient.kt:PixivApiClient$.</ID>
-    <ID>MaxLineLength:PixivApiClient.kt:PixivApiClient$getNotificationPage(session, pixivApiUrl("v1/notification/view-more", "notification_id" to notificationId.toString()))</ID>
-    <ID>MaxLineLength:PixivApiClient.kt:PixivApiClient$suspend</ID>
-    <ID>MaxLineLength:PixivWebSocketClient.kt:PixivWebSocketClient.&lt;no name provided&gt;$override fun onMessage</ID>
-    <ID>MaxLineLength:RankingWidgetProvider.kt:RankingWidgetUpdater$val response = (context.applicationContext as IllustiaApplication).sharedHttpClient.newCall(request).execute()</ID>
-    <ID>MaxLineLength:RankingWidgetProvider.kt:RankingWidgetUpdater$views.setTextViewText(slot.titleId, entry.illust.title.ifBlank { context.getString(R.string.widget_ranking_title) })</ID>
-    <ID>MaxLineLength:ReactionComponents.kt:(scaleIn(spring(dampingRatio = 0.35f, stiffness = 300f), initialScale = 0.1f) + fadeIn(tween(100)))</ID>
-    <ID>MaxLineLength:ReactionComponents.kt:(scaleIn(spring(dampingRatio = 0.45f, stiffness = 380f), initialScale = 0.3f) + fadeIn(tween(160)))</ID>
-    <ID>MaxLineLength:RustPixivHttpClient.kt:RustPixivHttpClient$suspend</ID>
-    <ID>MaxLineLength:SavedIllustViewerScreen.kt:Text(item?.pageCount?.let { stringResource(R.string.data_items_count, it) }.orEmpty(), color = MiuixTheme.colorScheme.onSurfaceVariantSummary)</ID>
-    <ID>MaxLineLength:SavedIllustViewerScreen.kt:contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = padding.calculateTopPadding() + 16.dp, bottom = 96.dp)</ID>
-    <ID>MaxLineLength:SavedIllustViewerScreen.kt:navigationIcon = { HeaderIcon(MiuixIcons.Back, onClick = { viewModel.closeSavedIllustViewer(); onBack() }) }</ID>
-    <ID>MaxLineLength:SearchBrowse.kt:SectionHeader(stringResource(R.string.search_recent_viewed), action = stringResource(R.string.action_view_all), onAction = viewModel::openViewHistory)</ID>
-    <ID>MaxLineLength:SearchBrowse.kt:Text(stringResource(R.string.search_recommended_tags), color = MiuixTheme.colorScheme.onSurfaceVariantSummary, style = MiuixTheme.textStyles.title4, fontWeight = FontWeight.Bold)</ID>
-    <ID>MaxLineLength:SearchBrowse.kt:items</ID>
-    <ID>MaxLineLength:SearchOptions.kt:Text(stringResource(R.string.search_bookmark_count), color = MiuixTheme.colorScheme.onSurfaceVariantSummary, style = MiuixTheme.textStyles.footnote1, fontWeight = FontWeight.Bold)</ID>
-    <ID>MaxLineLength:SearchOptions.kt:Text(stringResource(R.string.search_duration), color = MiuixTheme.colorScheme.onSurfaceVariantSummary, style = MiuixTheme.textStyles.footnote1, fontWeight = FontWeight.Bold)</ID>
-    <ID>MaxLineLength:SearchOptions.kt:Text(stringResource(R.string.search_sort_order), color = MiuixTheme.colorScheme.onSurfaceVariantSummary, style = MiuixTheme.textStyles.footnote1, fontWeight = FontWeight.Bold)</ID>
-    <ID>MaxLineLength:SearchOptions.kt:Text(stringResource(R.string.search_target), color = MiuixTheme.colorScheme.onSurfaceVariantSummary, style = MiuixTheme.textStyles.footnote1, fontWeight = FontWeight.Bold)</ID>
-    <ID>MaxLineLength:SearchOptions.kt:Text(stringResource(R.string.search_work_type), color = MiuixTheme.colorScheme.onSurfaceVariantSummary, style = MiuixTheme.textStyles.footnote1, fontWeight = FontWeight.Bold)</ID>
-    <ID>MaxLineLength:SearchResults.kt:Text("@${user.account}", color = MiuixTheme.colorScheme.onSurfaceVariantSummary, style = MiuixTheme.textStyles.footnote1, maxLines = 1, overflow = TextOverflow.Ellipsis)</ID>
-    <ID>MaxLineLength:SearchResults.kt:Text(user.name, color = MiuixTheme.colorScheme.onBackground, style = MiuixTheme.textStyles.title4, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)</ID>
-    <ID>MaxLineLength:SearchResults.kt:if</ID>
-    <ID>MaxLineLength:SearchScreen.kt:onSearch = { onSubmit(state.searchDraft.ifBlank { state.activeSearchWord }); onExpandedChange(false) }</ID>
-    <ID>MaxLineLength:SearchScreen.kt:val</ID>
-    <ID>MaxLineLength:SearchToolbar.kt:Text(stringResource(R.string.search_history), color = MiuixTheme.colorScheme.onSurfaceVariantSummary, style = MiuixTheme.textStyles.footnote1, fontWeight = FontWeight.Bold)</ID>
-    <ID>MaxLineLength:SettingsComponents.kt:Text(confirmText, color = if (destructive) MiuixTheme.colorScheme.error else MiuixTheme.colorScheme.primary, fontWeight = FontWeight.Bold)</ID>
-    <ID>MaxLineLength:SettingsComponents.kt:color = if (isSelected) MiuixTheme.colorScheme.onPrimary else MiuixTheme.colorScheme.onSurface</ID>
-    <ID>MaxLineLength:SettingsScreen.kt:SettingsCategory(context.getString(R.string.settings_account), if (state.settings.refreshToken.isNotBlank()) context.getString(R.string.settings_logged_in) else context.getString(R.string.settings_not_logged_in), MiuixIcons.Contacts) { viewModel.openAccountSettings() }</ID>
-    <ID>MaxLineLength:SettingsScreen.kt:SettingsCategory(context.getString(R.string.settings_bookmark), context.getString(R.string.settings_bookmark_summary), MiuixIcons.FavoritesFill) { viewModel.openBookmarkSettings() }</ID>
-    <ID>MaxLineLength:SettingsScreen.kt:SettingsCategory(context.getString(R.string.settings_data), "${context.getString(R.string.more_view_history)} ${context.getString(R.string.data_items_count, state.settings.viewHistory.size)} / ${context.getString(R.string.more_mute_settings)} ${context.getString(R.string.data_items_count, mutedTotal)}", MiuixIcons.Timer) { viewModel.openDataSettings() }</ID>
-    <ID>MaxLineLength:SettingsScreen.kt:SettingsCategory(context.getString(R.string.settings_general), context.getString(R.string.settings_general_summary), MiuixIcons.More) { viewModel.openGeneralSettings() }</ID>
-    <ID>MaxLineLength:SettingsScreen.kt:SettingsCategory(context.getString(R.string.settings_image), context.getString(R.string.settings_image_summary), MiuixIcons.Photos) { viewModel.openImageSettings() }</ID>
-    <ID>MaxLineLength:SettingsScreen.kt:Text("${stringResource(R.string.app_name)} v$appVersion", color = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.6f), style = MiuixTheme.textStyles.footnote1)</ID>
-    <ID>MaxLineLength:SettingsScreen.kt:Text(stringResource(R.string.settings_footer), color = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.6f), style = MiuixTheme.textStyles.footnote1, textAlign = TextAlign.Center)</ID>
-    <ID>MaxLineLength:SettingsScreen.kt:val</ID>
-    <ID>MaxLineLength:SettingsStorePreferences.kt:bookmarkRestrict = enumValueOrDefault(preferences.getString(KEY_BOOKMARK_RESTRICT, null), com.yunfie.illustia.models.Restrict.Public)</ID>
-    <ID>MaxLineLength:SettingsStorePreferences.kt:bookmarkRestrict = enumValueOrDefault(preferences[BOOKMARK_RESTRICT], com.yunfie.illustia.models.Restrict.Public)</ID>
-    <ID>MaxLineLength:SettingsStorePreferences.kt:internal suspend</ID>
-    <ID>MaxLineLength:SettingsStorePreferences.kt:searchBookmarkFilter = enumValueOrDefault(preferences.getString(KEY_SEARCH_BOOKMARK_FILTER, null), com.yunfie.illustia.models.SearchBookmarkFilter.None)</ID>
-    <ID>MaxLineLength:SettingsStorePreferences.kt:searchBookmarkFilter = enumValueOrDefault(preferences[SEARCH_BOOKMARK_FILTER], com.yunfie.illustia.models.SearchBookmarkFilter.None)</ID>
-    <ID>MaxLineLength:SettingsStorePreferences.kt:searchDuration = enumValueOrDefault(preferences.getString(KEY_SEARCH_DURATION, null), com.yunfie.illustia.models.SearchDuration.All)</ID>
-    <ID>MaxLineLength:SettingsStorePreferences.kt:searchDuration = enumValueOrDefault(preferences[SEARCH_DURATION], com.yunfie.illustia.models.SearchDuration.All)</ID>
-    <ID>MaxLineLength:SettingsStorePreferences.kt:searchSort = enumValueOrDefault(preferences.getString(KEY_SEARCH_SORT, null), com.yunfie.illustia.models.SearchSort.DateDesc)</ID>
-    <ID>MaxLineLength:SettingsStorePreferences.kt:searchTarget = enumValueOrDefault(preferences.getString(KEY_SEARCH_TARGET, null), com.yunfie.illustia.models.SearchTarget.PartialTags)</ID>
-    <ID>MaxLineLength:SettingsStorePreferences.kt:searchTarget = enumValueOrDefault(preferences[SEARCH_TARGET], com.yunfie.illustia.models.SearchTarget.PartialTags)</ID>
-    <ID>MaxLineLength:SettingsStorePreferences.kt:searchWorkType = enumValueOrDefault(preferences.getString(KEY_SEARCH_WORK_TYPE, null), com.yunfie.illustia.models.SearchWorkType.Artworks)</ID>
-    <ID>MaxLineLength:SettingsStorePreferences.kt:searchWorkType = enumValueOrDefault(preferences[SEARCH_WORK_TYPE], com.yunfie.illustia.models.SearchWorkType.Artworks)</ID>
-    <ID>MaxLineLength:SettingsStorePreferences.kt:seenFeedIllusts = preferences.getString("seenFeedIllusts", "").orEmpty().split(",").mapNotNull { it.toLongOrNull() }</ID>
-    <ID>MaxLineLength:ShortsFeedScreen.kt:imageVector = if (illust.isBookmarked) MiuixIcons.FavoritesFill else MiuixIcons.Favorites</ID>
-    <ID>MaxLineLength:UserProfileComponents.kt:0 -&gt; UserIllustGridPage(illusts, settings, hasMore, onOpenIllust, onBookmark, onLoadMore, worksGridState, backgroundColor)</ID>
-    <ID>MaxLineLength:UserProfileComponents.kt:Box</ID>
-    <ID>MaxLineLength:UserProfileComponents.kt:Button</ID>
-    <ID>MaxLineLength:UserProfileComponents.kt:Button(onClick = onLoadMore, modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp)) { Text(stringResource(R.string.action_load_more)) }</ID>
-    <ID>MaxLineLength:UserProfileComponents.kt:SettingRow(stringResource(R.string.user_id_label), user.id.toString()) { Text("Pixiv", color = MiuixTheme.colorScheme.primary, fontWeight = FontWeight.Bold) }</ID>
-    <ID>MaxLineLength:UserProfileComponents.kt:Text(if (user.isFollowed) stringResource(R.string.action_following) else stringResource(R.string.action_not_followed), color = MiuixTheme.colorScheme.onSurfaceVariantSummary, fontWeight = FontWeight.Bold)</ID>
-    <ID>MaxLineLength:UserProfileComponents.kt:Text(stringResource(R.string.detail_muted_artist), color = MiuixTheme.colorScheme.onBackground, style = MiuixTheme.textStyles.title4, fontWeight = FontWeight.Black)</ID>
-    <ID>MaxLineLength:UserProfileComponents.kt:Text(stringResource(R.string.detail_muted_artist_blur, stringResource(R.string.detail_muted_artist_blur_default)), color = MiuixTheme.colorScheme.onSurfaceVariantSummary, style = MiuixTheme.textStyles.body2, lineHeight = 20.sp)</ID>
-    <ID>MaxLineLength:UserProfileComponents.kt:Text(stringResource(R.string.detail_unmute), color = Color.White, fontWeight = FontWeight.Bold, style = MiuixTheme.textStyles.body2)</ID>
-    <ID>MaxLineLength:UserProfileComponents.kt:Text(user.comment, color = MiuixTheme.colorScheme.onBackground, style = MiuixTheme.textStyles.body1, lineHeight = 23.sp)</ID>
-    <ID>MaxLineLength:UserProfileComponents.kt:if (user.comment.isNotBlank()) Text(user.comment, color = MiuixTheme.colorScheme.onBackground, style = MiuixTheme.textStyles.body1, lineHeight = 22.sp, maxLines = 3, overflow = TextOverflow.Ellipsis)</ID>
-    <ID>MaxLineLength:ViewHistoryScreen.kt:ViewHistoryDeleteTarget.Selected -&gt; stringResource(R.string.view_history_delete_selected_desc, selectedCountText)</ID>
-    <ID>MaxLineLength:ViewHistoryScreen.kt:subtitle = if (hasSelection) stringResource(R.string.view_history_selected_count, selectedIds.size) else ""</ID>
-    <ID>MaxLineLength:ViewModelSupport.kt:internal</ID>
-    <ID>MaxLineLength:WatchlistSeriesScreen.kt:item(span = { GridItemSpan(maxLineSpan) }) { EmptyState(stringResource(R.string.watchlist_series_empty)) }</ID>
-    <ID>MaxLineLength:WatchlistStore.kt:private suspend</ID>
-    <ID>ReturnCount:AppDataScreen.kt:private fun File.directorySize: Long</ID>
     <ID>ReturnCount:AppLockScreen.kt:fun onDigitPressed</ID>
     <ID>ReturnCount:AppLockSetupScreen.kt:fun onVerifyDigit</ID>
     <ID>ReturnCount:CalculatorEngine.kt:CalculatorEngine$fun evaluate: Double?</ID>
@@ -767,13 +170,13 @@
     <ID>ReturnCount:DragGestureInspector.kt:private suspend inline fun AwaitPointerEventScope.drag: PointerInputChange?</ID>
     <ID>ReturnCount:IllustWidgetConfigureActivity.kt:IllustWidgetConfigureActivity$private fun decodeWidgetBitmap: Bitmap?</ID>
     <ID>ReturnCount:IllustWidgetProvider.kt:IllustWidgetProvider.Companion$private fun decodeWidgetBitmap: Bitmap?</ID>
+    <ID>ReturnCount:IllustiaAuthFeedModule.kt:IllustiaAuthFeedModule$fun handleIncomingIntent</ID>
+    <ID>ReturnCount:IllustiaAuthFeedModule.kt:IllustiaAuthFeedModule$override fun submitSearch</ID>
+    <ID>ReturnCount:IllustiaBookmarkModule.kt:IllustiaBookmarkModule$fun loadMoreSelectedRelatedUsers</ID>
     <ID>ReturnCount:IllustiaRepository.kt:IllustiaRepository$private fun PixivApiException.isAuthExpired: Boolean</ID>
-    <ID>ReturnCount:IllustiaViewModelCore.kt:IllustiaViewModelCore$fun changeUnlockCode: Boolean</ID>
-    <ID>ReturnCount:IllustiaViewModelCore.kt:IllustiaViewModelCore$fun handleIncomingIntent</ID>
-    <ID>ReturnCount:IllustiaViewModelCore.kt:IllustiaViewModelCore$fun loadMoreSelectedRelatedUsers</ID>
-    <ID>ReturnCount:IllustiaViewModelCore.kt:IllustiaViewModelCore$fun startAutoLockTimer</ID>
-    <ID>ReturnCount:IllustiaViewModelCore.kt:IllustiaViewModelCore$fun submitSearch</ID>
-    <ID>ReturnCount:IllustiaViewModelCore.kt:IllustiaViewModelCore$private fun PixivApiException.isAuthExpired: Boolean</ID>
+    <ID>ReturnCount:IllustiaSettingsSecurityModule.kt:IllustiaSettingsSecurityModule$fun changeUnlockCode: Boolean</ID>
+    <ID>ReturnCount:IllustiaSettingsSecurityModule.kt:IllustiaSettingsSecurityModule$fun startAutoLockTimer</ID>
+    <ID>ReturnCount:IllustiaViewModelFoundation.kt:IllustiaViewModelFoundation$protected fun PixivApiException.isAuthExpired: Boolean</ID>
     <ID>ReturnCount:ImageSettingsScreen.kt:@Composable private fun pixivImageProxyLabel: String</ID>
     <ID>ReturnCount:LoginScreens.kt:private fun pixivLoginCodeOrNull: String?</ID>
     <ID>ReturnCount:MainActivity.kt:MainActivity$private fun applyAdaptiveRefreshRateHint</ID>
@@ -796,51 +199,34 @@
     <ID>ReturnCount:PalleriaLiveWallpaperService.kt:PalleriaLiveWallpaperService.PalleriaEngine$private fun renderSurface</ID>
     <ID>ReturnCount:PalleriaLiveWallpaperService.kt:internal fun selectCandidate: NativeSavedImage?</ID>
     <ID>ReturnCount:PalleriaLiveWallpaperService.kt:private fun decodeSampledBitmap: Bitmap?</ID>
-    <ID>ReturnCount:PalleriaSyncManager.kt:PalleriaSyncManager$internal suspend fun enqueueDataEvents: Boolean</ID>
-    <ID>ReturnCount:PalleriaSyncManager.kt:PalleriaSyncManager$private fun applyViewHistoryPayload</ID>
-    <ID>ReturnCount:PalleriaSyncManager.kt:PalleriaSyncManager$private fun keysForChainLocked: PallaSyncKeySnapshot?</ID>
-    <ID>ReturnCount:PalleriaSyncManager.kt:PalleriaSyncManager$private fun legacyIllust: Illust?</ID>
-    <ID>ReturnCount:PalleriaSyncManager.kt:PalleriaSyncManager$private suspend fun activeChainStateLocked: ChainStateEntity?</ID>
-    <ID>ReturnCount:PalleriaSyncManager.kt:PalleriaSyncManager$private suspend fun applyRecordPageLocked: PallaSyncHttpResult&lt;Unit&gt;</ID>
-    <ID>ReturnCount:PalleriaSyncManager.kt:PalleriaSyncManager$private suspend fun enqueueDataEventsLocked: Boolean</ID>
-    <ID>ReturnCount:PalleriaSyncManager.kt:PalleriaSyncManager$private suspend fun fetchDevicesLocked: PallaSyncHttpResult&lt;Unit&gt;</ID>
-    <ID>ReturnCount:PalleriaSyncManager.kt:PalleriaSyncManager$private suspend fun joinChainLocked: Pair&lt;String, HttpUrl&gt;?</ID>
-    <ID>ReturnCount:PalleriaSyncManager.kt:PalleriaSyncManager$private suspend fun processOutboxLocked: PallaSyncHttpResult&lt;Unit&gt;</ID>
-    <ID>ReturnCount:PalleriaSyncManager.kt:PalleriaSyncManager$private suspend fun pullRecordPagesLocked: PallaSyncHttpResult&lt;Unit&gt;</ID>
-    <ID>ReturnCount:PalleriaSyncManager.kt:PalleriaSyncManager$private suspend fun synchronizeOnceLocked: SyncCycleOutcome</ID>
-    <ID>ReturnCount:PalleriaSyncManager.kt:PalleriaSyncManager$suspend fun syncNow: Boolean</ID>
+    <ID>ReturnCount:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$private fun applyViewHistoryPayload</ID>
+    <ID>ReturnCount:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$private fun keysForChainLocked: PallaSyncKeySnapshot?</ID>
+    <ID>ReturnCount:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$private fun legacyIllust: Illust?</ID>
+    <ID>ReturnCount:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$private suspend fun activeChainStateLocked: ChainStateEntity?</ID>
+    <ID>ReturnCount:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$private suspend fun applyRecordPageLocked: PallaSyncHttpResult&lt;Unit&gt;</ID>
+    <ID>ReturnCount:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$private suspend fun enqueueDataEventsLocked: Boolean</ID>
+    <ID>ReturnCount:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$private suspend fun fetchDevicesLocked: PallaSyncHttpResult&lt;Unit&gt;</ID>
+    <ID>ReturnCount:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$private suspend fun joinChainLocked: Pair&lt;String, HttpUrl&gt;?</ID>
+    <ID>ReturnCount:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$private suspend fun processOutboxLocked: PallaSyncHttpResult&lt;Unit&gt;</ID>
+    <ID>ReturnCount:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$private suspend fun pullRecordPagesLocked: PallaSyncHttpResult&lt;Unit&gt;</ID>
+    <ID>ReturnCount:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator$private suspend fun synchronizeOnceLocked: SyncCycleOutcome</ID>
     <ID>ReturnCount:PinSetupScreen.kt:fun onDigitPressed</ID>
     <ID>ReturnCount:PixivImageProxy.kt:fun proxyPixivImageUrl: String</ID>
     <ID>ReturnCount:SettingsStoreCodec.kt:internal fun decodeLegacyHistoryIllust: Illust?</ID>
     <ID>ReturnCount:SettingsStoreSecurity.kt:internal fun verifyPinHash: Boolean</ID>
     <ID>ReturnCount:SettingsStoreSecurity.kt:internal fun verifyUnlockCodeHash: Boolean</ID>
-    <ID>SwallowedException:CalculatorEngine.kt:CalculatorEngine$e: Exception</ID>
-    <ID>SwallowedException:DevicePairingScreen.kt:e: Exception</ID>
-    <ID>SwallowedException:IllustDetailInfo.kt:e: Exception</ID>
-    <ID>SwallowedException:IllustiaViewModelCore.kt:IllustiaViewModelCore$e: Exception</ID>
-    <ID>SwallowedException:RustPixivHttpClient.kt:error: ApiException.Http</ID>
-    <ID>ThrowsCount:IllustWidgetConfigureActivity.kt:IllustWidgetConfigureActivity$private suspend fun downloadWidgetImage: File</ID>
     <ID>ThrowsCount:IllustiaRepository.kt:IllustiaRepository$private suspend inline fun &lt;T&gt; withSessionRetry: T</ID>
     <ID>ThrowsCount:NativeImageStore.kt:NativeImageStore$private fun saveToMediaStore: Boolean</ID>
-    <ID>TooGenericExceptionCaught:CalculatorEngine.kt:CalculatorEngine$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:CommentStore.kt:CommentStore$error: Throwable</ID>
-    <ID>TooGenericExceptionCaught:DevicePairingScreen.kt:e: Exception</ID>
-    <ID>TooGenericExceptionCaught:DummyAppIconSwitcher.kt:DummyAppIconSwitcher$error: Throwable</ID>
-    <ID>TooGenericExceptionCaught:IllustDetailInfo.kt:e: Exception</ID>
-    <ID>TooGenericExceptionCaught:IllustSeriesStore.kt:IllustSeriesStore$error: Throwable</ID>
-    <ID>TooGenericExceptionCaught:IllustiaRepository.kt:IllustiaRepository$error: Throwable</ID>
-    <ID>TooGenericExceptionCaught:IllustiaViewModelCore.kt:IllustiaViewModelCore$e: Exception</ID>
-    <ID>TooGenericExceptionCaught:IllustiaViewModelCore.kt:IllustiaViewModelCore$e: Throwable</ID>
-    <ID>TooGenericExceptionCaught:IllustiaViewModelCore.kt:IllustiaViewModelCore$error: Throwable</ID>
-    <ID>TooGenericExceptionCaught:PalleriaSyncManager.kt:PalleriaSyncManager$error: Exception</ID>
-    <ID>TooGenericExceptionCaught:SettingsStore.kt:SettingsStore$error: Exception</ID>
-    <ID>TooGenericExceptionCaught:SettingsStoreSecurity.kt:e: Exception</ID>
-    <ID>TooGenericExceptionCaught:WatchlistStore.kt:WatchlistStore$error: Throwable</ID>
-    <ID>TooGenericExceptionThrown:IllustiaViewModelCore.kt:IllustiaViewModelCore$throw Exception(str(R.string.error_save_failed) + " (${response.code})")</ID>
+    <ID>TooGenericExceptionThrown:IllustiaLibraryNavigationModule.kt:IllustiaLibraryNavigationModule$throw Exception(str(R.string.error_save_failed) + " (${response.code})")</ID>
     <ID>TooManyFunctions:DownloadQueueScreen.kt:com.yunfie.illustia.ui.screens.DownloadQueueScreen.kt</ID>
     <ID>TooManyFunctions:IllustWidgetProvider.kt:IllustWidgetProvider$Companion</ID>
+    <ID>TooManyFunctions:IllustiaAuthFeedModule.kt:IllustiaAuthFeedModule : IllustiaSettingsSecurityModule</ID>
+    <ID>TooManyFunctions:IllustiaBookmarkModule.kt:IllustiaBookmarkModule : IllustiaDetailProfileModule</ID>
+    <ID>TooManyFunctions:IllustiaDetailProfileModule.kt:IllustiaDetailProfileModule : IllustiaAuthFeedModule</ID>
+    <ID>TooManyFunctions:IllustiaLibraryNavigationModule.kt:IllustiaLibraryNavigationModule : IllustiaBookmarkModule</ID>
     <ID>TooManyFunctions:IllustiaRepository.kt:IllustiaRepository</ID>
-    <ID>TooManyFunctions:IllustiaViewModelCore.kt:IllustiaViewModelCore : AndroidViewModel</ID>
+    <ID>TooManyFunctions:IllustiaSettingsSecurityModule.kt:IllustiaSettingsSecurityModule : IllustiaViewModelFoundation</ID>
+    <ID>TooManyFunctions:IllustiaViewModelFoundation.kt:IllustiaViewModelFoundation : AndroidViewModel</ID>
     <ID>TooManyFunctions:MainActivity.kt:MainActivity : FragmentActivity</ID>
     <ID>TooManyFunctions:MoreScreen.kt:com.yunfie.illustia.ui.screens.MoreScreen.kt</ID>
     <ID>TooManyFunctions:NativeImageStore.kt:NativeImageStore</ID>
@@ -849,8 +235,10 @@
     <ID>TooManyFunctions:PallaSyncKeystore.kt:PallaSyncKeystore</ID>
     <ID>TooManyFunctions:PallaSyncSettingsEvents.kt:com.yunfie.illustia.pallasync.PallaSyncSettingsEvents.kt</ID>
     <ID>TooManyFunctions:PalleriaLiveWallpaperService.kt:PalleriaLiveWallpaperService$PalleriaEngine : Engine</ID>
+    <ID>TooManyFunctions:PalleriaSyncCoordinator.kt:PalleriaSyncCoordinator : PallaSyncEventWriter</ID>
     <ID>TooManyFunctions:PalleriaSyncManager.kt:PalleriaSyncManager</ID>
     <ID>TooManyFunctions:PixivApiClient.kt:PixivApiClient</ID>
+    <ID>TooManyFunctions:PlatformCapabilities.kt:PlatformCapabilities</ID>
     <ID>TooManyFunctions:RustPixivHttpClient.kt:RustPixivCall</ID>
     <ID>TooManyFunctions:RustPixivHttpClient.kt:com.yunfie.illustia.data.RustPixivHttpClient.kt</ID>
     <ID>TooManyFunctions:SettingsComponents.kt:com.yunfie.illustia.ui.components.SettingsComponents.kt</ID>
@@ -858,12 +246,6 @@
     <ID>TooManyFunctions:SettingsStoreCodec.kt:com.yunfie.illustia.settings.store.SettingsStoreCodec.kt</ID>
     <ID>TooManyFunctions:SettingsStoreSecurity.kt:com.yunfie.illustia.settings.store.SettingsStoreSecurity.kt</ID>
     <ID>TooManyFunctions:UserProfileComponents.kt:com.yunfie.illustia.ui.screens.profile.UserProfileComponents.kt</ID>
-    <ID>TopLevelPropertyNaming:CommonCore.kt:const val MotionFast = 180</ID>
-    <ID>TopLevelPropertyNaming:CommonCore.kt:const val MotionMedium = 260</ID>
-    <ID>TopLevelPropertyNaming:CommonCore.kt:const val MotionSlow = 340</ID>
-    <ID>TopLevelPropertyNaming:PixivImageComponents.kt:private const val PrefetchDecodeSizePx = 512</ID>
-    <ID>TopLevelPropertyNaming:PixivImageComponents.kt:private const val ThumbnailDecodeSizePx = 512</ID>
-    <ID>TopLevelPropertyNaming:ProfileGridLayout.kt:internal const val ProfileGridColumnCount = 2</ID>
     <ID>UnusedParameter:CommentScreen.kt:onBack: () -&gt; Unit</ID>
     <ID>UnusedParameter:IllustDetailScreen.kt:firstComment: Comment?</ID>
     <ID>UnusedParameter:IllustDetailScreen.kt:onMuteTag: (String) -&gt; Unit</ID>
@@ -871,65 +253,8 @@
     <ID>UnusedParameter:MoreScreen.kt:onOpenWatchlistSeries: (Long) -&gt; Unit</ID>
     <ID>UnusedParameter:PixivWebSocketClient.kt:PixivWebSocketClient$cause: Throwable</ID>
     <ID>UnusedParameter:UserProfileComponents.kt:scrollBehavior: ScrollBehavior</ID>
-    <ID>WildcardImport:AboutScreen.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:AccountSettingsScreen.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:AccountSwitchSheet.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:AppDataScreen.kt:import top.yukonga.miuix.kmp.icon.extended.*</ID>
-    <ID>WildcardImport:AppOverlayHost.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:BookmarkScreen.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:BookmarkSettingsScreen.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:BookmarkTabs.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:CommentScreen.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:DataSettingsScreen.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:DevicePairingScreen.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:DevicePairingScreen.kt:import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:DeviceViewHistoryScreen.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:DeviceViewHistoryScreen.kt:import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:DeviceViewHistoryScreen.kt:import top.yukonga.miuix.kmp.basic.*</ID>
-    <ID>WildcardImport:DeviceViewHistoryScreen.kt:import top.yukonga.miuix.kmp.icon.extended.*</ID>
-    <ID>WildcardImport:FavoriteTagsScreen.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:FavoriteTagsScreen.kt:import top.yukonga.miuix.kmp.icon.extended.*</ID>
-    <ID>WildcardImport:GeneralSettingsScreen.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:GeneralSettingsScreen.kt:import top.yukonga.miuix.kmp.icon.extended.*</ID>
-    <ID>WildcardImport:IllustComponents.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:IllustDetailInfo.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:IllustDetailScreen.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:IllustDetailScreen.kt:import top.yukonga.miuix.kmp.basic.*</ID>
-    <ID>WildcardImport:IllustDetailScreen.kt:import top.yukonga.miuix.kmp.icon.extended.*</ID>
-    <ID>WildcardImport:IllustiaAppRoot.kt:import top.yukonga.miuix.kmp.basic.*</ID>
-    <ID>WildcardImport:ImageSettingsScreen.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:ImageViewerScreen.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:ImageViewerScreen.kt:import top.yukonga.miuix.kmp.basic.*</ID>
-    <ID>WildcardImport:ImageViewerScreen.kt:import top.yukonga.miuix.kmp.icon.extended.*</ID>
-    <ID>WildcardImport:LoginScreens.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:LoginScreens.kt:import top.yukonga.miuix.kmp.icon.extended.*</ID>
-    <ID>WildcardImport:MainSurface.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:MainSurface.kt:import top.yukonga.miuix.kmp.basic.*</ID>
-    <ID>WildcardImport:MoreScreen.kt:import top.yukonga.miuix.kmp.basic.*</ID>
-    <ID>WildcardImport:NovelCardComponents.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:NovelReaderContent.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:NovelScreen.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:OnboardingArt.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:OnboardingScenes.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:OnboardingScreen.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:PallaSyncSettingsScreen.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:PallaSyncSettingsScreen.kt:import androidx.compose.runtime.*</ID>
-    <ID>WildcardImport:RankingScreen.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:RankingScreen.kt:import com.yunfie.illustia.ui.components.*</ID>
-    <ID>WildcardImport:RankingScreen.kt:import top.yukonga.miuix.kmp.basic.*</ID>
-    <ID>WildcardImport:RankingScreen.kt:import top.yukonga.miuix.kmp.icon.extended.*</ID>
-    <ID>WildcardImport:SearchScreen.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:SearchScreen.kt:import com.yunfie.illustia.ui.components.*</ID>
-    <ID>WildcardImport:SearchScreen.kt:import top.yukonga.miuix.kmp.basic.*</ID>
-    <ID>WildcardImport:SearchScreen.kt:import top.yukonga.miuix.kmp.icon.extended.*</ID>
-    <ID>WildcardImport:SettingsScreen.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:UserProfileComponents.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:UserProfileComponents.kt:import androidx.compose.foundation.lazy.grid.*</ID>
-    <ID>WildcardImport:UserProfileComponents.kt:import com.yunfie.illustia.ui.components.*</ID>
-    <ID>WildcardImport:UserProfileComponents.kt:import top.yukonga.miuix.kmp.basic.*</ID>
-    <ID>WildcardImport:ViewHistoryScreen.kt:import androidx.compose.foundation.layout.*</ID>
-    <ID>WildcardImport:ViewHistoryScreen.kt:import top.yukonga.miuix.kmp.basic.*</ID>
-    <ID>WildcardImport:ViewHistoryScreen.kt:import top.yukonga.miuix.kmp.icon.extended.*</ID>
-    <ID>WildcardImport:WatchlistSeriesScreen.kt:import androidx.compose.foundation.layout.*</ID>
+    <ID>VariableNaming:IllustiaViewModelFoundation.kt:IllustiaViewModelFoundation$internal val _uiState: AppStateStore = appStateStore</ID>
+    <ID>VariableNaming:IllustiaViewModelFoundation.kt:IllustiaViewModelFoundation$protected val _detailNavigationRequests = MutableSharedFlow&lt;Long&gt;(extraBufferCapacity = 16)</ID>
+    <ID>VariableNaming:IllustiaViewModelFoundation.kt:IllustiaViewModelFoundation$protected val _navigationRequests = MutableSharedFlow&lt;IllustiaNavigationRequest&gt;(extraBufferCapacity = 16)</ID>
   </CurrentIssues>
 </SmellBaseline>

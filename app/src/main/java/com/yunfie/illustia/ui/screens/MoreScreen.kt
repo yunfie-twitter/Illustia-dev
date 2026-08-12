@@ -19,9 +19,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -36,15 +36,26 @@ import com.yunfie.illustia.models.UserProfile
 import com.yunfie.illustia.ui.components.MainNavigationContentPadding
 import com.yunfie.illustia.ui.components.PixivImage
 import com.yunfie.illustia.ui.components.miuixClickable
-import top.yukonga.miuix.kmp.basic.*
+import top.yukonga.miuix.kmp.basic.Badge
+import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.CardDefaults
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.ScrollBehavior
+import top.yukonga.miuix.kmp.basic.Surface
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.ChevronForward
 import top.yukonga.miuix.kmp.icon.extended.Contacts
 import top.yukonga.miuix.kmp.icon.extended.Download
 import top.yukonga.miuix.kmp.icon.extended.FavoritesFill
 import top.yukonga.miuix.kmp.icon.extended.Filter
-import top.yukonga.miuix.kmp.icon.extended.More
 import top.yukonga.miuix.kmp.icon.extended.Messages
+import top.yukonga.miuix.kmp.icon.extended.More
 import top.yukonga.miuix.kmp.icon.extended.Refresh
 import top.yukonga.miuix.kmp.icon.extended.Settings
 import top.yukonga.miuix.kmp.icon.extended.Timer
@@ -75,15 +86,18 @@ fun MoreScreen(
         },
     ) { scaffoldPadding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .background(MiuixTheme.colorScheme.surface),
-            contentPadding = PaddingValues(
-                start = 16.dp, end = 16.dp,
-                top = scaffoldPadding.calculateTopPadding() + 18.dp,
-                bottom = 24.dp,
-            ),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .background(MiuixTheme.colorScheme.surface),
+            contentPadding =
+                PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = scaffoldPadding.calculateTopPadding() + 18.dp,
+                    bottom = 24.dp,
+                ),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             item {
@@ -136,7 +150,9 @@ private fun rememberQuickActions(
                 MoreAction(
                     title = context.getString(R.string.more_favorite_tags),
                     icon = MiuixIcons.FavoritesFill,
-                    badge = state.settings.favoriteTags.size.badgeText(),
+                    badge =
+                        state.settings.favoriteTags.size
+                            .badgeText(),
                     onClick = viewModel::openFavoriteTags,
                 ),
             )
@@ -170,12 +186,13 @@ private fun rememberQuickActions(
 @Composable
 private fun rememberUtilityActions(viewModel: IllustiaViewModel): List<MoreAction> {
     val context = LocalContext.current
-    val appVersion = remember {
-        runCatching {
-            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            packageInfo.versionName
-        }.getOrNull() ?: "1.0.0"
-    }
+    val appVersion =
+        remember {
+            runCatching {
+                val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+                packageInfo.versionName
+            }.getOrNull() ?: "1.0.0"
+        }
 
     return remember(viewModel, appVersion) {
         listOf(
@@ -198,18 +215,20 @@ private fun MoreHeader(
         modifier = Modifier.fillMaxWidth(),
         cornerRadius = 18.dp,
         insideMargin = PaddingValues(0.dp),
-        colors = CardDefaults.defaultColors(
-            color = MiuixTheme.colorScheme.surfaceContainer,
-            contentColor = MiuixTheme.colorScheme.onBackground,
-        ),
+        colors =
+            CardDefaults.defaultColors(
+                color = MiuixTheme.colorScheme.surfaceContainer,
+                contentColor = MiuixTheme.colorScheme.onBackground,
+            ),
         pressFeedbackType = PressFeedbackType.Sink,
         onClick = onClick,
     ) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MiuixTheme.colorScheme.surfaceContainer)
-                .padding(18.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .background(MiuixTheme.colorScheme.surfaceContainer)
+                    .padding(18.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
@@ -249,10 +268,11 @@ private fun MoreHeader(
 @Composable
 private fun AccountAvatar(account: UserProfile?) {
     Box(
-        modifier = Modifier
-            .size(58.dp)
-            .clip(CircleShape)
-            .background(MiuixTheme.colorScheme.surfaceContainerHigh),
+        modifier =
+            Modifier
+                .size(58.dp)
+                .clip(CircleShape)
+                .background(MiuixTheme.colorScheme.surfaceContainerHigh),
         contentAlignment = Alignment.Center,
     ) {
         val avatarUrl = account?.profileImageUrl
@@ -316,10 +336,11 @@ private fun IconTile(
     iconSize: androidx.compose.ui.unit.Dp = 22.dp,
 ) {
     Box(
-        modifier = Modifier
-            .size(size)
-            .clip(IconTileShape)
-            .background(MiuixTheme.colorScheme.surfaceContainerHigh),
+        modifier =
+            Modifier
+                .size(size)
+                .clip(IconTileShape)
+                .background(MiuixTheme.colorScheme.surfaceContainerHigh),
         contentAlignment = Alignment.Center,
     ) {
         Icon(
@@ -334,10 +355,11 @@ private fun IconTile(
 @Composable
 private fun Badge(text: String) {
     Box(
-        modifier = Modifier
-            .clip(RoundedCornerShape(999.dp))
-            .background(MiuixTheme.colorScheme.error)
-            .padding(horizontal = 7.dp, vertical = 3.dp),
+        modifier =
+            Modifier
+                .clip(RoundedCornerShape(999.dp))
+                .background(MiuixTheme.colorScheme.error)
+                .padding(horizontal = 7.dp, vertical = 3.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -363,23 +385,23 @@ private fun Int.badgeText(): String? {
 }
 
 @Composable
-private fun accountTitle(isLoggedIn: Boolean, account: UserProfile?): String {
-    return when {
+private fun accountTitle(
+    isLoggedIn: Boolean,
+    account: UserProfile?,
+): String =
+    when {
         !isLoggedIn -> stringResource(R.string.more_not_logged_in)
         account != null -> account.name.ifBlank { "@${account.account}" }
         else -> stringResource(R.string.more_logged_in_account)
     }
-}
 
 @Composable
 private fun accountSubtitle(
     isLoggedIn: Boolean,
     account: UserProfile?,
-): String {
-    return when {
+): String =
+    when {
         !isLoggedIn -> stringResource(R.string.more_login_prompt)
         account != null && account.account.isNotBlank() -> "@${account.account}"
         else -> stringResource(R.string.more_connected_pixiv)
     }
-}
-

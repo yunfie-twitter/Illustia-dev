@@ -27,65 +27,66 @@ class PallaSyncEventApplier internal constructor(
 ) {
     constructor(
         context: Context,
-        @Suppress("UNUSED_PARAMETER") syncManager: PalleriaSyncManager? = null,
     ) : this(SettingsSyncedCollectionsStore(context.applicationContext))
 
-    private val json = Json {
-        ignoreUnknownKeys = true
-    }
+    private val json =
+        Json {
+            ignoreUnknownKeys = true
+        }
 
-    internal suspend fun applyEvent(payloadJsonString: String): PallaSyncApplyResult {
-        return applyEvents(listOf(payloadJsonString)).single()
-    }
+    internal suspend fun applyEvent(payloadJsonString: String): PallaSyncApplyResult = applyEvents(listOf(payloadJsonString)).single()
 
     /**
      * Folds a whole page in memory and persists it once. Invalid/unknown records
      * are returned as quarantine results; storage failures are deliberately thrown
      * so the coordinator does not advance its relay cursor.
      */
-    internal suspend fun applyEvents(
-        payloadJsonStrings: List<String>,
-    ): List<PallaSyncApplyResult> = withContext(Dispatchers.IO) {
-        if (payloadJsonStrings.isEmpty()) return@withContext emptyList()
+    internal suspend fun applyEvents(payloadJsonStrings: List<String>): List<PallaSyncApplyResult> =
+        withContext(Dispatchers.IO) {
+            if (payloadJsonStrings.isEmpty()) return@withContext emptyList()
 
-        val parsedPayloads = kotlinx.coroutines.coroutineScope {
-            payloadJsonStrings.map { encoded ->
-                async(Dispatchers.Default) {
-                    runCatching { json.decodeFromString<DataPayload>(encoded) }
+            val parsedPayloads =
+                kotlinx.coroutines.coroutineScope {
+                    payloadJsonStrings
+                        .map { encoded ->
+                            async(Dispatchers.Default) {
+                                runCatching { json.decodeFromString<DataPayload>(encoded) }
+                            }
+                        }.awaitAll()
                 }
-            }.awaitAll()
-        }
 
-        val results = ArrayList<PallaSyncApplyResult>(payloadJsonStrings.size)
-        collectionStore.update { original ->
-            var current = original
-            parsedPayloads.forEach { parsed ->
-                val outcome = parsed.mapCatching { payload ->
-                    applyPayload(current, payload)
-                }.fold(
-                    onSuccess = { it },
-                    onFailure = { error ->
-                        FoldResult(
-                            current,
-                            PallaSyncApplyResult.Quarantined(
-                                error.message?.take(240) ?: error::class.java.simpleName,
-                            ),
-                        )
-                    },
-                )
-                current = outcome.collections
-                results += outcome.result
+            val results = ArrayList<PallaSyncApplyResult>(payloadJsonStrings.size)
+            collectionStore.update { original ->
+                var current = original
+                parsedPayloads.forEach { parsed ->
+                    val outcome =
+                        parsed
+                            .mapCatching { payload ->
+                                applyPayload(current, payload)
+                            }.fold(
+                                onSuccess = { it },
+                                onFailure = { error ->
+                                    FoldResult(
+                                        current,
+                                        PallaSyncApplyResult.Quarantined(
+                                            error.message?.take(240) ?: error::class.java.simpleName,
+                                        ),
+                                    )
+                                },
+                            )
+                    current = outcome.collections
+                    results += outcome.result
+                }
+                current
             }
-            current
+            results
         }
-        results
-    }
 
     private fun applyPayload(
         current: SyncedCollectionsSnapshot,
         payload: DataPayload,
-    ): FoldResult {
-        return when (payload.schema) {
+    ): FoldResult =
+        when (payload.schema) {
             FAVORITE_TAG_SCHEMA_V2 -> applyFavoriteTag(current, payload)
             SEARCH_HISTORY_SCHEMA_V2 -> applySearchHistory(current, payload)
             MUTE_SETTINGS_SCHEMA_V2 -> applyMuteSetting(current, payload)
@@ -96,26 +97,35 @@ class PallaSyncEventApplier internal constructor(
             VIEW_HISTORY_SCHEMA_V1 -> applyLegacyViewHistory(current, payload)
             else -> current.quarantined("Unknown schema: ${payload.schema}")
         }
-    }
 
     private fun applyFavoriteTag(
         current: SyncedCollectionsSnapshot,
         payload: DataPayload,
     ): FoldResult {
-        val tag = payload.body.objectString("tag")
-            ?: return current.quarantined("favorite_tag body is missing tag")
+        val tag =
+            payload.body.objectString("tag")
+                ?: return current.quarantined("favorite_tag body is missing tag")
         if (tag.isBlank() || payload.entity_id != tag) {
             return current.quarantined("favorite_tag entity/body mismatch")
         }
-        val tags = when (payload.operation) {
-            SYNC_OPERATION_UPSERT -> if (tag in current.favoriteTags) {
-                current.favoriteTags
-            } else {
-                current.favoriteTags + tag
+        val tags =
+            when (payload.operation) {
+                SYNC_OPERATION_UPSERT -> {
+                    if (tag in current.favoriteTags) {
+                        current.favoriteTags
+                    } else {
+                        current.favoriteTags + tag
+                    }
+                }
+
+                SYNC_OPERATION_DELETE -> {
+                    current.favoriteTags.filterNot { it == tag }
+                }
+
+                else -> {
+                    return current.invalidOperation(payload)
+                }
             }
-            SYNC_OPERATION_DELETE -> current.favoriteTags.filterNot { it == tag }
-            else -> return current.invalidOperation(payload)
-        }
         return current.copy(favoriteTags = tags).applied()
     }
 
@@ -123,17 +133,27 @@ class PallaSyncEventApplier internal constructor(
         current: SyncedCollectionsSnapshot,
         payload: DataPayload,
     ): FoldResult {
-        val query = payload.body.objectString("query")
-            ?: return current.quarantined("search_history body is missing query")
+        val query =
+            payload.body.objectString("query")
+                ?: return current.quarantined("search_history body is missing query")
         if (query.isBlank() || payload.entity_id != query) {
             return current.quarantined("search_history entity/body mismatch")
         }
-        val history = when (payload.operation) {
-            SYNC_OPERATION_UPSERT -> (listOf(query) + current.searchHistory.filterNot { it == query })
-                .take(MAX_SEARCH_HISTORY)
-            SYNC_OPERATION_DELETE -> current.searchHistory.filterNot { it == query }
-            else -> return current.invalidOperation(payload)
-        }
+        val history =
+            when (payload.operation) {
+                SYNC_OPERATION_UPSERT -> {
+                    (listOf(query) + current.searchHistory.filterNot { it == query })
+                        .take(MAX_SEARCH_HISTORY)
+                }
+
+                SYNC_OPERATION_DELETE -> {
+                    current.searchHistory.filterNot { it == query }
+                }
+
+                else -> {
+                    return current.invalidOperation(payload)
+                }
+            }
         return current.copy(searchHistory = history).applied()
     }
 
@@ -155,25 +175,35 @@ class PallaSyncEventApplier internal constructor(
 
         return when (kind) {
             "tag" -> {
-                val values = current.mutedTags.applyItemOperation(value, payload.operation)
-                    ?: return current.invalidOperation(payload)
+                val values =
+                    current.mutedTags.applyItemOperation(value, payload.operation)
+                        ?: return current.invalidOperation(payload)
                 current.copy(mutedTags = values).applied()
             }
+
             "user" -> {
-                val id = value.toLongOrNull()?.takeIf { it > 0L }
-                    ?: return current.quarantined("Invalid muted user ID")
-                val values = current.mutedUsers.applyItemOperation(id, payload.operation)
-                    ?: return current.invalidOperation(payload)
+                val id =
+                    value.toLongOrNull()?.takeIf { it > 0L }
+                        ?: return current.quarantined("Invalid muted user ID")
+                val values =
+                    current.mutedUsers.applyItemOperation(id, payload.operation)
+                        ?: return current.invalidOperation(payload)
                 current.copy(mutedUsers = values).applied()
             }
+
             "illust" -> {
-                val id = value.toLongOrNull()?.takeIf { it > 0L }
-                    ?: return current.quarantined("Invalid muted illustration ID")
-                val values = current.mutedIllusts.applyItemOperation(id, payload.operation)
-                    ?: return current.invalidOperation(payload)
+                val id =
+                    value.toLongOrNull()?.takeIf { it > 0L }
+                        ?: return current.quarantined("Invalid muted illustration ID")
+                val values =
+                    current.mutedIllusts.applyItemOperation(id, payload.operation)
+                        ?: return current.invalidOperation(payload)
                 current.copy(mutedIllusts = values).applied()
             }
-            else -> current.quarantined("Unknown mute entity kind: $kind")
+
+            else -> {
+                current.quarantined("Unknown mute entity kind: $kind")
+            }
         }
     }
 
@@ -186,8 +216,12 @@ class PallaSyncEventApplier internal constructor(
             return current.quarantined("Invalid view_history entity_id")
         }
         val kind = payload.entity_id.substring(0, separator)
-        val id = payload.entity_id.substring(separator + 1).toLongOrNull()?.takeIf { it > 0L }
-            ?: return current.quarantined("Invalid view_history illustration ID")
+        val id =
+            payload.entity_id
+                .substring(separator + 1)
+                .toLongOrNull()
+                ?.takeIf { it > 0L }
+                ?: return current.quarantined("Invalid view_history illustration ID")
 
         return when (kind) {
             "seen" -> {
@@ -195,31 +229,52 @@ class PallaSyncEventApplier internal constructor(
                 if (bodyId != null && bodyId != id) {
                     return current.quarantined("seen entity/body mismatch")
                 }
-                val values = when (payload.operation) {
-                    SYNC_OPERATION_UPSERT -> (listOf(id) + current.seenFeedIllusts.filterNot { it == id })
-                        .take(MAX_SYNCED_SEEN_ILLUSTS)
-                    SYNC_OPERATION_DELETE -> current.seenFeedIllusts.filterNot { it == id }
-                    else -> return current.invalidOperation(payload)
-                }
+                val values =
+                    when (payload.operation) {
+                        SYNC_OPERATION_UPSERT -> {
+                            (listOf(id) + current.seenFeedIllusts.filterNot { it == id })
+                                .take(MAX_SYNCED_SEEN_ILLUSTS)
+                        }
+
+                        SYNC_OPERATION_DELETE -> {
+                            current.seenFeedIllusts.filterNot { it == id }
+                        }
+
+                        else -> {
+                            return current.invalidOperation(payload)
+                        }
+                    }
                 current.copy(seenFeedIllusts = values).applied()
             }
+
             "viewed" -> {
-                val values = when (payload.operation) {
-                    SYNC_OPERATION_UPSERT -> {
-                        val illust = payload.body.toHistoryIllust()
-                            ?: return current.quarantined("Invalid viewed illustration body")
-                        if (illust.id != id) {
-                            return current.quarantined("viewed entity/body mismatch")
+                val values =
+                    when (payload.operation) {
+                        SYNC_OPERATION_UPSERT -> {
+                            val illust =
+                                payload.body.toHistoryIllust()
+                                    ?: return current.quarantined("Invalid viewed illustration body")
+                            if (illust.id != id) {
+                                return current.quarantined("viewed entity/body mismatch")
+                            }
+                            (listOf(illust) + current.viewHistory.filterNot { it.id == id })
+                                .take(MAX_VIEW_HISTORY)
                         }
-                        (listOf(illust) + current.viewHistory.filterNot { it.id == id })
-                            .take(MAX_VIEW_HISTORY)
+
+                        SYNC_OPERATION_DELETE -> {
+                            current.viewHistory.filterNot { it.id == id }
+                        }
+
+                        else -> {
+                            return current.invalidOperation(payload)
+                        }
                     }
-                    SYNC_OPERATION_DELETE -> current.viewHistory.filterNot { it.id == id }
-                    else -> return current.invalidOperation(payload)
-                }
                 current.copy(viewHistory = values).applied()
             }
-            else -> current.quarantined("Unknown view_history entity kind: $kind")
+
+            else -> {
+                current.quarantined("Unknown view_history entity kind: $kind")
+            }
         }
     }
 
@@ -227,9 +282,10 @@ class PallaSyncEventApplier internal constructor(
         current: SyncedCollectionsSnapshot,
         payload: DataPayload,
     ): FoldResult {
-        val incoming = (payload.body as? JsonArray)
-            ?.mapNotNull { runCatching { it.jsonPrimitive.content }.getOrNull() }
-            ?: return current.quarantined("Invalid favorite_tag/1 snapshot")
+        val incoming =
+            (payload.body as? JsonArray)
+                ?.mapNotNull { runCatching { it.jsonPrimitive.content }.getOrNull() }
+                ?: return current.quarantined("Invalid favorite_tag/1 snapshot")
         return current.copy(favoriteTags = (incoming + current.favoriteTags).distinct()).applied()
     }
 
@@ -237,48 +293,58 @@ class PallaSyncEventApplier internal constructor(
         current: SyncedCollectionsSnapshot,
         payload: DataPayload,
     ): FoldResult {
-        val incoming = (payload.body as? JsonArray)
-            ?.mapNotNull { runCatching { it.jsonPrimitive.content }.getOrNull() }
-            ?: return current.quarantined("Invalid search_history/1 snapshot")
-        return current.copy(
-            searchHistory = (incoming + current.searchHistory).distinct().take(MAX_SEARCH_HISTORY),
-        ).applied()
+        val incoming =
+            (payload.body as? JsonArray)
+                ?.mapNotNull { runCatching { it.jsonPrimitive.content }.getOrNull() }
+                ?: return current.quarantined("Invalid search_history/1 snapshot")
+        return current
+            .copy(
+                searchHistory = (incoming + current.searchHistory).distinct().take(MAX_SEARCH_HISTORY),
+            ).applied()
     }
 
     private fun applyLegacyMuteSettings(
         current: SyncedCollectionsSnapshot,
         payload: DataPayload,
     ): FoldResult {
-        val body = payload.body as? JsonObject
-            ?: return current.quarantined("Invalid mute_settings/1 snapshot")
+        val body =
+            payload.body as? JsonObject
+                ?: return current.quarantined("Invalid mute_settings/1 snapshot")
         val tags = body.stringArray("mutedTags")
         val users = body.longArray("mutedUsers")
         val illusts = body.longArray("mutedIllusts")
-        return current.copy(
-            mutedTags = (tags + current.mutedTags).distinct(),
-            mutedUsers = (users + current.mutedUsers).distinct(),
-            mutedIllusts = (illusts + current.mutedIllusts).distinct(),
-        ).applied()
+        return current
+            .copy(
+                mutedTags = (tags + current.mutedTags).distinct(),
+                mutedUsers = (users + current.mutedUsers).distinct(),
+                mutedIllusts = (illusts + current.mutedIllusts).distinct(),
+            ).applied()
     }
 
     private fun applyLegacyViewHistory(
         current: SyncedCollectionsSnapshot,
         payload: DataPayload,
     ): FoldResult {
-        val body = payload.body as? JsonObject
-            ?: return current.quarantined("Invalid view_history/1 snapshot")
+        val body =
+            payload.body as? JsonObject
+                ?: return current.quarantined("Invalid view_history/1 snapshot")
         val seen = body.longArray("seenFeedIllusts")
-        val viewed = body["viewedIllusts"]?.jsonArray
-            ?.mapNotNull(JsonElement::toHistoryIllust)
-            .orEmpty()
-        return current.copy(
-            seenFeedIllusts = (seen + current.seenFeedIllusts)
-                .distinct()
-                .take(MAX_SYNCED_SEEN_ILLUSTS),
-            viewHistory = (viewed + current.viewHistory)
-                .distinctBy(Illust::id)
-                .take(MAX_VIEW_HISTORY),
-        ).applied()
+        val viewed =
+            body["viewedIllusts"]
+                ?.jsonArray
+                ?.mapNotNull(JsonElement::toHistoryIllust)
+                .orEmpty()
+        return current
+            .copy(
+                seenFeedIllusts =
+                    (seen + current.seenFeedIllusts)
+                        .distinct()
+                        .take(MAX_SYNCED_SEEN_ILLUSTS),
+                viewHistory =
+                    (viewed + current.viewHistory)
+                        .distinctBy(Illust::id)
+                        .take(MAX_VIEW_HISTORY),
+            ).applied()
     }
 
     private data class FoldResult(
@@ -286,71 +352,79 @@ class PallaSyncEventApplier internal constructor(
         val result: PallaSyncApplyResult,
     )
 
-    private fun SyncedCollectionsSnapshot.applied(): FoldResult {
-        return FoldResult(this, PallaSyncApplyResult.Applied)
-    }
+    private fun SyncedCollectionsSnapshot.applied(): FoldResult = FoldResult(this, PallaSyncApplyResult.Applied)
 
-    private fun SyncedCollectionsSnapshot.quarantined(reason: String): FoldResult {
-        return FoldResult(this, PallaSyncApplyResult.Quarantined(reason))
-    }
+    private fun SyncedCollectionsSnapshot.quarantined(reason: String): FoldResult =
+        FoldResult(this, PallaSyncApplyResult.Quarantined(reason))
 
-    private fun SyncedCollectionsSnapshot.invalidOperation(payload: DataPayload): FoldResult {
-        return quarantined("Invalid ${payload.schema} operation: ${payload.operation}")
-    }
+    private fun SyncedCollectionsSnapshot.invalidOperation(payload: DataPayload): FoldResult =
+        quarantined("Invalid ${payload.schema} operation: ${payload.operation}")
 }
 
 internal interface SyncedCollectionsStore {
-    suspend fun update(
-        transform: (SyncedCollectionsSnapshot) -> SyncedCollectionsSnapshot,
-    ): SyncedCollectionsSnapshot
+    suspend fun update(transform: (SyncedCollectionsSnapshot) -> SyncedCollectionsSnapshot): SyncedCollectionsSnapshot
 }
 
-private class SettingsSyncedCollectionsStore(context: Context) : SyncedCollectionsStore {
-    private val store = SettingsStore(context)
+private class SettingsSyncedCollectionsStore(
+    context: Context,
+) : SyncedCollectionsStore {
+    private val store = SettingsStore(context, IncomingSyncEventWriter)
 
-    override suspend fun update(
-        transform: (SyncedCollectionsSnapshot) -> SyncedCollectionsSnapshot,
-    ): SyncedCollectionsSnapshot = store.updateSyncedCollections(transform)
+    override suspend fun update(transform: (SyncedCollectionsSnapshot) -> SyncedCollectionsSnapshot): SyncedCollectionsSnapshot =
+        store.updateSyncedCollections(transform)
 }
 
-private fun <T> List<T>.applyItemOperation(item: T, operation: String): List<T>? {
-    return when (operation) {
+/** Prevents incoming relay events from recursively constructing another sync coordinator. */
+private object IncomingSyncEventWriter : PallaSyncEventWriter {
+    override suspend fun enqueueDataEvents(events: List<PallaSyncPendingEvent>): Boolean = events.isEmpty()
+
+    override suspend fun <T> enqueueDataEventsThen(
+        events: List<PallaSyncPendingEvent>,
+        afterEnqueue: suspend () -> T,
+    ): T {
+        require(events.isEmpty()) { "Incoming sync persistence must not enqueue outgoing events" }
+        return afterEnqueue()
+    }
+}
+
+private fun <T> List<T>.applyItemOperation(
+    item: T,
+    operation: String,
+): List<T>? =
+    when (operation) {
         SYNC_OPERATION_UPSERT -> if (item in this) this else this + item
         SYNC_OPERATION_DELETE -> filterNot { it == item }
         else -> null
     }
-}
 
-private fun JsonElement.objectString(key: String): String? {
-    return (this as? JsonObject)?.get(key)?.let { element ->
+private fun JsonElement.objectString(key: String): String? =
+    (this as? JsonObject)?.get(key)?.let { element ->
         runCatching { element.jsonPrimitive.content }.getOrNull()
     }
-}
 
-private fun JsonElement.objectLong(key: String): Long? {
-    return objectString(key)?.toLongOrNull()
-}
+private fun JsonElement.objectLong(key: String): Long? = objectString(key)?.toLongOrNull()
 
-private fun JsonObject.stringArray(key: String): List<String> {
-    return (this[key] as? JsonArray)
+private fun JsonObject.stringArray(key: String): List<String> =
+    (this[key] as? JsonArray)
         ?.mapNotNull { runCatching { it.jsonPrimitive.content }.getOrNull() }
         .orEmpty()
-}
 
-private fun JsonObject.longArray(key: String): List<Long> {
-    return stringArray(key).mapNotNull { it.toLongOrNull()?.takeIf { id -> id > 0L } }
-}
+private fun JsonObject.longArray(key: String): List<Long> = stringArray(key).mapNotNull { it.toLongOrNull()?.takeIf { id -> id > 0L } }
 
 private fun JsonElement.toHistoryIllust(): Illust? {
     val item = this as? JsonObject ?: return null
-    val id = item["id"]?.let { runCatching { it.jsonPrimitive.content.toLong() }.getOrNull() }
-        ?.takeIf { it > 0L } ?: return null
+    val id =
+        item["id"]
+            ?.let { runCatching { it.jsonPrimitive.content.toLong() }.getOrNull() }
+            ?.takeIf { it > 0L } ?: return null
     val imageUrl = item["imageUrl"]?.let { runCatching { it.jsonPrimitive.content }.getOrNull() }.orEmpty()
     return Illust(
         id = id,
         title = item["title"]?.let { runCatching { it.jsonPrimitive.content }.getOrNull() }.orEmpty(),
-        type = item["type"]?.let { runCatching { it.jsonPrimitive.content }.getOrNull() }
-            ?.ifBlank { "illust" } ?: "illust",
+        type =
+            item["type"]
+                ?.let { runCatching { it.jsonPrimitive.content }.getOrNull() }
+                ?.ifBlank { "illust" } ?: "illust",
         caption = "",
         artistId = 0L,
         artistName = item["artistName"]?.let { runCatching { it.jsonPrimitive.content }.getOrNull() }.orEmpty(),
@@ -363,9 +437,11 @@ private fun JsonElement.toHistoryIllust(): Illust? {
         imagePages = emptyList(),
         originalImagePages = emptyList(),
         tags = emptyList(),
-        pageCount = item["pageCount"]?.let {
-            runCatching { it.jsonPrimitive.content.toInt() }.getOrNull()
-        }?.coerceAtLeast(1) ?: 1,
+        pageCount =
+            item["pageCount"]
+                ?.let {
+                    runCatching { it.jsonPrimitive.content.toInt() }.getOrNull()
+                }?.coerceAtLeast(1) ?: 1,
         isBookmarked = false,
     )
 }

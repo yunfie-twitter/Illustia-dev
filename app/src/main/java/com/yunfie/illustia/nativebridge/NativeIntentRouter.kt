@@ -6,10 +6,21 @@ import androidx.core.content.IntentCompat
 import java.net.URI
 
 sealed interface NativeIntentEvent {
-    data class Artwork(val id: Long) : NativeIntentEvent
-    data class User(val id: Long) : NativeIntentEvent
-    data class Text(val value: String) : NativeIntentEvent
-    data class Image(val uri: Uri) : NativeIntentEvent
+    data class Artwork(
+        val id: Long,
+    ) : NativeIntentEvent
+
+    data class User(
+        val id: Long,
+    ) : NativeIntentEvent
+
+    data class Text(
+        val value: String,
+    ) : NativeIntentEvent
+
+    data class Image(
+        val uri: Uri,
+    ) : NativeIntentEvent
 }
 
 object NativeIntentRouter {
@@ -17,10 +28,26 @@ object NativeIntentRouter {
     private val CUSTOM_PIXIV_SCHEMES = setOf("pixiv", "pixez")
     private val CUSTOM_PIXIV_HOSTS = setOf("pixiv.net", "www.pixiv.net", "users", "illusts")
     private val ROUTE_CANDIDATE_PATTERN = Regex("""(?i)\b(?:https?://|pixiv://|pixez://)\S+""")
-    private val ROUTE_TRAILING_PUNCTUATION = charArrayOf(
-        '.', ',', ';', ':', '!', '?', ')', ']', '}',
-        '。', '、', '！', '？', '）', '】', '』', '」',
-    )
+    private val ROUTE_TRAILING_PUNCTUATION =
+        charArrayOf(
+            '.',
+            ',',
+            ';',
+            ':',
+            '!',
+            '?',
+            ')',
+            ']',
+            '}',
+            '。',
+            '、',
+            '！',
+            '？',
+            '）',
+            '】',
+            '』',
+            '」',
+        )
 
     const val EXTRA_HANDOFF_URI = "com.yunfie.illustia.extra.HANDOFF_URI"
     const val MAX_PROCESS_TEXT_CODE_POINTS = 256
@@ -42,7 +69,8 @@ object NativeIntentRouter {
         }
         if (intent.action == Intent.ACTION_VIEW) {
             parseText(intent.dataString)?.let { return it }
-            intent.getStringExtra(EXTRA_HANDOFF_URI)
+            intent
+                .getStringExtra(EXTRA_HANDOFF_URI)
                 ?.takeIf(String::isNotBlank)
                 ?.let(::parseText)
                 ?.let { return it }
@@ -57,29 +85,37 @@ object NativeIntentRouter {
         val normalized = value?.trim().orEmpty()
         if (normalized.isEmpty()) return null
         parseUri(normalized)?.let { return it }
-        return ROUTE_CANDIDATE_PATTERN.findAll(normalized)
+        return ROUTE_CANDIDATE_PATTERN
+            .findAll(normalized)
             .mapNotNull { match -> parseUri(match.value.trimEnd(*ROUTE_TRAILING_PUNCTUATION)) }
             .firstOrNull()
     }
 
     fun normalizeProcessText(value: CharSequence?): String? {
         if (value == null) return null
-        val normalized = buildString(value.length.coerceAtMost(MAX_PROCESS_TEXT_CODE_POINTS)) {
-            var pendingSpace = false
-            value.forEach { char ->
-                when {
-                    char.isWhitespace() -> pendingSpace = isNotEmpty()
-                    char.isISOControl() -> Unit
-                    else -> {
-                        if (pendingSpace) append(' ')
-                        append(char)
-                        pendingSpace = false
+        val normalized =
+            buildString(value.length.coerceAtMost(MAX_PROCESS_TEXT_CODE_POINTS)) {
+                var pendingSpace = false
+                value.forEach { char ->
+                    when {
+                        char.isWhitespace() -> {
+                            pendingSpace = isNotEmpty()
+                        }
+
+                        char.isISOControl() -> {
+                            Unit
+                        }
+
+                        else -> {
+                            if (pendingSpace) append(' ')
+                            append(char)
+                            pendingSpace = false
+                        }
                     }
                 }
-            }
-        }.trim()
-            .removePrefix("#")
-            .trimStart()
+            }.trim()
+                .removePrefix("#")
+                .trimStart()
         if (normalized.isBlank()) return null
 
         val codePointCount = normalized.codePointCount(0, normalized.length)
@@ -93,9 +129,11 @@ object NativeIntentRouter {
         val normalizedScheme = uri.scheme?.lowercase() ?: return null
         val normalizedHost = uri.host?.lowercase() ?: return null
         if (!isTrustedPixivRoute(normalizedScheme, normalizedHost)) return null
-        val segments = uri.rawPath.orEmpty()
-            .split('/')
-            .filter(String::isNotEmpty)
+        val segments =
+            uri.rawPath
+                .orEmpty()
+                .split('/')
+                .filter(String::isNotEmpty)
         val artworkIndex = segments.indexOfFirst { it == "artworks" || it == "illusts" }
         if (artworkIndex >= 0) {
             segments.getOrNull(artworkIndex + 1)?.toLongOrNull()?.let {
@@ -117,11 +155,13 @@ object NativeIntentRouter {
         return null
     }
 
-    private fun isTrustedPixivRoute(normalizedScheme: String, normalizedHost: String): Boolean {
-        return when (normalizedScheme) {
+    private fun isTrustedPixivRoute(
+        normalizedScheme: String,
+        normalizedHost: String,
+    ): Boolean =
+        when (normalizedScheme) {
             "http", "https" -> normalizedHost in WEB_PIXIV_HOSTS
             in CUSTOM_PIXIV_SCHEMES -> normalizedHost in CUSTOM_PIXIV_HOSTS
             else -> false
         }
-    }
 }

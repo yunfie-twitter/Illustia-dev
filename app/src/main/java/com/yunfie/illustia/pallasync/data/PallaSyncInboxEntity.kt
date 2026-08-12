@@ -16,8 +16,8 @@ import androidx.room.Index
     primaryKeys = ["chain_id", "record_id"],
     indices = [
         Index(value = ["chain_id", "relay_seq"]),
-        Index(value = ["chain_id", "status"])
-    ]
+        Index(value = ["chain_id", "status"]),
+    ],
 )
 data class PallaSyncInboxEntity(
     @ColumnInfo(name = "chain_id") val chainId: String,
@@ -26,7 +26,7 @@ data class PallaSyncInboxEntity(
     @ColumnInfo(name = "status") val status: String,
     @ColumnInfo(name = "raw_record_json") val rawRecordJson: String,
     @ColumnInfo(name = "quarantine_reason") val quarantineReason: String? = null,
-    @ColumnInfo(name = "received_at_ms") val receivedAtMs: Long = System.currentTimeMillis()
+    @ColumnInfo(name = "received_at_ms") val receivedAtMs: Long = System.currentTimeMillis(),
 ) {
     init {
         require(relaySeq >= 0) { "relaySeq must not be negative" }
@@ -46,13 +46,13 @@ data class PallaSyncInboxEntity(
             chainId: String,
             recordId: String,
             relaySeq: Long,
-            rawRecordJson: String
+            rawRecordJson: String,
         ) = PallaSyncInboxEntity(
             chainId = chainId,
             recordId = recordId,
             relaySeq = relaySeq,
             status = STATUS_APPLIED,
-            rawRecordJson = rawRecordJson
+            rawRecordJson = rawRecordJson,
         )
 
         fun quarantined(
@@ -60,14 +60,14 @@ data class PallaSyncInboxEntity(
             recordId: String,
             relaySeq: Long,
             rawRecordJson: String,
-            reason: String
+            reason: String,
         ) = PallaSyncInboxEntity(
             chainId = chainId,
             recordId = recordId,
             relaySeq = relaySeq,
             status = STATUS_QUARANTINED,
             rawRecordJson = rawRecordJson,
-            quarantineReason = reason
+            quarantineReason = reason,
         )
     }
 }

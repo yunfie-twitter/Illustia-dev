@@ -10,7 +10,9 @@ import android.content.Intent
 import android.os.Bundle
 import com.yunfie.illustia.MainActivity
 
-class PalleriaAuthenticator(private val context: Context) : AbstractAccountAuthenticator(context) {
+class PalleriaAuthenticator(
+    private val context: Context,
+) : AbstractAccountAuthenticator(context) {
     private fun loginIntent(response: AccountAuthenticatorResponse) =
         Intent(context, MainActivity::class.java).apply {
             putExtra(AccountManager.KEY_ACCOUNT_AUTHENTICATOR_RESPONSE, response)
@@ -25,8 +27,10 @@ class PalleriaAuthenticator(private val context: Context) : AbstractAccountAuthe
         options: Bundle?,
     ) = Bundle().apply { putParcelable(AccountManager.KEY_INTENT, loginIntent(response)) }
 
-    override fun editProperties(response: AccountAuthenticatorResponse, accountType: String) =
-        Bundle().apply { putParcelable(AccountManager.KEY_INTENT, loginIntent(response)) }
+    override fun editProperties(
+        response: AccountAuthenticatorResponse,
+        accountType: String,
+    ) = Bundle().apply { putParcelable(AccountManager.KEY_INTENT, loginIntent(response)) }
 
     override fun getAuthToken(
         response: AccountAuthenticatorResponse,

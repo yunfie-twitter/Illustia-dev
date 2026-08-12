@@ -6,9 +6,10 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
-import androidx.activity.compose.setContent
 import androidx.activity.compose.BackHandler
+import androidx.activity.compose.setContent
 import androidx.activity.viewModels
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -18,13 +19,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -57,10 +57,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.Request
-import java.io.File
-import java.io.FileOutputStream
-import java.io.IOException
-import kotlin.math.roundToInt
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
@@ -70,9 +66,13 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Close
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
+import java.io.File
+import java.io.FileOutputStream
+import java.io.IOException
+import kotlin.math.roundToInt
 
 class IllustWidgetConfigureActivity : FragmentActivity() {
     private val widgetImageMaxDimension = 960
@@ -136,10 +136,11 @@ class IllustWidgetConfigureActivity : FragmentActivity() {
                         },
                     ) { paddingValues ->
                         Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                                .padding(paddingValues),
+                            modifier =
+                                Modifier
+                                    .fillMaxSize()
+                                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                                    .padding(paddingValues),
                         ) {
                             SearchScreen(
                                 state = state,
@@ -206,30 +207,41 @@ class IllustWidgetConfigureActivity : FragmentActivity() {
         }
     }
 
-    private suspend fun saveSelection(widgetId: Int, illust: Illust, pageIndex: Int) {
+    private suspend fun saveSelection(
+        widgetId: Int,
+        illust: Illust,
+        pageIndex: Int,
+    ) {
         val urls = widgetPageUrls(illust, viewModel.uiState.value.settings.fullscreenQuality)
         val selectedUrl = urls.getOrNull(pageIndex) ?: urls.firstOrNull() ?: throw IOException("No page urls")
         val imageFile = downloadWidgetImage(selectedUrl, widgetId, pageIndex)
-        val selection = IllustWidgetSelection(
-            illustId = illust.id,
-            pageIndex = pageIndex.coerceIn(0, urls.lastIndex.coerceAtLeast(0)),
-            pageCount = urls.size.coerceAtLeast(1),
-            title = illust.title,
-            artistName = illust.artistName,
-            imageUrl = selectedUrl,
-            imagePath = imageFile.absolutePath,
-        )
+        val selection =
+            IllustWidgetSelection(
+                illustId = illust.id,
+                pageIndex = pageIndex.coerceIn(0, urls.lastIndex.coerceAtLeast(0)),
+                pageCount = urls.size.coerceAtLeast(1),
+                title = illust.title,
+                artistName = illust.artistName,
+                imageUrl = selectedUrl,
+                imagePath = imageFile.absolutePath,
+            )
         IllustWidgetStore(this).save(widgetId, selection)
     }
 
-    private suspend fun downloadWidgetImage(imageUrl: String, widgetId: Int, pageIndex: Int): File {
-        return withContext(Dispatchers.IO) {
+    private suspend fun downloadWidgetImage(
+        imageUrl: String,
+        widgetId: Int,
+        pageIndex: Int,
+    ): File =
+        withContext(Dispatchers.IO) {
             val app = application as IllustiaApplication
-            val request = Request.Builder()
-                .url(imageUrl)
-                .header("Referer", "https://www.pixiv.net/")
-                .header("User-Agent", "PixivAndroidApp/6.184.0 (Android 14; Illustia)")
-                .build()
+            val request =
+                Request
+                    .Builder()
+                    .url(imageUrl)
+                    .header("Referer", "https://www.pixiv.net/")
+                    .header("User-Agent", "PixivAndroidApp/6.184.0 (Android 14; Illustia)")
+                    .build()
             val response = app.sharedHttpClient.newCall(request).execute()
             response.use { resp ->
                 if (!resp.isSuccessful) throw IOException("Widget image download failed: ${resp.code}")
@@ -239,8 +251,9 @@ class IllustWidgetConfigureActivity : FragmentActivity() {
                 resp.body.use { body ->
                     FileOutputStream(rawFile).use { output -> body.byteStream().use { input -> input.copyTo(output) } }
                 }
-                val bitmap = decodeWidgetBitmap(rawFile, widgetImageMaxDimension)
-                    ?: throw IOException("Widget image decode failed")
+                val bitmap =
+                    decodeWidgetBitmap(rawFile, widgetImageMaxDimension)
+                        ?: throw IOException("Widget image decode failed")
                 FileOutputStream(outputFile).use { output ->
                     if (!bitmap.compress(Bitmap.CompressFormat.JPEG, 92, output)) {
                         throw IOException("Widget image encode failed")
@@ -252,32 +265,37 @@ class IllustWidgetConfigureActivity : FragmentActivity() {
                 outputFile
             }
         }
-    }
 
-    private fun decodeWidgetBitmap(file: File, maxDimension: Int): Bitmap? {
-        val bounds = BitmapFactory.Options().apply {
-            inJustDecodeBounds = true
-        }
+    private fun decodeWidgetBitmap(
+        file: File,
+        maxDimension: Int,
+    ): Bitmap? {
+        val bounds =
+            BitmapFactory.Options().apply {
+                inJustDecodeBounds = true
+            }
         BitmapFactory.decodeFile(file.absolutePath, bounds)
         if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
 
         val sampleSize = calculateInSampleSize(bounds.outWidth, bounds.outHeight, maxDimension, maxDimension)
-        val decoded = BitmapFactory.decodeFile(
-            file.absolutePath,
-            BitmapFactory.Options().apply {
-                inSampleSize = sampleSize
-                inPreferredConfig = Bitmap.Config.RGB_565
-            },
-        ) ?: return null
+        val decoded =
+            BitmapFactory.decodeFile(
+                file.absolutePath,
+                BitmapFactory.Options().apply {
+                    inSampleSize = sampleSize
+                    inPreferredConfig = Bitmap.Config.RGB_565
+                },
+            ) ?: return null
 
         if (decoded.width <= maxDimension && decoded.height <= maxDimension) {
             return decoded
         }
 
-        val scale = minOf(
-            maxDimension.toFloat() / decoded.width.toFloat(),
-            maxDimension.toFloat() / decoded.height.toFloat(),
-        )
+        val scale =
+            minOf(
+                maxDimension.toFloat() / decoded.width.toFloat(),
+                maxDimension.toFloat() / decoded.height.toFloat(),
+            )
         val targetWidth = (decoded.width * scale).roundToInt().coerceAtLeast(1)
         val targetHeight = (decoded.height * scale).roundToInt().coerceAtLeast(1)
         val scaled = Bitmap.createScaledBitmap(decoded, targetWidth, targetHeight, true)
@@ -287,7 +305,12 @@ class IllustWidgetConfigureActivity : FragmentActivity() {
         return scaled
     }
 
-    private fun calculateInSampleSize(srcWidth: Int, srcHeight: Int, reqWidth: Int, reqHeight: Int): Int {
+    private fun calculateInSampleSize(
+        srcWidth: Int,
+        srcHeight: Int,
+        reqWidth: Int,
+        reqHeight: Int,
+    ): Int {
         var inSampleSize = 1
         var halfHeight = srcHeight / 2
         var halfWidth = srcWidth / 2
@@ -297,21 +320,31 @@ class IllustWidgetConfigureActivity : FragmentActivity() {
         return inSampleSize.coerceAtLeast(1)
     }
 
-    private fun widgetPageUrls(illust: Illust, quality: String): List<String> {
-        return when (quality) {
-            "low" -> illust.mediumImagePages.ifEmpty {
-                listOf(
-                    illust.mediumImageUrl.ifBlank {
-                        illust.squareImageUrl.ifBlank { illust.imageUrl }
-                    },
-                )
+    private fun widgetPageUrls(
+        illust: Illust,
+        quality: String,
+    ): List<String> =
+        when (quality) {
+            "low" -> {
+                illust.mediumImagePages.ifEmpty {
+                    listOf(
+                        illust.mediumImageUrl.ifBlank {
+                            illust.squareImageUrl.ifBlank { illust.imageUrl }
+                        },
+                    )
+                }
             }
-            "medium" -> illust.imagePages.ifEmpty { listOf(illust.imageUrl) }
-            else -> illust.originalImagePages.ifEmpty {
-                illust.imagePages.ifEmpty { listOfNotNull(illust.originalImageUrl ?: illust.imageUrl) }
+
+            "medium" -> {
+                illust.imagePages.ifEmpty { listOf(illust.imageUrl) }
+            }
+
+            else -> {
+                illust.originalImagePages.ifEmpty {
+                    illust.imagePages.ifEmpty { listOfNotNull(illust.originalImageUrl ?: illust.imageUrl) }
+                }
             }
         }.ifEmpty { listOf(illust.imageUrl) }
-    }
 }
 
 @Composable
@@ -323,21 +356,30 @@ private fun WidgetPagePickerSheet(
     onCancel: () -> Unit,
     onApply: (Int) -> Unit,
 ) {
-    val urls = remember(illust, quality) {
-        when (quality) {
-            "low" -> illust.mediumImagePages.ifEmpty {
-                listOf(
-                    illust.mediumImageUrl.ifBlank {
-                        illust.squareImageUrl.ifBlank { illust.imageUrl }
-                    },
-                )
-            }
-            "medium" -> illust.imagePages.ifEmpty { listOf(illust.imageUrl) }
-            else -> illust.originalImagePages.ifEmpty {
-                illust.imagePages.ifEmpty { listOfNotNull(illust.originalImageUrl ?: illust.imageUrl) }
-            }
-        }.ifEmpty { listOf(illust.imageUrl) }
-    }
+    val urls =
+        remember(illust, quality) {
+            when (quality) {
+                "low" -> {
+                    illust.mediumImagePages.ifEmpty {
+                        listOf(
+                            illust.mediumImageUrl.ifBlank {
+                                illust.squareImageUrl.ifBlank { illust.imageUrl }
+                            },
+                        )
+                    }
+                }
+
+                "medium" -> {
+                    illust.imagePages.ifEmpty { listOf(illust.imageUrl) }
+                }
+
+                else -> {
+                    illust.originalImagePages.ifEmpty {
+                        illust.imagePages.ifEmpty { listOfNotNull(illust.originalImageUrl ?: illust.imageUrl) }
+                    }
+                }
+            }.ifEmpty { listOf(illust.imageUrl) }
+        }
     var selected by rememberSaveable(illust.id) { mutableIntStateOf(initialPageIndex.coerceIn(0, urls.lastIndex.coerceAtLeast(0))) }
 
     OverlayBottomSheet(
@@ -353,24 +395,26 @@ private fun WidgetPagePickerSheet(
                 url = urls[selected],
                 contentDescription = illust.title,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(220.dp)
-                    .clip(RoundedCornerShape(18.dp)),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .height(220.dp)
+                        .clip(RoundedCornerShape(18.dp)),
                 thumbnail = false,
                 crossfade = true,
             )
             LazyRow(horizontalArrangement = Arrangement.spacedBy(10.dp), contentPadding = PaddingValues(horizontal = 4.dp)) {
                 itemsIndexed(urls) { index, url ->
                     Box(
-                        modifier = Modifier
-                            .height(72.dp)
-                            .width(72.dp)
-                            .clip(RoundedCornerShape(16.dp))
-                            .clickable {
-                                selected = index
-                                onPageSelected(index)
-                            },
+                        modifier =
+                            Modifier
+                                .height(72.dp)
+                                .width(72.dp)
+                                .clip(RoundedCornerShape(16.dp))
+                                .clickable {
+                                    selected = index
+                                    onPageSelected(index)
+                                },
                     ) {
                         PixivImage(
                             url = url,
@@ -394,4 +438,3 @@ private fun WidgetPagePickerSheet(
         }
     }
 }
-

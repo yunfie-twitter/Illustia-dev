@@ -11,7 +11,7 @@ object UuidV7 {
     @Synchronized
     fun generate(): UUID {
         var currentMs = System.currentTimeMillis()
-        
+
         if (currentMs > lastTimestampMs) {
             lastTimestampMs = currentMs
             seq = 0
@@ -31,7 +31,7 @@ object UuidV7 {
         secureRandom.nextBytes(randomBytes)
 
         val msb = (currentMs shl 16) or ((0x7L shl 12)) or (seq.toLong() and 0xFFFL)
-        
+
         // We use 64 bits for LSB. The top 2 bits of LSB must be 10 (variant 1)
         var lsb = 0L
         for (i in 0..7) {
@@ -42,7 +42,5 @@ object UuidV7 {
         return UUID(msb, lsb)
     }
 
-    fun generateString(): String {
-        return generate().toString().lowercase()
-    }
+    fun generateString(): String = generate().toString().lowercase()
 }

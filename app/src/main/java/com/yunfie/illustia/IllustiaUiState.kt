@@ -143,11 +143,9 @@ enum class DownloadQueueStatus {
     Failed,
 }
 
-internal fun AppSettings.toMuteFilter(): MuteFilter {
-    return MuteFilter(
+internal fun AppSettings.toMuteFilter(): MuteFilter =
+    MuteFilter(
         illustIds = mutedIllusts.toSet(),
         userIds = mutedUsers.toSet(),
         tags = mutedTags.toSet(),
     )
-}
-

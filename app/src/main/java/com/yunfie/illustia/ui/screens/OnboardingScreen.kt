@@ -1,6 +1,17 @@
 package com.yunfie.illustia.ui.screens
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,39 +48,54 @@ fun OnboardingScreen(
     var showDetails by remember { mutableStateOf(false) }
 
     Scaffold { scaffoldPadding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(
-                    start = 22.dp,
-                    end = 22.dp,
-                    top = scaffoldPadding.calculateTopPadding(),
-                    bottom = scaffoldPadding.calculateBottomPadding() + 18.dp,
-                ),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center,
+        BoxWithConstraints(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .padding(
+                        start = 22.dp,
+                        end = 22.dp,
+                        top = scaffoldPadding.calculateTopPadding(),
+                        bottom = scaffoldPadding.calculateBottomPadding() + 18.dp,
+                    ),
         ) {
-            BrandLockup(
-                modifier = Modifier.fillMaxWidth(),
-            )
+            val useWideLayout = maxWidth >= 600.dp && maxWidth > maxHeight
 
-            Spacer(Modifier.height(72.dp))
-
-            LoginActions(
-                onWebLogin = viewModel::openWebLogin,
-                onShowDetails = { showDetails = true },
-                onRefreshTokenLogin = onRefreshTokenLogin,
-            )
-
-            Spacer(Modifier.height(16.dp))
-
-            CheckboxPreference(
-                title = stringResource(R.string.data_send_telemetry),
-                summary = stringResource(R.string.data_send_telemetry_desc),
-                checked = state.settings.sendTelemetry,
-                onCheckedChange = viewModel::updateSendTelemetry,
-                modifier = Modifier.fillMaxWidth(),
-            )
+            if (useWideLayout) {
+                Row(
+                    modifier = Modifier.fillMaxSize(),
+                    horizontalArrangement = Arrangement.spacedBy(48.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    BrandLockup(modifier = Modifier.weight(1f))
+                    OnboardingActions(
+                        state = state,
+                        viewModel = viewModel,
+                        onShowDetails = { showDetails = true },
+                        onRefreshTokenLogin = onRefreshTokenLogin,
+                        modifier = Modifier.weight(1f).widthIn(max = 560.dp),
+                    )
+                }
+            } else {
+                Column(
+                    modifier =
+                        Modifier
+                            .align(Alignment.Center)
+                            .fillMaxWidth()
+                            .widthIn(max = 560.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                ) {
+                    BrandLockup(modifier = Modifier.fillMaxWidth())
+                    Spacer(Modifier.height(72.dp))
+                    OnboardingActions(
+                        state = state,
+                        viewModel = viewModel,
+                        onShowDetails = { showDetails = true },
+                        onRefreshTokenLogin = onRefreshTokenLogin,
+                    )
+                }
+            }
         }
     }
 
@@ -110,9 +136,32 @@ fun OnboardingScreen(
 }
 
 @Composable
-private fun BrandLockup(
+private fun OnboardingActions(
+    state: IllustiaUiState,
+    viewModel: IllustiaViewModel,
+    onShowDetails: () -> Unit,
+    onRefreshTokenLogin: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    Column(modifier = modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        LoginActions(
+            onWebLogin = viewModel::openWebLogin,
+            onShowDetails = onShowDetails,
+            onRefreshTokenLogin = onRefreshTokenLogin,
+        )
+        Spacer(Modifier.height(16.dp))
+        CheckboxPreference(
+            title = stringResource(R.string.data_send_telemetry),
+            summary = stringResource(R.string.data_send_telemetry_desc),
+            checked = state.settings.sendTelemetry,
+            onCheckedChange = viewModel::updateSendTelemetry,
+            modifier = Modifier.fillMaxWidth(),
+        )
+    }
+}
+
+@Composable
+private fun BrandLockup(modifier: Modifier = Modifier) {
     val appName = stringResource(R.string.app_name)
 
     Row(
@@ -143,9 +192,10 @@ private fun LoginActions(
     ) {
         Button(
             onClick = onWebLogin,
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(60.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(60.dp),
             colors = ButtonDefaults.buttonColorsPrimary(),
             insideMargin = PaddingValues(horizontal = 18.dp, vertical = 14.dp),
         ) {
@@ -157,9 +207,10 @@ private fun LoginActions(
         }
 
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 24.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 24.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -180,9 +231,10 @@ private fun LoginActions(
         }
 
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 4.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             BottomAction(
@@ -206,10 +258,11 @@ private fun BottomAction(
     modifier: Modifier = Modifier,
 ) {
     Box(
-        modifier = modifier
-            .height(68.dp)
-            .miuixClickable(haptic = true, onClick = onClick)
-            .padding(horizontal = 6.dp),
+        modifier =
+            modifier
+                .height(68.dp)
+                .miuixClickable(haptic = true, onClick = onClick)
+                .padding(horizontal = 6.dp),
         contentAlignment = Alignment.Center,
     ) {
         Text(

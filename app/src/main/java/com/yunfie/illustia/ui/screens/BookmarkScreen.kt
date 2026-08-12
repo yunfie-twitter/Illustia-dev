@@ -1,7 +1,10 @@
 package com.yunfie.illustia.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
@@ -62,10 +65,11 @@ fun BookmarkScreen(
     val repository = remember(viewModel) { viewModel.uiRepository() }
     val watchlistStore = remember(repository) { WatchlistStore(repository) }
     val watchlistState by watchlistStore.state.collectAsStateWithLifecycle()
-    val pagerState = rememberPagerState(
-        initialPage = chrome.selectedTab,
-        pageCount = { 4 },
-    )
+    val pagerState =
+        rememberPagerState(
+            initialPage = chrome.selectedTab,
+            pageCount = { 4 },
+        )
     val coroutineScope = rememberCoroutineScope()
     val selectedTopTab = pagerState.currentPage
 
@@ -81,17 +85,20 @@ fun BookmarkScreen(
 
     val feedHighQuality = settings.useHighQualityFeedImages
     val showAiBadge = remember(settings.showAiBadge) { settings.showAiBadge }
-    val activeItems = when (selectedTopTab) {
-        0 -> timelineItems
-        1 -> bookmarkItems
-        else -> emptyList()
-    }
-    val prefetchUrls = remember(activeItems, feedHighQuality) {
-        activeItems.asSequence()
-            .take(16)
-            .map { if (feedHighQuality) it.previewUrl else it.thumbnailUrl }
-            .toList()
-    }
+    val activeItems =
+        when (selectedTopTab) {
+            0 -> timelineItems
+            1 -> bookmarkItems
+            else -> emptyList()
+        }
+    val prefetchUrls =
+        remember(activeItems, feedHighQuality) {
+            activeItems
+                .asSequence()
+                .take(16)
+                .map { if (feedHighQuality) it.previewUrl else it.thumbnailUrl }
+                .toList()
+        }
     PrefetchPixivImages(prefetchUrls, enabled = settings.prefetchImages)
 
     LaunchedEffect(selectedTopTab) {
@@ -109,52 +116,71 @@ fun BookmarkScreen(
     val hapticMode = LocalAppHapticMode.current
 
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(MiuixTheme.colorScheme.surface),
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(MiuixTheme.colorScheme.surface),
     ) {
         TopAppBar(
-            title = androidx.compose.ui.res.stringResource(R.string.nav_bookmarks_full),
-            largeTitle = androidx.compose.ui.res.stringResource(R.string.nav_bookmarks_full),
+            title =
+                androidx.compose.ui.res
+                    .stringResource(R.string.nav_bookmarks_full),
+            largeTitle =
+                androidx.compose.ui.res
+                    .stringResource(R.string.nav_bookmarks_full),
             scrollBehavior = scrollBehavior,
             actions = {
                 if (selectedTopTab == 1) {
                     RestrictPill(
                         restrict = settings.bookmarkRestrict,
                         onClick = {
-                            val next = if (settings.bookmarkRestrict == Restrict.Public) {
-                                Restrict.Private
-                            } else {
-                                Restrict.Public
-                            }
+                            val next =
+                                if (settings.bookmarkRestrict == Restrict.Public) {
+                                    Restrict.Private
+                                } else {
+                                    Restrict.Public
+                                }
                             viewModel.updateRestrict(next)
                             viewModel.refreshBookmarks()
                         },
                     )
                 }
                 if (selectedTopTab == 3) {
-                    val newestLabel = androidx.compose.ui.res.stringResource(R.string.sort_date_desc)
-                    val oldestLabel = androidx.compose.ui.res.stringResource(R.string.sort_date_asc)
-                    val nameLabel = androidx.compose.ui.res.stringResource(R.string.sort_name_asc)
+                    val newestLabel =
+                        androidx.compose.ui.res
+                            .stringResource(R.string.sort_date_desc)
+                    val oldestLabel =
+                        androidx.compose.ui.res
+                            .stringResource(R.string.sort_date_asc)
+                    val nameLabel =
+                        androidx.compose.ui.res
+                            .stringResource(R.string.sort_name_asc)
                     WindowIconDropdownMenu(
-                        entry = DropdownEntry(
-                            items = listOf(
-                                DropdownItem(
-                                    text = if (followingUserSort == FollowingUserSort.Newest) "✓ $newestLabel" else newestLabel,
-                                    onClick = { followingUserSort = FollowingUserSort.Newest },
-                                ),
-                                DropdownItem(
-                                    text = if (followingUserSort == FollowingUserSort.Oldest) "✓ $oldestLabel" else oldestLabel,
-                                    onClick = { followingUserSort = FollowingUserSort.Oldest },
-                                ),
-                                DropdownItem(
-                                    text = if (followingUserSort == FollowingUserSort.Name) "✓ $nameLabel" else nameLabel,
-                                    onClick = { followingUserSort = FollowingUserSort.Name },
-                                ),
+                        entry =
+                            DropdownEntry(
+                                items =
+                                    listOf(
+                                        DropdownItem(
+                                            text = if (followingUserSort == FollowingUserSort.Newest) "✓ $newestLabel" else newestLabel,
+                                            onClick = { followingUserSort = FollowingUserSort.Newest },
+                                        ),
+                                        DropdownItem(
+                                            text = if (followingUserSort == FollowingUserSort.Oldest) "✓ $oldestLabel" else oldestLabel,
+                                            onClick = { followingUserSort = FollowingUserSort.Oldest },
+                                        ),
+                                        DropdownItem(
+                                            text = if (followingUserSort == FollowingUserSort.Name) "✓ $nameLabel" else nameLabel,
+                                            onClick = { followingUserSort = FollowingUserSort.Name },
+                                        ),
+                                    ),
                             ),
-                        ),
                     ) {
-                        Icon(MiuixIcons.Filter, contentDescription = androidx.compose.ui.res.stringResource(R.string.action_sort))
+                        Icon(
+                            MiuixIcons.Filter,
+                            contentDescription =
+                                androidx.compose.ui.res
+                                    .stringResource(R.string.action_sort),
+                        )
                     }
                 }
                 IconButton(onClick = {
@@ -166,7 +192,12 @@ fun BookmarkScreen(
                         else -> viewModel.refreshBookmarks()
                     }
                 }) {
-                    Icon(MiuixIcons.Refresh, contentDescription = androidx.compose.ui.res.stringResource(R.string.dialog_reload))
+                    Icon(
+                        MiuixIcons.Refresh,
+                        contentDescription =
+                            androidx.compose.ui.res
+                                .stringResource(R.string.dialog_reload),
+                    )
                 }
             },
             bottomContent = {
@@ -186,40 +217,51 @@ fun BookmarkScreen(
                 modifier = Modifier.fillMaxSize(),
             ) { page ->
                 when (page) {
-                    0 -> BookmarkTimelineTab(
-                        timelineItems = timelineItems,
-                        loadState = loadState,
-                        settings = settings,
-                        feedHighQuality = feedHighQuality,
-                        showAiBadge = showAiBadge,
-                        viewModel = viewModel,
-                        chrome = chrome,
-                        scrollBehavior = scrollBehavior,
-                    )
-                    1 -> BookmarkMainTab(
-                        bookmarkItems = bookmarkItems,
-                        loadState = loadState,
-                        settings = settings,
-                        feedHighQuality = feedHighQuality,
-                        showAiBadge = showAiBadge,
-                        viewModel = viewModel,
-                        chrome = chrome,
-                        scrollBehavior = scrollBehavior,
-                    )
-                    2 -> BookmarkWatchlistTab(
-                        settings = settings,
-                        watchlistState = watchlistState,
-                        watchlistStore = watchlistStore,
-                        onOpenWatchlistSeries = onOpenWatchlistSeries,
-                    )
-                    3 -> BookmarkFollowingTab(
-                        settings = settings,
-                        followingUsers = followingUsers,
-                        sort = followingUserSort,
-                        loadState = loadState,
-                        viewModel = viewModel,
-                        chrome = chrome,
-                    )
+                    0 -> {
+                        BookmarkTimelineTab(
+                            timelineItems = timelineItems,
+                            loadState = loadState,
+                            settings = settings,
+                            feedHighQuality = feedHighQuality,
+                            showAiBadge = showAiBadge,
+                            viewModel = viewModel,
+                            chrome = chrome,
+                            scrollBehavior = scrollBehavior,
+                        )
+                    }
+
+                    1 -> {
+                        BookmarkMainTab(
+                            bookmarkItems = bookmarkItems,
+                            loadState = loadState,
+                            settings = settings,
+                            feedHighQuality = feedHighQuality,
+                            showAiBadge = showAiBadge,
+                            viewModel = viewModel,
+                            chrome = chrome,
+                            scrollBehavior = scrollBehavior,
+                        )
+                    }
+
+                    2 -> {
+                        BookmarkWatchlistTab(
+                            settings = settings,
+                            watchlistState = watchlistState,
+                            watchlistStore = watchlistStore,
+                            onOpenWatchlistSeries = onOpenWatchlistSeries,
+                        )
+                    }
+
+                    3 -> {
+                        BookmarkFollowingTab(
+                            settings = settings,
+                            followingUsers = followingUsers,
+                            sort = followingUserSort,
+                            loadState = loadState,
+                            viewModel = viewModel,
+                            chrome = chrome,
+                        )
+                    }
                 }
             }
         }

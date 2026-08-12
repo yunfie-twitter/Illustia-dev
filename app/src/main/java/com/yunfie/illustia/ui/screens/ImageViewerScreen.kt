@@ -6,13 +6,24 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -22,32 +33,45 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.dp
 import com.yunfie.illustia.R
 import com.yunfie.illustia.models.Illust
 import com.yunfie.illustia.models.pixiv.UgoiraPlayback
 import com.yunfie.illustia.ui.components.PixivImage
 import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
-import top.yukonga.miuix.kmp.basic.*
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.*
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import top.yukonga.miuix.kmp.basic.FloatingToolbar
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.SmallTopAppBar
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.ToolbarPosition
+import top.yukonga.miuix.kmp.icon.MiuixIcons
+import top.yukonga.miuix.kmp.icon.extended.Back
+import top.yukonga.miuix.kmp.icon.extended.Background
+import top.yukonga.miuix.kmp.icon.extended.Copy
+import top.yukonga.miuix.kmp.icon.extended.Favorites
+import top.yukonga.miuix.kmp.icon.extended.FavoritesFill
+import top.yukonga.miuix.kmp.icon.extended.Import
+import top.yukonga.miuix.kmp.icon.extended.Photos
+import top.yukonga.miuix.kmp.icon.extended.Share
+import top.yukonga.miuix.kmp.icon.extended.Theme
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -66,22 +90,32 @@ fun ImageViewerScreen(
 ) {
     val context = LocalContext.current
     val shareFailedMessage = stringResource(R.string.viewer_share_failed)
-    val imageUrls = remember(illust, fullscreenQuality) {
-        when (fullscreenQuality) {
-            "low" -> illust.mediumImagePages.ifEmpty {
-                listOf(
-                    illust.mediumImageUrl.ifBlank {
-                        illust.squareImageUrl.ifBlank { illust.imageUrl }
-                    },
-                )
-            }
-            "medium" -> illust.imagePages.ifEmpty { listOf(illust.imageUrl) }
-            else -> illust.originalImagePages.ifEmpty {
-                illust.imagePages.ifEmpty { listOfNotNull(illust.originalImageUrl ?: illust.imageUrl) }
+    val imageUrls =
+        remember(illust, fullscreenQuality) {
+            when (fullscreenQuality) {
+                "low" -> {
+                    illust.mediumImagePages.ifEmpty {
+                        listOf(
+                            illust.mediumImageUrl.ifBlank {
+                                illust.squareImageUrl.ifBlank { illust.imageUrl }
+                            },
+                        )
+                    }
+                }
+
+                "medium" -> {
+                    illust.imagePages.ifEmpty { listOf(illust.imageUrl) }
+                }
+
+                else -> {
+                    illust.originalImagePages.ifEmpty {
+                        illust.imagePages.ifEmpty { listOfNotNull(illust.originalImageUrl ?: illust.imageUrl) }
+                    }
+                }
             }
         }
-    }
-    val pagerState = rememberPagerState(initialPage = startPage.coerceIn(0, imageUrls.lastIndex.coerceAtLeast(0)), pageCount = { imageUrls.size })
+    val pagerState =
+        rememberPagerState(initialPage = startPage.coerceIn(0, imageUrls.lastIndex.coerceAtLeast(0)), pageCount = { imageUrls.size })
     val coroutineScope = rememberCoroutineScope()
     var isZoomed by remember { mutableStateOf(false) }
     var showControls by remember { mutableStateOf(true) }
@@ -99,14 +133,15 @@ fun ImageViewerScreen(
         isZoomed = false
         onPageChanged(pagerState.currentPage)
     }
-    
+
     fun shareCurrentPage() {
         val url = imageUrls[pagerState.currentPage]
-        val sendIntent = Intent().apply {
-            action = Intent.ACTION_SEND
-            putExtra(Intent.EXTRA_TEXT, "${illust.title} by ${illust.artistName}\n$url")
-            type = "text/plain"
-        }
+        val sendIntent =
+            Intent().apply {
+                action = Intent.ACTION_SEND
+                putExtra(Intent.EXTRA_TEXT, "${illust.title} by ${illust.artistName}\n$url")
+                type = "text/plain"
+            }
         val shareIntent = Intent.createChooser(sendIntent, null)
         runCatching {
             context.startActivity(shareIntent)
@@ -124,7 +159,7 @@ fun ImageViewerScreen(
     }
 
     PredictiveBackGestureHandler(onBack = onBack)
-    
+
     Scaffold(
         containerColor = Color.Black,
         contentWindowInsets = WindowInsets(0),
@@ -135,14 +170,14 @@ fun ImageViewerScreen(
                     color = Color.Transparent,
                     titleColor = Color.White,
                     navigationIcon = {
-                            IconButton(onClick = onBack) {
-                                Icon(
-                                    imageVector = MiuixIcons.Back,
+                        IconButton(onClick = onBack) {
+                            Icon(
+                                imageVector = MiuixIcons.Back,
                                 contentDescription = stringResource(R.string.action_close),
-                                    tint = Color.White,
-                                )
-                            }
-                        },
+                                tint = Color.White,
+                            )
+                        }
+                    },
                 )
             }
         },
@@ -157,18 +192,20 @@ fun ImageViewerScreen(
                     showDivider = false,
                 ) {
                     Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 10.dp, vertical = 8.dp),
+                        modifier =
+                            Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 10.dp, vertical = 8.dp),
                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clip(RoundedCornerShape(999.dp))
-                                .background(MiuixTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.96f))
-                                .padding(horizontal = 14.dp, vertical = 10.dp),
+                            modifier =
+                                Modifier
+                                    .weight(1f)
+                                    .clip(RoundedCornerShape(999.dp))
+                                    .background(MiuixTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.96f))
+                                    .padding(horizontal = 14.dp, vertical = 10.dp),
                         ) {
                             Row(
                                 horizontalArrangement = Arrangement.spacedBy(10.dp),
@@ -188,16 +225,17 @@ fun ImageViewerScreen(
                             }
                         }
                         Box(
-                            modifier = Modifier
-                                .size(46.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(
-                                    if (isBookmarked) {
-                                        MiuixTheme.colorScheme.primaryContainer
-                                    } else {
-                                        MiuixTheme.colorScheme.surfaceContainerHighest
-                                    },
-                                ),
+                            modifier =
+                                Modifier
+                                    .size(46.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(
+                                        if (isBookmarked) {
+                                            MiuixTheme.colorScheme.primaryContainer
+                                        } else {
+                                            MiuixTheme.colorScheme.surfaceContainerHighest
+                                        },
+                                    ),
                             contentAlignment = Alignment.Center,
                         ) {
                             IconButton(onClick = onBookmark) {
@@ -209,10 +247,11 @@ fun ImageViewerScreen(
                             }
                         }
                         Box(
-                            modifier = Modifier
-                                .size(46.dp)
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(MiuixTheme.colorScheme.surfaceContainerHighest),
+                            modifier =
+                                Modifier
+                                    .size(46.dp)
+                                    .clip(RoundedCornerShape(16.dp))
+                                    .background(MiuixTheme.colorScheme.surfaceContainerHighest),
                             contentAlignment = Alignment.Center,
                         ) {
                             IconButton(onClick = { shareCurrentPage() }) {
@@ -230,9 +269,10 @@ fun ImageViewerScreen(
         floatingToolbarPosition = ToolbarPosition.BottomCenter,
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(Color.Black),
         ) {
             if (illust.type == "ugoira") {
                 UgoiraArtwork(
@@ -255,36 +295,38 @@ fun ImageViewerScreen(
                             url = url,
                             contentDescription = "${illust.title} ${page + 1}",
                             contentScale = ContentScale.FillWidth,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .wrapContentHeight()
-                                .clickable { showControls = !showControls },
+                            modifier =
+                                Modifier
+                                    .fillMaxWidth()
+                                    .wrapContentHeight()
+                                    .clickable { showControls = !showControls },
                         )
                     }
                 }
-            } else HorizontalPager(
-                state = pagerState,
-                modifier = Modifier.fillMaxSize(),
-                beyondViewportPageCount = if (prefetchImages) 1 else 0,
-                userScrollEnabled = !isZoomed,
-                key = { it },
-            ) { page ->
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    ZoomablePixivImage(
-                        url = imageUrls[page],
-                        contentDescription = illust.title,
-                        isActive = pagerState.currentPage == page,
-                        swipeThresholdPx = swipePageThresholdPx,
-                        onSwipePrevious = { movePage(-1) },
-                        onSwipeNext = { movePage(1) },
-                        onZoomChanged = { zoomed ->
-                            if (pagerState.currentPage == page) isZoomed = zoomed
-                        },
-                        onTap = { showControls = !showControls }
-                    )
+            } else {
+                HorizontalPager(
+                    state = pagerState,
+                    modifier = Modifier.fillMaxSize(),
+                    beyondViewportPageCount = if (prefetchImages) 1 else 0,
+                    userScrollEnabled = !isZoomed,
+                    key = { it },
+                ) { page ->
+                    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        ZoomablePixivImage(
+                            url = imageUrls[page],
+                            contentDescription = illust.title,
+                            isActive = pagerState.currentPage == page,
+                            swipeThresholdPx = swipePageThresholdPx,
+                            onSwipePrevious = { movePage(-1) },
+                            onSwipeNext = { movePage(1) },
+                            onZoomChanged = { zoomed ->
+                                if (pagerState.currentPage == page) isZoomed = zoomed
+                            },
+                            onTap = { showControls = !showControls },
+                        )
+                    }
                 }
             }
         }
     }
 }
-

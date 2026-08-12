@@ -1,7 +1,13 @@
 package com.yunfie.illustia.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -22,10 +28,10 @@ import com.yunfie.illustia.ui.components.HeaderIcon
 import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
 import com.yunfie.illustia.ui.components.SettingLinkRow
 import top.yukonga.miuix.kmp.basic.HorizontalDivider
-import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.icon.extended.Contacts
@@ -52,35 +58,81 @@ fun SettingsScreen(
 ) {
     PredictiveBackGestureHandler(onBack = onBack)
     val context = LocalContext.current
-    val appVersion = remember {
-        runCatching {
-            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            packageInfo.versionName
-        }.getOrNull() ?: "1.0.0"
-    }
+    val appVersion =
+        remember {
+            runCatching {
+                val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+                packageInfo.versionName
+            }.getOrNull() ?: "1.0.0"
+        }
     val scrollBehavior = MiuixScrollBehavior()
     val mutedTotal = state.settings.mutedIllusts.size + state.settings.mutedUsers.size + state.settings.mutedTags.size
 
-    val categories = remember(state.settings.refreshToken, state.settings.viewHistory.size, mutedTotal, state.settings.privacyModeEnabled) {
-        listOf(
-            SettingsCategory(context.getString(R.string.settings_general), context.getString(R.string.settings_general_summary), MiuixIcons.More) { viewModel.openGeneralSettings() },
-            SettingsCategory(context.getString(R.string.settings_image), context.getString(R.string.settings_image_summary), MiuixIcons.Photos) { viewModel.openImageSettings() },
-            SettingsCategory(context.getString(R.string.settings_bookmark), context.getString(R.string.settings_bookmark_summary), MiuixIcons.FavoritesFill) { viewModel.openBookmarkSettings() },
-            SettingsCategory(context.getString(R.string.settings_account), if (state.settings.refreshToken.isNotBlank()) context.getString(R.string.settings_logged_in) else context.getString(R.string.settings_not_logged_in), MiuixIcons.Contacts) { viewModel.openAccountSettings() },
-            SettingsCategory(context.getString(R.string.settings_data), "${context.getString(R.string.more_view_history)} ${context.getString(R.string.data_items_count, state.settings.viewHistory.size)} / ${context.getString(R.string.more_mute_settings)} ${context.getString(R.string.data_items_count, mutedTotal)}", MiuixIcons.Timer) { viewModel.openDataSettings() },
-            SettingsCategory(
-                context.getString(R.string.privacy_mode_title),
-                if (state.settings.privacyModeEnabled) context.getString(R.string.privacy_settings_enabled)
-                else context.getString(R.string.privacy_settings_disabled),
-                MiuixIcons.Lock,
-            ) { viewModel.openPrivacyModeSettings() },
-            SettingsCategory(
-                context.getString(R.string.experimental_settings_title),
-                context.getString(R.string.settings_experimental_summary),
-                MiuixIcons.Settings,
-            ) { viewModel.openExperimentalSettings() },
-        )
-    }
+    val categories =
+        remember(state.settings.refreshToken, state.settings.viewHistory.size, mutedTotal, state.settings.privacyModeEnabled) {
+            listOf(
+                SettingsCategory(
+                    context.getString(R.string.settings_general),
+                    context.getString(R.string.settings_general_summary),
+                    MiuixIcons.More,
+                ) {
+                    viewModel.openGeneralSettings()
+                },
+                SettingsCategory(
+                    context.getString(R.string.settings_image),
+                    context.getString(R.string.settings_image_summary),
+                    MiuixIcons.Photos,
+                ) {
+                    viewModel.openImageSettings()
+                },
+                SettingsCategory(
+                    context.getString(R.string.settings_bookmark),
+                    context.getString(R.string.settings_bookmark_summary),
+                    MiuixIcons.FavoritesFill,
+                ) {
+                    viewModel.openBookmarkSettings()
+                },
+                SettingsCategory(
+                    context.getString(R.string.settings_account),
+                    if (state.settings.refreshToken.isNotBlank()) {
+                        context.getString(
+                            R.string.settings_logged_in,
+                        )
+                    } else {
+                        context.getString(R.string.settings_not_logged_in)
+                    },
+                    MiuixIcons.Contacts,
+                ) {
+                    viewModel.openAccountSettings()
+                },
+                SettingsCategory(
+                    context.getString(R.string.settings_data),
+                    "${context.getString(
+                        R.string.more_view_history,
+                    )} ${context.getString(
+                        R.string.data_items_count,
+                        state.settings.viewHistory.size,
+                    )} / ${context.getString(R.string.more_mute_settings)} ${context.getString(R.string.data_items_count, mutedTotal)}",
+                    MiuixIcons.Timer,
+                ) {
+                    viewModel.openDataSettings()
+                },
+                SettingsCategory(
+                    context.getString(R.string.privacy_mode_title),
+                    if (state.settings.privacyModeEnabled) {
+                        context.getString(R.string.privacy_settings_enabled)
+                    } else {
+                        context.getString(R.string.privacy_settings_disabled)
+                    },
+                    MiuixIcons.Lock,
+                ) { viewModel.openPrivacyModeSettings() },
+                SettingsCategory(
+                    context.getString(R.string.experimental_settings_title),
+                    context.getString(R.string.settings_experimental_summary),
+                    MiuixIcons.Settings,
+                ) { viewModel.openExperimentalSettings() },
+            )
+        }
 
     Scaffold(
         containerColor = MiuixTheme.colorScheme.surface,
@@ -96,16 +148,18 @@ fun SettingsScreen(
         },
     ) { scaffoldPadding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .background(MiuixTheme.colorScheme.surface),
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                end = 16.dp,
-                top = scaffoldPadding.calculateTopPadding() + 16.dp,
-                bottom = 96.dp,
-            ),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .background(MiuixTheme.colorScheme.surface),
+            contentPadding =
+                PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = scaffoldPadding.calculateTopPadding() + 16.dp,
+                    bottom = 96.dp,
+                ),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
             item {
@@ -130,10 +184,19 @@ fun SettingsScreen(
             item {
                 Column(
                     modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                    horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
-                    Text("${stringResource(R.string.app_name)} v$appVersion", color = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.6f), style = MiuixTheme.textStyles.footnote1)
-                    Text(stringResource(R.string.settings_footer), color = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.6f), style = MiuixTheme.textStyles.footnote1, textAlign = TextAlign.Center)
+                    Text(
+                        "${stringResource(R.string.app_name)} v$appVersion",
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.6f),
+                        style = MiuixTheme.textStyles.footnote1,
+                    )
+                    Text(
+                        stringResource(R.string.settings_footer),
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.6f),
+                        style = MiuixTheme.textStyles.footnote1,
+                        textAlign = TextAlign.Center,
+                    )
                 }
             }
         }

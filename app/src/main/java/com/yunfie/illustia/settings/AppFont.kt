@@ -6,20 +6,18 @@ enum class AppFont(
     val value: String,
 ) {
     System("system"),
-    MiSans("misans");
+    MiSans("misans"),
+    ;
 
     companion object {
-        fun fromValue(value: String): AppFont {
-            return entries.firstOrNull { it.value == value } ?: System
-        }
+        fun fromValue(value: String): AppFont = entries.firstOrNull { it.value == value } ?: System
     }
 }
 
 fun appFontOptions(): List<String> = AppFont.entries.map { it.value }
 
-fun appFontLabelRes(value: String): Int {
-    return when (AppFont.fromValue(value)) {
+fun appFontLabelRes(value: String): Int =
+    when (AppFont.fromValue(value)) {
         AppFont.System -> R.string.font_system
         AppFont.MiSans -> R.string.font_misans
     }
-}

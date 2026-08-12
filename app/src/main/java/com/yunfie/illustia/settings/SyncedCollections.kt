@@ -18,8 +18,8 @@ internal data class SyncedCollectionsSnapshot(
     val viewHistory: List<Illust> = emptyList(),
 )
 
-internal fun AppSettings.syncedCollections(): SyncedCollectionsSnapshot {
-    return SyncedCollectionsSnapshot(
+internal fun AppSettings.syncedCollections(): SyncedCollectionsSnapshot =
+    SyncedCollectionsSnapshot(
         favoriteTags = favoriteTags,
         searchHistory = searchHistory,
         mutedTags = mutedTags,
@@ -28,12 +28,9 @@ internal fun AppSettings.syncedCollections(): SyncedCollectionsSnapshot {
         seenFeedIllusts = seenFeedIllusts,
         viewHistory = viewHistory,
     )
-}
 
-internal fun AppSettings.withSyncedCollections(
-    synced: SyncedCollectionsSnapshot,
-): AppSettings {
-    return copy(
+internal fun AppSettings.withSyncedCollections(synced: SyncedCollectionsSnapshot): AppSettings =
+    copy(
         favoriteTags = synced.favoriteTags,
         searchHistory = synced.searchHistory,
         mutedTags = synced.mutedTags,
@@ -42,7 +39,6 @@ internal fun AppSettings.withSyncedCollections(
         seenFeedIllusts = synced.seenFeedIllusts,
         viewHistory = synced.viewHistory,
     )
-}
 
 /**
  * Replays only the local changes from [base] to [intended] over the latest
@@ -53,23 +49,27 @@ internal fun rebaseSyncedCollections(
     base: SyncedCollectionsSnapshot,
     intended: SyncedCollectionsSnapshot,
     persisted: SyncedCollectionsSnapshot,
-): SyncedCollectionsSnapshot {
-    return SyncedCollectionsSnapshot(
+): SyncedCollectionsSnapshot =
+    SyncedCollectionsSnapshot(
         favoriteTags = rebaseSet(base.favoriteTags, intended.favoriteTags, persisted.favoriteTags),
         searchHistory = rebaseOrdered(base.searchHistory, intended.searchHistory, persisted.searchHistory) { it },
         mutedTags = rebaseSet(base.mutedTags, intended.mutedTags, persisted.mutedTags),
         mutedUsers = rebaseSet(base.mutedUsers, intended.mutedUsers, persisted.mutedUsers),
         mutedIllusts = rebaseSet(base.mutedIllusts, intended.mutedIllusts, persisted.mutedIllusts),
-        seenFeedIllusts = rebaseOrdered(
-            base.seenFeedIllusts,
-            intended.seenFeedIllusts,
-            persisted.seenFeedIllusts,
-        ) { it },
+        seenFeedIllusts =
+            rebaseOrdered(
+                base.seenFeedIllusts,
+                intended.seenFeedIllusts,
+                persisted.seenFeedIllusts,
+            ) { it },
         viewHistory = rebaseOrdered(base.viewHistory, intended.viewHistory, persisted.viewHistory, Illust::id),
     )
-}
 
-private fun <T> rebaseSet(previous: List<T>, next: List<T>, current: List<T>): List<T> {
+private fun <T> rebaseSet(
+    previous: List<T>,
+    next: List<T>,
+    current: List<T>,
+): List<T> {
     val previousSet = previous.toSet()
     val nextDistinct = next.distinct()
     val removed = previousSet - nextDistinct.toSet()
@@ -110,10 +110,11 @@ private fun <T, K> orderedMovedPrefix(
     val previousByKey = previous.associateBy(key)
     for (prefixSize in 0..next.size) {
         val movedKeys = next.take(prefixSize).mapTo(hashSetOf(), key)
-        val untouchedPrevious = previous.filter { item ->
-            val itemKey = key(item)
-            itemKey in nextKeys && itemKey !in movedKeys
-        }
+        val untouchedPrevious =
+            previous.filter { item ->
+                val itemKey = key(item)
+                itemKey in nextKeys && itemKey !in movedKeys
+            }
         val targetSuffix = next.drop(prefixSize)
         if (
             untouchedPrevious.map(key) == targetSuffix.map(key) &&

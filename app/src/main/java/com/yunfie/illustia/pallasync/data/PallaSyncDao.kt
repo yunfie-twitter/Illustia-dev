@@ -26,7 +26,7 @@ interface PallaSyncDao {
         UPDATE pallasync_outbox
         SET status = 'queued'
         WHERE chain_id = :chainId AND status = 'pending_initial_merge'
-        """
+        """,
     )
     suspend fun queuePendingInitialMergeEvents(chainId: String): Int
 
@@ -35,7 +35,7 @@ interface PallaSyncDao {
         UPDATE pallasync_chain_state
         SET initial_pull_completed = 1
         WHERE chainId = :chainId
-        """
+        """,
     )
     suspend fun markInitialPullCompleted(chainId: String): Int
 
@@ -58,7 +58,7 @@ interface PallaSyncDao {
 
     @Query("SELECT * FROM pallasync_chain_state WHERE chainId = :chainId")
     suspend fun getChainState(chainId: String): ChainStateEntity?
-    
+
     @Query("SELECT * FROM pallasync_chain_state")
     suspend fun getAllChainStates(): List<ChainStateEntity>
 
@@ -76,18 +76,24 @@ interface PallaSyncDao {
             ELSE last_relay_seq
         END
         WHERE chainId = :chainId
-        """
+        """,
     )
-    suspend fun advanceLastRelaySeq(chainId: String, lastRelaySeq: Long): Int
+    suspend fun advanceLastRelaySeq(
+        chainId: String,
+        lastRelaySeq: Long,
+    ): Int
 
     @Query(
         """
         UPDATE pallasync_chain_state
         SET lamport = CASE WHEN lamport < :lamport THEN :lamport ELSE lamport END
         WHERE chainId = :chainId
-        """
+        """,
     )
-    suspend fun advanceLamport(chainId: String, lamport: Long): Int
+    suspend fun advanceLamport(
+        chainId: String,
+        lamport: Long,
+    ): Int
 
     @Query("DELETE FROM pallasync_outbox")
     suspend fun clearOutboxEvents()
@@ -122,25 +128,31 @@ interface PallaSyncDao {
             SELECT 1 FROM pallasync_inbox
             WHERE chain_id = :chainId AND record_id = :recordId
         )
-        """
+        """,
     )
-    suspend fun hasInboxRecord(chainId: String, recordId: String): Boolean
+    suspend fun hasInboxRecord(
+        chainId: String,
+        recordId: String,
+    ): Boolean
 
     @Query(
         """
         SELECT * FROM pallasync_inbox
         WHERE chain_id = :chainId AND record_id = :recordId
         LIMIT 1
-        """
+        """,
     )
-    suspend fun getInboxRecord(chainId: String, recordId: String): PallaSyncInboxEntity?
+    suspend fun getInboxRecord(
+        chainId: String,
+        recordId: String,
+    ): PallaSyncInboxEntity?
 
     @Query(
         """
         SELECT * FROM pallasync_inbox
         WHERE chain_id = :chainId AND status = 'quarantined'
         ORDER BY relay_seq ASC
-        """
+        """,
     )
     suspend fun getQuarantinedInboxRecords(chainId: String): List<PallaSyncInboxEntity>
 
@@ -179,7 +191,7 @@ interface PallaSyncDao {
         chainId: String,
         lastRelaySeq: Long,
         maxLamport: Long,
-        records: List<PallaSyncInboxEntity>
+        records: List<PallaSyncInboxEntity>,
     ) {
         require(lastRelaySeq >= 0) { "lastRelaySeq must not be negative" }
         require(maxLamport >= 0) { "maxLamport must not be negative" }
@@ -199,7 +211,7 @@ interface PallaSyncDao {
     @Transaction
     suspend fun updateChainStateAndInsertOutbox(
         state: ChainStateEntity,
-        event: OutboxEntity
+        event: OutboxEntity,
     ): Long {
         require(state.chainId == event.chainId) { "State and outbox chain IDs differ" }
         updateChainState(state)
@@ -226,7 +238,7 @@ interface PallaSyncDao {
     @Transaction
     suspend fun activateChain(
         state: ChainStateEntity,
-        initialEvents: List<OutboxEntity>
+        initialEvents: List<OutboxEntity>,
     ) {
         require(initialEvents.all { it.chainId == state.chainId }) {
             "Initial outbox contains a different chain"
@@ -247,5 +259,4 @@ interface PallaSyncDao {
         clearDevices()
         clearInboxRecords()
     }
-
 }

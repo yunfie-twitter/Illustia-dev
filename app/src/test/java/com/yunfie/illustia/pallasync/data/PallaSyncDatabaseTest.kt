@@ -6,12 +6,12 @@ import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.test.core.app.ApplicationProvider
 import io.kotest.assertions.throwables.shouldThrow
 import io.kotest.matchers.shouldBe
-import java.lang.reflect.Proxy
 import kotlinx.coroutines.runBlocking
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.SQLiteMode
+import java.lang.reflect.Proxy
 
 @RunWith(RobolectricTestRunner::class)
 @SQLiteMode(SQLiteMode.Mode.LEGACY)
@@ -20,8 +20,10 @@ class PallaSyncDatabaseTest {
     fun `cursor inbox and lamport commit atomically while a failed page rolls back`() {
         runBlocking {
             val context = ApplicationProvider.getApplicationContext<Context>()
-            val database = Room.inMemoryDatabaseBuilder(context, PallaSyncDatabase::class.java)
-                .build()
+            val database =
+                Room
+                    .inMemoryDatabaseBuilder(context, PallaSyncDatabase::class.java)
+                    .build()
             try {
                 val dao = database.pallaSyncDao()
                 dao.updateChainState(chainState("chain-a"))
@@ -29,14 +31,15 @@ class PallaSyncDatabaseTest {
                     chainId = "chain-a",
                     lastRelaySeq = 12L,
                     maxLamport = 7L,
-                    records = listOf(
-                        PallaSyncInboxEntity.applied(
-                            chainId = "chain-a",
-                            recordId = "record-12",
-                            relaySeq = 12L,
-                            rawRecordJson = "{}",
+                    records =
+                        listOf(
+                            PallaSyncInboxEntity.applied(
+                                chainId = "chain-a",
+                                recordId = "record-12",
+                                relaySeq = 12L,
+                                rawRecordJson = "{}",
+                            ),
                         ),
-                    ),
                 )
 
                 dao.getChainState("chain-a")?.lastRelaySeq shouldBe 12L
@@ -48,15 +51,16 @@ class PallaSyncDatabaseTest {
                         chainId = "missing-chain",
                         lastRelaySeq = 13L,
                         maxLamport = 8L,
-                        records = listOf(
-                            PallaSyncInboxEntity.quarantined(
-                                chainId = "missing-chain",
-                                recordId = "rollback-record",
-                                relaySeq = 13L,
-                                rawRecordJson = "{bad}",
-                                reason = "test failure",
+                        records =
+                            listOf(
+                                PallaSyncInboxEntity.quarantined(
+                                    chainId = "missing-chain",
+                                    recordId = "rollback-record",
+                                    relaySeq = 13L,
+                                    rawRecordJson = "{bad}",
+                                    reason = "test failure",
+                                ),
                             ),
-                        ),
                     )
                 }
                 dao.hasInboxRecord("missing-chain", "rollback-record") shouldBe false
@@ -70,15 +74,16 @@ class PallaSyncDatabaseTest {
     @Test
     fun `version 3 migration is additive and creates the durable cursor inbox schema`() {
         val statements = mutableListOf<String>()
-        val recordingDatabase = Proxy.newProxyInstance(
-            SupportSQLiteDatabase::class.java.classLoader,
-            arrayOf(SupportSQLiteDatabase::class.java),
-        ) { _, method, arguments ->
-            if (method.name == "execSQL") {
-                statements += arguments?.firstOrNull() as String
-            }
-            null
-        } as SupportSQLiteDatabase
+        val recordingDatabase =
+            Proxy.newProxyInstance(
+                SupportSQLiteDatabase::class.java.classLoader,
+                arrayOf(SupportSQLiteDatabase::class.java),
+            ) { _, method, arguments ->
+                if (method.name == "execSQL") {
+                    statements += arguments?.firstOrNull() as String
+                }
+                null
+            } as SupportSQLiteDatabase
 
         PallaSyncDatabase.MIGRATION_3_4.migrate(recordingDatabase)
 
@@ -99,11 +104,12 @@ class PallaSyncDatabaseTest {
     }
 }
 
-private fun chainState(chainId: String) = ChainStateEntity(
-    chainId = chainId,
-    lamport = 0L,
-    keyEpoch = 1L,
-    chainVectorJson = "{}",
-)
+private fun chainState(chainId: String) =
+    ChainStateEntity(
+        chainId = chainId,
+        lamport = 0L,
+        keyEpoch = 1L,
+        chainVectorJson = "{}",
+    )
 
 private fun String.normalizedSql(): String = trim().replace(Regex("\\s+"), " ")

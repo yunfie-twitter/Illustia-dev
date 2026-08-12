@@ -4,10 +4,12 @@ import android.content.SharedPreferences
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.emptyPreferences
 import com.yunfie.illustia.models.StoredAccount
 import com.yunfie.illustia.settings.AppSettings
+import com.yunfie.illustia.settings.DEFAULT_DETAIL_SECTION_ORDER
+import com.yunfie.illustia.settings.DEFAULT_NAVIGATION_ORDER
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
@@ -22,21 +24,22 @@ internal fun readFromDataStore(
     val tokenByUserId = decodeAccountTokens(sensitivePreferences.getString(KEY_ACCOUNT_TOKENS, "").orEmpty())
     val fallbackAccounts = decodeAccounts(sensitivePreferences.getString(KEY_ACCOUNTS, "").orEmpty())
     val fallbackTokenByUserId = fallbackAccounts.associate { it.userId to it.refreshToken }
-    val accounts = if (roomData.accounts.isNotEmpty()) {
-        roomData.accounts.mapNotNull { account ->
-            val token = tokenByUserId[account.userId] ?: fallbackTokenByUserId[account.userId]
-            if (token.isNullOrBlank()) return@mapNotNull null
-            StoredAccount(
-                name = account.name.orEmpty(),
-                account = account.account.orEmpty(),
-                profileImageUrl = account.profileImageUrl,
-                refreshToken = token,
-                userId = account.userId,
-            )
+    val accounts =
+        if (roomData.accounts.isNotEmpty()) {
+            roomData.accounts.mapNotNull { account ->
+                val token = tokenByUserId[account.userId] ?: fallbackTokenByUserId[account.userId]
+                if (token.isNullOrBlank()) return@mapNotNull null
+                StoredAccount(
+                    name = account.name.orEmpty(),
+                    account = account.account.orEmpty(),
+                    profileImageUrl = account.profileImageUrl,
+                    refreshToken = token,
+                    userId = account.userId,
+                )
+            }
+        } else {
+            fallbackAccounts
         }
-    } else {
-        fallbackAccounts
-    }
     return AppSettings(
         refreshToken = sensitivePreferences.getString(KEY_REFRESH_TOKEN, "").orEmpty(),
         bookmarkUserId = preferences[BOOKMARK_USER_ID].takeIf { it != null && it > 0L },
@@ -53,14 +56,22 @@ internal fun readFromDataStore(
         searchTarget = enumValueOrDefault(preferences[SEARCH_TARGET], com.yunfie.illustia.models.SearchTarget.PartialTags),
         searchWorkType = enumValueOrDefault(preferences[SEARCH_WORK_TYPE], com.yunfie.illustia.models.SearchWorkType.Artworks),
         searchDuration = enumValueOrDefault(preferences[SEARCH_DURATION], com.yunfie.illustia.models.SearchDuration.All),
-        searchBookmarkFilter = enumValueOrDefault(preferences[SEARCH_BOOKMARK_FILTER], com.yunfie.illustia.models.SearchBookmarkFilter.None),
+        searchBookmarkFilter =
+            enumValueOrDefault(
+                preferences[SEARCH_BOOKMARK_FILTER],
+                com.yunfie.illustia.models.SearchBookmarkFilter.None,
+            ),
         searchUsersEnabled = preferences[SEARCH_USERS_ENABLED] ?: true,
-        searchHistory = roomData.searchHistory.map { it.query }.ifEmpty {
-            decodeStringList(preferences[SEARCH_HISTORY_JSON])
-        }.take(MAX_SEARCH_HISTORY),
-        favoriteTags = roomData.favoriteTags.map { it.tag }.ifEmpty {
-            decodeStringList(preferences[FAVORITE_TAGS_JSON])
-        },
+        searchHistory =
+            roomData.searchHistory
+                .map { it.query }
+                .ifEmpty {
+                    decodeStringList(preferences[SEARCH_HISTORY_JSON])
+                }.take(MAX_SEARCH_HISTORY),
+        favoriteTags =
+            roomData.favoriteTags.map { it.tag }.ifEmpty {
+                decodeStringList(preferences[FAVORITE_TAGS_JSON])
+            },
         saveViewHistory = preferences[SAVE_VIEW_HISTORY] ?: true,
         saveSearchHistory = preferences[SAVE_SEARCH_HISTORY] ?: true,
         appLockEnabled = preferences[APP_LOCK_ENABLED] ?: false,
@@ -68,9 +79,12 @@ internal fun readFromDataStore(
         biometricEnabled = preferences[BIOMETRIC_ENABLED] ?: false,
         appLockFailCount = preferences[APP_LOCK_FAIL_COUNT] ?: 0,
         appLockCooldownUntil = preferences[APP_LOCK_COOLDOWN_UNTIL] ?: 0L,
-        viewHistory = roomData.viewHistory.map(::illustFromEntity).ifEmpty {
-            decodeHistoryIllusts(preferences[VIEW_HISTORY_JSON])
-        }.take(MAX_VIEW_HISTORY),
+        viewHistory =
+            roomData.viewHistory
+                .map(::illustFromEntity)
+                .ifEmpty {
+                    decodeHistoryIllusts(preferences[VIEW_HISTORY_JSON])
+                }.take(MAX_VIEW_HISTORY),
         smoothTransitions = preferences[SMOOTH_TRANSITIONS] ?: true,
         hapticMode = preferences[HAPTIC_MODE] ?: "rich",
         prefetchImages = preferences[PREFETCH_IMAGES] ?: false,
@@ -81,6 +95,15 @@ internal fun readFromDataStore(
         swipeToSwitchWorks = preferences[SWIPE_TO_SWITCH_WORKS] ?: true,
         secureWindow = preferences[SECURE_WINDOW] ?: false,
         amoledMode = preferences[AMOLED_MODE] ?: false,
+        navigationOrder = decodeStringList(preferences[NAVIGATION_ORDER_JSON]).ifEmpty { DEFAULT_NAVIGATION_ORDER },
+        hiddenNavigationTabs = decodeStringList(preferences[HIDDEN_NAVIGATION_TABS_JSON]),
+        navigationStyle = preferences[NAVIGATION_STYLE] ?: "standard",
+        artworkThemeEnabled = preferences[ARTWORK_THEME_ENABLED] ?: false,
+        showCardTitle = preferences[SHOW_CARD_TITLE] ?: true,
+        showCardArtist = preferences[SHOW_CARD_ARTIST] ?: true,
+        showCardTags = preferences[SHOW_CARD_TAGS] ?: false,
+        showCardBookmarkCount = preferences[SHOW_CARD_BOOKMARK_COUNT] ?: false,
+        detailSectionOrder = decodeStringList(preferences[DETAIL_SECTION_ORDER_JSON]).ifEmpty { DEFAULT_DETAIL_SECTION_ORDER },
         skipConfirmOnDetailSave = preferences[SKIP_CONFIRM_ON_DETAIL_SAVE] ?: false,
         showAiBadge = preferences[SHOW_AI_BADGE] ?: true,
         followOnLike = preferences[FOLLOW_ON_LIKE] ?: false,
@@ -138,13 +161,13 @@ internal fun readFromDataStore(
     )
 }
 
-internal suspend fun readDataStorePreferences(dataStore: DataStore<Preferences>): Preferences = withContext(Dispatchers.IO) {
-    dataStore.data
-        .catch { error ->
-            if (error is IOException) emit(emptyPreferences()) else throw error
-        }
-        .first()
-}
+internal suspend fun readDataStorePreferences(dataStore: DataStore<Preferences>): Preferences =
+    withContext(Dispatchers.IO) {
+        dataStore.data
+            .catch { error ->
+                if (error is IOException) emit(emptyPreferences()) else throw error
+            }.first()
+    }
 
 internal suspend fun writeDataStorePreferences(
     dataStore: DataStore<Preferences>,
@@ -155,8 +178,8 @@ internal suspend fun writeDataStorePreferences(
     }
 }
 
-internal fun readFromSharedPreferences(preferences: SharedPreferences): AppSettings {
-    return AppSettings(
+internal fun readFromSharedPreferences(preferences: SharedPreferences): AppSettings =
+    AppSettings(
         refreshToken = preferences.getString(KEY_REFRESH_TOKEN, "").orEmpty(),
         bookmarkUserId = preferences.getLong(KEY_BOOKMARK_USER_ID, 0L).takeIf { it > 0L },
         appLanguage = preferences.getString(KEY_APP_LANGUAGE, "system") ?: "system",
@@ -167,12 +190,32 @@ internal fun readFromSharedPreferences(preferences: SharedPreferences): AppSetti
         onboardingSetupCompleted = preferences.getBoolean(KEY_ONBOARDING_SETUP_COMPLETED, false),
         allowR18 = preferences.getBoolean(KEY_ALLOW_R18, false),
         highQualityImages = preferences.getBoolean(KEY_HIGH_QUALITY, true),
-        bookmarkRestrict = enumValueOrDefault(preferences.getString(KEY_BOOKMARK_RESTRICT, null), com.yunfie.illustia.models.Restrict.Public),
+        bookmarkRestrict =
+            enumValueOrDefault(
+                preferences.getString(KEY_BOOKMARK_RESTRICT, null),
+                com.yunfie.illustia.models.Restrict.Public,
+            ),
         searchSort = enumValueOrDefault(preferences.getString(KEY_SEARCH_SORT, null), com.yunfie.illustia.models.SearchSort.DateDesc),
-        searchTarget = enumValueOrDefault(preferences.getString(KEY_SEARCH_TARGET, null), com.yunfie.illustia.models.SearchTarget.PartialTags),
-        searchWorkType = enumValueOrDefault(preferences.getString(KEY_SEARCH_WORK_TYPE, null), com.yunfie.illustia.models.SearchWorkType.Artworks),
-        searchDuration = enumValueOrDefault(preferences.getString(KEY_SEARCH_DURATION, null), com.yunfie.illustia.models.SearchDuration.All),
-        searchBookmarkFilter = enumValueOrDefault(preferences.getString(KEY_SEARCH_BOOKMARK_FILTER, null), com.yunfie.illustia.models.SearchBookmarkFilter.None),
+        searchTarget =
+            enumValueOrDefault(
+                preferences.getString(KEY_SEARCH_TARGET, null),
+                com.yunfie.illustia.models.SearchTarget.PartialTags,
+            ),
+        searchWorkType =
+            enumValueOrDefault(
+                preferences.getString(KEY_SEARCH_WORK_TYPE, null),
+                com.yunfie.illustia.models.SearchWorkType.Artworks,
+            ),
+        searchDuration =
+            enumValueOrDefault(
+                preferences.getString(KEY_SEARCH_DURATION, null),
+                com.yunfie.illustia.models.SearchDuration.All,
+            ),
+        searchBookmarkFilter =
+            enumValueOrDefault(
+                preferences.getString(KEY_SEARCH_BOOKMARK_FILTER, null),
+                com.yunfie.illustia.models.SearchBookmarkFilter.None,
+            ),
         searchUsersEnabled = preferences.getBoolean(KEY_SEARCH_USERS_ENABLED, true),
         searchHistory = decodeLegacyStringList(preferences.getString(KEY_SEARCH_HISTORY, "")).take(MAX_SEARCH_HISTORY),
         favoriteTags = decodeLegacyStringList(preferences.getString(KEY_FAVORITE_TAGS, "")),
@@ -194,6 +237,15 @@ internal fun readFromSharedPreferences(preferences: SharedPreferences): AppSetti
         swipeToSwitchWorks = preferences.getBoolean("swipeToSwitchWorks", true),
         secureWindow = preferences.getBoolean("secureWindow", false),
         amoledMode = preferences.getBoolean("amoledMode", false),
+        navigationOrder = decodeStringList(preferences.getString("navigationOrder", null)).ifEmpty { DEFAULT_NAVIGATION_ORDER },
+        hiddenNavigationTabs = decodeStringList(preferences.getString("hiddenNavigationTabs", null)),
+        navigationStyle = preferences.getString("navigationStyle", "standard") ?: "standard",
+        artworkThemeEnabled = preferences.getBoolean("artworkThemeEnabled", false),
+        showCardTitle = preferences.getBoolean("showCardTitle", true),
+        showCardArtist = preferences.getBoolean("showCardArtist", true),
+        showCardTags = preferences.getBoolean("showCardTags", false),
+        showCardBookmarkCount = preferences.getBoolean("showCardBookmarkCount", false),
+        detailSectionOrder = decodeStringList(preferences.getString("detailSectionOrder", null)).ifEmpty { DEFAULT_DETAIL_SECTION_ORDER },
         skipConfirmOnDetailSave = preferences.getBoolean("skipConfirmOnDetailSave", false),
         showAiBadge = preferences.getBoolean("showAiBadge", true),
         followOnLike = preferences.getBoolean("followOnLike", false),
@@ -218,10 +270,30 @@ internal fun readFromSharedPreferences(preferences: SharedPreferences): AppSetti
         horizontalColumnCount = preferences.getInt("horizontalColumnCount", 4),
         pixivNetworkMode = preferences.getString(KEY_PIXIV_NETWORK_MODE, "standard") ?: "standard",
         pixivImageProxyBaseUrl = preferences.getString(KEY_PIXIV_IMAGE_PROXY_BASE_URL, "").orEmpty(),
-        mutedIllusts = preferences.getString("mutedIllusts", "").orEmpty().split(",").mapNotNull { it.toLongOrNull() },
-        mutedUsers = preferences.getString("mutedUsers", "").orEmpty().split(",").mapNotNull { it.toLongOrNull() },
-        mutedTags = preferences.getString("mutedTags", "").orEmpty().split(",").filter { it.isNotBlank() },
-        seenFeedIllusts = preferences.getString("seenFeedIllusts", "").orEmpty().split(",").mapNotNull { it.toLongOrNull() },
+        mutedIllusts =
+            preferences
+                .getString("mutedIllusts", "")
+                .orEmpty()
+                .split(",")
+                .mapNotNull { it.toLongOrNull() },
+        mutedUsers =
+            preferences
+                .getString("mutedUsers", "")
+                .orEmpty()
+                .split(",")
+                .mapNotNull { it.toLongOrNull() },
+        mutedTags =
+            preferences
+                .getString("mutedTags", "")
+                .orEmpty()
+                .split(",")
+                .filter { it.isNotBlank() },
+        seenFeedIllusts =
+            preferences
+                .getString("seenFeedIllusts", "")
+                .orEmpty()
+                .split(",")
+                .mapNotNull { it.toLongOrNull() },
         accounts = decodeAccounts(preferences.getString(KEY_ACCOUNTS, "").orEmpty()),
         activeAccountIndex = preferences.getInt(KEY_ACTIVE_ACCOUNT_INDEX, -1),
         privacyModeEnabled = false,
@@ -234,22 +306,23 @@ internal fun readFromSharedPreferences(preferences: SharedPreferences): AppSetti
         pallaSyncServerUrl = "https://api.yunfi.f5.si",
         sendTelemetry = false,
     )
-}
 
 internal fun readCollectionsFromDataStore(
     preferences: Preferences,
     sensitivePreferences: SharedPreferences,
-): AppSettings {
-    return AppSettings(
+): AppSettings =
+    AppSettings(
         refreshToken = sensitivePreferences.getString(KEY_REFRESH_TOKEN, "").orEmpty(),
         searchHistory = decodeStringList(preferences[SEARCH_HISTORY_JSON]).take(MAX_SEARCH_HISTORY),
         favoriteTags = decodeStringList(preferences[FAVORITE_TAGS_JSON]),
         viewHistory = decodeHistoryIllusts(preferences[VIEW_HISTORY_JSON]).take(MAX_VIEW_HISTORY),
         accounts = decodeAccounts(sensitivePreferences.getString(KEY_ACCOUNTS, "").orEmpty()),
     )
-}
 
-internal fun writeToDataStore(preferences: MutablePreferences, settings: AppSettings) {
+internal fun writeToDataStore(
+    preferences: MutablePreferences,
+    settings: AppSettings,
+) {
     preferences[SETTINGS_VERSION] = CURRENT_SETTINGS_VERSION
     settings.bookmarkUserId?.let { preferences[BOOKMARK_USER_ID] = it } ?: preferences.remove(BOOKMARK_USER_ID)
     preferences[APP_LANGUAGE] = settings.appLanguage
@@ -287,6 +360,15 @@ internal fun writeToDataStore(preferences: MutablePreferences, settings: AppSett
     preferences[SWIPE_TO_SWITCH_WORKS] = settings.swipeToSwitchWorks
     preferences[SECURE_WINDOW] = settings.secureWindow
     preferences[AMOLED_MODE] = settings.amoledMode
+    preferences[NAVIGATION_ORDER_JSON] = encodeStringList(settings.navigationOrder)
+    preferences[HIDDEN_NAVIGATION_TABS_JSON] = encodeStringList(settings.hiddenNavigationTabs)
+    preferences[NAVIGATION_STYLE] = settings.navigationStyle
+    preferences[ARTWORK_THEME_ENABLED] = settings.artworkThemeEnabled
+    preferences[SHOW_CARD_TITLE] = settings.showCardTitle
+    preferences[SHOW_CARD_ARTIST] = settings.showCardArtist
+    preferences[SHOW_CARD_TAGS] = settings.showCardTags
+    preferences[SHOW_CARD_BOOKMARK_COUNT] = settings.showCardBookmarkCount
+    preferences[DETAIL_SECTION_ORDER_JSON] = encodeStringList(settings.detailSectionOrder)
     preferences[SKIP_CONFIRM_ON_DETAIL_SAVE] = settings.skipConfirmOnDetailSave
     preferences[SHOW_AI_BADGE] = settings.showAiBadge
     preferences[FOLLOW_ON_LIKE] = settings.followOnLike
@@ -346,7 +428,8 @@ internal fun writeSensitiveSettings(
     sensitivePreferences: SharedPreferences,
     settings: AppSettings,
 ) {
-    sensitivePreferences.edit()
+    sensitivePreferences
+        .edit()
         .putString(KEY_REFRESH_TOKEN, settings.refreshToken)
         .putString(KEY_ACCOUNT_TOKENS, encodeAccountTokens(settings.accounts))
         .remove(KEY_ACCOUNTS)

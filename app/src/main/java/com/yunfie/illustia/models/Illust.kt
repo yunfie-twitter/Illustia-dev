@@ -22,6 +22,7 @@ data class Illust(
     val tags: List<String>,
     val pageCount: Int,
     val isBookmarked: Boolean,
+    val totalBookmarks: Int = 0,
     val totalComments: Int? = null,
     val series: IllustSeries? = null,
 ) {
@@ -35,11 +36,12 @@ data class Illust(
     val isAi: Boolean = tags.any { it.equals("AI", ignoreCase = true) || it.contains("AI生成") }
 
     /** カードバッジテキスト (AI / manga / ページ数) */
-    val cardBadgeText: String? = when {
-        isAi -> "AI"
-        type == "ugoira" -> "ugoira"
-        type == "manga" -> "manga"
-        pageCount > 1 -> "$pageCount"
-        else -> null
-    }
+    val cardBadgeText: String? =
+        when {
+            isAi -> "AI"
+            type == "ugoira" -> "ugoira"
+            type == "manga" -> "manga"
+            pageCount > 1 -> "$pageCount"
+            else -> null
+        }
 }

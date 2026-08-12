@@ -47,8 +47,6 @@ import com.yunfie.illustia.R
 import com.yunfie.illustia.ui.components.HeaderIcon
 import com.yunfie.illustia.ui.components.MiuixConfirmDialog
 import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
-import java.text.DateFormat
-import java.util.Date
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
@@ -63,6 +61,8 @@ import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.icon.extended.Delete
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.PressFeedbackType
+import java.text.DateFormat
+import java.util.Date
 
 private enum class QueueTab {
     All,
@@ -90,17 +90,19 @@ fun DownloadQueueScreen(
     val scrollBehavior = MiuixScrollBehavior()
     var selectedTab by remember { mutableIntStateOf(0) }
     var showClearConfirmation by remember { mutableStateOf(false) }
-    val groups = remember(state.downloadQueue) {
-        val sorted = state.downloadQueue.sortedByDescending(DownloadQueueEntry::timestampMillis)
-        QueueGroups(
-            active = sorted.filter {
-                it.status == DownloadQueueStatus.Waiting ||
-                    it.status == DownloadQueueStatus.Downloading
-            },
-            completed = sorted.filter { it.status == DownloadQueueStatus.Completed },
-            failed = sorted.filter { it.status == DownloadQueueStatus.Failed },
-        )
-    }
+    val groups =
+        remember(state.downloadQueue) {
+            val sorted = state.downloadQueue.sortedByDescending(DownloadQueueEntry::timestampMillis)
+            QueueGroups(
+                active =
+                    sorted.filter {
+                        it.status == DownloadQueueStatus.Waiting ||
+                            it.status == DownloadQueueStatus.Downloading
+                    },
+                completed = sorted.filter { it.status == DownloadQueueStatus.Completed },
+                failed = sorted.filter { it.status == DownloadQueueStatus.Failed },
+            )
+        }
     val selected = QueueTab.entries[selectedTab.coerceIn(0, QueueTab.entries.lastIndex)]
     val hasFinishedItems = groups.completed.isNotEmpty() || groups.failed.isNotEmpty()
 
@@ -139,19 +141,21 @@ fun DownloadQueueScreen(
         },
     ) { padding ->
         Surface(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection),
             color = MiuixTheme.colorScheme.surface,
         ) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(
-                    start = 16.dp,
-                    end = 16.dp,
-                    top = padding.calculateTopPadding() + 12.dp,
-                    bottom = 96.dp,
-                ),
+                contentPadding =
+                    PaddingValues(
+                        start = 16.dp,
+                        end = 16.dp,
+                        top = padding.calculateTopPadding() + 12.dp,
+                        bottom = 96.dp,
+                    ),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 item {
@@ -181,9 +185,17 @@ fun DownloadQueueScreen(
                         }
                     }
 
-                    QueueTab.Active -> queueTabContent(groups.active, QueueTab.Active)
-                    QueueTab.Completed -> queueTabContent(groups.completed, QueueTab.Completed)
-                    QueueTab.Failed -> queueTabContent(groups.failed, QueueTab.Failed)
+                    QueueTab.Active -> {
+                        queueTabContent(groups.active, QueueTab.Active)
+                    }
+
+                    QueueTab.Completed -> {
+                        queueTabContent(groups.completed, QueueTab.Completed)
+                    }
+
+                    QueueTab.Failed -> {
+                        queueTabContent(groups.failed, QueueTab.Failed)
+                    }
                 }
             }
         }
@@ -193,41 +205,46 @@ fun DownloadQueueScreen(
 @Composable
 private fun ActiveTransferTrack() {
     val transition = rememberInfiniteTransition(label = "download-track")
-    val offset = transition.animateFloat(
-        initialValue = -300f,
-        targetValue = 900f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(1_450),
-            repeatMode = RepeatMode.Restart,
-        ),
-        label = "download-track-offset",
-    )
+    val offset =
+        transition.animateFloat(
+            initialValue = -300f,
+            targetValue = 900f,
+            animationSpec =
+                infiniteRepeatable(
+                    animation = tween(1_450),
+                    repeatMode = RepeatMode.Restart,
+                ),
+            label = "download-track-offset",
+        )
     val primary = MiuixTheme.colorScheme.primary
-    val trackColors = remember(primary) {
-        listOf(Color.Transparent, primary, Color.Transparent)
-    }
+    val trackColors =
+        remember(primary) {
+            listOf(Color.Transparent, primary, Color.Transparent)
+        }
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(5.dp)
-            .clip(CircleShape)
-            .background(MiuixTheme.colorScheme.surfaceContainerHigh),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .height(5.dp)
+                .clip(CircleShape)
+                .background(MiuixTheme.colorScheme.surfaceContainerHigh),
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .drawWithCache {
-                    onDrawBehind {
-                        val startX = offset.value
-                        drawRect(
-                            Brush.linearGradient(
-                                colors = trackColors,
-                                start = Offset(startX, 0f),
-                                end = Offset(startX + 360f, 0f),
-                            ),
-                        )
-                    }
-                },
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .drawWithCache {
+                        onDrawBehind {
+                            val startX = offset.value
+                            drawRect(
+                                Brush.linearGradient(
+                                    colors = trackColors,
+                                    start = Offset(startX, 0f),
+                                    end = Offset(startX + 360f, 0f),
+                                ),
+                            )
+                        }
+                    },
         )
     }
 }
@@ -239,20 +256,22 @@ private fun QueueTabs(
     groups: QueueGroups,
 ) {
     TabRow(
-        tabs = listOf(
-            "${stringResource(R.string.download_queue_tab_all)} ${groups.totalCount}",
-            "${stringResource(R.string.download_queue_tab_downloading)} ${groups.active.size}",
-            "${stringResource(R.string.download_queue_tab_completed)} ${groups.completed.size}",
-            "${stringResource(R.string.download_queue_section_failed)} ${groups.failed.size}",
-        ),
+        tabs =
+            listOf(
+                "${stringResource(R.string.download_queue_tab_all)} ${groups.totalCount}",
+                "${stringResource(R.string.download_queue_tab_downloading)} ${groups.active.size}",
+                "${stringResource(R.string.download_queue_tab_completed)} ${groups.completed.size}",
+                "${stringResource(R.string.download_queue_section_failed)} ${groups.failed.size}",
+            ),
         selectedTabIndex = selectedTab,
         onTabSelected = onSelected,
-        colors = TabRowDefaults.tabRowColors(
-            backgroundColor = MiuixTheme.colorScheme.surface,
-            contentColor = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-            selectedBackgroundColor = MiuixTheme.colorScheme.surfaceContainerHigh,
-            selectedContentColor = MiuixTheme.colorScheme.onBackground,
-        ),
+        colors =
+            TabRowDefaults.tabRowColors(
+                backgroundColor = MiuixTheme.colorScheme.surface,
+                contentColor = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                selectedBackgroundColor = MiuixTheme.colorScheme.surfaceContainerHigh,
+                selectedContentColor = MiuixTheme.colorScheme.onBackground,
+            ),
         modifier = Modifier.fillMaxWidth(),
         minWidth = 78.dp,
         maxWidth = 136.dp,
@@ -286,11 +305,15 @@ private fun androidx.compose.foundation.lazy.LazyListScope.queueTabContent(
 }
 
 @Composable
-private fun QueueSectionHeader(titleRes: Int, count: Int) {
+private fun QueueSectionHeader(
+    titleRes: Int,
+    count: Int,
+) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 8.dp, start = 4.dp, end = 4.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(top = 8.dp, start = 4.dp, end = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -316,10 +339,11 @@ private fun DownloadQueueCard(entry: DownloadQueueEntry) {
         modifier = Modifier.fillMaxWidth(),
         cornerRadius = 22.dp,
         insideMargin = PaddingValues(0.dp),
-        colors = CardDefaults.defaultColors(
-            color = MiuixTheme.colorScheme.surfaceContainer,
-            contentColor = MiuixTheme.colorScheme.onSurface,
-        ),
+        colors =
+            CardDefaults.defaultColors(
+                color = MiuixTheme.colorScheme.surfaceContainer,
+                contentColor = MiuixTheme.colorScheme.onSurface,
+            ),
         pressFeedbackType = PressFeedbackType.Sink,
     ) {
         Row(
@@ -355,10 +379,12 @@ private fun DownloadQueueCard(entry: DownloadQueueEntry) {
                 StatusPill(entry.status, accent)
                 Spacer(Modifier.height(7.dp))
                 Text(
-                    text = remember(entry.timestampMillis) {
-                        DateFormat.getTimeInstance(DateFormat.SHORT)
-                            .format(Date(entry.timestampMillis))
-                    },
+                    text =
+                        remember(entry.timestampMillis) {
+                            DateFormat
+                                .getTimeInstance(DateFormat.SHORT)
+                                .format(Date(entry.timestampMillis))
+                        },
                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     style = MiuixTheme.textStyles.footnote2,
                 )
@@ -368,36 +394,43 @@ private fun DownloadQueueCard(entry: DownloadQueueEntry) {
 }
 
 @Composable
-private fun DownloadStatusGlyph(status: DownloadQueueStatus, accent: Color) {
-    val alpha = if (status == DownloadQueueStatus.Downloading) {
-        val transition = rememberInfiniteTransition(label = "status-downloading")
-        val pulse by transition.animateFloat(
-            initialValue = 0.45f,
-            targetValue = 1f,
-            animationSpec = infiniteRepeatable(
-                animation = tween(820),
-                repeatMode = RepeatMode.Reverse,
-            ),
-            label = "status-pulse",
-        )
-        pulse
-    } else {
-        1f
-    }
+private fun DownloadStatusGlyph(
+    status: DownloadQueueStatus,
+    accent: Color,
+) {
+    val alpha =
+        if (status == DownloadQueueStatus.Downloading) {
+            val transition = rememberInfiniteTransition(label = "status-downloading")
+            val pulse by transition.animateFloat(
+                initialValue = 0.45f,
+                targetValue = 1f,
+                animationSpec =
+                    infiniteRepeatable(
+                        animation = tween(820),
+                        repeatMode = RepeatMode.Reverse,
+                    ),
+                label = "status-pulse",
+            )
+            pulse
+        } else {
+            1f
+        }
     Box(
-        modifier = Modifier
-            .size(46.dp)
-            .clip(RoundedCornerShape(15.dp))
-            .background(accent.copy(alpha = 0.14f * alpha)),
+        modifier =
+            Modifier
+                .size(46.dp)
+                .clip(RoundedCornerShape(15.dp))
+                .background(accent.copy(alpha = 0.14f * alpha)),
         contentAlignment = Alignment.Center,
     ) {
         Text(
-            text = when (status) {
-                DownloadQueueStatus.Waiting -> "…"
-                DownloadQueueStatus.Downloading -> "↓"
-                DownloadQueueStatus.Completed -> "✓"
-                DownloadQueueStatus.Failed -> "!"
-            },
+            text =
+                when (status) {
+                    DownloadQueueStatus.Waiting -> "…"
+                    DownloadQueueStatus.Downloading -> "↓"
+                    DownloadQueueStatus.Completed -> "✓"
+                    DownloadQueueStatus.Failed -> "!"
+                },
             color = accent.copy(alpha = alpha),
             style = MiuixTheme.textStyles.title3,
             fontWeight = FontWeight.Black,
@@ -406,12 +439,16 @@ private fun DownloadStatusGlyph(status: DownloadQueueStatus, accent: Color) {
 }
 
 @Composable
-private fun StatusPill(status: DownloadQueueStatus, accent: Color) {
+private fun StatusPill(
+    status: DownloadQueueStatus,
+    accent: Color,
+) {
     Box(
-        modifier = Modifier
-            .clip(CircleShape)
-            .background(accent.copy(alpha = 0.12f))
-            .padding(horizontal = 9.dp, vertical = 5.dp),
+        modifier =
+            Modifier
+                .clip(CircleShape)
+                .background(accent.copy(alpha = 0.12f))
+                .padding(horizontal = 9.dp, vertical = 5.dp),
     ) {
         Text(
             text = queueStatusLabel(status),
@@ -425,15 +462,17 @@ private fun StatusPill(status: DownloadQueueStatus, accent: Color) {
 @Composable
 private fun QueueEmptyState(tab: QueueTab) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(top = 18.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(top = 18.dp),
         cornerRadius = 24.dp,
         insideMargin = PaddingValues(24.dp),
-        colors = CardDefaults.defaultColors(
-            color = MiuixTheme.colorScheme.surfaceContainer,
-            contentColor = MiuixTheme.colorScheme.onSurface,
-        ),
+        colors =
+            CardDefaults.defaultColors(
+                color = MiuixTheme.colorScheme.surfaceContainer,
+                contentColor = MiuixTheme.colorScheme.onSurface,
+            ),
     ) {
         Column(
             modifier = Modifier.fillMaxWidth(),
@@ -447,14 +486,15 @@ private fun QueueEmptyState(tab: QueueTab) {
                 fontWeight = FontWeight.Black,
             )
             Text(
-                text = stringResource(
-                    when (tab) {
-                        QueueTab.All -> R.string.download_queue_empty_all
-                        QueueTab.Active -> R.string.download_queue_empty
-                        QueueTab.Completed -> R.string.download_queue_empty_completed
-                        QueueTab.Failed -> R.string.download_queue_empty_failed
-                    },
-                ),
+                text =
+                    stringResource(
+                        when (tab) {
+                            QueueTab.All -> R.string.download_queue_empty_all
+                            QueueTab.Active -> R.string.download_queue_empty
+                            QueueTab.Completed -> R.string.download_queue_empty_completed
+                            QueueTab.Failed -> R.string.download_queue_empty_failed
+                        },
+                    ),
                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 style = MiuixTheme.textStyles.body2,
             )
@@ -463,21 +503,19 @@ private fun QueueEmptyState(tab: QueueTab) {
 }
 
 @Composable
-private fun statusAccent(status: DownloadQueueStatus): Color {
-    return when (status) {
+private fun statusAccent(status: DownloadQueueStatus): Color =
+    when (status) {
         DownloadQueueStatus.Waiting -> MiuixTheme.colorScheme.onSurfaceVariantSummary
         DownloadQueueStatus.Downloading -> MiuixTheme.colorScheme.primary
         DownloadQueueStatus.Completed -> Color(0xFF2AA876)
         DownloadQueueStatus.Failed -> MiuixTheme.colorScheme.error
     }
-}
 
 @Composable
-private fun queueStatusLabel(status: DownloadQueueStatus): String {
-    return when (status) {
+private fun queueStatusLabel(status: DownloadQueueStatus): String =
+    when (status) {
         DownloadQueueStatus.Waiting -> stringResource(R.string.download_queue_waiting)
         DownloadQueueStatus.Downloading -> stringResource(R.string.download_queue_downloading)
         DownloadQueueStatus.Completed -> stringResource(R.string.download_queue_completed)
         DownloadQueueStatus.Failed -> stringResource(R.string.download_queue_failed)
     }
-}

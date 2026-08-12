@@ -11,55 +11,79 @@ import org.json.JSONObject
 class ManagedDataRepository(
     private val contentResolver: ContentResolver,
 ) {
-    fun export(uri: Uri, settings: AppSettings) {
-        val backup = JSONObject().apply {
-            put("format", BACKUP_FORMAT)
-            put("version", BACKUP_VERSION)
-            put("exportedAt", System.currentTimeMillis())
-            put("viewHistory", JSONArray().apply {
-                settings.viewHistory.forEach { illust -> put(illust.toBackupJson()) }
-            })
-            put("searchHistory", JSONArray(settings.searchHistory))
-            put("favoriteTags", JSONArray(settings.favoriteTags))
-            put("mutedIllusts", JSONArray(settings.mutedIllusts))
-            put("mutedUsers", JSONArray(settings.mutedUsers))
-            put("mutedTags", JSONArray(settings.mutedTags))
-        }
+    fun export(
+        uri: Uri,
+        settings: AppSettings,
+    ) {
+        val backup =
+            JSONObject().apply {
+                put("format", BACKUP_FORMAT)
+                put("version", BACKUP_VERSION)
+                put("exportedAt", System.currentTimeMillis())
+                put(
+                    "viewHistory",
+                    JSONArray().apply {
+                        settings.viewHistory.forEach { illust -> put(illust.toBackupJson()) }
+                    },
+                )
+                put("searchHistory", JSONArray(settings.searchHistory))
+                put("favoriteTags", JSONArray(settings.favoriteTags))
+                put("mutedIllusts", JSONArray(settings.mutedIllusts))
+                put("mutedUsers", JSONArray(settings.mutedUsers))
+                put("mutedTags", JSONArray(settings.mutedTags))
+            }
         contentResolver.openOutputStream(uri, "wt")?.bufferedWriter()?.use { writer ->
             writer.write(backup.toString(2))
         } ?: error("Unable to open export destination")
     }
 
-    fun import(uri: Uri, current: AppSettings): AppSettings {
-        val text = contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
-            ?: error("Unable to open import source")
+    fun import(
+        uri: Uri,
+        current: AppSettings,
+    ): AppSettings {
+        val text =
+            contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() }
+                ?: error("Unable to open import source")
         val backup = JSONObject(text)
         require(backup.optString("format") == BACKUP_FORMAT)
         require(backup.optInt("version", 0) == BACKUP_VERSION)
 
         return current.copy(
-            viewHistory = backup.requireArray("viewHistory")
-                .jsonObjects()
-                .mapNotNull { item -> item.toHistoryIllust() }
-                .distinctBy(Illust::id)
-                .take(MAX_VIEW_HISTORY),
-            searchHistory = backup.requireArray("searchHistory").strings().distinct().take(MAX_SEARCH_HISTORY),
-            favoriteTags = backup.requireArray("favoriteTags").strings().distinct().take(MAX_FAVORITE_TAGS),
+            viewHistory =
+                backup
+                    .requireArray("viewHistory")
+                    .jsonObjects()
+                    .mapNotNull { item -> item.toHistoryIllust() }
+                    .distinctBy(Illust::id)
+                    .take(MAX_VIEW_HISTORY),
+            searchHistory =
+                backup
+                    .requireArray("searchHistory")
+                    .strings()
+                    .distinct()
+                    .take(MAX_SEARCH_HISTORY),
+            favoriteTags =
+                backup
+                    .requireArray("favoriteTags")
+                    .strings()
+                    .distinct()
+                    .take(MAX_FAVORITE_TAGS),
             mutedIllusts = backup.requireArray("mutedIllusts").longs().distinct(),
             mutedUsers = backup.requireArray("mutedUsers").longs().distinct(),
             mutedTags = backup.requireArray("mutedTags").strings().distinct(),
         )
     }
 
-    private fun Illust.toBackupJson() = JSONObject().apply {
-        put("id", id)
-        put("title", title)
-        put("type", type)
-        put("artistId", artistId)
-        put("artistName", artistName)
-        put("imageUrl", imageUrl)
-        put("pageCount", pageCount)
-    }
+    private fun Illust.toBackupJson() =
+        JSONObject().apply {
+            put("id", id)
+            put("title", title)
+            put("type", type)
+            put("artistId", artistId)
+            put("artistName", artistName)
+            put("imageUrl", imageUrl)
+            put("pageCount", pageCount)
+        }
 
     private fun JSONObject.toHistoryIllust(): Illust? {
         val illustId = optLong("id", 0L).takeIf { it > 0L } ?: return null
@@ -87,17 +111,20 @@ class ManagedDataRepository(
         return getJSONArray(name)
     }
 
-    private fun JSONArray.strings(): List<String> = buildList {
-        repeat(length()) { index -> getString(index).takeIf(String::isNotBlank)?.let(::add) }
-    }
+    private fun JSONArray.strings(): List<String> =
+        buildList {
+            repeat(length()) { index -> getString(index).takeIf(String::isNotBlank)?.let(::add) }
+        }
 
-    private fun JSONArray.longs(): List<Long> = buildList {
-        repeat(length()) { index -> getLong(index).takeIf { it > 0L }?.let(::add) }
-    }
+    private fun JSONArray.longs(): List<Long> =
+        buildList {
+            repeat(length()) { index -> getLong(index).takeIf { it > 0L }?.let(::add) }
+        }
 
-    private fun JSONArray.jsonObjects(): List<JSONObject> = buildList {
-        repeat(length()) { index -> add(getJSONObject(index)) }
-    }
+    private fun JSONArray.jsonObjects(): List<JSONObject> =
+        buildList {
+            repeat(length()) { index -> add(getJSONObject(index)) }
+        }
 
     private companion object {
         const val BACKUP_FORMAT = "illustia-data-backup"

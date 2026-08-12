@@ -1,7 +1,15 @@
 package com.yunfie.illustia.ui.screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
@@ -36,9 +44,9 @@ import top.yukonga.miuix.kmp.icon.extended.Close
 import top.yukonga.miuix.kmp.icon.extended.Contacts
 import top.yukonga.miuix.kmp.icon.extended.Delete
 import top.yukonga.miuix.kmp.icon.extended.Ok
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.squircle.squircleSurface
 import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
+import top.yukonga.miuix.kmp.squircle.squircleSurface
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
 @Composable
@@ -71,21 +79,21 @@ fun AccountSwitchSheet(
         insideMargin = BottomSheetInsideMargin,
     ) {
         LazyColumn(
-                modifier = Modifier.fillMaxWidth(),
-                contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                verticalArrangement = Arrangement.spacedBy(6.dp),
-            ) {
-                itemsIndexed(accounts, key = { index, account -> account.refreshToken }) { index, account ->
-                    AccountRow(
-                        account = account,
-                        isActive = index == activeAccountIndex,
-                        onSelect = { viewModel.switchAccount(index) },
-                        onRemove = { pendingRemoval = index },
-                    )
-                }
-                item {
-                    AddAccountRow(onClick = onAddAccount)
-                }
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            itemsIndexed(accounts, key = { index, account -> account.refreshToken }) { index, account ->
+                AccountRow(
+                    account = account,
+                    isActive = index == activeAccountIndex,
+                    onSelect = { viewModel.switchAccount(index) },
+                    onRemove = { pendingRemoval = index },
+                )
+            }
+            item {
+                AddAccountRow(onClick = onAddAccount)
+            }
         }
     }
 
@@ -114,25 +122,29 @@ private fun AccountRow(
     onRemove: () -> Unit,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .squircleSurface(
-                color = if (isActive) MiuixTheme.colorScheme.primary.copy(alpha = 0.08f)
-                else MiuixTheme.colorScheme.surfaceContainer,
-                cornerRadius = 16.dp,
-            )
-            .then(
-                Modifier.padding(horizontal = 14.dp, vertical = 12.dp)
-            )
-            .miuixClickable(onClick = onSelect),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .squircleSurface(
+                    color =
+                        if (isActive) {
+                            MiuixTheme.colorScheme.primary.copy(alpha = 0.08f)
+                        } else {
+                            MiuixTheme.colorScheme.surfaceContainer
+                        },
+                    cornerRadius = 16.dp,
+                ).then(
+                    Modifier.padding(horizontal = 14.dp, vertical = 12.dp),
+                ).miuixClickable(onClick = onSelect),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clip(CircleShape)
-                .background(MiuixTheme.colorScheme.surfaceContainerHigh),
+            modifier =
+                Modifier
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .background(MiuixTheme.colorScheme.surfaceContainerHigh),
             contentAlignment = Alignment.Center,
         ) {
             val avatarUrl = account.profileImageUrl
@@ -195,19 +207,21 @@ private fun AccountRow(
 @Composable
 private fun AddAccountRow(onClick: () -> Unit) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .squircleSurface(MiuixTheme.colorScheme.surfaceContainer, 16.dp)
-            .miuixClickable(onClick = onClick)
-            .padding(horizontal = 14.dp, vertical = 14.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .squircleSurface(MiuixTheme.colorScheme.surfaceContainer, 16.dp)
+                .miuixClickable(onClick = onClick)
+                .padding(horizontal = 14.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Box(
-            modifier = Modifier
-                .size(44.dp)
-                .clip(CircleShape)
-                .background(MiuixTheme.colorScheme.surfaceContainerHigh),
+            modifier =
+                Modifier
+                    .size(44.dp)
+                    .clip(CircleShape)
+                    .background(MiuixTheme.colorScheme.surfaceContainerHigh),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
@@ -225,4 +239,3 @@ private fun AddAccountRow(onClick: () -> Unit) {
         )
     }
 }
-

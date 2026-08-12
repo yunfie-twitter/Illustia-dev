@@ -4,11 +4,10 @@ import android.net.Uri
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.ui.Alignment
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -20,27 +19,40 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
-import com.yunfie.illustia.IllustiaNavigationRequest
-import com.yunfie.illustia.IllustiaViewModel
 import com.yunfie.illustia.AppShortcutDestination
 import com.yunfie.illustia.AppShortcutRouter
+import com.yunfie.illustia.IllustiaNavigationRequest
+import com.yunfie.illustia.IllustiaViewModel
 import com.yunfie.illustia.R
 import com.yunfie.illustia.data.pixiv.CommentArtworkType
 import com.yunfie.illustia.settings.AppHapticMode
+import com.yunfie.illustia.settings.effectiveAppHapticMode
+import com.yunfie.illustia.ui.components.ArtworkCardPreferences
 import com.yunfie.illustia.ui.components.LocalAppHapticMode
+import com.yunfie.illustia.ui.components.LocalArtworkCardPreferences
 import com.yunfie.illustia.ui.components.LocalBottomSheetBackgroundColor
 import com.yunfie.illustia.ui.components.LocalPixivImageProxyBaseUrl
 import com.yunfie.illustia.ui.components.LocalPreferLowDataImages
+import com.yunfie.illustia.ui.components.NoOpHapticFeedback
 import com.yunfie.illustia.ui.components.isActiveNetworkMetered
+import com.yunfie.illustia.ui.components.isAppHapticsSupported
 import com.yunfie.illustia.ui.screens.CalculatorScreen
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import top.yukonga.miuix.kmp.basic.*
+import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
+import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.SnackbarDuration
+import top.yukonga.miuix.kmp.basic.SnackbarHost
+import top.yukonga.miuix.kmp.basic.SnackbarHostState
+import top.yukonga.miuix.kmp.basic.Surface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
@@ -49,8 +61,8 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     val settings = state.settings
     val startupScreen = state.settings.startupScreen
-    val tabs = mainTabs(settings.shortsFeedEnabled)
-    val initialTab = remember(startupScreen) { startupTabFor(startupScreen) }
+    val tabs = mainTabs(settings)
+    val initialTab = remember(startupScreen, tabs) { startupTabFor(startupScreen, tabs) }
     val initialPage = remember(initialTab, tabs) { tabs.indexOf(initialTab).coerceAtLeast(0) }
     var selectedTab by remember(initialTab) { mutableStateOf(initialTab) }
     var previousTab by remember { mutableStateOf<AppTab?>(null) }
@@ -59,10 +71,11 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
     var selectedCommentTarget by remember { mutableStateOf<Pair<Long, CommentArtworkType>?>(null) }
     val backStack = remember { mutableStateListOf<NavKey>(AppRoute.Main) }
     val detailSnapshots = remember { mutableStateMapOf<Long, DetailEntrySnapshot>() }
-    val pagerState = androidx.compose.foundation.pager.rememberPagerState(
-        initialPage = initialPage,
-        pageCount = { tabs.size },
-    )
+    val pagerState =
+        androidx.compose.foundation.pager.rememberPagerState(
+            initialPage = initialPage,
+            pageCount = { tabs.size },
+        )
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val homeScrollBehavior = MiuixScrollBehavior()
@@ -74,7 +87,8 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
     LaunchedEffect(state.webLoginRequest) {
         val request = state.webLoginRequest ?: return@LaunchedEffect
         runCatching {
-            CustomTabsIntent.Builder()
+            CustomTabsIntent
+                .Builder()
                 .setShowTitle(true)
                 .setUrlBarHidingEnabled(true)
                 .build()
@@ -108,19 +122,36 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
                     detailSnapshots.remove(removed.illustId)
                 }
             }
-            AppRoute.ImageViewer -> viewModel.closeImageViewer()
-            is AppRoute.TagSearch -> viewModel.clearSearchResults()
-            AppRoute.NovelList -> Unit
-            AppRoute.NovelReader -> viewModel.closeNovel()
+
+            AppRoute.ImageViewer -> {
+                viewModel.closeImageViewer()
+            }
+
+            is AppRoute.TagSearch -> {
+                viewModel.clearSearchResults()
+            }
+
+            AppRoute.NovelList -> {
+                Unit
+            }
+
+            AppRoute.NovelReader -> {
+                viewModel.closeNovel()
+            }
+
             AppRoute.IllustSeries -> {
                 if (selectedWatchlistSeriesIds.isNotEmpty()) {
                     selectedWatchlistSeriesIds.removeAt(selectedWatchlistSeriesIds.lastIndex)
                 }
             }
+
             is AppRoute.UserProfile -> {
                 viewModel.hideUserPage()
             }
-            else -> Unit
+
+            else -> {
+                Unit
+            }
         }
         when (val revealed = backStack.lastOrNull()) {
             is AppRoute.Detail -> {
@@ -136,8 +167,14 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
                     viewModel.openIllust(revealed.illustId)
                 }
             }
-            is AppRoute.UserProfile -> viewModel.openUserPage(revealed.userId)
-            else -> if (removed is AppRoute.Detail) viewModel.closeIllust()
+
+            is AppRoute.UserProfile -> {
+                viewModel.openUserPage(revealed.userId)
+            }
+
+            else -> {
+                if (removed is AppRoute.Detail) viewModel.closeIllust()
+            }
         }
     }
 
@@ -173,6 +210,13 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
 
     LaunchedEffect(pagerState.settledPage) {
         selectedTab = tabs[pagerState.settledPage]
+    }
+
+    LaunchedEffect(tabs) {
+        val targetTab = selectedTab.takeIf { it in tabs } ?: initialTab
+        val targetIndex = tabs.indexOf(targetTab).coerceAtLeast(0)
+        selectedTab = targetTab
+        if (pagerState.currentPage != targetIndex) pagerState.scrollToPage(targetIndex)
     }
 
     LaunchedEffect(selectedTab) {
@@ -232,25 +276,33 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
                     navigate(AppRoute.Search)
                 } else {
                     selectedTab = AppTab.Search
-                    tabs.indexOf(AppTab.Search)
+                    tabs
+                        .indexOf(AppTab.Search)
                         .takeIf { it >= 0 }
                         ?.let { pagerState.scrollToPage(it) }
                 }
             }
+
             AppShortcutDestination.Ranking -> {
                 selectedTab = AppTab.Ranking
-                tabs.indexOf(AppTab.Ranking)
+                tabs
+                    .indexOf(AppTab.Ranking)
                     .takeIf { it >= 0 }
                     ?.let { pagerState.scrollToPage(it) }
             }
+
             AppShortcutDestination.Bookmarks -> {
                 selectedTab = AppTab.Bookmarks
-                tabs.indexOf(AppTab.Bookmarks)
+                tabs
+                    .indexOf(AppTab.Bookmarks)
                     .takeIf { it >= 0 }
                     ?.let { pagerState.scrollToPage(it) }
                 viewModel.refreshBookmarks()
             }
-            AppShortcutDestination.ViewHistory -> navigate(AppRoute.ViewHistory)
+
+            AppShortcutDestination.ViewHistory -> {
+                navigate(AppRoute.ViewHistory)
+            }
         }
         AppShortcutRouter.consume(destination)
     }
@@ -311,12 +363,13 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
         state.selectedIllustUser,
     ) {
         state.selectedIllust?.let { illust ->
-            detailSnapshots[illust.id] = DetailEntrySnapshot(
-                illust = illust,
-                relatedIllusts = state.relatedIllusts,
-                firstComment = state.selectedIllustFirstComment,
-                user = state.selectedIllustUser,
-            )
+            detailSnapshots[illust.id] =
+                DetailEntrySnapshot(
+                    illust = illust,
+                    relatedIllusts = state.relatedIllusts,
+                    firstComment = state.selectedIllustFirstComment,
+                    user = state.selectedIllustUser,
+                )
         }
     }
 
@@ -374,16 +427,36 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
     }
 
     val preferLowDataImages = remember(context) { context.isActiveNetworkMetered() }
+    val platformHapticFeedback = LocalHapticFeedback.current
+    val hapticsSupported = remember(context) { isAppHapticsSupported(context) }
+    val effectiveHapticMode = effectiveAppHapticMode(state.settings.hapticMode, hapticsSupported)
     CompositionLocalProvider(
         LocalPixivImageProxyBaseUrl provides state.settings.pixivImageProxyBaseUrl,
         LocalPreferLowDataImages provides preferLowDataImages,
         LocalBottomSheetBackgroundColor provides MiuixTheme.colorScheme.surfaceContainerHigh,
-        LocalAppHapticMode provides AppHapticMode.fromValue(state.settings.hapticMode),
+        LocalArtworkCardPreferences provides
+            ArtworkCardPreferences(
+                showTitle = settings.showCardTitle,
+                showArtist = settings.showCardArtist,
+                showTags = settings.showCardTags,
+                showBookmarkCount = settings.showCardBookmarkCount,
+                showAiBadge = settings.showAiBadge,
+            ),
+        LocalAppHapticMode provides effectiveHapticMode,
+        LocalHapticFeedback provides
+            if (effectiveHapticMode == AppHapticMode.Off) {
+                NoOpHapticFeedback
+            } else {
+                platformHapticFeedback
+            },
     ) {
         Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .scrollEndHaptic(),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .then(
+                        if (effectiveHapticMode == AppHapticMode.Off) Modifier else Modifier.scrollEndHaptic(),
+                    ),
         ) {
             if (!state.privacyLocked || state.isTransitioningToIllustia) {
                 Scaffold(
@@ -394,9 +467,10 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
                     },
                 ) { rootPadding ->
                     Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(rootPadding),
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(rootPadding),
                     ) {
                         Surface(
                             modifier = Modifier.fillMaxSize(),
@@ -451,10 +525,11 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
 
             if (state.activeDownloads > 0) {
                 LinearProgressIndicator(
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .fillMaxWidth()
-                        .height(3.dp),
+                    modifier =
+                        Modifier
+                            .align(Alignment.TopCenter)
+                            .fillMaxWidth()
+                            .height(3.dp),
                 )
             }
         }

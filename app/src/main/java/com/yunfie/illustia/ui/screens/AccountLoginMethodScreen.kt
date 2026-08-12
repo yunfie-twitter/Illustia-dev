@@ -57,16 +57,18 @@ fun AccountLoginMethodScreen(
         },
     ) { scaffoldPadding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .background(MiuixTheme.colorScheme.surface),
-            contentPadding = PaddingValues(
-                start = 16.dp,
-                end = 16.dp,
-                top = scaffoldPadding.calculateTopPadding() + 10.dp,
-                bottom = 48.dp,
-            ),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .background(MiuixTheme.colorScheme.surface),
+            contentPadding =
+                PaddingValues(
+                    start = 16.dp,
+                    end = 16.dp,
+                    top = scaffoldPadding.calculateTopPadding() + 10.dp,
+                    bottom = 48.dp,
+                ),
             verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             item {
@@ -109,33 +111,46 @@ private fun LoginMethodCard(
     emphasized: Boolean = false,
 ) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .squircleSurface(
-                color = if (emphasized) MiuixTheme.colorScheme.primary.copy(alpha = 0.09f)
-                else MiuixTheme.colorScheme.surfaceContainer,
-                cornerRadius = 22.dp,
-            )
-            .miuixClickable(onClick = onClick)
-            .padding(horizontal = 16.dp, vertical = 18.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .squircleSurface(
+                    color =
+                        if (emphasized) {
+                            MiuixTheme.colorScheme.primary.copy(alpha = 0.09f)
+                        } else {
+                            MiuixTheme.colorScheme.surfaceContainer
+                        },
+                    cornerRadius = 22.dp,
+                ).miuixClickable(onClick = onClick)
+                .padding(horizontal = 16.dp, vertical = 18.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Box(
-            modifier = Modifier
-                .size(50.dp)
-                .squircleSurface(
-                    color = if (emphasized) MiuixTheme.colorScheme.primary
-                    else MiuixTheme.colorScheme.surfaceContainerHigh,
-                    cornerRadius = 15.dp,
-                ),
+            modifier =
+                Modifier
+                    .size(50.dp)
+                    .squircleSurface(
+                        color =
+                            if (emphasized) {
+                                MiuixTheme.colorScheme.primary
+                            } else {
+                                MiuixTheme.colorScheme.surfaceContainerHigh
+                            },
+                        cornerRadius = 15.dp,
+                    ),
             contentAlignment = Alignment.Center,
         ) {
             Icon(
                 imageVector = icon,
                 contentDescription = null,
-                tint = if (emphasized) MiuixTheme.colorScheme.onPrimary
-                else MiuixTheme.colorScheme.onSurface,
+                tint =
+                    if (emphasized) {
+                        MiuixTheme.colorScheme.onPrimary
+                    } else {
+                        MiuixTheme.colorScheme.onSurface
+                    },
                 modifier = Modifier.size(24.dp),
             )
         }
@@ -160,12 +175,12 @@ private fun LoginMethodCard(
                         color = MiuixTheme.colorScheme.primary,
                         style = MiuixTheme.textStyles.footnote1,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier
-                            .squircleSurface(
-                                color = MiuixTheme.colorScheme.primary.copy(alpha = 0.12f),
-                                cornerRadius = 8.dp,
-                            )
-                            .padding(horizontal = 8.dp, vertical = 3.dp),
+                        modifier =
+                            Modifier
+                                .squircleSurface(
+                                    color = MiuixTheme.colorScheme.primary.copy(alpha = 0.12f),
+                                    cornerRadius = 8.dp,
+                                ).padding(horizontal = 8.dp, vertical = 3.dp),
                     )
                 }
             }

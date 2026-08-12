@@ -22,7 +22,10 @@ class CrashHandler : Thread.UncaughtExceptionHandler {
         Thread.setDefaultUncaughtExceptionHandler(this)
     }
 
-    override fun uncaughtException(thread: Thread, ex: Throwable) {
+    override fun uncaughtException(
+        thread: Thread,
+        ex: Throwable,
+    ) {
         if (ex.isCancellationFailure()) return
         if (!handleException(ex)) {
             defaultHandler?.uncaughtException(thread, ex)
@@ -51,10 +54,14 @@ class CrashHandler : Thread.UncaughtExceptionHandler {
     private fun crashMessage(ex: Throwable): String {
         val message = ex.message.orEmpty()
         return when {
-            ex is Resources.NotFoundException || ex is InflateException || message.contains("XML") ->
+            ex is Resources.NotFoundException || ex is InflateException || message.contains("XML") -> {
                 context?.getString(R.string.error_crash_resource_loading, message) ?: message
-            message.contains("document", ignoreCase = true) ->
+            }
+
+            message.contains("document", ignoreCase = true) -> {
                 context?.getString(R.string.error_crash_storage_permission, message) ?: message
+            }
+
             else -> {
                 val sw = StringWriter()
                 ex.printStackTrace(PrintWriter(sw))

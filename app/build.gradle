@@ -4,28 +4,26 @@ plugins {
     id "com.android.application"
     id "androidx.baselineprofile"
     id "org.jetbrains.kotlin.android"
-    id "org.jetbrains.kotlin.kapt"
+    alias(libs.plugins.ksp)
     id "org.jetbrains.kotlin.plugin.compose"
     id "org.jetbrains.kotlin.plugin.serialization"
     id "org.jlleitschuh.gradle.ktlint"
     id "dev.detekt"
-    id 'com.google.firebase.crashlytics'
-    id 'com.google.firebase.firebase-perf'
-    id 'com.google.gms.google-services'
 }
 
 ext.releaseKeystorePath = System.getenv("KEYSTORE_PATH")
+def androidMinSdk = 24
 
 android {
     namespace "com.yunfie.illustia"
     compileSdk 37
     defaultConfig {
         applicationId "com.yunfie.illustia"
-        // Android 7.1 (API 25) and newer.
-        minSdk 25
+        // Android 7.0 (API 24) and newer.
+        minSdk androidMinSdk
         targetSdk 36
-        versionCode 41
-        versionName "5.4.0-beta.2"
+        versionCode 42
+        versionName "5.4.0-beta.3"
     }
 
     signingConfigs {
@@ -84,13 +82,19 @@ ktlint {
     outputToConsole = true
     ignoreFailures = false
     filter {
-        exclude("**/generated/**")
+        // Generated UniFFI sources are attached to the Android main source set.
+        // A path predicate is required because glob filtering is unreliable for
+        // dynamically attached source directories in ktlint-gradle.
+        exclude { element ->
+            element.file.absolutePath.replace('\\', '/').contains('/build/generated/')
+        }
     }
 }
 
 detekt {
     toolVersion = "2.0.0-alpha.5"
     buildUponDefaultConfig = true
+    config.setFrom(files("config/detekt/detekt.yml"))
     parallel = true
     ignoreFailures = false
 }
@@ -156,7 +160,8 @@ tasks.register("generateUniFfiBindings", Exec) {
 tasks.register("buildRustAndroid", Exec) {
     workingDir rustCrateDir
     environment "CARGO_TARGET_DIR", rustTargetDir
-    commandLine cargoExecutable, "ndk", "-t", "arm64-v8a", "-t", "armeabi-v7a", "-t", "x86_64",
+    commandLine cargoExecutable, "ndk", "--platform", androidMinSdk.toString(),
+        "-t", "arm64-v8a", "-t", "armeabi-v7a", "-t", "x86_64",
         "-o", uniffiJniDir.get().asFile, "build", "--release"
     dependsOn "generateUniFfiBindings"
     inputs.files(rustInputs)
@@ -171,8 +176,61 @@ tasks.register("buildPallaSyncCoreAndroid", Exec) {
     def pallaSyncCoreCrateDir = rootProject.file("rust/pallasync-core")
     workingDir pallaSyncCoreCrateDir
     environment "CARGO_TARGET_DIR", rustTargetDir
-    commandLine cargoExecutable, "ndk", "-t", "arm64-v8a", "-t", "armeabi-v7a", "-t", "x86_64",
+    commandLine cargoExecutable, "ndk", "--platform", androidMinSdk.toString(),
+        "-t", "arm64-v8a", "-t", "armeabi-v7a", "-t", "x86_64",
         "-o", uniffiJniDir.get().asFile, "build", "--release"
+}
+
+def detektBaselineBudget = 400
+def detektRuleBudgets = [
+    ComplexCondition: 11,
+    ConstructorParameterNaming: 2,
+    CyclomaticComplexMethod: 18,
+    EmptyFunctionBlock: 2,
+    InvalidPackageDeclaration: 0,
+    LargeClass: 3,
+    LongMethod: 15,
+    LoopWithTooManyJumpStatements: 3,
+    MagicNumber: 102,
+    MatchingDeclarationName: 5,
+    ReturnCount: 52,
+    SwallowedException: 0,
+    ThrowsCount: 2,
+    TooGenericExceptionCaught: 0,
+    TooGenericExceptionThrown: 1,
+    TooManyFunctions: 28,
+    UnusedParameter: 7,
+    VariableNaming: 3,
+]
+
+tasks.register("checkQualityBaselineBudgets") {
+    group = "verification"
+    description = "Fails when static-analysis baselines grow beyond their approved budgets."
+    def detektBaselineFile = file("detekt-baseline.xml")
+    inputs.file(detektBaselineFile)
+
+    doLast {
+        def detektCount = detektBaselineFile.readLines().count { it.contains("<ID>") }
+        def detektEntries = detektBaselineFile.readLines().findAll { it.contains("<ID>") }
+        def ruleCounts = detektEntries.countBy { entry ->
+            def matcher = entry =~ /<ID>([^:]+):/
+            matcher.find() ? matcher.group(1) : "Unknown"
+        }
+        def exceededRuleBudgets = ruleCounts.findAll { rule, count ->
+            !detektRuleBudgets.containsKey(rule) || count > detektRuleBudgets[rule]
+        }
+        if (detektCount > detektBaselineBudget) {
+            throw new GradleException(
+                "detekt baseline has ${detektCount} issues; budget is ${detektBaselineBudget}.",
+            )
+        }
+        if (!exceededRuleBudgets.isEmpty()) {
+            throw new GradleException(
+                "detekt rule budgets exceeded: ${exceededRuleBudgets.sort().collect { rule, count -> "${rule} ${count}/${detektRuleBudgets[rule] ?: 0}" }.join(', ')}.",
+            )
+        }
+        logger.lifecycle("Quality baseline budget: detekt ${detektCount}/${detektBaselineBudget}; ${ruleCounts.sort()}")
+    }
 }
 
 tasks.named("preBuild").configure {
@@ -201,53 +259,53 @@ kotlin {
 dependencies {
     baselineProfile project(":benchmark")
 
-    // Backport java.time and other Java library APIs to Android 7.1.
-    coreLibraryDesugaring "com.android.tools:desugar_jdk_libs:2.1.5"
+    // Backport java.time and other Java library APIs to Android 7.0.
+    coreLibraryDesugaring libs.desugar.jdk.libs
 
-    implementation platform("androidx.compose:compose-bom:2026.06.01")
-    implementation "androidx.compose.material:material"
-    implementation "androidx.activity:activity-compose:1.13.0"
-    implementation "androidx.lifecycle:lifecycle-viewmodel-ktx:2.11.0"
-    implementation "androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0"
-    implementation "androidx.lifecycle:lifecycle-runtime-compose:2.11.0"
-    implementation "androidx.appcompat:appcompat:1.7.1"
-    implementation "androidx.core:core-splashscreen:1.2.0"
-    implementation "androidx.security:security-crypto:1.1.0"
-    implementation "androidx.datastore:datastore-preferences:1.2.1"
-    implementation "androidx.room:room-runtime:2.8.4"
-    implementation 'com.google.firebase:firebase-perf:22.0.6'
-    implementation 'com.google.firebase:firebase-crashlytics:20.1.0'
-    implementation("com.journeyapps:zxing-android-embedded:4.3.0")
-    implementation("com.google.zxing:core:3.4.1")
-    kapt "androidx.room:room-compiler:2.8.4"
-    implementation "androidx.compose.foundation:foundation"
-    implementation "androidx.documentfile:documentfile:1.1.0"
-    implementation "androidx.profileinstaller:profileinstaller:1.4.1"
-    implementation "androidx.browser:browser:1.10.0"
-    implementation "io.coil-kt.coil3:coil-compose:3.5.0"
-    implementation "io.coil-kt.coil3:coil-gif:3.5.0"
-    implementation "io.coil-kt.coil3:coil-network-okhttp:3.5.0"
-    implementation "com.squareup.okhttp3:okhttp:5.4.0"
-    implementation "net.java.dev.jna:jna:5.17.0@aar"
-    implementation "org.jetbrains.kotlinx:kotlinx-coroutines-android:1.11.0"
-    implementation "org.jetbrains.kotlinx:kotlinx-serialization-json:1.11.0"
-    implementation "androidx.navigation3:navigation3-runtime:1.1.4"
-    implementation "androidx.biometric:biometric:1.4.0-alpha07"
-    implementation "androidx.lifecycle:lifecycle-process:2.11.0"
-    implementation "top.yukonga.miuix.kmp:miuix-ui-android:0.9.3"
-    implementation "top.yukonga.miuix.kmp:miuix-preference-android:0.9.3"
-    implementation "top.yukonga.miuix.kmp:miuix-icons-android:0.9.3"
-    implementation "top.yukonga.miuix.kmp:miuix-squircle-android:0.9.3"
-    implementation "top.yukonga.miuix.kmp:miuix-navigation3-ui-android:0.9.3"
+    implementation platform(libs.kotlin.bom)
+    implementation platform(libs.compose.bom)
+    implementation libs.compose.material
+    implementation libs.activity.compose
+    implementation libs.lifecycle.viewmodel.ktx
+    implementation libs.lifecycle.viewmodel.compose
+    implementation libs.lifecycle.runtime.compose
+    implementation libs.appcompat
+    implementation libs.core.splashscreen
+    implementation libs.security.crypto
+    implementation libs.datastore.preferences
+    implementation libs.room.runtime
+    implementation libs.sentry.android
+    implementation libs.zxing.android
+    implementation libs.zxing.core
+    ksp libs.room.compiler
+    implementation libs.compose.foundation
+    implementation libs.documentfile
+    implementation libs.profileinstaller
+    implementation libs.browser
+    implementation libs.coil.compose
+    implementation libs.coil.gif
+    implementation libs.coil.network.okhttp
+    implementation libs.okhttp
+    implementation "net.java.dev.jna:jna:${libs.versions.jna.get()}@aar"
+    implementation libs.coroutines.android
+    implementation libs.serialization.json
+    implementation libs.navigation3.runtime
+    implementation libs.biometric
+    implementation libs.lifecycle.process
+    implementation libs.miuix.ui
+    implementation libs.miuix.preference
+    implementation libs.miuix.icons
+    implementation libs.miuix.squircle
+    implementation libs.miuix.navigation3.ui
 
     // Test dependencies
-    testImplementation "io.kotest:kotest-runner-junit5:6.2.2"
-    testImplementation "io.kotest:kotest-assertions-core:6.2.2"
-    testImplementation "io.kotest:kotest-property:6.2.2"
-    testImplementation "junit:junit:4.13.2"
-    testImplementation "androidx.test:core:1.7.0"
-    testImplementation "org.robolectric:robolectric:4.16.1"
-    testRuntimeOnly "org.junit.vintage:junit-vintage-engine:5.10.1"
+    testImplementation libs.kotest.runner
+    testImplementation libs.kotest.assertions
+    testImplementation libs.kotest.property
+    testImplementation libs.junit4
+    testImplementation libs.androidx.test.core
+    testImplementation libs.robolectric
+    testRuntimeOnly libs.junit.vintage
 }
 
 

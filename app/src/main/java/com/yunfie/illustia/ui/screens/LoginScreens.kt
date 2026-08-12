@@ -8,7 +8,16 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -42,9 +51,16 @@ import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.*
-import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.icon.extended.Background
+import top.yukonga.miuix.kmp.icon.extended.Close
+import top.yukonga.miuix.kmp.icon.extended.Copy
+import top.yukonga.miuix.kmp.icon.extended.Import
+import top.yukonga.miuix.kmp.icon.extended.Settings
+import top.yukonga.miuix.kmp.icon.extended.Show
+import top.yukonga.miuix.kmp.icon.extended.Theme
+import top.yukonga.miuix.kmp.icon.extended.Update
 import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
 @Composable
@@ -68,10 +84,11 @@ fun RefreshTokenLoginBottomSheet(
     ) {
         NonAmoledDarkTheme {
             Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .verticalScroll(rememberScrollState())
-                    .padding(horizontal = 18.dp, vertical = 10.dp),
+                modifier =
+                    Modifier
+                        .fillMaxWidth()
+                        .verticalScroll(rememberScrollState())
+                        .padding(horizontal = 18.dp, vertical = 10.dp),
                 verticalArrangement = Arrangement.spacedBy(14.dp),
             ) {
                 TextField(
@@ -135,9 +152,10 @@ fun PixivWebLoginScreen(
     }
 
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .fillMaxHeight(0.82f)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .fillMaxHeight(0.82f),
     ) {
         Box(modifier = Modifier.weight(1f)) {
             AndroidView(
@@ -150,40 +168,49 @@ fun PixivWebLoginScreen(
                         settings.domStorageEnabled = true
                         settings.userAgentString = "PixivAndroidApp/6.184.0 (Android 14; Illustia)"
                         webChromeClient = WebChromeClient()
-                        webViewClient = object : WebViewClient() {
-                            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
-                                return completeWithUrl(request.url.toString())
-                            }
+                        webViewClient =
+                            object : WebViewClient() {
+                                override fun shouldOverrideUrlLoading(
+                                    view: WebView,
+                                    request: WebResourceRequest,
+                                ): Boolean = completeWithUrl(request.url.toString())
 
-                            override fun onPageStarted(view: WebView, url: String, favicon: Bitmap?) {
-                                if (completeWithUrl(url)) {
-                                    view.stopLoading()
-                                    return
+                                override fun onPageStarted(
+                                    view: WebView,
+                                    url: String,
+                                    favicon: Bitmap?,
+                                ) {
+                                    if (completeWithUrl(url)) {
+                                        view.stopLoading()
+                                        return
+                                    }
+                                    webError = null
+                                    isLoading = true
                                 }
-                                webError = null
-                                isLoading = true
-                            }
 
-                            override fun onPageFinished(view: WebView, url: String) {
-                                isLoading = false
-                            }
-
-                            override fun onReceivedError(
-                                view: WebView,
-                                request: WebResourceRequest,
-                                error: WebResourceError,
-                            ) {
-                                if (request.isForMainFrame && completeWithUrl(request.url.toString())) {
-                                    view.stopLoading()
-                                    return
-                                }
-                                if (request.isForMainFrame && !completed) {
+                                override fun onPageFinished(
+                                    view: WebView,
+                                    url: String,
+                                ) {
                                     isLoading = false
-                                    webError = error.description?.toString()?.ifBlank { context.getString(R.string.error_generic) }
-                                        ?: context.getString(R.string.error_generic)
+                                }
+
+                                override fun onReceivedError(
+                                    view: WebView,
+                                    request: WebResourceRequest,
+                                    error: WebResourceError,
+                                ) {
+                                    if (request.isForMainFrame && completeWithUrl(request.url.toString())) {
+                                        view.stopLoading()
+                                        return
+                                    }
+                                    if (request.isForMainFrame && !completed) {
+                                        isLoading = false
+                                        webError = error.description?.toString()?.ifBlank { context.getString(R.string.error_generic) }
+                                            ?: context.getString(R.string.error_generic)
+                                    }
                                 }
                             }
-                        }
                         loadUrl(request.authorizationUrl)
                     }
                 },
@@ -195,15 +222,21 @@ fun PixivWebLoginScreen(
             )
             if (webError != null) {
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(MiuixTheme.colorScheme.background.copy(alpha = 0.82f))
-                        .padding(26.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .background(MiuixTheme.colorScheme.background.copy(alpha = 0.82f))
+                            .padding(26.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     ElevatedPanel {
                         Text(stringResource(R.string.error_generic), style = MiuixTheme.textStyles.title3, fontWeight = FontWeight.Bold)
-                        Text(webError.orEmpty(), color = MiuixTheme.colorScheme.onSurfaceVariantSummary, style = MiuixTheme.textStyles.body2, lineHeight = 20.sp)
+                        Text(
+                            webError.orEmpty(),
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            style = MiuixTheme.textStyles.body2,
+                            lineHeight = 20.sp,
+                        )
                         Button(
                             onClick = {
                                 webError = null
@@ -226,9 +259,10 @@ private fun pixivLoginCodeOrNull(url: String): String? {
     val uri = runCatching { Uri.parse(url) }.getOrNull() ?: return null
     val code = uri.getQueryParameter("code") ?: return null
     val isPixivLoginRedirect = uri.scheme == "pixiv" && uri.host == "account" && uri.path == "/login"
-    val isPixivCallback = uri.scheme == "https" &&
-        uri.host == "app-api.pixiv.net" &&
-        uri.path == "/web/v1/users/auth/pixiv/callback"
+    val isPixivCallback =
+        uri.scheme == "https" &&
+            uri.host == "app-api.pixiv.net" &&
+            uri.path == "/web/v1/users/auth/pixiv/callback"
     val isPixivCodeUrl = uri.host?.contains("pixiv", ignoreCase = true) == true && code.isNotBlank()
     return if (isPixivLoginRedirect || isPixivCallback || isPixivCodeUrl) code else null
 }

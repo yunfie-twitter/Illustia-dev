@@ -1,37 +1,49 @@
 package com.yunfie.illustia.ui.components
 
-import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.GridItemSpan
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
-import androidx.compose.foundation.lazy.grid.rememberLazyGridState
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.GridItemSpan
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.blur
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -44,38 +56,42 @@ import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
-import top.yukonga.miuix.kmp.utils.PressFeedbackType
 import top.yukonga.miuix.kmp.squircle.squircleBackground
 import top.yukonga.miuix.kmp.squircle.squircleSurface
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+import top.yukonga.miuix.kmp.utils.PressFeedbackType
 
 @Composable
 fun IllustCardSkeleton(modifier: Modifier = Modifier) {
     val transition = rememberInfiniteTransition(label = "illustSkeleton")
-    val shimmer = transition.animateFloat(
-        initialValue = -1f,
-        targetValue = 2f,
-        animationSpec = infiniteRepeatable(
-            animation = tween(durationMillis = 1250, easing = FastOutSlowInEasing),
-            repeatMode = RepeatMode.Restart,
-        ),
-        label = "illustSkeletonShimmer",
-    )
+    val shimmer =
+        transition.animateFloat(
+            initialValue = -1f,
+            targetValue = 2f,
+            animationSpec =
+                infiniteRepeatable(
+                    animation = tween(durationMillis = 1250, easing = FastOutSlowInEasing),
+                    repeatMode = RepeatMode.Restart,
+                ),
+            label = "illustSkeletonShimmer",
+        )
     val base = MiuixTheme.colorScheme.surfaceContainer
     val highlight = MiuixTheme.colorScheme.surfaceContainerHigh
     val shimmerColors = remember(base, highlight) { listOf(base, highlight, base) }
-    val shimmerModifier = Modifier.drawWithCache {
-        onDrawBehind {
-            val startX = shimmer.value * size.width
-            drawRect(
-                brush = Brush.linearGradient(
-                    colors = shimmerColors,
-                    start = Offset(startX, 0f),
-                    end = Offset(startX + size.width * 0.52f, size.height),
-                ),
-            )
+    val shimmerModifier =
+        Modifier.drawWithCache {
+            onDrawBehind {
+                val startX = shimmer.value * size.width
+                drawRect(
+                    brush =
+                        Brush.linearGradient(
+                            colors = shimmerColors,
+                            start = Offset(startX, 0f),
+                            end = Offset(startX + size.width * 0.52f, size.height),
+                        ),
+                )
+            }
         }
-    }
 
     Column(
         modifier = modifier,
@@ -97,8 +113,20 @@ fun IllustCardSkeleton(modifier: Modifier = Modifier) {
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
-                Box(Modifier.fillMaxWidth(0.82f).height(14.dp).clip(CircleShape).then(shimmerModifier))
-                Box(Modifier.fillMaxWidth(0.56f).height(10.dp).clip(CircleShape).then(shimmerModifier))
+                Box(
+                    Modifier
+                        .fillMaxWidth(0.82f)
+                        .height(14.dp)
+                        .clip(CircleShape)
+                        .then(shimmerModifier),
+                )
+                Box(
+                    Modifier
+                        .fillMaxWidth(0.56f)
+                        .height(10.dp)
+                        .clip(CircleShape)
+                        .then(shimmerModifier),
+                )
             }
             Box(Modifier.size(28.dp).clip(CircleShape).then(shimmerModifier))
         }
@@ -140,22 +168,27 @@ fun IllustCard(
     showBookmarkButton: Boolean = true,
     isMutedByTag: Boolean = false,
 ) {
+    val cardPreferences = LocalArtworkCardPreferences.current
     val preferLowDataImages = LocalPreferLowDataImages.current
-    val previewUrl = remember(illust.id, highQualityImages, preferLowDataImages) {
-        if (highQualityImages && !preferLowDataImages) {
-            illust.previewUrl
-        } else {
-            illust.thumbnailUrl
+    val previewUrl =
+        remember(illust.id, highQualityImages, preferLowDataImages) {
+            if (highQualityImages && !preferLowDataImages) {
+                illust.previewUrl
+            } else {
+                illust.thumbnailUrl
+            }
         }
-    }
-    val cardBadgeText = remember(illust.id, showAiBadge) {
-        if (illust.isAi && !showAiBadge) null else illust.cardBadgeText
-    }
+    val cardBadgeText =
+        remember(illust.id, showAiBadge, cardPreferences.showAiBadge) {
+            if (illust.isAi && (!showAiBadge || !cardPreferences.showAiBadge)) null else illust.cardBadgeText
+        }
 
     IllustCardImpl(
         previewUrl = previewUrl,
         title = illust.title,
         artistName = illust.artistName,
+        tags = illust.tags,
+        totalBookmarks = illust.totalBookmarks,
         isBookmarked = illust.isBookmarked,
         cardBadgeText = cardBadgeText,
         onBookmark = onBookmark,
@@ -165,6 +198,7 @@ fun IllustCard(
         modifier = modifier,
         isSelected = isSelected,
         isMutedByTag = isMutedByTag,
+        preferences = cardPreferences,
     )
 }
 
@@ -174,6 +208,8 @@ private fun IllustCardImpl(
     previewUrl: String,
     title: String,
     artistName: String,
+    tags: List<String>,
+    totalBookmarks: Int,
     isBookmarked: Boolean,
     cardBadgeText: String?,
     onBookmark: () -> Unit,
@@ -183,24 +219,30 @@ private fun IllustCardImpl(
     modifier: Modifier = Modifier,
     isSelected: Boolean,
     isMutedByTag: Boolean,
+    preferences: ArtworkCardPreferences,
 ) {
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
     val hapticMode = LocalAppHapticMode.current
-    val cardModifier = if (isSelected) {
-        modifier.border(2.dp, MiuixTheme.colorScheme.primary, RoundedCornerShape(14.dp))
-    } else {
-        modifier
-    }
+    val cardModifier =
+        if (isSelected) {
+            modifier.border(2.dp, MiuixTheme.colorScheme.primary, RoundedCornerShape(14.dp))
+        } else {
+            modifier
+        }
     Card(
-        modifier = cardModifier.combinedClickable(
+        modifier =
+            cardModifier.combinedClickable(
                 onClick = onClick,
-                onLongClick = if (onLongClick != null) {
-                    {
-                        performAppHapticFeedback(context, haptic, hapticMode)
-                        onLongClick()
-                    }
-                } else null
+                onLongClick =
+                    if (onLongClick != null) {
+                        {
+                            performAppHapticFeedback(context, haptic, hapticMode)
+                            onLongClick()
+                        }
+                    } else {
+                        null
+                    },
             ),
         cornerRadius = 14.dp,
         insideMargin = PaddingValues(0.dp),
@@ -209,7 +251,6 @@ private fun IllustCardImpl(
     ) {
         Box {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-
                 IllustCardThumbnail(
                     previewUrl = previewUrl,
                     title = title,
@@ -217,28 +258,38 @@ private fun IllustCardImpl(
                     isMutedByTag = isMutedByTag,
                 )
 
-                IllustCardInfo(
-                    title = title,
-                    artistName = artistName,
-                    isBookmarked = isBookmarked,
-                    onBookmark = onBookmark,
-                    showBookmarkButton = showBookmarkButton,
-                )
+                if (
+                    preferences.showTitle || preferences.showArtist || preferences.showTags ||
+                    preferences.showBookmarkCount || showBookmarkButton
+                ) {
+                    IllustCardInfo(
+                        title = title,
+                        artistName = artistName,
+                        tags = tags,
+                        totalBookmarks = totalBookmarks,
+                        isBookmarked = isBookmarked,
+                        onBookmark = onBookmark,
+                        showBookmarkButton = showBookmarkButton,
+                        preferences = preferences,
+                    )
+                }
             }
 
             if (isSelected) {
                 Box(
-                    modifier = Modifier
-                        .matchParentSize()
-                        .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.08f)),
+                    modifier =
+                        Modifier
+                            .matchParentSize()
+                            .background(MiuixTheme.colorScheme.primary.copy(alpha = 0.08f)),
                 )
                 Box(
-                    modifier = Modifier
-                        .align(Alignment.TopEnd)
-                        .padding(8.dp)
-                        .size(24.dp)
-                        .clip(CircleShape)
-                        .background(MiuixTheme.colorScheme.primary),
+                    modifier =
+                        Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(8.dp)
+                            .size(24.dp)
+                            .clip(CircleShape)
+                            .background(MiuixTheme.colorScheme.primary),
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(
@@ -261,10 +312,11 @@ private fun IllustCardThumbnail(
     isMutedByTag: Boolean,
 ) {
     Box(
-        modifier = Modifier
-            .fillMaxWidth()
-            .aspectRatio(0.75f)
-            .squircleSurface(MiuixTheme.colorScheme.surfaceContainer, 14.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .aspectRatio(0.75f)
+                .squircleSurface(MiuixTheme.colorScheme.surfaceContainer, 14.dp),
     ) {
         Box(modifier = Modifier.fillMaxSize().then(if (isMutedByTag) Modifier.blur(12.dp) else Modifier)) {
             PixivImage(
@@ -281,11 +333,12 @@ private fun IllustCardThumbnail(
                 color = Color.White,
                 style = MiuixTheme.textStyles.footnote2,
                 fontWeight = FontWeight.Black,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(8.dp)
-                    .squircleBackground(Color.Black.copy(alpha = 0.4f), 6.dp)
-                    .padding(horizontal = 6.dp, vertical = 2.dp),
+                modifier =
+                    Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(8.dp)
+                        .squircleBackground(Color.Black.copy(alpha = 0.4f), 6.dp)
+                        .padding(horizontal = 6.dp, vertical = 2.dp),
             )
         }
     }
@@ -295,32 +348,67 @@ private fun IllustCardThumbnail(
 private fun IllustCardInfo(
     title: String,
     artistName: String,
+    tags: List<String>,
+    totalBookmarks: Int,
     isBookmarked: Boolean,
     onBookmark: () -> Unit,
     showBookmarkButton: Boolean,
+    preferences: ArtworkCardPreferences,
 ) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 4.dp, vertical = 4.dp)
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 4.dp, vertical = 4.dp),
     ) {
-        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
-            Text(
-                text = title,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                fontWeight = FontWeight.Bold,
-                color = MiuixTheme.colorScheme.onBackground,
-                style = MiuixTheme.textStyles.subtitle,
-            )
-            Text(
-                text = artistName,
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                style = MiuixTheme.textStyles.footnote1,
-            )
+        Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            if (preferences.showTitle) {
+                Text(
+                    text = title,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    fontWeight = FontWeight.Bold,
+                    color = MiuixTheme.colorScheme.onBackground,
+                    style = MiuixTheme.textStyles.subtitle,
+                )
+            }
+            if (preferences.showArtist) {
+                Text(
+                    text = artistName,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    style = MiuixTheme.textStyles.footnote1,
+                )
+            }
+            if (preferences.showTags || preferences.showBookmarkCount) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    if (preferences.showTags && tags.isNotEmpty()) {
+                        Text(
+                            text = tags.take(2).joinToString("  ") { "#$it" },
+                            modifier = Modifier.weight(1f),
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            style = MiuixTheme.textStyles.footnote2,
+                        )
+                    }
+                    if (preferences.showBookmarkCount) {
+                        Text(
+                            text = "♥ ${formatCompactCount(totalBookmarks)}",
+                            maxLines = 1,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            style = MiuixTheme.textStyles.footnote2,
+                            fontWeight = FontWeight.Bold,
+                        )
+                    }
+                }
+            }
         }
         if (showBookmarkButton) {
             BookmarkHeartButton(
@@ -333,36 +421,52 @@ private fun IllustCardInfo(
     }
 }
 
+private fun formatCompactCount(value: Int): String =
+    when {
+        value >= 1_000_000 -> "%.1fM".format(value / 1_000_000f)
+        value >= 1_000 -> "%.1fK".format(value / 1_000f)
+        else -> value.toString()
+    }
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun IllustListRow(
     illust: Illust,
     onBookmark: () -> Unit,
     onClick: () -> Unit,
-    onLongClick: (() -> Unit)? = null
+    onLongClick: (() -> Unit)? = null,
 ) {
     val haptic = LocalHapticFeedback.current
     val context = LocalContext.current
     val hapticMode = LocalAppHapticMode.current
-    val pageBadgeText = remember(illust.id) {
-        if (illust.pageCount > 1) "${illust.pageCount}P" else null
-    }
+    val pageBadgeText =
+        remember(illust.id) {
+            if (illust.pageCount > 1) "${illust.pageCount}P" else null
+        }
 
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .combinedClickable(
-                onClick = onClick,
-                onLongClick = if (onLongClick != null) {
-                    {
-                        performAppHapticFeedback(context, haptic, hapticMode)
-                        onLongClick()
-                    }
-                } else null
-            ),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .combinedClickable(
+                    onClick = onClick,
+                    onLongClick =
+                        if (onLongClick != null) {
+                            {
+                                performAppHapticFeedback(context, haptic, hapticMode)
+                                onLongClick()
+                            }
+                        } else {
+                            null
+                        },
+                ),
         cornerRadius = 18.dp,
         insideMargin = PaddingValues(12.dp),
-        colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.surfaceContainer, contentColor = MiuixTheme.colorScheme.onBackground),
+        colors =
+            CardDefaults.defaultColors(
+                color = MiuixTheme.colorScheme.surfaceContainer,
+                contentColor = MiuixTheme.colorScheme.onBackground,
+            ),
         pressFeedbackType = PressFeedbackType.Sink,
     ) {
         Row(
@@ -370,9 +474,10 @@ fun IllustListRow(
             horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             Box(
-                modifier = Modifier
-                    .size(68.dp)
-                    .squircleSurface(MiuixTheme.colorScheme.surfaceContainerHigh, 8.dp),
+                modifier =
+                    Modifier
+                        .size(68.dp)
+                        .squircleSurface(MiuixTheme.colorScheme.surfaceContainerHigh, 8.dp),
             ) {
                 PixivImage(
                     url = illust.thumbnailUrl,
@@ -387,15 +492,16 @@ fun IllustListRow(
                         color = Color.White,
                         fontWeight = FontWeight.Black,
                         style = MiuixTheme.textStyles.footnote2,
-                        modifier = Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(4.dp)
-                            .squircleBackground(Color.Black.copy(alpha = 0.4f), 4.dp)
-                            .padding(horizontal = 4.dp, vertical = 1.dp),
+                        modifier =
+                            Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(4.dp)
+                                .squircleBackground(Color.Black.copy(alpha = 0.4f), 4.dp)
+                                .padding(horizontal = 4.dp, vertical = 1.dp),
                     )
                 }
             }
-            
+
             Column(modifier = Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(2.dp)) {
                 Text(
                     text = illust.title,
@@ -413,7 +519,7 @@ fun IllustListRow(
                     style = MiuixTheme.textStyles.footnote1,
                 )
             }
-            
+
             BookmarkHeartButton(
                 isBookmarked = illust.isBookmarked,
                 onClick = onBookmark,
@@ -425,12 +531,19 @@ fun IllustListRow(
 }
 
 @Composable
-fun HighlightCard(illust: Illust, onClick: () -> Unit) {
+fun HighlightCard(
+    illust: Illust,
+    onClick: () -> Unit,
+) {
     Card(
         modifier = Modifier.width(232.dp).height(128.dp),
         cornerRadius = 16.dp,
         insideMargin = PaddingValues(0.dp),
-        colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.surfaceContainer, contentColor = MiuixTheme.colorScheme.onBackground),
+        colors =
+            CardDefaults.defaultColors(
+                color = MiuixTheme.colorScheme.surfaceContainer,
+                contentColor = MiuixTheme.colorScheme.onBackground,
+            ),
         pressFeedbackType = PressFeedbackType.Tilt,
         onClick = onClick,
     ) {
@@ -443,11 +556,12 @@ fun HighlightCard(illust: Illust, onClick: () -> Unit) {
                 thumbnail = true,
             )
             Box(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .fillMaxWidth()
-                    .height(64.dp)
-                    .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f)))),
+                modifier =
+                    Modifier
+                        .align(Alignment.BottomStart)
+                        .fillMaxWidth()
+                        .height(64.dp)
+                        .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.7f)))),
             )
             Text(
                 text = illust.title,
@@ -520,21 +634,27 @@ fun TagTile(
     val haptic = LocalHapticFeedback.current
     val hapticMode = LocalAppHapticMode.current
     Card(
-        modifier = modifier
-            .aspectRatio(1f)
-            .combinedClickable(
-                onClick = onClick,
-                role = Role.Button,
-                onLongClick = onLongClick?.let { longClick ->
-                    {
-                        performAppHapticFeedback(context, haptic, hapticMode)
-                        longClick()
-                    }
-                },
-            ),
+        modifier =
+            modifier
+                .aspectRatio(1f)
+                .combinedClickable(
+                    onClick = onClick,
+                    role = Role.Button,
+                    onLongClick =
+                        onLongClick?.let { longClick ->
+                            {
+                                performAppHapticFeedback(context, haptic, hapticMode)
+                                longClick()
+                            }
+                        },
+                ),
         cornerRadius = 14.dp,
         insideMargin = PaddingValues(0.dp),
-        colors = CardDefaults.defaultColors(color = MiuixTheme.colorScheme.surfaceContainer, contentColor = MiuixTheme.colorScheme.onBackground),
+        colors =
+            CardDefaults.defaultColors(
+                color = MiuixTheme.colorScheme.surfaceContainer,
+                contentColor = MiuixTheme.colorScheme.onBackground,
+            ),
         pressFeedbackType = PressFeedbackType.Sink,
     ) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.BottomCenter) {
@@ -560,4 +680,3 @@ fun TagTile(
         }
     }
 }
-

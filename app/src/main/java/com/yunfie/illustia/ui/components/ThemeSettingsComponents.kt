@@ -13,9 +13,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -25,16 +25,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.yunfie.illustia.R
-import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.BasicComponent
+import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ColorPicker
 import top.yukonga.miuix.kmp.basic.ColorSpace
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextButton
 import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.icon.extended.ChevronForward
+import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -91,17 +91,18 @@ fun SeedColorPickerDialog(
     if (!show) return
 
     var draftColor by remember(initialColor) { mutableStateOf(initialColor) }
-    val presets = remember {
-        listOf(
-            Color(0xFF00BCD4),
-            Color(0xFFE91E63),
-            Color(0xFF4CAF50),
-            Color(0xFF795548),
-            Color(0xFF9C27B0),
-            Color(0xFF2196F3),
-            Color(0xFFFB7299),
-        )
-    }
+    val presets =
+        remember {
+            listOf(
+                Color(0xFF00BCD4),
+                Color(0xFFE91E63),
+                Color(0xFF4CAF50),
+                Color(0xFF795548),
+                Color(0xFF9C27B0),
+                Color(0xFF2196F3),
+                Color(0xFFFB7299),
+            )
+        }
 
     OverlayDialog(
         show = true,
@@ -144,19 +145,19 @@ fun SeedColorPickerDialog(
                     ) {
                         row.forEach { preset ->
                             Box(
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(36.dp)
-                                    .background(preset, RoundedCornerShape(12.dp))
-                                    .border(
-                                        width = 1.dp,
-                                        color = MiuixTheme.colorScheme.outline.copy(alpha = 0.4f),
-                                        shape = RoundedCornerShape(12.dp),
-                                    )
-                                    .padding(0.dp)
-                                    .miuixClickable {
-                                        draftColor = preset
-                                    },
+                                modifier =
+                                    Modifier
+                                        .weight(1f)
+                                        .height(36.dp)
+                                        .background(preset, RoundedCornerShape(12.dp))
+                                        .border(
+                                            width = 1.dp,
+                                            color = MiuixTheme.colorScheme.outline.copy(alpha = 0.4f),
+                                            shape = RoundedCornerShape(12.dp),
+                                        ).padding(0.dp)
+                                        .miuixClickable {
+                                            draftColor = preset
+                                        },
                             )
                         }
                         repeat(4 - row.size) {
@@ -197,17 +198,16 @@ private fun ColorSwatch(
     size: androidx.compose.ui.unit.Dp = 24.dp,
 ) {
     Box(
-        modifier = Modifier
-            .size(size)
-            .background(color, RoundedCornerShape(8.dp))
-            .border(
-                width = 1.dp,
-                color = MiuixTheme.colorScheme.outline.copy(alpha = 0.35f),
-                shape = RoundedCornerShape(8.dp),
-            ),
+        modifier =
+            Modifier
+                .size(size)
+                .background(color, RoundedCornerShape(8.dp))
+                .border(
+                    width = 1.dp,
+                    color = MiuixTheme.colorScheme.outline.copy(alpha = 0.35f),
+                    shape = RoundedCornerShape(8.dp),
+                ),
     )
 }
 
-fun colorSummary(color: Color): String {
-    return String.format("#%06X", color.toArgb() and 0xFFFFFF)
-}
+fun colorSummary(color: Color): String = String.format("#%06X", color.toArgb() and 0xFFFFFF)

@@ -51,11 +51,12 @@ internal fun IllustiaUiState.withUpdatedIllust(updated: Illust): IllustiaUiState
     val updatedRanking = rankingItems.replaceIllustIfPresent(updated)
     val updatedRelated = relatedIllusts.replaceIllustIfPresent(updated)
     val updatedHistory = settings.viewHistory.replaceIllustIfPresent(updated)
-    val updatedBookmarks = if (updated.isBookmarked) {
-        bookmarkItems.replaceOrAppend(updated)
-    } else {
-        bookmarkItems.removeIllustIfPresent(updated.id)
-    }
+    val updatedBookmarks =
+        if (updated.isBookmarked) {
+            bookmarkItems.replaceOrAppend(updated)
+        } else {
+            bookmarkItems.removeIllustIfPresent(updated.id)
+        }
     val updatedUserIllusts = selectedUserIllusts.replaceIllustIfPresent(updated)
     val updatedUserBookmarks = selectedUserBookmarks.replaceIllustIfPresent(updated)
     val updatedSelected = if (selectedIllust?.id == updated.id) updated else selectedIllust
@@ -99,24 +100,21 @@ internal fun List<Illust>.visibleWith(filter: MuteFilter): List<Illust> {
     }
     return filterNot { illust ->
         illust.id in filter.illustIds ||
-                illust.artistId in filter.userIds ||
-                illust.tags.any { it in filter.tags }
+            illust.artistId in filter.userIds ||
+            illust.tags.any { it in filter.tags }
     }
 }
 
-internal fun List<Illust>.visibleWith(state: IllustiaUiState): List<Illust> {
-    return visibleWith(
+internal fun List<Illust>.visibleWith(state: IllustiaUiState): List<Illust> =
+    visibleWith(
         MuteFilter(
             illustIds = state.mutedIllustsSet,
             userIds = state.mutedUsersSet,
             tags = state.mutedTagsSet,
         ),
     )
-}
 
-internal fun List<Illust>.visibleWithSettings(settings: AppSettings): List<Illust> {
-    return visibleWith(settings.toMuteFilter())
-}
+internal fun List<Illust>.visibleWithSettings(settings: AppSettings): List<Illust> = visibleWith(settings.toMuteFilter())
 
 internal fun List<Illust>.visibleWithMutedTagsVisible(settings: AppSettings): List<Illust> {
     val filter = settings.toMuteFilter()
@@ -125,7 +123,7 @@ internal fun List<Illust>.visibleWithMutedTagsVisible(settings: AppSettings): Li
     }
     return filterNot { illust ->
         illust.id in filter.illustIds ||
-                illust.artistId in filter.userIds
+            illust.artistId in filter.userIds
     }
 }
 
@@ -134,4 +132,3 @@ internal fun Illust.isMutedByTags(settings: AppSettings): Boolean {
     val mutedTags = settings.mutedTags.toHashSet()
     return tags.any { it in mutedTags }
 }
-

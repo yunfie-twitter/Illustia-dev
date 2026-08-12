@@ -5,38 +5,40 @@ import com.yunfie.illustia.settings.AppSettings
 import io.kotest.core.spec.style.StringSpec
 import io.kotest.matchers.shouldBe
 
-class IllustStateReducerTest : StringSpec({
-    "updates every visible copy and adds a newly bookmarked work" {
-        val original = reducerIllust(isBookmarked = false)
-        val updated = original.copy(title = "Updated", isBookmarked = true)
-        val state = IllustiaUiState(
-            settings = AppSettings(viewHistory = listOf(original)),
-            homeItems = listOf(original),
-            searchItems = listOf(original),
-            selectedIllust = original,
-        )
+class IllustStateReducerTest :
+    StringSpec({
+        "updates every visible copy and adds a newly bookmarked work" {
+            val original = reducerIllust(isBookmarked = false)
+            val updated = original.copy(title = "Updated", isBookmarked = true)
+            val state =
+                IllustiaUiState(
+                    settings = AppSettings(viewHistory = listOf(original)),
+                    homeItems = listOf(original),
+                    searchItems = listOf(original),
+                    selectedIllust = original,
+                )
 
-        val result = state.withUpdatedIllust(updated)
+            val result = state.withUpdatedIllust(updated)
 
-        result.homeItems shouldBe listOf(updated)
-        result.searchItems shouldBe listOf(updated)
-        result.settings.viewHistory shouldBe listOf(updated)
-        result.bookmarkItems shouldBe listOf(updated)
-        result.selectedIllust shouldBe updated
-    }
+            result.homeItems shouldBe listOf(updated)
+            result.searchItems shouldBe listOf(updated)
+            result.settings.viewHistory shouldBe listOf(updated)
+            result.bookmarkItems shouldBe listOf(updated)
+            result.selectedIllust shouldBe updated
+        }
 
-    "removes an unbookmarked work from bookmarks" {
-        val bookmarked = reducerIllust(isBookmarked = true)
-        val updated = bookmarked.copy(isBookmarked = false)
+        "removes an unbookmarked work from bookmarks" {
+            val bookmarked = reducerIllust(isBookmarked = true)
+            val updated = bookmarked.copy(isBookmarked = false)
 
-        IllustiaUiState(bookmarkItems = listOf(bookmarked))
-            .withUpdatedIllust(updated)
-            .bookmarkItems shouldBe emptyList()
-    }
-})
+            IllustiaUiState(bookmarkItems = listOf(bookmarked))
+                .withUpdatedIllust(updated)
+                .bookmarkItems shouldBe emptyList()
+        }
+    })
 
-private fun reducerIllust(isBookmarked: Boolean): Illust {
-    return Illust(
+private fun reducerIllust(isBookmarked: Boolean): Illust =
+    Illust(
         id = 42L,
         title = "Original",
         type = "illust",
@@ -51,4 +53,3 @@ private fun reducerIllust(isBookmarked: Boolean): Illust {
         pageCount = 1,
         isBookmarked = isBookmarked,
     )
-}

@@ -29,6 +29,8 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -40,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -49,13 +52,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yunfie.illustia.CalculatorHistoryEntry
 import com.yunfie.illustia.R
-import androidx.compose.ui.res.stringResource
 import com.yunfie.illustia.ui.components.overlayActionButtonColors
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TextField
 import top.yukonga.miuix.kmp.overlay.OverlayDialog
 import top.yukonga.miuix.kmp.theme.MiuixTheme
+
+private val LocalCompactCalculatorButtons = compositionLocalOf { false }
 
 @Composable
 internal fun CalculatorHistorySection(
@@ -72,26 +76,28 @@ internal fun CalculatorHistorySection(
             text = stringResource(R.string.calculator_history),
             color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
             style = MiuixTheme.textStyles.footnote1,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 12.dp, bottom = 4.dp)
-                .pointerInput(Unit) {
-                    detectTapGestures(
-                        onLongPress = {
-                            unlockCode = ""
-                            showUnlockDialog = true
-                        },
-                    )
-                },
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp, bottom = 4.dp)
+                    .pointerInput(Unit) {
+                        detectTapGestures(
+                            onLongPress = {
+                                unlockCode = ""
+                                showUnlockDialog = true
+                            },
+                        )
+                    },
         )
 
         val displayHistory = history.take(20)
 
         if (displayHistory.isEmpty()) {
             Box(
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
@@ -103,9 +109,10 @@ internal fun CalculatorHistorySection(
         } else {
             LazyColumn(
                 state = listState,
-                modifier = Modifier
-                    .weight(1f)
-                    .fillMaxWidth(),
+                modifier =
+                    Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
                 reverseLayout = false,
             ) {
                 items(displayHistory) { entry ->
@@ -131,10 +138,11 @@ internal fun CalculatorHistorySection(
                     label = stringResource(R.string.privacy_unlock_code),
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.NumberPassword,
-                        imeAction = ImeAction.Done,
-                    ),
+                    keyboardOptions =
+                        KeyboardOptions(
+                            keyboardType = KeyboardType.NumberPassword,
+                            imeAction = ImeAction.Done,
+                        ),
                 )
                 Row(
                     modifier = Modifier.fillMaxWidth(),
@@ -171,9 +179,10 @@ internal fun CalculatorHistorySection(
 @Composable
 internal fun CalculatorHistoryItem(entry: CalculatorHistoryEntry) {
     Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
+        modifier =
+            Modifier
+                .fillMaxWidth()
+                .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -200,11 +209,12 @@ internal fun CalculatorDisplay(
     buffer: String,
     modifier: Modifier = Modifier,
 ) {
-    val displayText = when {
-        buffer.isEmpty() -> "0"
-        buffer == "エラー" -> stringResource(R.string.calculator_error)
-        else -> buffer
-    }
+    val displayText =
+        when {
+            buffer.isEmpty() -> "0"
+            buffer == "エラー" -> stringResource(R.string.calculator_error)
+            else -> buffer
+        }
 
     Text(
         text = displayText,
@@ -227,39 +237,42 @@ internal fun CalculatorButtonGrid(
     onDelete: () -> Unit,
     onEvaluate: () -> Unit,
     modifier: Modifier = Modifier,
+    compact: Boolean = false,
 ) {
-    Column(
-        modifier = modifier.fillMaxWidth(),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
-        CalcRow {
-            SpecialButton(label = "C", enabled = enabled, modifier = Modifier.weight(1f)) { onClear() }
-            SpecialButton(label = "⌫", enabled = enabled, modifier = Modifier.weight(1f)) { onDelete() }
-            OperatorButton(label = "÷", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('÷') }
-            OperatorButton(label = "×", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('×') }
-        }
-        CalcRow {
-            DigitButton(label = "7", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('7') }
-            DigitButton(label = "8", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('8') }
-            DigitButton(label = "9", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('9') }
-            OperatorButton(label = "-", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('-') }
-        }
-        CalcRow {
-            DigitButton(label = "4", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('4') }
-            DigitButton(label = "5", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('5') }
-            DigitButton(label = "6", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('6') }
-            OperatorButton(label = "+", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('+') }
-        }
-        CalcRow {
-            DigitButton(label = "1", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('1') }
-            DigitButton(label = "2", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('2') }
-            DigitButton(label = "3", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('3') }
-            Spacer(modifier = Modifier.weight(1f))
-        }
-        CalcRow {
-            DigitButton(label = ".", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('.') }
-            WideDigitButton(label = "0", enabled = enabled, modifier = Modifier.weight(2f)) { onAppend('0') }
-            EqualsButton(enabled = enabled, modifier = Modifier.weight(1f)) { onEvaluate() }
+    CompositionLocalProvider(LocalCompactCalculatorButtons provides compact) {
+        Column(
+            modifier = modifier.fillMaxWidth(),
+            verticalArrangement = Arrangement.spacedBy(if (compact) 8.dp else 12.dp),
+        ) {
+            CalcRow {
+                SpecialButton(label = "C", enabled = enabled, modifier = Modifier.weight(1f)) { onClear() }
+                SpecialButton(label = "⌫", enabled = enabled, modifier = Modifier.weight(1f)) { onDelete() }
+                OperatorButton(label = "÷", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('÷') }
+                OperatorButton(label = "×", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('×') }
+            }
+            CalcRow {
+                DigitButton(label = "7", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('7') }
+                DigitButton(label = "8", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('8') }
+                DigitButton(label = "9", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('9') }
+                OperatorButton(label = "-", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('-') }
+            }
+            CalcRow {
+                DigitButton(label = "4", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('4') }
+                DigitButton(label = "5", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('5') }
+                DigitButton(label = "6", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('6') }
+                OperatorButton(label = "+", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('+') }
+            }
+            CalcRow {
+                DigitButton(label = "1", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('1') }
+                DigitButton(label = "2", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('2') }
+                DigitButton(label = "3", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('3') }
+                Spacer(modifier = Modifier.weight(1f))
+            }
+            CalcRow {
+                DigitButton(label = ".", enabled = enabled, modifier = Modifier.weight(1f)) { onAppend('.') }
+                WideDigitButton(label = "0", enabled = enabled, modifier = Modifier.weight(2f)) { onAppend('0') }
+                EqualsButton(enabled = enabled, modifier = Modifier.weight(1f)) { onEvaluate() }
+            }
         }
     }
 }
@@ -268,7 +281,7 @@ internal fun CalculatorButtonGrid(
 internal fun CalcRow(content: @Composable RowScope.() -> Unit) {
     Row(
         modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        horizontalArrangement = Arrangement.spacedBy(if (LocalCompactCalculatorButtons.current) 8.dp else 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         content()
@@ -283,20 +296,27 @@ internal fun DigitButton(
     onClick: () -> Unit,
 ) {
     Box(
-        modifier = modifier
-            .aspectRatio(1f)
-            .clip(CircleShape)
-            .background(
-                if (enabled) MiuixTheme.colorScheme.surfaceContainer
-                else MiuixTheme.colorScheme.surfaceContainer.copy(alpha = 0.4f)
-            )
-            .clickable(enabled = enabled) { onClick() },
+        modifier =
+            modifier
+                .aspectRatio(if (LocalCompactCalculatorButtons.current) 1.75f else 1f)
+                .clip(CircleShape)
+                .background(
+                    if (enabled) {
+                        MiuixTheme.colorScheme.surfaceContainer
+                    } else {
+                        MiuixTheme.colorScheme.surfaceContainer.copy(alpha = 0.4f)
+                    },
+                ).clickable(enabled = enabled) { onClick() },
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = label,
-            color = if (enabled) MiuixTheme.colorScheme.onSurface
-            else MiuixTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+            color =
+                if (enabled) {
+                    MiuixTheme.colorScheme.onSurface
+                } else {
+                    MiuixTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                },
             style = MiuixTheme.textStyles.title1,
             fontWeight = FontWeight.Medium,
         )
@@ -311,20 +331,27 @@ internal fun WideDigitButton(
     onClick: () -> Unit,
 ) {
     Box(
-        modifier = modifier
-            .aspectRatio(2f)
-            .clip(CircleShape)
-            .background(
-                if (enabled) MiuixTheme.colorScheme.surfaceContainer
-                else MiuixTheme.colorScheme.surfaceContainer.copy(alpha = 0.4f)
-            )
-            .clickable(enabled = enabled) { onClick() },
+        modifier =
+            modifier
+                .aspectRatio(if (LocalCompactCalculatorButtons.current) 3.65f else 2f)
+                .clip(CircleShape)
+                .background(
+                    if (enabled) {
+                        MiuixTheme.colorScheme.surfaceContainer
+                    } else {
+                        MiuixTheme.colorScheme.surfaceContainer.copy(alpha = 0.4f)
+                    },
+                ).clickable(enabled = enabled) { onClick() },
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = label,
-            color = if (enabled) MiuixTheme.colorScheme.onSurface
-            else MiuixTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+            color =
+                if (enabled) {
+                    MiuixTheme.colorScheme.onSurface
+                } else {
+                    MiuixTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                },
             style = MiuixTheme.textStyles.title1,
             fontWeight = FontWeight.Medium,
         )
@@ -341,14 +368,17 @@ internal fun OperatorButton(
     val operatorTextColor = if (enabled) Color(0xFFFD8D35) else Color(0x99FD8D35)
 
     Box(
-        modifier = modifier
-            .aspectRatio(1f)
-            .clip(CircleShape)
-            .background(
-                if (enabled) MiuixTheme.colorScheme.surfaceContainer
-                else MiuixTheme.colorScheme.surfaceContainer.copy(alpha = 0.4f)
-            )
-            .clickable(enabled = enabled) { onClick() },
+        modifier =
+            modifier
+                .aspectRatio(if (LocalCompactCalculatorButtons.current) 1.75f else 1f)
+                .clip(CircleShape)
+                .background(
+                    if (enabled) {
+                        MiuixTheme.colorScheme.surfaceContainer
+                    } else {
+                        MiuixTheme.colorScheme.surfaceContainer.copy(alpha = 0.4f)
+                    },
+                ).clickable(enabled = enabled) { onClick() },
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -368,13 +398,13 @@ internal fun EqualsButton(
 ) {
     val xiaomiColor = Color(0xFFFD8D35)
     Box(
-        modifier = modifier
-            .aspectRatio(1f)
-            .clip(CircleShape)
-            .background(
-                if (enabled) xiaomiColor else xiaomiColor.copy(alpha = 0.4f)
-            )
-            .clickable(enabled = enabled) { onClick() },
+        modifier =
+            modifier
+                .aspectRatio(if (LocalCompactCalculatorButtons.current) 1.75f else 1f)
+                .clip(CircleShape)
+                .background(
+                    if (enabled) xiaomiColor else xiaomiColor.copy(alpha = 0.4f),
+                ).clickable(enabled = enabled) { onClick() },
         contentAlignment = Alignment.Center,
     ) {
         Text(
@@ -394,20 +424,27 @@ internal fun SpecialButton(
     onClick: () -> Unit,
 ) {
     Box(
-        modifier = modifier
-            .aspectRatio(1f)
-            .clip(CircleShape)
-            .background(
-                if (enabled) MiuixTheme.colorScheme.surfaceContainerHighest
-                else MiuixTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.4f)
-            )
-            .clickable(enabled = enabled) { onClick() },
+        modifier =
+            modifier
+                .aspectRatio(if (LocalCompactCalculatorButtons.current) 1.75f else 1f)
+                .clip(CircleShape)
+                .background(
+                    if (enabled) {
+                        MiuixTheme.colorScheme.surfaceContainerHighest
+                    } else {
+                        MiuixTheme.colorScheme.surfaceContainerHighest.copy(alpha = 0.4f)
+                    },
+                ).clickable(enabled = enabled) { onClick() },
         contentAlignment = Alignment.Center,
     ) {
         Text(
             text = label,
-            color = if (enabled) MiuixTheme.colorScheme.onSurface
-            else MiuixTheme.colorScheme.onSurface.copy(alpha = 0.4f),
+            color =
+                if (enabled) {
+                    MiuixTheme.colorScheme.onSurface
+                } else {
+                    MiuixTheme.colorScheme.onSurface.copy(alpha = 0.4f)
+                },
             style = MiuixTheme.textStyles.title1,
             fontWeight = FontWeight.Medium,
         )

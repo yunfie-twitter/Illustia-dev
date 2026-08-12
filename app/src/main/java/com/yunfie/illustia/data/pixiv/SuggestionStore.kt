@@ -1,11 +1,11 @@
 package com.yunfie.illustia.data.pixiv
 
 import com.yunfie.illustia.data.IllustiaRepository
-import java.util.concurrent.atomic.AtomicLong
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import java.util.concurrent.atomic.AtomicLong
 
 class SuggestionStore(
     private val searchAutocomplete: suspend (String) -> List<String>,
@@ -30,7 +30,7 @@ class SuggestionStore(
             }
         } catch (error: CancellationException) {
             throw error
-        } catch (_: Throwable) {
+        } catch (_: Exception) {
             // Keep the last successful suggestions for transient network failures.
         }
     }

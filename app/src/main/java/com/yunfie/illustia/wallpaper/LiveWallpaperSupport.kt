@@ -3,15 +3,14 @@ package com.yunfie.illustia.wallpaper
 import android.os.Build
 
 internal object LiveWallpaperSupport {
-    fun isSupported(): Boolean {
-        return !isHyperOsDevice(
+    fun isSupported(): Boolean =
+        !isHyperOsDevice(
             manufacturer = Build.MANUFACTURER,
             brand = Build.BRAND,
             osVersionName = systemProperty("ro.mi.os.version.name"),
             incremental = Build.VERSION.INCREMENTAL,
             display = Build.DISPLAY,
         )
-    }
 }
 
 internal fun isHyperOsDevice(
@@ -30,10 +29,10 @@ internal fun isHyperOsDevice(
         display.contains("HyperOS", ignoreCase = true)
 }
 
-private fun systemProperty(name: String): String {
-    return runCatching {
+private fun systemProperty(name: String): String =
+    runCatching {
         val systemProperties = Class.forName("android.os.SystemProperties")
-        systemProperties.getMethod("get", String::class.java)
+        systemProperties
+            .getMethod("get", String::class.java)
             .invoke(null, name) as? String
     }.getOrNull().orEmpty()
-}

@@ -75,16 +75,18 @@ fun MuteSettingsScreen(
         },
     ) { scaffoldPadding ->
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection)
-                .background(MiuixTheme.colorScheme.surface),
-            contentPadding = PaddingValues(
-                start = 18.dp,
-                end = 18.dp,
-                top = scaffoldPadding.calculateTopPadding() + 14.dp,
-                bottom = 96.dp,
-            ),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .nestedScroll(scrollBehavior.nestedScrollConnection)
+                    .background(MiuixTheme.colorScheme.surface),
+            contentPadding =
+                PaddingValues(
+                    start = 18.dp,
+                    end = 18.dp,
+                    top = scaffoldPadding.calculateTopPadding() + 14.dp,
+                    bottom = 96.dp,
+                ),
         ) {
             item {
                 Section(stringResource(R.string.mute_section_users)) {
@@ -164,7 +166,10 @@ fun MuteSettingsScreen(
 }
 
 @Composable
-fun MuteItemRow(text: String, onDelete: () -> Unit) {
+fun MuteItemRow(
+    text: String,
+    onDelete: () -> Unit,
+) {
     BasicComponent(
         title = text,
         modifier = Modifier.fillMaxWidth(),
@@ -198,9 +203,10 @@ private fun AddMuteTagSheet(
         insideMargin = BottomSheetInsideMargin,
     ) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 18.dp, vertical = 10.dp),
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 18.dp, vertical = 10.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
             TextField(
@@ -219,7 +225,12 @@ private fun AddMuteTagSheet(
                         tagInput = ""
                     }
                 },
-                enabled = tagInput.trim().removePrefix("#").trim().isNotEmpty(),
+                enabled =
+                    tagInput
+                        .trim()
+                        .removePrefix("#")
+                        .trim()
+                        .isNotEmpty(),
                 modifier = Modifier.fillMaxWidth(),
                 colors = overlayActionButtonColors(),
             ) {

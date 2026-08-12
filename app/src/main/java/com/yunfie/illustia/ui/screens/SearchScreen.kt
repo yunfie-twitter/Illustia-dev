@@ -8,12 +8,21 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyGridState
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items as gridItems
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
@@ -26,13 +35,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -41,6 +50,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yunfie.illustia.IllustiaUiState
 import com.yunfie.illustia.IllustiaViewModel
 import com.yunfie.illustia.R
+import com.yunfie.illustia.data.pixiv.SuggestionStore
 import com.yunfie.illustia.models.Illust
 import com.yunfie.illustia.models.LoadState
 import com.yunfie.illustia.models.SearchBookmarkFilter
@@ -50,16 +60,33 @@ import com.yunfie.illustia.models.SearchTarget
 import com.yunfie.illustia.models.UserPreview
 import com.yunfie.illustia.nativebridge.NativeIntentEvent
 import com.yunfie.illustia.nativebridge.NativeIntentRouter
-import com.yunfie.illustia.data.pixiv.SuggestionStore
-import com.yunfie.illustia.ui.components.*
-import kotlinx.coroutines.flow.collect
+import com.yunfie.illustia.ui.components.HeaderIcon
+import com.yunfie.illustia.ui.components.IllustGridSkeleton
+import com.yunfie.illustia.ui.components.LoadingIndicator
+import com.yunfie.illustia.ui.components.adaptiveIllustColumns
 import kotlinx.coroutines.delay
-import top.yukonga.miuix.kmp.basic.*
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.PullToRefresh
+import top.yukonga.miuix.kmp.basic.Surface
+import top.yukonga.miuix.kmp.basic.TabRowWithContour
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.*
+import top.yukonga.miuix.kmp.icon.extended.Back
+import top.yukonga.miuix.kmp.icon.extended.Background
+import top.yukonga.miuix.kmp.icon.extended.Filter
+import top.yukonga.miuix.kmp.icon.extended.Import
+import top.yukonga.miuix.kmp.icon.extended.Search
+import top.yukonga.miuix.kmp.icon.extended.Settings
+import top.yukonga.miuix.kmp.icon.extended.Show
+import top.yukonga.miuix.kmp.icon.extended.Theme
+import top.yukonga.miuix.kmp.icon.extended.Trim
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.PressFeedbackType
-import kotlinx.coroutines.launch
+import androidx.compose.foundation.lazy.grid.items as gridItems
 
 private val SearchSortOptions = SearchSort.entries.toList()
 private val SearchTargetOptions = SearchTarget.entries.toList()
@@ -93,9 +120,10 @@ fun SearchScreen(
         suggestionStore.fetch(liveQuery)
     }
 
-    val suggestions = remember(state.settings.searchHistory, state.recommendedTags, autocompleteSuggestions) {
-        (state.settings.searchHistory.take(6) + state.recommendedTags + autocompleteSuggestions).distinct().take(18)
-    }
+    val suggestions =
+        remember(state.settings.searchHistory, state.recommendedTags, autocompleteSuggestions) {
+            (state.settings.searchHistory.take(6) + state.recommendedTags + autocompleteSuggestions).distinct().take(18)
+        }
 
     LaunchedEffect(state.sessionReady, state.settings.refreshToken, state.recommendedTagsFetchedAtMillis) {
         if (state.sessionReady) {
@@ -121,11 +149,12 @@ fun SearchScreen(
         }
     }
 
-    val contentMode = when {
-        searchExpanded -> "suggestions"
-        isResultMode -> "results"
-        else -> "browse"
-    }
+    val contentMode =
+        when {
+            searchExpanded -> "suggestions"
+            isResultMode -> "results"
+            else -> "browse"
+        }
 
     if ((isResultMode || searchExpanded) && onBackFromResults == null) {
         val closeSearch = {
@@ -153,9 +182,10 @@ fun SearchScreen(
             // Search bar area (no TopAppBar title spacing)
             if (isResultMode && !searchExpanded) {
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 4.dp, end = 16.dp, top = 4.dp, bottom = 6.dp),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .padding(start = 4.dp, end = 16.dp, top = 4.dp, bottom = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     HeaderIcon(
@@ -175,12 +205,18 @@ fun SearchScreen(
                             onExpandedChange(expanded)
                         },
                         onValueChange = onUpdateDraft,
-                        onSearch = { onSubmit(state.searchDraft.ifBlank { state.activeSearchWord }); onExpandedChange(false) },
+                        onSearch = {
+                            onSubmit(state.searchDraft.ifBlank { state.activeSearchWord })
+                            onExpandedChange(false)
+                        },
                         onClear = {
                             onUpdateDraft("")
                             onExpandedChange(true)
                         },
-                        onSuggestionClick = { onSubmit(it); onExpandedChange(false) },
+                        onSuggestionClick = {
+                            onSubmit(it)
+                            onExpandedChange(false)
+                        },
                         modifier = Modifier.weight(1f),
                     )
                 }
@@ -192,12 +228,18 @@ fun SearchScreen(
                     historyCount = state.settings.searchHistory.size,
                     onExpandedChange = onExpandedChange,
                     onValueChange = onUpdateDraft,
-                    onSearch = { onSubmit(state.searchDraft.ifBlank { state.activeSearchWord }); onExpandedChange(false) },
+                    onSearch = {
+                        onSubmit(state.searchDraft.ifBlank { state.activeSearchWord })
+                        onExpandedChange(false)
+                    },
                     onClear = {
                         onUpdateDraft("")
                         onExpandedChange(true)
                     },
-                    onSuggestionClick = { onSubmit(it); onExpandedChange(false) },
+                    onSuggestionClick = {
+                        onSubmit(it)
+                        onExpandedChange(false)
+                    },
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )
             }
@@ -210,19 +252,27 @@ fun SearchScreen(
                 modifier = Modifier.fillMaxSize(),
             ) { mode ->
                 when (mode) {
-                    "suggestions" -> Spacer(Modifier.fillMaxSize())
-                    "results" -> SearchResultsArea(
-                        state = state,
-                        viewModel = viewModel,
-                        widgetSelectionMode = widgetSelectionMode,
-                        onIllustSelected = onIllustSelected,
-                    )
-                    else -> BrowseArea(
-                        state = state,
-                        viewModel = viewModel,
-                        showHeader = true,
-                        onIllustSelected = onIllustSelected,
-                    )
+                    "suggestions" -> {
+                        Spacer(Modifier.fillMaxSize())
+                    }
+
+                    "results" -> {
+                        SearchResultsArea(
+                            state = state,
+                            viewModel = viewModel,
+                            widgetSelectionMode = widgetSelectionMode,
+                            onIllustSelected = onIllustSelected,
+                        )
+                    }
+
+                    else -> {
+                        BrowseArea(
+                            state = state,
+                            viewModel = viewModel,
+                            showHeader = true,
+                            onIllustSelected = onIllustSelected,
+                        )
+                    }
                 }
             }
         }
@@ -240,11 +290,17 @@ private fun SearchResultsArea(
     val tabIllust = stringResource(R.string.search_tab_illust)
     val tabNovel = stringResource(R.string.search_tab_novel)
     val tabUser = stringResource(R.string.search_tab_user)
-    val tabs = remember(state.settings.searchUsersEnabled, state.settings.searchWorkType, widgetSelectionMode, tabIllust, tabNovel, tabUser) {
-        val workTab = if (state.settings.searchWorkType.isNovel) tabNovel else tabIllust
-        if (widgetSelectionMode) listOf(workTab)
-        else if (state.settings.searchUsersEnabled) listOf(workTab, tabUser) else listOf(workTab)
-    }
+    val tabs =
+        remember(state.settings.searchUsersEnabled, state.settings.searchWorkType, widgetSelectionMode, tabIllust, tabNovel, tabUser) {
+            val workTab = if (state.settings.searchWorkType.isNovel) tabNovel else tabIllust
+            if (widgetSelectionMode) {
+                listOf(workTab)
+            } else if (state.settings.searchUsersEnabled) {
+                listOf(workTab, tabUser)
+            } else {
+                listOf(workTab)
+            }
+        }
     val resultPagerState = rememberPagerState(pageCount = { tabs.size })
     val coroutineScope = rememberCoroutineScope()
     val selectedResultTab = resultPagerState.currentPage
@@ -281,7 +337,7 @@ private fun SearchResultsArea(
         PullToRefresh(
             isRefreshing = false,
             onRefresh = { viewModel.submitSearch() },
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier.fillMaxSize(),
         ) {
             if (
                 state.loadState == LoadState.Loading &&
