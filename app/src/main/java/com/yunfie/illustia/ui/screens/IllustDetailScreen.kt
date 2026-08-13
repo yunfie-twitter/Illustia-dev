@@ -6,12 +6,6 @@ import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.animation.AnimatedContent
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.spring
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -22,7 +16,6 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
@@ -37,7 +30,6 @@ import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
@@ -235,6 +227,7 @@ fun IllustDetailScreen(
             onRevealMutedArtwork = { revealMutedArtwork = true },
             mutedArtworkTitle = mutedArtworkTitle,
             mutedArtworkSummary = mutedArtworkSummary,
+            showLikeAnimation = showLikeAnimation,
             expanded = expanded,
             modifier = modifier,
         )
@@ -312,7 +305,7 @@ fun IllustDetailScreen(
                                         .weight(0.9f)
                                         .fillMaxHeight()
                                         .background(MiuixTheme.colorScheme.surface),
-                                contentPadding = PaddingValues(bottom = 96.dp),
+                                contentPadding = PaddingValues(top = 12.dp, bottom = 96.dp),
                             ) {
                                 item { detailInfoContent() }
                             }
@@ -329,24 +322,6 @@ fun IllustDetailScreen(
                             item { detailInfoContent() }
                         }
                     }
-                }
-                AnimatedVisibility(
-                    visible = showLikeAnimation,
-                    modifier = Modifier.align(Alignment.Center),
-                    enter =
-                        fadeIn() +
-                            scaleIn(
-                                initialScale = 0.25f,
-                                animationSpec = spring(dampingRatio = 0.42f, stiffness = 420f),
-                            ),
-                    exit = fadeOut() + scaleOut(targetScale = 1.35f),
-                ) {
-                    Icon(
-                        imageVector = MiuixIcons.FavoritesFill,
-                        contentDescription = null,
-                        tint = MiuixTheme.colorScheme.error,
-                        modifier = Modifier.size(112.dp),
-                    )
                 }
             }
         }

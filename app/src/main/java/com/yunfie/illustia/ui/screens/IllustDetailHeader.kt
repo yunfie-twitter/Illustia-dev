@@ -5,6 +5,12 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -52,6 +58,7 @@ import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
+import top.yukonga.miuix.kmp.icon.extended.FavoritesFill
 import top.yukonga.miuix.kmp.icon.extended.More
 import top.yukonga.miuix.kmp.menu.WindowIconDropdownMenu
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -80,6 +87,7 @@ internal fun IllustDetailHeader(
     onRevealMutedArtwork: () -> Unit,
     mutedArtworkTitle: String,
     mutedArtworkSummary: String,
+    showLikeAnimation: Boolean,
     expanded: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
@@ -281,6 +289,25 @@ internal fun IllustDetailHeader(
             ) {
                 LoadingIndicator()
             }
+        }
+
+        AnimatedVisibility(
+            visible = showLikeAnimation,
+            modifier = Modifier.align(Alignment.Center),
+            enter =
+                fadeIn() +
+                    scaleIn(
+                        initialScale = 0.25f,
+                        animationSpec = spring(dampingRatio = 0.42f, stiffness = 420f),
+                    ),
+            exit = fadeOut() + scaleOut(targetScale = 1.35f),
+        ) {
+            Icon(
+                imageVector = MiuixIcons.FavoritesFill,
+                contentDescription = null,
+                tint = MiuixTheme.colorScheme.error,
+                modifier = Modifier.size(112.dp),
+            )
         }
 
         Row(
