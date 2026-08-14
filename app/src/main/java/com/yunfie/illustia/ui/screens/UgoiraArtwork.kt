@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -45,6 +46,7 @@ import coil3.request.crossfade
 import com.yunfie.illustia.R
 import com.yunfie.illustia.models.pixiv.UgoiraPlayback
 import com.yunfie.illustia.models.pixiv.normalizedUgoiraDelayMillis
+import com.yunfie.illustia.performance.DevicePerformance
 import com.yunfie.illustia.ui.components.LoadingIndicator
 import com.yunfie.illustia.ui.components.PixivImage
 import kotlinx.coroutines.Dispatchers
@@ -68,8 +70,11 @@ internal fun UgoiraArtwork(
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     val animationScope = rememberCoroutineScope()
+    val runtimePolicy by DevicePerformance.runtimePolicy.collectAsState()
+    val animatedMediaEnabled = runtimePolicy.animatedMediaEnabled
     var reloadKey by remember { mutableIntStateOf(0) }
-    val playbackResult by produceState<Result<UgoiraPlayback>?>(initialValue = null, reloadKey) {
+    val playbackResult by produceState<Result<UgoiraPlayback>?>(initialValue = null, reloadKey, animatedMediaEnabled) {
+        if (!animatedMediaEnabled) return@produceState
         value =
             withContext(Dispatchers.IO) {
                 runCatching { loadPlayback() }
@@ -270,7 +275,7 @@ internal fun UgoiraArtwork(
         }
 
         when {
-            playbackResult == null -> {
+            animatedMediaEnabled && playbackResult == null -> {
                 Box(
                     modifier =
                         Modifier

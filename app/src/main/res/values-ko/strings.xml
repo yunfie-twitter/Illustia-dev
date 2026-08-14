@@ -343,6 +343,7 @@
     <string name="image_proxy_title">Pixiv 이미지 프록시</string>
     <string name="image_proxy_desc">이미지 도메인을 선택한 공개 인스턴스로 바꿉니다</string>
     <string name="image_quality_high">높음</string>
+    <string name="image_quality_dynamic">동적 (권장)</string>
     <string name="image_quality_medium">중간</string>
     <string name="image_quality_low">낮음</string>
     <string name="pixiv_network_mode_standard">표준</string>

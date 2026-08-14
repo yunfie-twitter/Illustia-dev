@@ -49,6 +49,8 @@ import androidx.compose.ui.unit.dp
 import com.yunfie.illustia.R
 import com.yunfie.illustia.models.Illust
 import com.yunfie.illustia.models.pixiv.UgoiraPlayback
+import com.yunfie.illustia.performance.AdaptiveImageQuality
+import com.yunfie.illustia.performance.imageUrlsFor
 import com.yunfie.illustia.ui.components.PixivImage
 import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
 import kotlinx.coroutines.Job
@@ -107,12 +109,18 @@ fun ImageViewerScreen(
                     illust.imagePages.ifEmpty { listOf(illust.imageUrl) }
                 }
 
+                "dynamic" -> illust.imageUrlsFor(AdaptiveImageQuality.MID)
+
                 else -> {
                     illust.originalImagePages.ifEmpty {
                         illust.imagePages.ifEmpty { listOfNotNull(illust.originalImageUrl ?: illust.imageUrl) }
                     }
                 }
             }
+        }
+    val originalImageUrls =
+        remember(illust) {
+            illust.imageUrlsFor(AdaptiveImageQuality.ORIGINAL)
         }
     val pagerState =
         rememberPagerState(initialPage = startPage.coerceIn(0, imageUrls.lastIndex.coerceAtLeast(0)), pageCount = { imageUrls.size })
@@ -314,6 +322,7 @@ fun ImageViewerScreen(
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         ZoomablePixivImage(
                             url = imageUrls[page],
+                            highResolutionUrl = originalImageUrls.getOrElse(page) { imageUrls[page] },
                             contentDescription = illust.title,
                             isActive = pagerState.currentPage == page,
                             swipeThresholdPx = swipePageThresholdPx,

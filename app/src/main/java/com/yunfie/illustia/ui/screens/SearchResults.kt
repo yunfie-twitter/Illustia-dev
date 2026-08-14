@@ -30,6 +30,7 @@ import com.yunfie.illustia.isMutedByTags
 import com.yunfie.illustia.models.Illust
 import com.yunfie.illustia.models.LoadState
 import com.yunfie.illustia.models.UserPreview
+import com.yunfie.illustia.performance.imageUrlFor
 import com.yunfie.illustia.ui.components.AutoLoadMoreEffect
 import com.yunfie.illustia.ui.components.AvatarImage
 import com.yunfie.illustia.ui.components.EmptyState
@@ -37,6 +38,7 @@ import com.yunfie.illustia.ui.components.FollowPill
 import com.yunfie.illustia.ui.components.IllustCard
 import com.yunfie.illustia.ui.components.PixivImage
 import com.yunfie.illustia.ui.components.PrefetchPixivImages
+import com.yunfie.illustia.ui.components.rememberAdaptiveGridImageQuality
 import com.yunfie.illustia.ui.components.adaptiveIllustColumns
 import com.yunfie.illustia.ui.components.adaptiveMainNavigationContentPadding
 import com.yunfie.illustia.ui.components.overlayActionButtonColors
@@ -55,11 +57,22 @@ internal fun SearchResultGrid(
     viewModel: IllustiaViewModel,
     onIllustSelected: ((Illust) -> Unit)? = null,
 ) {
+    val gridState = viewModel.searchResultGridState
     val feedHighQuality = state.settings.useHighQualityFeedImages
     val showAiBadge = remember(state.settings.showAiBadge) { state.settings.showAiBadge }
     val isNovelResult = page == 0 && state.settings.searchWorkType.isNovel
+    val columnCount = if (page == 0 && !isNovelResult) adaptiveIllustColumns(state.settings) else 1
+    val adaptiveImageQuality = rememberAdaptiveGridImageQuality(gridState, columnCount)
     val prefetchUrls =
-        remember(page, state.searchItems, state.searchNovelItems, feedHighQuality, isNovelResult) {
+        remember(
+            page,
+            state.searchItems,
+            state.searchNovelItems,
+            feedHighQuality,
+            isNovelResult,
+            state.settings.feedPreviewQuality,
+            adaptiveImageQuality,
+        ) {
             if (page == 0) {
                 if (isNovelResult) {
                     state.searchNovelItems
@@ -71,14 +84,17 @@ internal fun SearchResultGrid(
                     state.searchItems
                         .asSequence()
                         .take(16)
-                        .map { if (feedHighQuality) it.previewUrl else it.thumbnailUrl }
+                        .map {
+                            if (state.settings.feedPreviewQuality == "dynamic") it.imageUrlFor(adaptiveImageQuality)
+                            else if (feedHighQuality) it.previewUrl else it.thumbnailUrl
+                        }
                         .toList()
                 }
             } else {
                 emptyList()
             }
         }
-    PrefetchPixivImages(prefetchUrls, enabled = state.settings.prefetchImages)
+    PrefetchPixivImages(prefetchUrls, enabled = state.settings.prefetchImages, isScrolling = gridState.isScrollInProgress)
     AutoLoadMoreEffect(
         enabled = state.settings.autoLoadMore,
         nextUrl =
@@ -91,10 +107,9 @@ internal fun SearchResultGrid(
         onLoadMore = if (page == 0) viewModel::loadMoreSearch else viewModel::loadMoreUserSearch,
     )
 
-    val gridState = viewModel.searchResultGridState
     LazyVerticalGrid(
         state = gridState,
-        columns = GridCells.Fixed(if (page == 0 && !isNovelResult) adaptiveIllustColumns(state.settings) else 1),
+        columns = GridCells.Fixed(columnCount),
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 8.dp, bottom = adaptiveMainNavigationContentPadding()),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -134,6 +149,7 @@ internal fun SearchResultGrid(
                         highQualityImages = feedHighQuality,
                         showAiBadge = showAiBadge,
                         isMutedByTag = illust.isMutedByTags(state.settings),
+                        dynamicImageQuality = adaptiveImageQuality.takeIf { state.settings.feedPreviewQuality == "dynamic" },
                     )
                 }
                 if (!state.settings.autoLoadMore && state.searchNextUrl != null) {

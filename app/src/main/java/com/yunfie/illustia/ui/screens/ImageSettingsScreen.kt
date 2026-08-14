@@ -146,7 +146,7 @@ fun ImageSettingsScreen(
                         DividerLine()
                         SettingDropdownRow(
                             title = stringResource(R.string.image_preview_quality),
-                            values = listOf("low", "medium", "high"),
+                            values = listOf("dynamic", "low", "medium", "high"),
                             selected = state.settings.feedPreviewQuality,
                             label = { qualityLabel(it) },
                             onSelect = viewModel::updateFeedPreviewQuality,
@@ -154,7 +154,7 @@ fun ImageSettingsScreen(
                         DividerLine()
                         SettingDropdownRow(
                             title = stringResource(R.string.image_detail_quality),
-                            values = listOf("low", "medium", "high"),
+                            values = listOf("dynamic", "low", "medium", "high"),
                             selected = state.settings.illustDetailQuality,
                             label = { qualityLabel(it) },
                             onSelect = viewModel::updateIllustDetailQuality,
@@ -162,7 +162,7 @@ fun ImageSettingsScreen(
                         DividerLine()
                         SettingDropdownRow(
                             title = stringResource(R.string.image_fullscreen_quality),
-                            values = listOf("low", "medium", "high"),
+                            values = listOf("dynamic", "low", "medium", "high"),
                             selected = state.settings.fullscreenQuality,
                             label = { qualityLabel(it) },
                             onSelect = viewModel::updateFullscreenQuality,
@@ -507,6 +507,7 @@ fun ImageSettingsScreen(
 @Composable
 private fun qualityLabel(value: String): String =
     when (value) {
+        "dynamic" -> stringResource(R.string.image_quality_dynamic)
         "high" -> stringResource(R.string.image_quality_high)
         "medium" -> stringResource(R.string.image_quality_medium)
         else -> stringResource(R.string.image_quality_low)

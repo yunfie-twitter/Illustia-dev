@@ -6,13 +6,13 @@ import android.content.ContentResolver
 import android.content.Context
 import android.os.Bundle
 import com.yunfie.illustia.models.StoredAccount
+import com.yunfie.illustia.performance.DevicePerformance
 
 object PalleriaAccount {
     const val TYPE = "com.yunfie.illustia.account"
     const val AUTHORITY = "com.yunfie.illustia.sync"
     const val USER_ID = "pixiv_user_id"
     const val MANUAL_SYNC = "manual"
-    private const val SYNC_INTERVAL_SECONDS = 15L * 60L
 
     fun requestSync(
         account: Account,
@@ -60,7 +60,12 @@ object PalleriaAccount {
                 ContentResolver.setSyncAutomatically(account, AUTHORITY, true)
             }
             ContentResolver.removePeriodicSync(account, AUTHORITY, Bundle.EMPTY)
-            ContentResolver.addPeriodicSync(account, AUTHORITY, Bundle.EMPTY, SYNC_INTERVAL_SECONDS)
+            ContentResolver.addPeriodicSync(
+                account,
+                AUTHORITY,
+                Bundle.EMPTY,
+                DevicePerformance.profile.accountSyncIntervalSeconds,
+            )
         }
     }
 }

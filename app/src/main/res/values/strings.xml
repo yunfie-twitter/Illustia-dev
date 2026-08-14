@@ -374,6 +374,7 @@
     <string name="image_proxy_title">Pixiv画像プロキシ</string>
     <string name="image_proxy_desc">画像ドメインを選択した公開インスタンスに置き換えます</string>
     <string name="image_quality_high">高画質</string>
+    <string name="image_quality_dynamic">動的（推奨）</string>
     <string name="image_quality_medium">標準</string>
     <string name="image_quality_low">軽量</string>
     <string name="pixiv_network_mode_standard">standard</string>

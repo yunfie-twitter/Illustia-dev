@@ -76,6 +76,7 @@ private suspend fun PointerInputScope.detectZoomAndPanGestures(
 @Composable
 internal fun ZoomablePixivImage(
     url: String,
+    highResolutionUrl: String,
     contentDescription: String,
     isActive: Boolean,
     swipeThresholdPx: Float,
@@ -88,6 +89,7 @@ internal fun ZoomablePixivImage(
     var offset by remember(url) { mutableStateOf(Offset.Zero) }
     var localScale by remember(url) { mutableFloatStateOf(1f) }
     var localOffset by remember(url) { mutableStateOf(Offset.Zero) }
+    var highResolutionRequested by remember(url, highResolutionUrl) { mutableStateOf(false) }
     var viewportSize by remember { mutableStateOf(IntSize.Zero) }
     val animationScope = rememberCoroutineScope()
     val zoomAnimation = remember { arrayOfNulls<Job>(1) }
@@ -99,6 +101,7 @@ internal fun ZoomablePixivImage(
     ) {
         val wasZoomed = previous > 1.02f
         val zoomed = current > 1.02f
+        if (zoomed) highResolutionRequested = true
         if (wasZoomed != zoomed) onZoomChanged(zoomed)
     }
 
@@ -234,23 +237,34 @@ internal fun ZoomablePixivImage(
                     },
                 ),
     ) {
+        val imageModifier =
+            Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    transformOrigin =
+                        androidx.compose.ui.graphics
+                            .TransformOrigin(0.5f, 0.5f)
+                    scaleX = scale
+                    scaleY = scale
+                    translationX = offset.x
+                    translationY = offset.y
+                }
         PixivImage(
             url = url,
             contentDescription = contentDescription,
             contentScale = ContentScale.Fit,
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .graphicsLayer {
-                        transformOrigin =
-                            androidx.compose.ui.graphics
-                                .TransformOrigin(0.5f, 0.5f)
-                        scaleX = scale
-                        scaleY = scale
-                        translationX = offset.x
-                        translationY = offset.y
-                    },
+            modifier = imageModifier,
             crossfade = false,
         )
+        if (highResolutionRequested && highResolutionUrl != url) {
+            // Keep the current bitmap underneath until Coil has decoded the original.
+            PixivImage(
+                url = highResolutionUrl,
+                contentDescription = contentDescription,
+                contentScale = ContentScale.Fit,
+                modifier = imageModifier,
+                crossfade = true,
+            )
+        }
     }
 }

@@ -7,6 +7,7 @@ import com.yunfie.illustia.pallasync.data.ChainStateEntity
 import com.yunfie.illustia.pallasync.data.OutboxEntity
 import com.yunfie.illustia.pallasync.data.PallaSyncDeviceEntity
 import com.yunfie.illustia.pallasync.data.PallaSyncInboxEntity
+import com.yunfie.illustia.performance.DevicePerformance
 import com.yunfie.illustia.settings.SettingsStore
 import com.yunfie.illustia.settings.store.PALLA_SYNC_SERVER_URL
 import kotlinx.coroutines.CoroutineScope
@@ -69,7 +70,6 @@ internal class PalleriaSyncCoordinator(
 
     companion object {
         private const val DEFAULT_SERVER_URL = "https://api.yunfi.f5.si"
-        private const val NORMAL_POLL_DELAY_MS = 5_000L
         private const val MAX_RETRY_DELAY_MS = 5 * 60_000L
         private const val PROTOCOL_ERROR_DELAY_MS = 30_000L
         private val JSON_MEDIA_TYPE = "application/vnd.palleria.sync.v2+json".toMediaType()
@@ -91,7 +91,10 @@ internal class PalleriaSyncCoordinator(
             }
             backgroundSyncJob =
                 scope.launch {
-                    var retryDelayMs = NORMAL_POLL_DELAY_MS
+                    val performance = DevicePerformance.profile
+                    delay(performance.backgroundSyncInitialDelayMs)
+                    val normalPollDelayMs = performance.backgroundSyncPollDelayMs
+                    var retryDelayMs = normalPollDelayMs
                     while (currentCoroutineContext().isActive) {
                         val outcome =
                             runCatching {
@@ -107,8 +110,8 @@ internal class PalleriaSyncCoordinator(
                                 SyncCycleOutcome.Success,
                                 SyncCycleOutcome.Idle,
                                 -> {
-                                    retryDelayMs = NORMAL_POLL_DELAY_MS
-                                    NORMAL_POLL_DELAY_MS
+                                    retryDelayMs = normalPollDelayMs
+                                    normalPollDelayMs
                                 }
 
                                 SyncCycleOutcome.Retryable -> {
@@ -125,7 +128,10 @@ internal class PalleriaSyncCoordinator(
                                     break
                                 }
                             }
-                        delay(waitMs)
+                        val adaptiveWaitMs =
+                            (waitMs * DevicePerformance.runtimePolicy.value.backgroundWorkMultiplier)
+                                .coerceAtMost(MAX_RETRY_DELAY_MS)
+                        delay(adaptiveWaitMs)
                     }
                 }
         }

@@ -81,8 +81,8 @@ class SettingsStore internal constructor(
     private val encryptedPreferences = Companion.createEncryptedPreferences(appContext)
     private val sensitivePreferences = encryptedPreferences ?: legacyPreferences
     private val dataStore = Companion.dataStoreFor(appContext)
-    private val database = IllustiaDatabase.getInstance(appContext)
-    private val dao = database.settingsDao()
+    private val database by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { IllustiaDatabase.getInstance(appContext) }
+    private val dao by lazy(LazyThreadSafetyMode.SYNCHRONIZED) { database.settingsDao() }
 
     init {
         migrateIfNeeded()
@@ -271,7 +271,13 @@ class SettingsStore internal constructor(
         synchronized(migrationLock) {
             if (migrationCompleted) return
             runBlocking(Dispatchers.IO) {
-                migrateSettingsIfNeededImpl(dataStore, encryptedPreferences, legacyPreferences, database, dao)
+                migrateSettingsIfNeededImpl(
+                    dataStore,
+                    encryptedPreferences,
+                    legacyPreferences,
+                    database = { database },
+                    dao = { dao },
+                )
             }
             migrationCompleted = true
         }

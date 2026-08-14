@@ -28,6 +28,7 @@ import com.yunfie.illustia.models.UserPreview
 import com.yunfie.illustia.models.UserProfile
 import com.yunfie.illustia.nativebridge.NativeImageStore
 import com.yunfie.illustia.nativebridge.NativeIntentEvent
+import com.yunfie.illustia.performance.DevicePerformance
 import com.yunfie.illustia.settings.AppSettings
 import com.yunfie.illustia.settings.SettingsStore
 import com.yunfie.illustia.settings.SyncedCollectionsSnapshot
@@ -253,7 +254,7 @@ abstract class IllustiaViewModelFoundation(
         val loader = SingletonImageLoader.get(context)
         items
             .asSequence()
-            .take(settings.smartCacheItemCount.coerceIn(4, 30))
+            .take(minOf(settings.smartCacheItemCount.coerceIn(4, 30), DevicePerformance.profile.smartCacheLimit))
             .flatMap { illust ->
                 (
                     illust.mediumImagePages.ifEmpty {

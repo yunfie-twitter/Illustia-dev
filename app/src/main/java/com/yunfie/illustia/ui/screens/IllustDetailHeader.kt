@@ -120,6 +120,11 @@ internal fun IllustDetailHeader(
                         ?: detailFallbackImageUrl(illust.imageUrl, illust.mediumImageUrl, illust.squareImageUrl)
                 }
 
+                detailQuality == "dynamic" -> {
+                    illust.imagePages.firstOrNull()
+                        ?: detailFallbackImageUrl(illust.imageUrl, illust.mediumImageUrl, illust.squareImageUrl)
+                }
+
                 else -> {
                     illust.originalImagePages.firstOrNull()
                         ?: illust.imagePages.firstOrNull()
@@ -144,6 +149,12 @@ internal fun IllustDetailHeader(
                 }
 
                 detailQuality == "medium" -> {
+                    illust.imagePages.ifEmpty {
+                        listOfNotNull(detailFallbackImageUrl(illust.imageUrl, illust.mediumImageUrl, illust.squareImageUrl))
+                    }
+                }
+
+                detailQuality == "dynamic" -> {
                     illust.imagePages.ifEmpty {
                         listOfNotNull(detailFallbackImageUrl(illust.imageUrl, illust.mediumImageUrl, illust.squareImageUrl))
                     }

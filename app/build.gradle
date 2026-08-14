@@ -22,8 +22,8 @@ android {
         // Android 7.0 (API 24) and newer.
         minSdk androidMinSdk
         targetSdk 36
-        versionCode 42
-        versionName "5.4.0-beta.3"
+        versionCode 43
+        versionName "5.4.0-beta.4"
     }
 
     signingConfigs {
@@ -292,6 +292,7 @@ dependencies {
     implementation libs.navigation3.runtime
     implementation libs.biometric
     implementation libs.lifecycle.process
+    implementation "androidx.metrics:metrics-performance:1.0.0"
     implementation libs.miuix.ui
     implementation libs.miuix.preference
     implementation libs.miuix.icons

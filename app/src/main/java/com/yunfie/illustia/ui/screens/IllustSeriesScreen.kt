@@ -38,6 +38,7 @@ import com.yunfie.illustia.R
 import com.yunfie.illustia.data.pixiv.IllustSeriesStore
 import com.yunfie.illustia.models.Illust
 import com.yunfie.illustia.models.pixiv.Illusts
+import com.yunfie.illustia.performance.imageUrlFor
 import com.yunfie.illustia.ui.components.AutoLoadMoreEffect
 import com.yunfie.illustia.ui.components.AvatarImage
 import com.yunfie.illustia.ui.components.EmptyState
@@ -46,6 +47,7 @@ import com.yunfie.illustia.ui.components.IllustCard
 import com.yunfie.illustia.ui.components.IllustCardSkeleton
 import com.yunfie.illustia.ui.components.PixivImage
 import com.yunfie.illustia.ui.components.PrefetchPixivImages
+import com.yunfie.illustia.ui.components.rememberAdaptiveGridImageQuality
 import com.yunfie.illustia.ui.components.ProfileGridHorizontalSpacing
 import com.yunfie.illustia.ui.components.ProfileGridVerticalSpacing
 import com.yunfie.illustia.ui.components.adaptiveProfileGridColumns
@@ -77,18 +79,24 @@ fun IllustSeriesScreen(
     val settings by viewModel.settingsState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val gridState = rememberLazyGridState()
+    val columnCount = adaptiveProfileGridColumns()
+    val adaptiveImageQuality = rememberAdaptiveGridImageQuality(gridState, columnCount)
     val feedHighQuality = settings.useHighQualityFeedImages
     val showAiBadge = remember(settings.showAiBadge) { settings.showAiBadge }
     val prefetchUrls =
-        remember(state.illusts, feedHighQuality) {
+        remember(state.illusts, feedHighQuality, settings.feedPreviewQuality, adaptiveImageQuality) {
             state.illusts
                 .asSequence()
                 .take(16)
-                .map { if (feedHighQuality) it.imageUrls.medium.ifBlank { it.imageUrls.large } else it.imageUrls.squareMedium }
+                .map {
+                    if (settings.feedPreviewQuality == "dynamic") it.toIllust().imageUrlFor(adaptiveImageQuality)
+                    else if (feedHighQuality) it.imageUrls.medium.ifBlank { it.imageUrls.large }
+                    else it.imageUrls.squareMedium
+                }
                 .toList()
         }
 
-    PrefetchPixivImages(prefetchUrls, enabled = settings.prefetchImages)
+    PrefetchPixivImages(prefetchUrls, enabled = settings.prefetchImages, isScrolling = gridState.isScrollInProgress)
     AutoLoadMoreEffect(
         enabled = settings.autoLoadMore,
         nextUrl = state.model?.nextUrl,
@@ -110,7 +118,7 @@ fun IllustSeriesScreen(
     ) {
         LazyVerticalGrid(
             state = gridState,
-            columns = GridCells.Fixed(adaptiveProfileGridColumns()),
+            columns = GridCells.Fixed(columnCount),
             modifier = Modifier.fillMaxSize(),
             contentPadding = profileGridContentPadding(top = 0.dp),
             horizontalArrangement = Arrangement.spacedBy(ProfileGridHorizontalSpacing),
@@ -186,6 +194,7 @@ fun IllustSeriesScreen(
                     modifier = Modifier.animateItem(),
                     highQualityImages = feedHighQuality,
                     showAiBadge = showAiBadge,
+                    dynamicImageQuality = adaptiveImageQuality.takeIf { settings.feedPreviewQuality == "dynamic" },
                 )
             }
             if (!settings.autoLoadMore && state.model?.nextUrl != null) {
