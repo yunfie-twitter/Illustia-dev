@@ -116,19 +116,20 @@ object DevicePerformanceClassifier {
         if (!metrics.is64Bit) score -= 1
         if (metrics.displayMegapixels >= 3.5) score -= 1
 
-        val hardLowEnd =
-            metrics.lowRamDevice ||
-                metrics.totalRamMb < 3_584 ||
-                metrics.memoryClassMb <= 128 ||
-                (metrics.cpuCoreCount <= 4 && (metrics.cpuMaxFrequencyMhz ?: 0) < 2_000)
         val tier =
             when {
-                hardLowEnd || score <= 7 -> DevicePerformanceTier.LOW
+                isHardLowEnd(metrics) || score <= 7 -> DevicePerformanceTier.LOW
                 score <= 12 -> DevicePerformanceTier.BALANCED
                 else -> DevicePerformanceTier.HIGH
             }
         return profileFor(tier, score)
     }
+
+    private fun isHardLowEnd(metrics: DevicePerformanceMetrics): Boolean =
+        metrics.lowRamDevice ||
+            metrics.totalRamMb < 3_584 ||
+            metrics.memoryClassMb <= 128 ||
+            (metrics.cpuCoreCount <= 4 && (metrics.cpuMaxFrequencyMhz ?: 0) < 2_000)
 
     fun applyMode(
         detectedProfile: DevicePerformanceProfile,

@@ -1,6 +1,7 @@
 package com.yunfie.illustia
 
 import android.app.Application
+import android.os.Build
 import coil3.ImageLoader
 import coil3.SingletonImageLoader
 import coil3.disk.DiskCache
@@ -148,7 +149,7 @@ class IllustiaApplication : Application() {
                 }
             }
 
-            android.os.Build.VERSION.SDK_INT < 34 && level >= TRIM_MEMORY_RUNNING_LOW -> {
+            Build.VERSION.SDK_INT < Build.VERSION_CODES.UPSIDE_DOWN_CAKE && level >= TRIM_MEMORY_RUNNING_LOW -> {
                 DevicePerformance.onMemoryPressure()
                 appImageLoader?.memoryCache?.let { cache ->
                     if (level >= TRIM_MEMORY_RUNNING_CRITICAL) {

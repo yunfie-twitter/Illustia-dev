@@ -383,6 +383,10 @@ jobs:
           set -o pipefail
           ./gradlew assembleRelease 2>&1 | tee gradle-release-build.log
         env:
+          # Keep Rust line tables in the pre-strip JNI libraries so the native
+          # symbol archive can be used to symbolize release crash addresses.
+          CARGO_PROFILE_RELEASE_DEBUG: line-tables-only
+
           KEYSTORE_PATH: ../release.keystore
           KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
           KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
@@ -438,6 +442,214 @@ jobs:
           for APK in "${APKS[@]}"; do
             echo "  $APK"
           done
+
+      # --------------------------------------------------------
+      # APK署名検証
+      # --------------------------------------------------------
+      - name: Verify APK Signatures and Certificates
+        shell: bash
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          APKSIGNER="$(
+            find "${ANDROID_SDK_ROOT}/build-tools" \
+              -mindepth 2 \
+              -maxdepth 2 \
+              -type f \
+              -name apksigner \
+              -print \
+              | sort -V \
+              | tail -n 1
+          )"
+
+          if [ -z "$APKSIGNER" ]; then
+            echo "apksigner was not found in Android SDK Build Tools."
+            exit 1
+          fi
+
+          EXPECTED_CERT_SHA256="$(
+            keytool -exportcert \
+              -keystore release.keystore \
+              -storepass "$KEYSTORE_PASSWORD" \
+              -alias "$KEY_ALIAS" \
+              | sha256sum \
+              | cut -d ' ' -f 1
+          )"
+
+          for APK in app/build/outputs/apk/release/*.apk; do
+            REPORT="${RUNNER_TEMP}/$(basename "${APK%.apk}")-apksigner.txt"
+
+            "$APKSIGNER" verify \
+              --verbose \
+              --print-certs \
+              "$APK" \
+              | tee "$REPORT"
+
+            ACTUAL_CERT_SHA256="$(
+              sed -n \
+                's/^Signer #1 certificate SHA-256 digest: //p' \
+                "$REPORT" \
+                | head -n 1 \
+                | tr -d ':' \
+                | tr '[:upper:]' '[:lower:]'
+            )"
+
+            if [ -z "$ACTUAL_CERT_SHA256" ]; then
+              echo "Could not read the signing certificate SHA-256 from $APK."
+              exit 1
+            fi
+
+            if [ "$ACTUAL_CERT_SHA256" != "$EXPECTED_CERT_SHA256" ]; then
+              echo "Signing certificate mismatch for $APK."
+              echo "Expected: $EXPECTED_CERT_SHA256"
+              echo "Actual  : $ACTUAL_CERT_SHA256"
+              exit 1
+            fi
+
+            echo "Verified release certificate for $APK."
+          done
+
+      # --------------------------------------------------------
+      # Release asset準備
+      # --------------------------------------------------------
+      - name: Collect APKs and R8 Mapping
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VERSION="${{ needs.prepare.outputs.version_name }}"
+          mkdir -p release-assets
+
+          cp app/build/outputs/apk/release/*.apk release-assets/
+
+          MAPPING="app/build/outputs/mapping/release/mapping.txt"
+
+          if [ ! -s "$MAPPING" ]; then
+            echo "R8 mapping file was not generated: $MAPPING"
+            exit 1
+          fi
+
+          cp "$MAPPING" "release-assets/Illustia-v${VERSION}-mapping.txt"
+
+      - name: Package Native Debug Symbols
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          VERSION="${{ needs.prepare.outputs.version_name }}"
+          JNI_DIR="app/build/generated/uniffi/jniLibs"
+          SYMBOL_ARCHIVE="${GITHUB_WORKSPACE}/release-assets/Illustia-v${VERSION}-native-debug-symbols.zip"
+
+          mapfile -d '' NATIVE_LIBS < <(
+            find "$JNI_DIR" -type f -name '*.so' -print0
+          )
+
+          if [ ${#NATIVE_LIBS[@]} -eq 0 ]; then
+            echo "No Rust/JNI libraries found under $JNI_DIR."
+            exit 1
+          fi
+
+          (
+            cd "$JNI_DIR"
+            zip -9 -r "$SYMBOL_ARCHIVE" . -i '*.so'
+          )
+
+          unzip -l "$SYMBOL_ARCHIVE"
+
+      # --------------------------------------------------------
+      # APKごとのSBOM (CycloneDX / SPDX)
+      # --------------------------------------------------------
+      - name: Set up Node.js for SBOM generation
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          package-manager-cache: false
+
+      - name: Install SBOM Generator
+        shell: bash
+        run: >-
+          npm install --global --omit=optional --ignore-scripts
+          @cyclonedx/cdxgen@12.8.2
+
+      - name: Generate APK SBOMs
+        shell: bash
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+
+          VERSION="${{ needs.prepare.outputs.version_name }}"
+          BASE_SBOM="${RUNNER_TEMP}/palleria-release-base.cdx.json"
+
+          # Scan the complete source dependency graph so both Gradle and Cargo
+          # dependencies are represented in each release APK's SBOM.
+          cdxgen \
+            -r \
+            --spec-version 1.6 \
+            -o "$BASE_SBOM" \
+            "$GITHUB_WORKSPACE"
+
+          jq -e '.components | length > 0' "$BASE_SBOM" >/dev/null
+
+          for APK in release-assets/*.apk; do
+            APK_NAME="$(basename "$APK")"
+            ASSET_NAME="${APK_NAME%.apk}"
+            APK_SHA256="$(sha256sum "$APK" | cut -d ' ' -f 1)"
+            CYCLONEDX_SBOM="release-assets/${ASSET_NAME}.sbom.cdx.json"
+            SPDX_SBOM="release-assets/${ASSET_NAME}.sbom.spdx.json"
+
+            jq \
+              --arg name "$APK_NAME" \
+              --arg version "$VERSION" \
+              --arg sha256 "$APK_SHA256" \
+              --arg commit "$GITHUB_SHA" \
+              '
+                .metadata.component.name = $name
+                | .metadata.component.version = $version
+                | .metadata.component.hashes = (
+                    (.metadata.component.hashes // [])
+                    + [{"alg": "SHA-256", "content": $sha256}]
+                    | unique_by(.alg, .content)
+                  )
+                | .metadata.component.properties = (
+                    (.metadata.component.properties // [])
+                    + [
+                        {"name": "palleria:release-artifact", "value": $name},
+                        {"name": "palleria:git-commit", "value": $commit}
+                      ]
+                  )
+              ' \
+              "$BASE_SBOM" > "$CYCLONEDX_SBOM"
+
+            cdx-convert \
+              -i "$CYCLONEDX_SBOM" \
+              -o "$SPDX_SBOM"
+
+            jq empty "$CYCLONEDX_SBOM"
+            jq empty "$SPDX_SBOM"
+          done
+
+      # --------------------------------------------------------
+      # Release assetのSHA-256
+      # --------------------------------------------------------
+      - name: Generate SHA-256 Checksums
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          (
+            cd release-assets
+            find . -maxdepth 1 -type f ! -name SHA256SUMS.txt \
+              -printf '%f\0' \
+              | sort -z \
+              | xargs -0 sha256sum \
+              > SHA256SUMS.txt
+
+            sha256sum --check SHA256SUMS.txt
+          )
 
       # --------------------------------------------------------
       # fdroidserver
@@ -748,7 +960,7 @@ jobs:
           generate_release_notes: true
 
           files: |
-            app/build/outputs/apk/release/*.apk
+            release-assets/*
 
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
