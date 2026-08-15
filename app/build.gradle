@@ -22,8 +22,8 @@ android {
         // Android 7.0 (API 24) and newer.
         minSdk androidMinSdk
         targetSdk 36
-        versionCode 43
-        versionName "5.4.0-beta.4"
+        versionCode 44
+        versionName "5.4.0"
     }
 
     signingConfigs {
@@ -271,6 +271,7 @@ dependencies {
     implementation libs.lifecycle.runtime.compose
     implementation libs.appcompat
     implementation libs.core.splashscreen
+    implementation libs.core.performance
     implementation libs.security.crypto
     implementation libs.datastore.preferences
     implementation libs.room.runtime

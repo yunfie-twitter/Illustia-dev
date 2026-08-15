@@ -59,12 +59,12 @@ import com.yunfie.illustia.ui.components.ProfileGridHorizontalSpacing
 import com.yunfie.illustia.ui.components.ProfileGridVerticalSpacing
 import com.yunfie.illustia.ui.components.StateBanner
 import com.yunfie.illustia.ui.components.adaptiveIllustColumns
-import com.yunfie.illustia.ui.components.rememberAdaptiveGridImageQuality
 import com.yunfie.illustia.ui.components.adaptiveMainNavigationContentPadding
 import com.yunfie.illustia.ui.components.adaptiveProfileGridColumns
 import com.yunfie.illustia.ui.components.miuixClickable
 import com.yunfie.illustia.ui.components.overlayActionButtonColors
 import com.yunfie.illustia.ui.components.profileGridContentPadding
+import com.yunfie.illustia.ui.components.rememberAdaptiveGridImageQuality
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.Card

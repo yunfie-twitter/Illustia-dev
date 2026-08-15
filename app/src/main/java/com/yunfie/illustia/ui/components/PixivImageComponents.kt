@@ -4,9 +4,9 @@ import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -56,7 +56,7 @@ fun PixivImage(
     val currentOnSuccess by rememberUpdatedState(onSuccess)
     val currentOnLoadSuccess by rememberUpdatedState(onLoadSuccess)
     val imageRequest =
-        remember(effectiveUrl, thumbnail, requestSizePx, runtimePolicy.subtleAnimationsEnabled) {
+        remember(effectiveUrl, contentScale, thumbnail, requestSizePx, runtimePolicy.subtleAnimationsEnabled) {
             ImageRequest
                 .Builder(context)
                 .data(effectiveUrl)
@@ -74,7 +74,7 @@ fun PixivImage(
                 ).apply {
                     if (thumbnail || requestSizePx != null) {
                         size(requestSizePx ?: ThumbnailDecodeSizePx)
-                        scale(Scale.FILL)
+                        scale(if (contentScale == ContentScale.Crop) Scale.FILL else Scale.FIT)
                         precision(Precision.INEXACT)
                         allowRgb565(thumbnail)
                     }

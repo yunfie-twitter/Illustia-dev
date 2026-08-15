@@ -213,6 +213,11 @@
     <string name="general_dynamic_color">动态颜色</string>
     <string name="general_dynamic_color_desc">将设备系统调色板应用到应用程序</string>
     <string name="general_dynamic_color_unsupported_desc">动态颜色在此设备上不可用</string>
+    <string name="general_performance_mode">性能模式</string>
+    <string name="general_performance_mode_desc">选择设备负载与画质之间的平衡</string>
+    <string name="general_performance_mode_auto">自动</string>
+    <string name="general_performance_mode_lightweight">性能优先</string>
+    <string name="general_performance_mode_quality">画质优先</string>
     <string name="general_seed_color">种子颜色</string>
     <string name="general_seed_color_dialog_title">种子颜色</string>
     <string name="general_seed_color_dialog_desc">选择动态颜色关闭时使用的基色</string>

@@ -29,11 +29,11 @@ import com.yunfie.illustia.models.Illust
 import com.yunfie.illustia.performance.imageUrlFor
 import com.yunfie.illustia.ui.components.IllustCard
 import com.yunfie.illustia.ui.components.PrefetchPixivImages
-import com.yunfie.illustia.ui.components.rememberAdaptiveGridImageQuality
 import com.yunfie.illustia.ui.components.SectionHeader
 import com.yunfie.illustia.ui.components.TagTile
 import com.yunfie.illustia.ui.components.adaptiveMainNavigationContentPadding
 import com.yunfie.illustia.ui.components.adaptiveProfileGridColumns
+import com.yunfie.illustia.ui.components.rememberAdaptiveGridImageQuality
 import com.yunfie.illustia.visibleWithMutedTagsVisible
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -61,8 +61,13 @@ internal fun BrowseArea(
         ) {
             val historyUrls =
                 state.settings.viewHistory.visibleWithMutedTagsVisible(state.settings).take(8).map {
-                    if (state.settings.feedPreviewQuality == "dynamic") it.imageUrlFor(adaptiveImageQuality)
-                    else if (feedHighQuality) it.previewUrl else it.thumbnailUrl
+                    if (state.settings.feedPreviewQuality == "dynamic") {
+                        it.imageUrlFor(adaptiveImageQuality)
+                    } else if (feedHighQuality) {
+                        it.previewUrl
+                    } else {
+                        it.thumbnailUrl
+                    }
                 }
             val tagUrls =
                 sequenceOf(state.homeItems.asSequence(), state.searchItems.asSequence())

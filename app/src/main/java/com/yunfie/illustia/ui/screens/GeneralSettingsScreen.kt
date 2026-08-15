@@ -114,6 +114,15 @@ fun GeneralSettingsScreen(
                         )
                         DividerLine()
                         SettingDropdownRow(
+                            title = stringResource(R.string.general_performance_mode),
+                            summary = stringResource(R.string.general_performance_mode_desc),
+                            values = listOf("auto", "lightweight", "quality"),
+                            selected = state.settings.performanceMode,
+                            label = { performanceModeLabel(it) },
+                            onSelect = viewModel::updatePerformanceMode,
+                        )
+                        DividerLine()
+                        SettingDropdownRow(
                             title = stringResource(R.string.general_language),
                             summary = stringResource(R.string.general_language_desc),
                             values = appLanguageOptions(),
@@ -266,3 +275,11 @@ fun GeneralSettingsScreen(
         }
     }
 }
+
+@Composable
+private fun performanceModeLabel(value: String): String =
+    when (value) {
+        "lightweight" -> stringResource(R.string.general_performance_mode_lightweight)
+        "quality" -> stringResource(R.string.general_performance_mode_quality)
+        else -> stringResource(R.string.general_performance_mode_auto)
+    }

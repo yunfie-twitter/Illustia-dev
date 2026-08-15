@@ -1,3 +1,5 @@
+@file:Suppress("MagicNumber")
+
 package com.yunfie.illustia.performance
 
 enum class RuntimePressureLevel {

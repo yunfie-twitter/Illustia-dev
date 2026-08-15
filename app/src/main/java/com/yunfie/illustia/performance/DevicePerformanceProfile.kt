@@ -1,9 +1,24 @@
+@file:Suppress("MagicNumber")
+
 package com.yunfie.illustia.performance
 
 enum class DevicePerformanceTier {
     LOW,
     BALANCED,
     HIGH,
+}
+
+enum class DevicePerformanceMode(
+    val storedValue: String,
+) {
+    AUTO("auto"),
+    LIGHTWEIGHT("lightweight"),
+    QUALITY("quality"),
+    ;
+
+    companion object {
+        fun fromStoredValue(value: String): DevicePerformanceMode = entries.firstOrNull { it.storedValue == value } ?: AUTO
+    }
 }
 
 /** Raw, independently measurable inputs used by the classifier. */
@@ -16,6 +31,7 @@ data class DevicePerformanceMetrics(
     val is64Bit: Boolean,
     val sdkInt: Int,
     val displayMegapixels: Double,
+    val mediaPerformanceClass: Int = 0,
 )
 
 data class DevicePerformanceProfile(
@@ -41,6 +57,7 @@ data class DevicePerformanceProfile(
 }
 
 object DevicePerformanceClassifier {
+    @Suppress("CyclomaticComplexMethod")
     fun classify(metrics: DevicePerformanceMetrics): DevicePerformanceProfile {
         var score = 0
 
@@ -69,10 +86,15 @@ object DevicePerformanceClassifier {
             }
         score +=
             when (val frequency = metrics.cpuMaxFrequencyMhz) {
-                null -> 1 // Unknown hardware must not be optimistically classified.
+                null -> 1
+
+                // Unknown hardware must not be optimistically classified.
                 in 0..<1_800 -> 0
+
                 in 1_800..<2_200 -> 1
+
                 in 2_200..<2_800 -> 2
+
                 else -> 3
             }
         score +=
@@ -81,6 +103,15 @@ object DevicePerformanceClassifier {
                 metrics.sdkInt <= 30 -> 1
                 metrics.sdkInt <= 33 -> 2
                 else -> 3
+            }
+        // Media Performance Class is an affirmative capability signal. An undefined
+        // value must never be interpreted as evidence that a device is low-end.
+        score +=
+            when {
+                metrics.mediaPerformanceClass >= 35 -> 3
+                metrics.mediaPerformanceClass >= 31 -> 2
+                metrics.mediaPerformanceClass >= 30 -> 1
+                else -> 0
             }
         if (!metrics.is64Bit) score -= 1
         if (metrics.displayMegapixels >= 3.5) score -= 1
@@ -99,12 +130,23 @@ object DevicePerformanceClassifier {
         return profileFor(tier, score)
     }
 
+    fun applyMode(
+        detectedProfile: DevicePerformanceProfile,
+        mode: DevicePerformanceMode,
+    ): DevicePerformanceProfile =
+        when (mode) {
+            DevicePerformanceMode.AUTO -> detectedProfile
+            DevicePerformanceMode.LIGHTWEIGHT -> profileFor(DevicePerformanceTier.LOW, detectedProfile.score)
+            DevicePerformanceMode.QUALITY -> profileFor(DevicePerformanceTier.HIGH, detectedProfile.score)
+        }
+
+    @Suppress("LongMethod")
     fun profileFor(
         tier: DevicePerformanceTier,
         score: Int,
     ): DevicePerformanceProfile =
         when (tier) {
-            DevicePerformanceTier.LOW ->
+            DevicePerformanceTier.LOW -> {
                 DevicePerformanceProfile(
                     tier = tier,
                     score = score,
@@ -124,8 +166,9 @@ object DevicePerformanceClassifier {
                     backgroundSyncPollDelayMs = 30_000L,
                     accountSyncIntervalSeconds = 60L * 60L,
                 )
+            }
 
-            DevicePerformanceTier.BALANCED ->
+            DevicePerformanceTier.BALANCED -> {
                 DevicePerformanceProfile(
                     tier = tier,
                     score = score,
@@ -145,8 +188,9 @@ object DevicePerformanceClassifier {
                     backgroundSyncPollDelayMs = 15_000L,
                     accountSyncIntervalSeconds = 30L * 60L,
                 )
+            }
 
-            DevicePerformanceTier.HIGH ->
+            DevicePerformanceTier.HIGH -> {
                 DevicePerformanceProfile(
                     tier = tier,
                     score = score,
@@ -166,5 +210,6 @@ object DevicePerformanceClassifier {
                     backgroundSyncPollDelayMs = 5_000L,
                     accountSyncIntervalSeconds = 15L * 60L,
                 )
+            }
         }
 }

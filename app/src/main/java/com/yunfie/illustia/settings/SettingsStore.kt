@@ -23,6 +23,7 @@ import com.yunfie.illustia.settings.db.SavedIllustWithPages
 import com.yunfie.illustia.settings.db.SettingsDao
 import com.yunfie.illustia.settings.store.DATASTORE_NAME
 import com.yunfie.illustia.settings.store.KEY_APP_LANGUAGE
+import com.yunfie.illustia.settings.store.KEY_PERFORMANCE_MODE
 import com.yunfie.illustia.settings.store.LEGACY_PREFS_NAME
 import com.yunfie.illustia.settings.store.PALLA_SYNC_ENABLED
 import com.yunfie.illustia.settings.store.PALLA_SYNC_SERVER_URL
@@ -140,6 +141,7 @@ class SettingsStore internal constructor(
                     .edit()
                     .putInt(KEY_IMAGE_CACHE_SIZE_MB, rebased.imageCacheSizeMb)
                     .putString(KEY_APP_LANGUAGE, rebased.appLanguage)
+                    .putString(KEY_PERFORMANCE_MODE, rebased.performanceMode)
                     .putBoolean(KEY_STARTUP_PRIVACY_MODE, rebased.privacyModeEnabled)
                     .commit()
 
@@ -386,6 +388,13 @@ class SettingsStore internal constructor(
                 .getSharedPreferences(LEGACY_PREFS_NAME, Context.MODE_PRIVATE)
                 .getInt(KEY_IMAGE_CACHE_SIZE_MB, DEFAULT_IMAGE_CACHE_SIZE_MB)
                 .coerceIn(MIN_IMAGE_CACHE_SIZE_MB, MAX_IMAGE_CACHE_SIZE_MB)
+
+        fun readPerformanceModeSync(context: Context): String =
+            context.applicationContext
+                .getSharedPreferences(LEGACY_PREFS_NAME, Context.MODE_PRIVATE)
+                .getString(KEY_PERFORMANCE_MODE, "auto")
+                ?.takeIf { it in setOf("auto", "lightweight", "quality") }
+                ?: "auto"
 
         private const val KEY_IMAGE_CACHE_SIZE_MB = "startup_image_cache_size_mb"
         private const val KEY_STARTUP_PRIVACY_MODE = "startup_privacy_mode_enabled"

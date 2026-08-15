@@ -23,18 +23,20 @@ enum class AdaptiveImageQuality {
                 ORIGINAL -> null
             }
 
-    fun cappedAt(maximum: AdaptiveImageQuality): AdaptiveImageQuality =
-        if (ordinal <= maximum.ordinal) this else maximum
+    fun cappedAt(maximum: AdaptiveImageQuality): AdaptiveImageQuality = if (ordinal <= maximum.ordinal) this else maximum
 }
 
 fun Illust.imageUrlFor(quality: AdaptiveImageQuality): String =
     when (quality) {
         AdaptiveImageQuality.VERY_LOW -> squareImageUrl.ifBlank { mediumImageUrl.ifBlank { imageUrl } }
+
         AdaptiveImageQuality.LOW -> mediumImageUrl.ifBlank { imageUrl.ifBlank { squareImageUrl } }
+
         AdaptiveImageQuality.MID,
         AdaptiveImageQuality.HIGH,
         AdaptiveImageQuality.VERY_HIGH,
         -> imageUrl.ifBlank { mediumImageUrl.ifBlank { squareImageUrl } }
+
         AdaptiveImageQuality.ORIGINAL -> originalImageUrl?.takeIf(String::isNotBlank) ?: imageUrlFor(AdaptiveImageQuality.HIGH)
     }
 
@@ -42,13 +44,20 @@ fun Illust.imageUrlsFor(quality: AdaptiveImageQuality): List<String> =
     when (quality) {
         AdaptiveImageQuality.VERY_LOW,
         AdaptiveImageQuality.LOW,
-        -> mediumImagePages.ifEmpty { listOf(imageUrlFor(quality)) }
+        -> {
+            mediumImagePages.ifEmpty { listOf(imageUrlFor(quality)) }
+        }
+
         AdaptiveImageQuality.MID,
         AdaptiveImageQuality.HIGH,
         AdaptiveImageQuality.VERY_HIGH,
-        -> imagePages.ifEmpty { listOf(imageUrlFor(quality)) }
-        AdaptiveImageQuality.ORIGINAL ->
+        -> {
+            imagePages.ifEmpty { listOf(imageUrlFor(quality)) }
+        }
+
+        AdaptiveImageQuality.ORIGINAL -> {
             originalImagePages.ifEmpty {
                 imagePages.ifEmpty { listOf(imageUrlFor(quality)) }
             }
+        }
     }

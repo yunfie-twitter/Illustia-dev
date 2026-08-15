@@ -109,7 +109,9 @@ fun ImageViewerScreen(
                     illust.imagePages.ifEmpty { listOf(illust.imageUrl) }
                 }
 
-                "dynamic" -> illust.imageUrlsFor(AdaptiveImageQuality.MID)
+                "dynamic" -> {
+                    illust.imageUrlsFor(AdaptiveImageQuality.MID)
+                }
 
                 else -> {
                     illust.originalImagePages.ifEmpty {
@@ -119,9 +121,15 @@ fun ImageViewerScreen(
             }
         }
     val originalImageUrls =
-        remember(illust) {
-            illust.imageUrlsFor(AdaptiveImageQuality.ORIGINAL)
+        remember(illust, fullscreenQuality) {
+            if (fullscreenQuality == "dynamic") {
+                illust.imageUrlsFor(AdaptiveImageQuality.ORIGINAL)
+            } else {
+                imageUrls
+            }
         }
+    val highResolutionRequestSizePx =
+        AdaptiveImageQuality.VERY_HIGH.targetPixels.takeIf { fullscreenQuality == "dynamic" }
     val pagerState =
         rememberPagerState(initialPage = startPage.coerceIn(0, imageUrls.lastIndex.coerceAtLeast(0)), pageCount = { imageUrls.size })
     val coroutineScope = rememberCoroutineScope()
@@ -323,6 +331,7 @@ fun ImageViewerScreen(
                         ZoomablePixivImage(
                             url = imageUrls[page],
                             highResolutionUrl = originalImageUrls.getOrElse(page) { imageUrls[page] },
+                            highResolutionRequestSizePx = highResolutionRequestSizePx,
                             contentDescription = illust.title,
                             isActive = pagerState.currentPage == page,
                             swipeThresholdPx = swipePageThresholdPx,

@@ -1,9 +1,13 @@
+@file:Suppress("MagicNumber")
+
 package com.yunfie.illustia.performance
 
 import android.app.ActivityManager
 import android.content.Context
 import android.os.Build
 import android.os.PowerManager
+import androidx.core.performance.DefaultDevicePerformance
+import com.yunfie.illustia.settings.SettingsStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -19,12 +23,15 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 
 /** Process-wide, versioned device performance decision. Initialize from Application.onCreate. */
+@Suppress("TooManyFunctions")
 object DevicePerformance {
     private const val PREFERENCES_NAME = "device_performance_profile"
     private const val KEY_VERSION_CODE = "version_code"
     private const val KEY_BUILD_FINGERPRINT = "build_fingerprint"
+    private const val KEY_CLASSIFIER_VERSION = "classifier_version"
     private const val KEY_TIER = "tier"
     private const val KEY_SCORE = "score"
+    private const val CLASSIFIER_VERSION = 2
     private const val LOAD_SAMPLE_INTERVAL_MS = 1_000L
     private val monitorStarted = AtomicBoolean(false)
     private val appForeground = MutableStateFlow(false)
@@ -51,11 +58,18 @@ object DevicePerformance {
     private val frameCount = AtomicLong(0L)
     private val slowFrameCount = AtomicLong(0L)
     private val latestScrollVelocity = AtomicLong(0L)
+
     @Volatile private var thermalStatus = PowerManager.THERMAL_STATUS_NONE
+
+    @Volatile private var latestThermalHeadroom = 0.0f
+
+    @Volatile private var moderateThermalHeadroomThreshold = 0.7f
+
+    @Volatile private var severeThermalHeadroomThreshold = 1.0f
+
     @Volatile private var pressureController = RuntimePressureController()
 
-    @Volatile
-    var profile: DevicePerformanceProfile =
+    private val fallbackProfile =
         DevicePerformanceClassifier.classify(
             DevicePerformanceMetrics(
                 lowRamDevice = false,
@@ -68,6 +82,15 @@ object DevicePerformance {
                 displayMegapixels = 2.0,
             ),
         )
+
+    @Volatile private var detectedProfile: DevicePerformanceProfile = fallbackProfile
+
+    @Volatile
+    var mode: DevicePerformanceMode = DevicePerformanceMode.AUTO
+        private set
+
+    @Volatile
+    var profile: DevicePerformanceProfile = fallbackProfile
         private set
 
     fun initialize(context: Context): DevicePerformanceProfile {
@@ -79,9 +102,10 @@ object DevicePerformance {
         val canReuse =
             cachedTier != null &&
                 preferences.getLong(KEY_VERSION_CODE, -1L) == versionCode &&
-                preferences.getString(KEY_BUILD_FINGERPRINT, null) == fingerprint
+                preferences.getString(KEY_BUILD_FINGERPRINT, null) == fingerprint &&
+                preferences.getInt(KEY_CLASSIFIER_VERSION, -1) == CLASSIFIER_VERSION
 
-        profile =
+        detectedProfile =
             if (canReuse) {
                 val cachedScore = preferences.getInt(KEY_SCORE, 8)
                 // Rebuild policy values from code so tuning changes are applied after an app update.
@@ -93,6 +117,7 @@ object DevicePerformance {
                         .edit()
                         .putLong(KEY_VERSION_CODE, versionCode)
                         .putString(KEY_BUILD_FINGERPRINT, fingerprint)
+                        .putInt(KEY_CLASSIFIER_VERSION, CLASSIFIER_VERSION)
                         .putString(KEY_TIER, measuredProfile.tier.name)
                         .putInt(KEY_SCORE, measuredProfile.score)
                         .putBoolean("low_ram", metrics.lowRamDevice)
@@ -103,15 +128,26 @@ object DevicePerformance {
                         .putBoolean("is_64_bit", metrics.is64Bit)
                         .putInt("sdk_int", metrics.sdkInt)
                         .putLong("display_megapixels_x100", (metrics.displayMegapixels * 100).toLong())
+                        .putInt("media_performance_class", metrics.mediaPerformanceClass)
                         .apply()
                 }
             }
+        mode = DevicePerformanceMode.fromStoredValue(SettingsStore.readPerformanceModeSync(appContext))
+        profile = DevicePerformanceClassifier.applyMode(detectedProfile, mode)
         val normalCap = normalImageQualityCap(profile.tier)
         pressureController = RuntimePressureController()
         _imageQualityCap.value = normalCap
         _runtimePolicy.value = buildRuntimePolicy(RuntimePressureLevel.NORMAL, 0)
         startLoadMonitor(appContext)
         registerThermalListener(appContext)
+        return profile
+    }
+
+    fun setMode(value: String): DevicePerformanceProfile {
+        mode = DevicePerformanceMode.fromStoredValue(value)
+        profile = DevicePerformanceClassifier.applyMode(detectedProfile, mode)
+        val currentPolicy = _runtimePolicy.value
+        publishRuntimePolicy(currentPolicy.level, currentPolicy.pressureScore)
         return profile
     }
 
@@ -135,6 +171,7 @@ object DevicePerformance {
         publishRuntimePolicy(level, 100)
     }
 
+    @Suppress("CyclomaticComplexMethod", "LongMethod")
     private fun startLoadMonitor(context: Context) {
         if (!monitorStarted.compareAndSet(false, true)) return
         monitorScope.launch {
@@ -145,7 +182,6 @@ object DevicePerformance {
             val activityManager = context.getSystemService(ActivityManager::class.java)
             val powerManager = context.getSystemService(PowerManager::class.java)
             var smoothedPressure = 0.0
-            var thermalHeadroom = 0.0f
             var samplesSinceThermalHeadroom = 10
             var prefetchStableSamples = 0
 
@@ -180,7 +216,11 @@ object DevicePerformance {
                 val slowFrames = slowFrameCount.getAndSet(0L)
                 val jankRatio = if (frames >= 10L) slowFrames.toDouble() / frames else 0.0
                 if (Build.VERSION.SDK_INT >= 30 && samplesSinceThermalHeadroom++ >= 10) {
-                    thermalHeadroom = powerManager.getThermalHeadroom(0).takeIf { it.isFinite() } ?: thermalHeadroom
+                    latestThermalHeadroom =
+                        powerManager
+                            .getThermalHeadroom(0)
+                            .takeIf { it.isFinite() }
+                            ?: latestThermalHeadroom
                     samplesSinceThermalHeadroom = 0
                 }
                 val rawPressure =
@@ -191,7 +231,9 @@ object DevicePerformance {
                         lowMemory = memoryInfo.lowMemory,
                         jankRatio = jankRatio,
                         thermalStatus = thermalStatus,
-                        thermalHeadroom = thermalHeadroom,
+                        thermalHeadroom = latestThermalHeadroom,
+                        moderateThermalHeadroomThreshold = moderateThermalHeadroomThreshold,
+                        severeThermalHeadroomThreshold = severeThermalHeadroomThreshold,
                         batterySaver = powerManager.isPowerSaveMode,
                     )
                 smoothedPressure = if (smoothedPressure == 0.0) rawPressure.toDouble() else smoothedPressure * 0.55 + rawPressure * 0.45
@@ -226,15 +268,17 @@ object DevicePerformance {
 
     private fun readCpuTimes(): CpuTimes? =
         runCatching {
-            val values = File("/proc/stat").useLines { lines ->
-                lines.firstOrNull()?.trim()?.split(Regex("\\s+"))
-            } ?: return@runCatching null
+            val values =
+                File("/proc/stat").useLines { lines ->
+                    lines.firstOrNull()?.trim()?.split(Regex("\\s+"))
+                } ?: return@runCatching null
             if (values.firstOrNull() != "cpu") return@runCatching null
             val ticks = values.drop(1).mapNotNull(String::toLongOrNull)
             if (ticks.size < 5) return@runCatching null
             CpuTimes(total = ticks.sum(), idle = ticks[3] + ticks.getOrElse(4) { 0L })
         }.getOrNull()
 
+    @Suppress("ReturnCount")
     private fun cpuLoad(
         previous: CpuTimes?,
         current: CpuTimes?,
@@ -277,13 +321,17 @@ object DevicePerformance {
             imageDecodeParallelism = (profile.imageDecodeParallelism - level.ordinal).coerceAtLeast(1),
             networkRequestParallelism =
                 (profile.maxNetworkRequests - level.ordinal).coerceAtLeast(profile.maxNetworkRequestsPerHost),
-            prefetchEnabled = level.ordinal < RuntimePressureLevel.VERY_HIGH.ordinal && !(fastInteraction && level.ordinal >= RuntimePressureLevel.HIGH.ordinal),
+            prefetchEnabled =
+                level.ordinal < RuntimePressureLevel.VERY_HIGH.ordinal &&
+                    !(fastInteraction && level.ordinal >= RuntimePressureLevel.HIGH.ordinal),
             animatedMediaEnabled = level.ordinal <= RuntimePressureLevel.ELEVATED.ordinal,
-            subtleAnimationsEnabled = profile.animationsEnabled && level.ordinal <= RuntimePressureLevel.ELEVATED.ordinal && !fastInteraction,
+            subtleAnimationsEnabled =
+                profile.animationsEnabled && level.ordinal <= RuntimePressureLevel.ELEVATED.ordinal && !fastInteraction,
             backgroundWorkMultiplier = 1 shl level.ordinal.coerceAtMost(3),
         )
     }
 
+    @Suppress("CyclomaticComplexMethod")
     internal fun calculatePressureScore(
         systemCpuLoad: Double?,
         appCpuLoad: Double,
@@ -293,6 +341,8 @@ object DevicePerformance {
         thermalStatus: Int,
         thermalHeadroom: Float,
         batterySaver: Boolean,
+        moderateThermalHeadroomThreshold: Float = 0.7f,
+        severeThermalHeadroomThreshold: Float = 1.0f,
     ): Int {
         if (lowMemory) return 100
         var score = 0
@@ -309,8 +359,8 @@ object DevicePerformance {
             when {
                 thermalStatus >= PowerManager.THERMAL_STATUS_SEVERE -> 70
                 thermalStatus >= PowerManager.THERMAL_STATUS_MODERATE -> 30
-                thermalHeadroom >= 1.0f -> 55
-                thermalHeadroom >= 0.7f -> 25
+                thermalHeadroom >= severeThermalHeadroomThreshold -> 55
+                thermalHeadroom >= moderateThermalHeadroomThreshold -> 25
                 else -> 0
             }
         score +=
@@ -346,6 +396,9 @@ object DevicePerformance {
     private fun registerThermalListener(context: Context) {
         if (Build.VERSION.SDK_INT < 29) return
         val powerManager = context.getSystemService(PowerManager::class.java)
+        if (Build.VERSION.SDK_INT >= 35) {
+            runCatching { updateThermalHeadroomThresholds(powerManager.thermalHeadroomThresholds) }
+        }
         thermalStatus = powerManager.currentThermalStatus
         if (thermalStatus >= PowerManager.THERMAL_STATUS_SEVERE) {
             val level = pressureController.requestImmediateElevation(android.os.SystemClock.elapsedRealtime())
@@ -360,6 +413,26 @@ object DevicePerformance {
                 _prefetchAllowed.value = false
             }
         }
+        if (Build.VERSION.SDK_INT >= 36) {
+            powerManager.addThermalHeadroomListener { headroom, _, _, thresholds ->
+                if (headroom.isFinite()) latestThermalHeadroom = headroom
+                updateThermalHeadroomThresholds(thresholds)
+                if (headroom >= severeThermalHeadroomThreshold && thermalStatus < PowerManager.THERMAL_STATUS_SEVERE) {
+                    val level = pressureController.requestImmediateElevation(android.os.SystemClock.elapsedRealtime())
+                    publishRuntimePolicy(level, 90)
+                    _prefetchAllowed.value = false
+                }
+            }
+        }
+    }
+
+    private fun updateThermalHeadroomThresholds(thresholds: Map<Int, Float>) {
+        thresholds[PowerManager.THERMAL_STATUS_MODERATE]
+            ?.takeIf { it.isFinite() && it > 0.0f }
+            ?.let { moderateThermalHeadroomThreshold = it }
+        thresholds[PowerManager.THERMAL_STATUS_SEVERE]
+            ?.takeIf { it.isFinite() && it > 0.0f }
+            ?.let { severeThermalHeadroomThreshold = it }
     }
 
     private fun measure(context: Context): DevicePerformanceMetrics {
@@ -375,6 +448,7 @@ object DevicePerformance {
             is64Bit = Build.SUPPORTED_64_BIT_ABIS.isNotEmpty(),
             sdkInt = Build.VERSION.SDK_INT,
             displayMegapixels = displayMetrics.widthPixels.toDouble() * displayMetrics.heightPixels / 1_000_000.0,
+            mediaPerformanceClass = runCatching { DefaultDevicePerformance().mediaPerformanceClass }.getOrDefault(0),
         )
     }
 
@@ -399,5 +473,4 @@ object DevicePerformance {
         @Suppress("DEPRECATION")
         return if (Build.VERSION.SDK_INT >= 28) info.longVersionCode else info.versionCode.toLong()
     }
-
 }

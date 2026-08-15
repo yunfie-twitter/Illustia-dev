@@ -17,26 +17,32 @@ import com.yunfie.illustia.settings.SettingsStore
 import com.yunfie.illustia.widget.IllustWidgetProvider
 import com.yunfie.illustia.widget.RankingWidgetProvider
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.asCoroutineDispatcher
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import okhttp3.Dispatcher
 import okhttp3.OkHttpClient
 import okio.Path.Companion.toOkioPath
-import java.util.concurrent.TimeUnit
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
 class IllustiaApplication : Application() {
     private val appScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val postStartupWorkStarted = AtomicBoolean(false)
-    @Volatile private var appImageLoader: ImageLoader? = null
-    @Volatile private var activeDecodeExecutor: ThreadPoolExecutor? = null
-    @Volatile private var activeNetworkDispatcher: Dispatcher? = null
+
+    @Volatile
+    private var appImageLoader: ImageLoader? = null
+
+    @Volatile
+    private var activeDecodeExecutor: ThreadPoolExecutor? = null
+
+    @Volatile
+    private var activeNetworkDispatcher: Dispatcher? = null
 
     val settingsStore: SettingsStore by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
         SettingsStore(this)
@@ -131,20 +137,26 @@ class IllustiaApplication : Application() {
     @Suppress("DEPRECATION")
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
-        val isMemoryPressure =
-            level == TRIM_MEMORY_RUNNING_LOW ||
-                level == TRIM_MEMORY_RUNNING_CRITICAL ||
-                level == TRIM_MEMORY_BACKGROUND ||
-                level == TRIM_MEMORY_MODERATE ||
-                level == TRIM_MEMORY_COMPLETE
-        if (!isMemoryPressure) return
+        when {
+            level >= TRIM_MEMORY_BACKGROUND -> {
+                appImageLoader?.memoryCache?.clear()
+            }
 
-        DevicePerformance.onMemoryPressure()
-        appImageLoader?.memoryCache?.let { cache ->
-            if (level == TRIM_MEMORY_RUNNING_CRITICAL || level == TRIM_MEMORY_COMPLETE) {
-                cache.clear()
-            } else {
-                cache.trimToSize(cache.maxSize / 2L)
+            level >= TRIM_MEMORY_UI_HIDDEN -> {
+                appImageLoader?.memoryCache?.let { cache ->
+                    cache.trimToSize(cache.maxSize / 2L)
+                }
+            }
+
+            android.os.Build.VERSION.SDK_INT < 34 && level >= TRIM_MEMORY_RUNNING_LOW -> {
+                DevicePerformance.onMemoryPressure()
+                appImageLoader?.memoryCache?.let { cache ->
+                    if (level >= TRIM_MEMORY_RUNNING_CRITICAL) {
+                        cache.clear()
+                    } else {
+                        cache.trimToSize(cache.maxSize / 2L)
+                    }
+                }
             }
         }
     }

@@ -102,10 +102,14 @@ fun BookmarkScreen(
                 .asSequence()
                 .take(16)
                 .map {
-                    if (settings.feedPreviewQuality == "dynamic") it.imageUrlFor(prefetchQuality)
-                    else if (feedHighQuality) it.previewUrl else it.thumbnailUrl
-                }
-                .toList()
+                    if (settings.feedPreviewQuality == "dynamic") {
+                        it.imageUrlFor(prefetchQuality)
+                    } else if (feedHighQuality) {
+                        it.previewUrl
+                    } else {
+                        it.thumbnailUrl
+                    }
+                }.toList()
         }
     PrefetchPixivImages(prefetchUrls, enabled = settings.prefetchImages, isScrolling = activeGridState.isScrollInProgress)
 

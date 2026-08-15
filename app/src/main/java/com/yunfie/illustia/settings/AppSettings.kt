@@ -46,6 +46,7 @@ data class AppSettings(
     val viewHistory: List<Illust> = emptyList(),
     val smoothTransitions: Boolean = true,
     val hapticMode: String = "rich",
+    val performanceMode: String = "auto",
     val prefetchImages: Boolean = false,
     val autoLoadMore: Boolean = false,
     val notchOptimization: Boolean = true,

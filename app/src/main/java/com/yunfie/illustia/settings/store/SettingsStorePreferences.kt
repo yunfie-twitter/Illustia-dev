@@ -87,6 +87,7 @@ internal fun readFromDataStore(
                 }.take(MAX_VIEW_HISTORY),
         smoothTransitions = preferences[SMOOTH_TRANSITIONS] ?: true,
         hapticMode = preferences[HAPTIC_MODE] ?: "rich",
+        performanceMode = preferences[PERFORMANCE_MODE] ?: "auto",
         prefetchImages = preferences[PREFETCH_IMAGES] ?: false,
         autoLoadMore = preferences[AUTO_LOAD_MORE] ?: false,
         notchOptimization = preferences[NOTCH_OPTIMIZATION] ?: true,
@@ -229,6 +230,7 @@ internal fun readFromSharedPreferences(preferences: SharedPreferences): AppSetti
         viewHistory = decodeHistoryIllusts(preferences.getString(KEY_VIEW_HISTORY, "")).take(MAX_VIEW_HISTORY),
         smoothTransitions = preferences.getBoolean(KEY_SMOOTH_TRANSITIONS, true),
         hapticMode = preferences.getString(KEY_HAPTIC_MODE, "rich") ?: "rich",
+        performanceMode = preferences.getString(KEY_PERFORMANCE_MODE, "auto") ?: "auto",
         prefetchImages = preferences.getBoolean(KEY_PREFETCH_IMAGES, false),
         autoLoadMore = preferences.getBoolean("autoLoadMore", false),
         notchOptimization = preferences.getBoolean("notchOptimization", true),
@@ -352,6 +354,7 @@ internal fun writeToDataStore(
     preferences.remove(VIEW_HISTORY_JSON)
     preferences[SMOOTH_TRANSITIONS] = settings.smoothTransitions
     preferences[HAPTIC_MODE] = settings.hapticMode
+    preferences[PERFORMANCE_MODE] = settings.performanceMode
     preferences[PREFETCH_IMAGES] = settings.prefetchImages
     preferences[AUTO_LOAD_MORE] = settings.autoLoadMore
     preferences[NOTCH_OPTIMIZATION] = settings.notchOptimization

@@ -56,8 +56,8 @@ import coil3.toBitmap
 import com.yunfie.illustia.data.NativeImageAnalysis
 import com.yunfie.illustia.data.proxyPixivImageUrl
 import com.yunfie.illustia.nativebridge.NativeIntentRouter
-import com.yunfie.illustia.platform.PlatformCapabilities
 import com.yunfie.illustia.performance.DevicePerformance
+import com.yunfie.illustia.platform.PlatformCapabilities
 import com.yunfie.illustia.settings.AppFont
 import com.yunfie.illustia.settings.SettingsStore
 import com.yunfie.illustia.settings.appLanguageLocaleList
@@ -175,7 +175,9 @@ class MainActivity : FragmentActivity() {
                     !settings.artworkThemeEnabled ||
                     selectedArtwork == null ||
                     DevicePerformance.profile.isLowEnd
-                ) return@LaunchedEffect
+                ) {
+                    return@LaunchedEffect
+                }
                 runCatching {
                     val url = selectedArtwork.previewUrl.ifBlank { selectedArtwork.imageUrl }
                     val request =

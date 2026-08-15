@@ -38,10 +38,10 @@ import com.yunfie.illustia.ui.components.FollowPill
 import com.yunfie.illustia.ui.components.IllustCard
 import com.yunfie.illustia.ui.components.PixivImage
 import com.yunfie.illustia.ui.components.PrefetchPixivImages
-import com.yunfie.illustia.ui.components.rememberAdaptiveGridImageQuality
 import com.yunfie.illustia.ui.components.adaptiveIllustColumns
 import com.yunfie.illustia.ui.components.adaptiveMainNavigationContentPadding
 import com.yunfie.illustia.ui.components.overlayActionButtonColors
+import com.yunfie.illustia.ui.components.rememberAdaptiveGridImageQuality
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
@@ -85,10 +85,14 @@ internal fun SearchResultGrid(
                         .asSequence()
                         .take(16)
                         .map {
-                            if (state.settings.feedPreviewQuality == "dynamic") it.imageUrlFor(adaptiveImageQuality)
-                            else if (feedHighQuality) it.previewUrl else it.thumbnailUrl
-                        }
-                        .toList()
+                            if (state.settings.feedPreviewQuality == "dynamic") {
+                                it.imageUrlFor(adaptiveImageQuality)
+                            } else if (feedHighQuality) {
+                                it.previewUrl
+                            } else {
+                                it.thumbnailUrl
+                            }
+                        }.toList()
                 }
             } else {
                 emptyList()

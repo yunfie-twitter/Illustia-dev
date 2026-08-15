@@ -47,12 +47,12 @@ import com.yunfie.illustia.ui.components.IllustCard
 import com.yunfie.illustia.ui.components.IllustCardSkeleton
 import com.yunfie.illustia.ui.components.PixivImage
 import com.yunfie.illustia.ui.components.PrefetchPixivImages
-import com.yunfie.illustia.ui.components.rememberAdaptiveGridImageQuality
 import com.yunfie.illustia.ui.components.ProfileGridHorizontalSpacing
 import com.yunfie.illustia.ui.components.ProfileGridVerticalSpacing
 import com.yunfie.illustia.ui.components.adaptiveProfileGridColumns
 import com.yunfie.illustia.ui.components.overlayActionButtonColors
 import com.yunfie.illustia.ui.components.profileGridContentPadding
+import com.yunfie.illustia.ui.components.rememberAdaptiveGridImageQuality
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
@@ -89,11 +89,14 @@ fun IllustSeriesScreen(
                 .asSequence()
                 .take(16)
                 .map {
-                    if (settings.feedPreviewQuality == "dynamic") it.toIllust().imageUrlFor(adaptiveImageQuality)
-                    else if (feedHighQuality) it.imageUrls.medium.ifBlank { it.imageUrls.large }
-                    else it.imageUrls.squareMedium
-                }
-                .toList()
+                    if (settings.feedPreviewQuality == "dynamic") {
+                        it.toIllust().imageUrlFor(adaptiveImageQuality)
+                    } else if (feedHighQuality) {
+                        it.imageUrls.medium.ifBlank { it.imageUrls.large }
+                    } else {
+                        it.imageUrls.squareMedium
+                    }
+                }.toList()
         }
 
     PrefetchPixivImages(prefetchUrls, enabled = settings.prefetchImages, isScrolling = gridState.isScrollInProgress)

@@ -269,6 +269,11 @@
     <string name="general_dynamic_color">Dynamic Color</string>
     <string name="general_dynamic_color_desc">端末のシステム配色をアプリに反映します</string>
     <string name="general_dynamic_color_unsupported_desc">この端末では Dynamic Color を利用できません</string>
+    <string name="general_performance_mode">パフォーマンスモード</string>
+    <string name="general_performance_mode_desc">端末に合わせた負荷と画質のバランスを選択します</string>
+    <string name="general_performance_mode_auto">自動</string>
+    <string name="general_performance_mode_lightweight">軽量優先</string>
+    <string name="general_performance_mode_quality">品質優先</string>
     <string name="general_seed_color">Seed Color</string>
     <string name="general_seed_color_dialog_title">Seed Color</string>
     <string name="general_seed_color_dialog_desc">Dynamic Color をオフにしたときの基準色を選択します</string>

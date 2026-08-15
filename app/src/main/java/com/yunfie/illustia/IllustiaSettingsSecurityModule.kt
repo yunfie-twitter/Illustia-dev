@@ -145,6 +145,12 @@ abstract class IllustiaSettingsSecurityModule(
         updateSettings { it.copy(hapticMode = value) }
     }
 
+    fun updatePerformanceMode(value: String) {
+        DevicePerformance.setMode(value)
+        val normalized = DevicePerformance.mode.storedValue
+        updateSettings { it.copy(performanceMode = normalized) }
+    }
+
     fun updateHapticsEnabled(enabled: Boolean) {
         updateHapticMode(if (enabled) AppHapticMode.Rich.value else AppHapticMode.Off.value)
     }

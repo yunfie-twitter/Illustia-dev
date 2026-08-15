@@ -27,6 +27,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
@@ -77,6 +78,7 @@ private suspend fun PointerInputScope.detectZoomAndPanGestures(
 internal fun ZoomablePixivImage(
     url: String,
     highResolutionUrl: String,
+    highResolutionRequestSizePx: Int?,
     contentDescription: String,
     isActive: Boolean,
     swipeThresholdPx: Float,
@@ -90,6 +92,7 @@ internal fun ZoomablePixivImage(
     var localScale by remember(url) { mutableFloatStateOf(1f) }
     var localOffset by remember(url) { mutableStateOf(Offset.Zero) }
     var highResolutionRequested by remember(url, highResolutionUrl) { mutableStateOf(false) }
+    var highResolutionLoaded by remember(url, highResolutionUrl) { mutableStateOf(false) }
     var viewportSize by remember { mutableStateOf(IntSize.Zero) }
     val animationScope = rememberCoroutineScope()
     val zoomAnimation = remember { arrayOfNulls<Job>(1) }
@@ -257,13 +260,14 @@ internal fun ZoomablePixivImage(
             crossfade = false,
         )
         if (highResolutionRequested && highResolutionUrl != url) {
-            // Keep the current bitmap underneath until Coil has decoded the original.
+            // Keep the current bitmap visible until the bounded upgrade has decoded successfully.
             PixivImage(
                 url = highResolutionUrl,
                 contentDescription = contentDescription,
                 contentScale = ContentScale.Fit,
-                modifier = imageModifier,
-                crossfade = true,
+                modifier = imageModifier.alpha(if (highResolutionLoaded) 1f else 0f),
+                requestSizePx = highResolutionRequestSizePx,
+                onLoadSuccess = { highResolutionLoaded = true },
             )
         }
     }

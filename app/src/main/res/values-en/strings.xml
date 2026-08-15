@@ -267,6 +267,11 @@
     <string name="general_dynamic_color">Dynamic Color</string>
     <string name="general_dynamic_color_desc">Apply the device system color palette to the app</string>
     <string name="general_dynamic_color_unsupported_desc">Dynamic Color is not available on this device</string>
+    <string name="general_performance_mode">Performance mode</string>
+    <string name="general_performance_mode_desc">Choose the balance between device load and visual quality</string>
+    <string name="general_performance_mode_auto">Automatic</string>
+    <string name="general_performance_mode_lightweight">Prioritize performance</string>
+    <string name="general_performance_mode_quality">Prioritize quality</string>
     <string name="general_seed_color">Seed Color</string>
     <string name="general_seed_color_dialog_title">Seed Color</string>
     <string name="general_seed_color_dialog_desc">Choose the base color used when Dynamic Color is off</string>

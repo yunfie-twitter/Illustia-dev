@@ -185,6 +185,7 @@ abstract class IllustiaViewModelFoundation(
                 } else {
                     startupSettings
                 }
+            DevicePerformance.setMode(normalizedStartupSettings.performanceMode)
             val shouldLock = normalizedStartupSettings.appLockEnabled && settingsStore.hasPinSet()
             _uiState.update {
                 it.withSettings(normalizedStartupSettings).copy(

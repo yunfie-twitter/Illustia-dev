@@ -213,6 +213,11 @@
     <string name="general_dynamic_color">動態顏色</string>
     <string name="general_dynamic_color_desc">將裝置系統調色板應用到應用程式</string>
     <string name="general_dynamic_color_unsupported_desc">動態顏色在此裝置上不可用</string>
+    <string name="general_performance_mode">效能模式</string>
+    <string name="general_performance_mode_desc">選擇裝置負載與畫質之間的平衡</string>
+    <string name="general_performance_mode_auto">自動</string>
+    <string name="general_performance_mode_lightweight">效能優先</string>
+    <string name="general_performance_mode_quality">畫質優先</string>
     <string name="general_seed_color">種子顏色</string>
     <string name="general_seed_color_dialog_title">種子顏色</string>
     <string name="general_seed_color_dialog_desc">選擇動態顏色關閉時使用的基色</string>

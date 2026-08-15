@@ -100,10 +100,14 @@ internal fun FeedTabContent(
                 .asSequence()
                 .take(16)
                 .map {
-                    if (settings.feedPreviewQuality == "dynamic") it.imageUrlFor(adaptiveImageQuality)
-                    else if (feedHighQuality) it.previewUrl else it.thumbnailUrl
-                }
-                .toList()
+                    if (settings.feedPreviewQuality == "dynamic") {
+                        it.imageUrlFor(adaptiveImageQuality)
+                    } else if (feedHighQuality) {
+                        it.previewUrl
+                    } else {
+                        it.thumbnailUrl
+                    }
+                }.toList()
         }
     PrefetchPixivImages(prefetchUrls, enabled = settings.prefetchImages, isScrolling = gridState.isScrollInProgress)
     AutoLoadMoreEffect(
@@ -202,10 +206,14 @@ internal fun FollowingTabContent(
                 .asSequence()
                 .take(16)
                 .map {
-                    if (settings.feedPreviewQuality == "dynamic") it.imageUrlFor(adaptiveImageQuality)
-                    else if (feedHighQuality) it.previewUrl else it.thumbnailUrl
-                }
-                .toList()
+                    if (settings.feedPreviewQuality == "dynamic") {
+                        it.imageUrlFor(adaptiveImageQuality)
+                    } else if (feedHighQuality) {
+                        it.previewUrl
+                    } else {
+                        it.thumbnailUrl
+                    }
+                }.toList()
         }
     PrefetchPixivImages(prefetchUrls, enabled = settings.prefetchImages, isScrolling = gridState.isScrollInProgress)
     AutoLoadMoreEffect(

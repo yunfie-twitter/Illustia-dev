@@ -49,6 +49,26 @@ class DevicePerformanceClassifierTest {
     }
 
     @Test
+    fun `media performance class only adds affirmative high end evidence`() {
+        val undefined = DevicePerformanceClassifier.classify(metrics(mediaPerformanceClass = 0))
+        val certified = DevicePerformanceClassifier.classify(metrics(mediaPerformanceClass = 31))
+
+        undefined.tier shouldBe DevicePerformanceTier.BALANCED
+        certified.tier shouldBe DevicePerformanceTier.HIGH
+        certified.score shouldBe undefined.score + 2
+    }
+
+    @Test
+    fun `user mode overrides static tier without changing detected score`() {
+        val detected = DevicePerformanceClassifier.classify(metrics())
+
+        DevicePerformanceClassifier.applyMode(detected, DevicePerformanceMode.AUTO) shouldBe detected
+        DevicePerformanceClassifier.applyMode(detected, DevicePerformanceMode.LIGHTWEIGHT).tier shouldBe DevicePerformanceTier.LOW
+        DevicePerformanceClassifier.applyMode(detected, DevicePerformanceMode.QUALITY).tier shouldBe DevicePerformanceTier.HIGH
+        DevicePerformanceClassifier.applyMode(detected, DevicePerformanceMode.QUALITY).score shouldBe detected.score
+    }
+
+    @Test
     fun `pixiv variants map to discrete adaptive tiers`() {
         val illust =
             Illust(
@@ -84,6 +104,7 @@ class DevicePerformanceClassifierTest {
         is64Bit: Boolean = true,
         sdkInt: Int = 33,
         displayMegapixels: Double = 2.5,
+        mediaPerformanceClass: Int = 0,
     ) = DevicePerformanceMetrics(
         lowRamDevice = lowRamDevice,
         totalRamMb = totalRamMb,
@@ -93,5 +114,6 @@ class DevicePerformanceClassifierTest {
         is64Bit = is64Bit,
         sdkInt = sdkInt,
         displayMegapixels = displayMegapixels,
+        mediaPerformanceClass = mediaPerformanceClass,
     )
 }

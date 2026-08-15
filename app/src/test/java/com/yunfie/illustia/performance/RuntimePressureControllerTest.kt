@@ -88,4 +88,20 @@ class RuntimePressureControllerTest {
             batterySaver = false,
         ) shouldBe 95
     }
+
+    @Test
+    fun `device thermal thresholds replace fallback headroom cutoffs`() {
+        DevicePerformance.calculatePressureScore(
+            systemCpuLoad = 0.0,
+            appCpuLoad = 0.0,
+            memoryHeadroom = 0.5,
+            lowMemory = false,
+            jankRatio = 0.0,
+            thermalStatus = PowerManager.THERMAL_STATUS_NONE,
+            thermalHeadroom = 0.65f,
+            batterySaver = false,
+            moderateThermalHeadroomThreshold = 0.6f,
+            severeThermalHeadroomThreshold = 0.9f,
+        ) shouldBe 25
+    }
 }
