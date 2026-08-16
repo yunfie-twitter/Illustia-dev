@@ -198,6 +198,8 @@
     <string name="settings_experimental_summary">体验仍在开发中的功能</string>
     <string name="general_settings_title">常规设置</string>
     <string name="experimental_settings_title">实验性功能</string>
+    <string name="experimental_dynamic_resolution_section">动态分辨率</string>
+    <string name="experimental_dynamic_resolution_summary">根据显示环境调整分辨率的实验性功能</string>
     <string name="general_section_display">显示</string>
     <string name="general_section_interaction">交互</string>
     <string name="general_section_startup">启动</string>
@@ -319,7 +321,7 @@
     <string name="image_proxy_title">Pixiv 图像代理</string>
     <string name="image_proxy_desc">将图像域替换为选定的公共实例</string>
     <string name="image_quality_high">高</string>
-    <string name="image_quality_dynamic">动态（推荐）</string>
+    <string name="image_quality_dynamic">动态（实验性）</string>
     <string name="image_quality_medium">中</string>
     <string name="image_quality_low">低</string>
     <string name="pixiv_network_mode_standard">标准</string>

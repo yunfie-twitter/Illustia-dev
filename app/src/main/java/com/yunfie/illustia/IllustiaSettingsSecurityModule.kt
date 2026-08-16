@@ -83,7 +83,7 @@ abstract class IllustiaSettingsSecurityModule(
         }
     }
 
-    fun loadInitialHomeIfNeeded() {
+    fun loadInitialHomeIfNeeded(): Boolean {
         val state = _uiState.value
         if (
             state.settings.refreshToken.isBlank() ||
@@ -91,9 +91,10 @@ abstract class IllustiaSettingsSecurityModule(
             state.homeItems.isNotEmpty() ||
             state.loadState == LoadState.Loading
         ) {
-            return
+            return false
         }
         refreshHome()
+        return true
     }
 
     fun updateRefreshToken(value: String) {

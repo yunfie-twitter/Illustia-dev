@@ -260,15 +260,26 @@ internal fun ZoomablePixivImage(
             crossfade = false,
         )
         if (highResolutionRequested && highResolutionUrl != url) {
-            // Keep the current bitmap visible until the bounded upgrade has decoded successfully.
-            PixivImage(
-                url = highResolutionUrl,
-                contentDescription = contentDescription,
-                contentScale = ContentScale.Fit,
-                modifier = imageModifier.alpha(if (highResolutionLoaded) 1f else 0f),
-                requestSizePx = highResolutionRequestSizePx,
-                onLoadSuccess = { highResolutionLoaded = true },
-            )
+            if (highResolutionLoaded) {
+                PixivImage(
+                    url = highResolutionUrl,
+                    contentDescription = contentDescription,
+                    contentScale = ContentScale.Fit,
+                    modifier = imageModifier,
+                    requestSizePx = highResolutionRequestSizePx,
+                )
+            } else {
+                // Decode off-screen without creating a transparent, zoomed full-screen layer.
+                // Some devices fail to composite that large layer and hide the base bitmap too.
+                PixivImage(
+                    url = highResolutionUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.size(1.dp).alpha(0f),
+                    requestSizePx = highResolutionRequestSizePx,
+                    onLoadSuccess = { highResolutionLoaded = true },
+                )
+            }
         }
     }
 }

@@ -22,8 +22,8 @@ android {
         // Android 7.0 (API 24) and newer.
         minSdk androidMinSdk
         targetSdk 36
-        versionCode 44
-        versionName "5.4.0"
+        versionCode 45
+        versionName "5.5.0-beta.1"
     }
 
     signingConfigs {
@@ -179,6 +179,20 @@ tasks.register("buildPallaSyncCoreAndroid", Exec) {
     commandLine cargoExecutable, "ndk", "--platform", androidMinSdk.toString(),
         "-t", "arm64-v8a", "-t", "armeabi-v7a", "-t", "x86_64",
         "-o", uniffiJniDir.get().asFile, "build", "--release"
+}
+
+tasks.withType(dev.detekt.gradle.Detekt).configureEach {
+    dependsOn "generateUniFfiBindings"
+    exclude { element ->
+        element.file.absolutePath.replace('\\', '/').contains('/build/generated/')
+    }
+}
+
+tasks.withType(dev.detekt.gradle.DetektCreateBaselineTask).configureEach {
+    dependsOn "generateUniFfiBindings"
+    exclude { element ->
+        element.file.absolutePath.replace('\\', '/').contains('/build/generated/')
+    }
 }
 
 def detektBaselineBudget = 400

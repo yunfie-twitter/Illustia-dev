@@ -223,6 +223,8 @@
     <!-- General settings screen -->
     <string name="general_settings_title">일반 설정</string>
     <string name="experimental_settings_title">실험적 기능</string>
+    <string name="experimental_dynamic_resolution_section">동적 해상도</string>
+    <string name="experimental_dynamic_resolution_summary">표시 환경에 맞춰 해상도를 조절하는 실험적 기능입니다</string>
     <string name="general_section_display">표시</string>
     <string name="general_section_interaction">조작</string>
     <string name="general_section_startup">시작</string>
@@ -348,7 +350,7 @@
     <string name="image_proxy_title">Pixiv 이미지 프록시</string>
     <string name="image_proxy_desc">이미지 도메인을 선택한 공개 인스턴스로 바꿉니다</string>
     <string name="image_quality_high">높음</string>
-    <string name="image_quality_dynamic">동적 (권장)</string>
+    <string name="image_quality_dynamic">동적 (실험적)</string>
     <string name="image_quality_medium">중간</string>
     <string name="image_quality_low">낮음</string>
     <string name="pixiv_network_mode_standard">표준</string>

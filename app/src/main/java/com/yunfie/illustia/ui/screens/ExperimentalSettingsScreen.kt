@@ -107,6 +107,37 @@ fun ExperimentalSettingsScreen(
             }
 
             item {
+                Section(stringResource(R.string.experimental_dynamic_resolution_section)) {
+                    ElevatedPanel {
+                        SettingDropdownRow(
+                            title = stringResource(R.string.image_preview_quality),
+                            summary = stringResource(R.string.experimental_dynamic_resolution_summary),
+                            values = listOf("dynamic", "low", "medium", "high"),
+                            selected = state.settings.feedPreviewQuality,
+                            label = { qualityLabel(it) },
+                            onSelect = viewModel::updateFeedPreviewQuality,
+                        )
+                        DividerLine()
+                        SettingDropdownRow(
+                            title = stringResource(R.string.image_detail_quality),
+                            values = listOf("dynamic", "low", "medium", "high"),
+                            selected = state.settings.illustDetailQuality,
+                            label = { qualityLabel(it) },
+                            onSelect = viewModel::updateIllustDetailQuality,
+                        )
+                        DividerLine()
+                        SettingDropdownRow(
+                            title = stringResource(R.string.image_fullscreen_quality),
+                            values = listOf("dynamic", "low", "medium", "high"),
+                            selected = state.settings.fullscreenQuality,
+                            label = { qualityLabel(it) },
+                            onSelect = viewModel::updateFullscreenQuality,
+                        )
+                    }
+                }
+            }
+
+            item {
                 val activeIds = activeNavigationIds(state.settings.shortsFeedEnabled)
                 val orderedIds = normalizeNavigationOrder(state.settings.navigationOrder, activeIds)
                 val hiddenIds =

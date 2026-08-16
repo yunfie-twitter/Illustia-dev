@@ -32,6 +32,7 @@ import com.yunfie.illustia.IllustiaNavigationRequest
 import com.yunfie.illustia.IllustiaViewModel
 import com.yunfie.illustia.R
 import com.yunfie.illustia.data.pixiv.CommentArtworkType
+import com.yunfie.illustia.models.LoadState
 import com.yunfie.illustia.settings.AppHapticMode
 import com.yunfie.illustia.settings.effectiveAppHapticMode
 import com.yunfie.illustia.ui.components.ArtworkCardPreferences
@@ -67,6 +68,7 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
     var selectedTab by remember(initialTab) { mutableStateOf(initialTab) }
     var previousTab by remember { mutableStateOf<AppTab?>(null) }
     var showTokenLogin by remember { mutableStateOf(false) }
+    var initialHomeLoadAttempted by remember(state.settings.refreshToken) { mutableStateOf(false) }
     val selectedWatchlistSeriesIds = remember { mutableStateListOf<Long>() }
     var selectedCommentTarget by remember { mutableStateOf<Pair<Long, CommentArtworkType>?>(null) }
     val backStack = remember { mutableStateListOf<NavKey>(AppRoute.Main) }
@@ -187,7 +189,6 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
         if (!state.settingsLoaded) return@LaunchedEffect
         if (state.settings.refreshToken.isNotBlank()) {
             delay(120)
-            viewModel.loadInitialHomeIfNeeded()
             if (backStack.lastOrNull() == AppRoute.Onboarding) {
                 backStack.clear()
                 backStack.add(AppRoute.Main)
@@ -197,6 +198,24 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
             backStack.clear()
             backStack.add(AppRoute.Onboarding)
             selectedWatchlistSeriesIds.clear()
+        }
+    }
+
+    LaunchedEffect(
+        state.settingsLoaded,
+        state.settings.refreshToken,
+        state.loadState,
+        state.homeItems.isEmpty(),
+        initialHomeLoadAttempted,
+    ) {
+        val initialHomeCanLoad =
+            state.settingsLoaded &&
+                state.settings.refreshToken.isNotBlank() &&
+                state.loadState != LoadState.Loading
+        if (!initialHomeCanLoad || initialHomeLoadAttempted) return@LaunchedEffect
+        delay(120)
+        if (viewModel.loadInitialHomeIfNeeded()) {
+            initialHomeLoadAttempted = true
         }
     }
 

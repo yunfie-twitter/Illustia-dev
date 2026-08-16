@@ -230,6 +230,8 @@
     <string name="experimental_settings_title">実験的機能</string>
     <string name="experimental_customize_title">Palleriaを自分仕様に</string>
     <string name="experimental_customize_summary">画面構成や作品カード、テーマの新しいカスタマイズを試せます。設定はいつでも元に戻せます。</string>
+    <string name="experimental_dynamic_resolution_section">動的解像度</string>
+    <string name="experimental_dynamic_resolution_summary">表示状況に合わせて解像度を自動調整する試験的機能です</string>
     <string name="experimental_navigation_section">ナビゲーション</string>
     <string name="experimental_navigation_style">ナビゲーションの形状</string>
     <string name="experimental_navigation_style_desc">通常バー、フローティング、自動格納を切り替えます</string>
@@ -379,7 +381,7 @@
     <string name="image_proxy_title">Pixiv画像プロキシ</string>
     <string name="image_proxy_desc">画像ドメインを選択した公開インスタンスに置き換えます</string>
     <string name="image_quality_high">高画質</string>
-    <string name="image_quality_dynamic">動的（推奨）</string>
+    <string name="image_quality_dynamic">動的（試験的）</string>
     <string name="image_quality_medium">標準</string>
     <string name="image_quality_low">軽量</string>
     <string name="pixiv_network_mode_standard">standard</string>

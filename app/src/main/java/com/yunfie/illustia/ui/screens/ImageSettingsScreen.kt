@@ -145,30 +145,6 @@ fun ImageSettingsScreen(
                         )
                         DividerLine()
                         SettingDropdownRow(
-                            title = stringResource(R.string.image_preview_quality),
-                            values = listOf("dynamic", "low", "medium", "high"),
-                            selected = state.settings.feedPreviewQuality,
-                            label = { qualityLabel(it) },
-                            onSelect = viewModel::updateFeedPreviewQuality,
-                        )
-                        DividerLine()
-                        SettingDropdownRow(
-                            title = stringResource(R.string.image_detail_quality),
-                            values = listOf("dynamic", "low", "medium", "high"),
-                            selected = state.settings.illustDetailQuality,
-                            label = { qualityLabel(it) },
-                            onSelect = viewModel::updateIllustDetailQuality,
-                        )
-                        DividerLine()
-                        SettingDropdownRow(
-                            title = stringResource(R.string.image_fullscreen_quality),
-                            values = listOf("dynamic", "low", "medium", "high"),
-                            selected = state.settings.fullscreenQuality,
-                            label = { qualityLabel(it) },
-                            onSelect = viewModel::updateFullscreenQuality,
-                        )
-                        DividerLine()
-                        SettingDropdownRow(
                             title = stringResource(R.string.image_manga_reader_mode),
                             summary = stringResource(R.string.image_manga_reader_mode_desc),
                             values = listOf("paged", "vertical"),
@@ -505,7 +481,7 @@ fun ImageSettingsScreen(
 }
 
 @Composable
-private fun qualityLabel(value: String): String =
+internal fun qualityLabel(value: String): String =
     when (value) {
         "dynamic" -> stringResource(R.string.image_quality_dynamic)
         "high" -> stringResource(R.string.image_quality_high)

@@ -553,6 +553,27 @@ jobs:
             exit 1
           fi
 
+          READELF="$(
+            find "${ANDROID_SDK_ROOT}/ndk" \
+              -path '*/toolchains/llvm/prebuilt/*/bin/llvm-readelf' \
+              -print \
+              | sort -V \
+              | tail -n 1
+          )"
+
+          if [ -z "$READELF" ]; then
+            echo "llvm-readelf was not found in the Android NDK."
+            exit 1
+          fi
+
+          for NATIVE_LIB in "${NATIVE_LIBS[@]}"; do
+            if ! "$READELF" --sections "$NATIVE_LIB" \
+              | grep '\.debug_line' >/dev/null; then
+              echo "Native debug line information is missing: $NATIVE_LIB"
+              exit 1
+            fi
+          done
+
           (
             cd "$JNI_DIR"
             zip -9 -r "$SYMBOL_ARCHIVE" . -i '*.so'
@@ -572,7 +593,7 @@ jobs:
       - name: Install SBOM Generator
         shell: bash
         run: >-
-          npm install --global --omit=optional --ignore-scripts
+          npm install --global --ignore-scripts
           @cyclonedx/cdxgen@12.8.2
 
       - name: Generate APK SBOMs
@@ -588,6 +609,7 @@ jobs:
           # dependencies are represented in each release APK's SBOM.
           cdxgen \
             -r \
+            --required-only \
             --spec-version 1.6 \
             -o "$BASE_SBOM" \
             "$GITHUB_WORKSPACE"
@@ -610,9 +632,9 @@ jobs:
                 .metadata.component.name = $name
                 | .metadata.component.version = $version
                 | .metadata.component.hashes = (
-                    (.metadata.component.hashes // [])
+                    (.metadata.component.hashes // []
+                      | map(select(.alg != "SHA-256")))
                     + [{"alg": "SHA-256", "content": $sha256}]
-                    | unique_by(.alg, .content)
                   )
                 | .metadata.component.properties = (
                     (.metadata.component.properties // [])
