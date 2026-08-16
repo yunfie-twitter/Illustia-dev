@@ -1,3 +1,5 @@
+
+
 # Palleria
 
 <p align="center">
@@ -19,7 +21,7 @@
 <p align="center">
 
 [![License](https://img.shields.io/badge/License-GPL--3.0--only-blue.svg?style=flat-square)](LICENSE)
-[![Android](https://img.shields.io/badge/Android-13%2B-3DDC84.svg?style=flat-square\&logo=android\&logoColor=white)](https://developer.android.com/)
+[![Android](https://img.shields.io/badge/Android-7.1%2B-3DDC84.svg?style=flat-square\&logo=android\&logoColor=white)](https://developer.android.com/)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.x-7F52FF.svg?style=flat-square\&logo=kotlin\&logoColor=white)](https://kotlinlang.org/)
 [![Jetpack Compose](https://img.shields.io/badge/Jetpack%20Compose-UI-4285F4.svg?style=flat-square\&logo=jetpackcompose\&logoColor=white)](https://developer.android.com/compose)
 [![Miuix KMP](https://img.shields.io/badge/Design-Miuix%20KMP-FF6900.svg?style=flat-square)](https://github.com/miuix-kotlin-multiplatform/miuix)
