@@ -343,6 +343,81 @@ internal fun ZoomablePixivImage(
             }
         }
     }
+}
+              onHorizontalDrag = { change, dragAmount ->
+                                    if (triggered) return@detectHorizontalDragGestures
+
+                                    accumulatedX += dragAmount
+
+                                    if (abs(accumulatedX) >= swipeThresholdPx) {
+                                        triggered = true
+                                        if (accumulatedX < 0) {
+                                            onSwipeNext()
+                                        } else {
+                                            onSwipePrevious()
+                                        }
+                                        animateTo(MIN_SCALE, Offset.Zero)
+                                        change.consume()
+                                    }
+                                },
+                                onDragEnd = {
+                                    accumulatedX = 0f
+                                    triggered = false
+                                },
+                                onDragCancel = {
+                                    accumulatedX = 0f
+                                    triggered = false
+                                },
+                            )
+                        }
+                    } else {
+                        Modifier
+                    },
+                ),
+    ) {
+        val effectiveScale = if (isActuallyZoomed(scale)) scale else MIN_SCALE
+        val effectiveOffset = if (isActuallyZoomed(scale)) offset else Offset.Zero
+
+        val imageModifier =
+            Modifier
+                .fillMaxSize()
+                .graphicsLayer {
+                    transformOrigin = TransformOrigin(0.5f, 0.5f)
+                    scaleX = effectiveScale
+                    scaleY = effectiveScale
+                    translationX = effectiveOffset.x
+                    translationY = effectiveOffset.y
+                }
+
+        PixivImage(
+            url = url,
+            contentDescription = contentDescription,
+            contentScale = ContentScale.Fit,
+            modifier = imageModifier,
+            crossfade = false,
+        )
+
+        if (highResolutionRequested && highResolutionUrl != url) {
+            if (highResolutionLoaded && isActuallyZoomed(scale)) {
+                PixivImage(
+                    url = highResolutionUrl,
+                    contentDescription = contentDescription,
+                    contentScale = ContentScale.Fit,
+                    modifier = imageModifier,
+                    requestSizePx = highResolutionRequestSizePx,
+                )
+            } else {
+                PixivImage(
+                    url = highResolutionUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Fit,
+                    modifier = Modifier.size(1.dp).alpha(0f),
+                    requestSizePx = highResolutionRequestSizePx,
+                    onLoadSuccess = { highResolutionLoaded = true },
+                )
+            }
+        }
+    }
 }import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.input.pointer.positionChanged
 import androidx.compose.ui.layout.ContentScale
