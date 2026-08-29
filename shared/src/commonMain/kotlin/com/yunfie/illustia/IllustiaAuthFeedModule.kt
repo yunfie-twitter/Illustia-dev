@@ -1,15 +1,14 @@
 package com.yunfie.illustia
 
-import android.app.Application
-import android.content.Intent
-import android.net.Uri
 import androidx.lifecycle.viewModelScope
-import com.yunfie.illustia.data.ManagedDataRepository
+import com.yunfie.illustia.data.IllustiaRepository
 import com.yunfie.illustia.models.HomeFeedKind
 import com.yunfie.illustia.models.LoadState
 import com.yunfie.illustia.models.NovelPreview
 import com.yunfie.illustia.nativebridge.NativeIntentEvent
 import com.yunfie.illustia.nativebridge.NativeIntentRouter
+import com.yunfie.illustia.platform.PlatformActions
+import com.yunfie.illustia.settings.SettingsStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.update
@@ -18,9 +17,10 @@ import kotlinx.coroutines.withContext
 
 /** Authentication, native intents, search, feeds, timelines, and managed-data transfer. */
 abstract class IllustiaAuthFeedModule(
-    app: Application,
-    managedDataRepository: ManagedDataRepository,
-) : IllustiaSettingsSecurityModule(app, managedDataRepository) {
+    settingsStore: SettingsStore,
+    repository: IllustiaRepository = IllustiaRepository(settingsStore),
+    platformActions: PlatformActions? = null,
+) : IllustiaSettingsSecurityModule(settingsStore, repository, platformActions) {
     abstract fun openIllust(illustId: Long)
 
     abstract fun openUserPage(userId: Long)
