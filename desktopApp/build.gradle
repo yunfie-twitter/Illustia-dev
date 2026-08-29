@@ -1,0 +1,43 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+plugins {
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.compose.multiplatform)
+    alias(libs.plugins.kotlin.compose)
+}
+
+kotlin {
+    jvmToolchain(17)
+
+    jvm {
+        compilerOptions {
+            jvmTarget = JvmTarget.fromTarget("17")
+        }
+    }
+
+    sourceSets {
+        jvmMain {
+            dependencies {
+                implementation project(":shared")
+                implementation compose.desktop.currentOs
+            }
+        }
+    }
+}
+
+compose.desktop {
+    application {
+        mainClass = "com.yunfie.illustia.desktop.MainKt"
+        nativeDistributions {
+            targetFormats(org.jetbrains.compose.desktop.application.dsl.TargetFormat.Dmg, org.jetbrains.compose.desktop.application.dsl.TargetFormat.Msi, org.jetbrains.compose.desktop.application.dsl.TargetFormat.Deb)
+            packageName = "Palleria"
+            packageVersion = "5.5.0"
+        }
+    }
+}
+
+def rustTargetDir = rootProject.file("rust/target")
+
+tasks.withType(JavaExec).configureEach {
+    systemProperty "jna.library.path", new File(rustTargetDir, "release").absolutePath
+}

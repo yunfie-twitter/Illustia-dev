@@ -3,12 +3,12 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 plugins {
     id "com.android.application"
     id "androidx.baselineprofile"
-    id "org.jetbrains.kotlin.android"
+    alias(libs.plugins.kotlin.android)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
     alias(libs.plugins.ksp)
-    id "org.jetbrains.kotlin.plugin.compose"
-    id "org.jetbrains.kotlin.plugin.serialization"
-    id "org.jlleitschuh.gradle.ktlint"
-    id "dev.detekt"
+    alias(libs.plugins.ktlint)
+    alias(libs.plugins.detekt)
 }
 
 ext.releaseKeystorePath = System.getenv("KEYSTORE_PATH")
@@ -52,15 +52,8 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 
-
-
     buildFeatures {
         compose true
-    }
-
-    sourceSets {
-        main.kotlin.srcDir "$buildDir/generated/uniffi/kotlin"
-        main.jniLibs.srcDir "$buildDir/generated/uniffi/jniLibs"
     }
 
     packaging {
@@ -82,9 +75,6 @@ ktlint {
     outputToConsole = true
     ignoreFailures = false
     filter {
-        // Generated UniFFI sources are attached to the Android main source set.
-        // A path predicate is required because glob filtering is unreliable for
-        // dynamically attached source directories in ktlint-gradle.
         exclude { element ->
             element.file.absolutePath.replace('\\', '/').contains('/build/generated/')
         }
@@ -116,141 +106,6 @@ tasks.configureEach { task ->
     }
 }
 
-def releaseKeystorePath = System.getenv("KEYSTORE_PATH")
-
-def rustCrateDir = rootProject.file("rust/pixiv-api")
-def rustTargetDir = rootProject.file("rust/target")
-def hostOperatingSystem = org.gradle.internal.os.OperatingSystem.current()
-def cargoExecutable = hostOperatingSystem.isWindows()
-    ? new File(System.getProperty("user.home"), ".cargo/bin/cargo.exe").absolutePath
-    : "cargo"
-def uniffiHostLibraryName = hostOperatingSystem.isWindows()
-    ? "palleria_pixiv_api.dll"
-    : hostOperatingSystem.isMacOsX()
-        ? "libpalleria_pixiv_api.dylib"
-        : "libpalleria_pixiv_api.so"
-def uniffiHostLibrary = new File(rustTargetDir, "release/${uniffiHostLibraryName}")
-def uniffiKotlinDir = layout.buildDirectory.dir("generated/uniffi/kotlin")
-def uniffiJniDir = layout.buildDirectory.dir("generated/uniffi/jniLibs")
-def rustInputs = files(
-    fileTree(new File(rustCrateDir, "src")) { include "**/*.rs" },
-    new File(rustCrateDir, "Cargo.toml"),
-    new File(rustCrateDir, "Cargo.lock"),
-)
-
-tasks.register("buildUniFfiHost", Exec) {
-    workingDir rustCrateDir
-    environment "CARGO_TARGET_DIR", rustTargetDir
-    commandLine cargoExecutable, "build", "--release", "--lib"
-    inputs.files(rustInputs)
-    outputs.file(uniffiHostLibrary)
-}
-
-tasks.register("generateUniFfiBindings", Exec) {
-    workingDir rustCrateDir
-    environment "CARGO_TARGET_DIR", rustTargetDir
-    commandLine cargoExecutable, "run", "--release", "--bin", "uniffi-bindgen", "--", "generate",
-        "--library", uniffiHostLibrary,
-        "--language", "kotlin", "--out-dir", uniffiKotlinDir.get().asFile, "--no-format"
-    dependsOn "buildUniFfiHost"
-    inputs.files(rustInputs, new File(rustCrateDir, "uniffi.toml"))
-    outputs.file(uniffiKotlinDir.map { it.file("com/yunfie/illustia/rust/palleria_pixiv_api.kt") })
-}
-
-tasks.register("buildRustAndroid", Exec) {
-    workingDir rustCrateDir
-    environment "CARGO_TARGET_DIR", rustTargetDir
-    commandLine cargoExecutable, "ndk", "--platform", androidMinSdk.toString(),
-        "-t", "arm64-v8a", "-t", "armeabi-v7a", "-t", "x86_64",
-        "-o", uniffiJniDir.get().asFile, "build", "--release"
-    dependsOn "generateUniFfiBindings"
-    inputs.files(rustInputs)
-    outputs.files(
-        uniffiJniDir.map { it.file("arm64-v8a/libpalleria_pixiv_api.so") },
-        uniffiJniDir.map { it.file("armeabi-v7a/libpalleria_pixiv_api.so") },
-        uniffiJniDir.map { it.file("x86_64/libpalleria_pixiv_api.so") },
-    )
-}
-
-tasks.register("buildPallaSyncCoreAndroid", Exec) {
-    def pallaSyncCoreCrateDir = rootProject.file("rust/pallasync-core")
-    workingDir pallaSyncCoreCrateDir
-    environment "CARGO_TARGET_DIR", rustTargetDir
-    commandLine cargoExecutable, "ndk", "--platform", androidMinSdk.toString(),
-        "-t", "arm64-v8a", "-t", "armeabi-v7a", "-t", "x86_64",
-        "-o", uniffiJniDir.get().asFile, "build", "--release"
-}
-
-tasks.withType(dev.detekt.gradle.Detekt).configureEach {
-    dependsOn "generateUniFfiBindings"
-    exclude { element ->
-        element.file.absolutePath.replace('\\', '/').contains('/build/generated/')
-    }
-}
-
-tasks.withType(dev.detekt.gradle.DetektCreateBaselineTask).configureEach {
-    dependsOn "generateUniFfiBindings"
-    exclude { element ->
-        element.file.absolutePath.replace('\\', '/').contains('/build/generated/')
-    }
-}
-
-def detektBaselineBudget = 400
-def detektRuleBudgets = [
-    ComplexCondition: 11,
-    ConstructorParameterNaming: 2,
-    CyclomaticComplexMethod: 18,
-    EmptyFunctionBlock: 2,
-    InvalidPackageDeclaration: 0,
-    LargeClass: 3,
-    LongMethod: 15,
-    LoopWithTooManyJumpStatements: 3,
-    MagicNumber: 102,
-    MatchingDeclarationName: 5,
-    ReturnCount: 52,
-    SwallowedException: 0,
-    ThrowsCount: 2,
-    TooGenericExceptionCaught: 0,
-    TooGenericExceptionThrown: 1,
-    TooManyFunctions: 28,
-    UnusedParameter: 7,
-    VariableNaming: 3,
-]
-
-tasks.register("checkQualityBaselineBudgets") {
-    group = "verification"
-    description = "Fails when static-analysis baselines grow beyond their approved budgets."
-    def detektBaselineFile = file("detekt-baseline.xml")
-    inputs.file(detektBaselineFile)
-
-    doLast {
-        def detektCount = detektBaselineFile.readLines().count { it.contains("<ID>") }
-        def detektEntries = detektBaselineFile.readLines().findAll { it.contains("<ID>") }
-        def ruleCounts = detektEntries.countBy { entry ->
-            def matcher = entry =~ /<ID>([^:]+):/
-            matcher.find() ? matcher.group(1) : "Unknown"
-        }
-        def exceededRuleBudgets = ruleCounts.findAll { rule, count ->
-            !detektRuleBudgets.containsKey(rule) || count > detektRuleBudgets[rule]
-        }
-        if (detektCount > detektBaselineBudget) {
-            throw new GradleException(
-                "detekt baseline has ${detektCount} issues; budget is ${detektBaselineBudget}.",
-            )
-        }
-        if (!exceededRuleBudgets.isEmpty()) {
-            throw new GradleException(
-                "detekt rule budgets exceeded: ${exceededRuleBudgets.sort().collect { rule, count -> "${rule} ${count}/${detektRuleBudgets[rule] ?: 0}" }.join(', ')}.",
-            )
-        }
-        logger.lifecycle("Quality baseline budget: detekt ${detektCount}/${detektBaselineBudget}; ${ruleCounts.sort()}")
-    }
-}
-
-tasks.named("preBuild").configure {
-    dependsOn "generateUniFfiBindings", "buildRustAndroid", "buildPallaSyncCoreAndroid"
-}
-
 androidComponents {
     onVariants(selector().all()) { variant ->
         variant.outputs.forEach { output ->
@@ -260,9 +115,6 @@ androidComponents {
     }
 }
 
-
-
-
 kotlin {
     compilerOptions {
         jvmTarget = JvmTarget.fromTarget("17")
@@ -271,6 +123,8 @@ kotlin {
 }
 
 dependencies {
+    implementation project(":shared")
+
     baselineProfile project(":benchmark")
 
     // Backport java.time and other Java library APIs to Android 7.0.
@@ -323,5 +177,3 @@ dependencies {
     testImplementation libs.robolectric
     testRuntimeOnly libs.junit.vintage
 }
-
-

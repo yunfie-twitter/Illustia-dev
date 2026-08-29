@@ -1,0 +1,180 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+plugins {
+    alias(libs.plugins.kotlin.multiplatform)
+    alias(libs.plugins.android.library)
+    alias(libs.plugins.compose.multiplatform)
+    alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.kotlin.serialization)
+    alias(libs.plugins.ksp)
+}
+
+def androidMinSdk = 24
+
+android {
+    namespace "com.yunfie.illustia.shared"
+    compileSdk 37
+    defaultConfig {
+        minSdk androidMinSdk
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+
+    buildFeatures {
+        compose true
+    }
+
+    sourceSets {
+        main.jniLibs.srcDir "$buildDir/generated/uniffi/jniLibs"
+    }
+
+    packaging {
+        jniLibs {
+            keepDebugSymbols += ["**/libandroidx.graphics.path.so"]
+        }
+    }
+}
+
+kotlin {
+    jvmToolchain(17)
+
+    androidTarget {
+        compilerOptions {
+            jvmTarget = JvmTarget.fromTarget("17")
+        }
+    }
+
+    jvm("desktop") {
+        compilerOptions {
+            jvmTarget = JvmTarget.fromTarget("17")
+        }
+    }
+
+    sourceSets {
+        commonMain {
+            kotlin.srcDir "$buildDir/generated/uniffi/kotlin"
+            dependencies {
+                implementation libs.serialization.json
+                implementation libs.coroutines.core
+                implementation libs.miuix.ui
+                implementation libs.miuix.preference
+                implementation libs.miuix.icons
+                implementation libs.miuix.squircle
+                implementation libs.miuix.navigation3.ui
+                implementation libs.coil.compose
+                implementation libs.lifecycle.viewmodel
+                implementation libs.lifecycle.viewmodel.compose
+                implementation libs.lifecycle.runtime.compose
+                implementation compose.runtime
+                implementation compose.foundation
+                implementation compose.material
+                implementation compose.material3
+                implementation compose.ui
+                implementation compose.components.resources
+            }
+        }
+        androidMain {
+            dependencies {
+                implementation libs.appcompat
+                implementation libs.security.crypto
+                implementation libs.datastore.preferences
+                implementation libs.room.runtime
+                implementation libs.coroutines.android
+                implementation libs.okhttp
+                implementation libs.coil.network.okhttp
+                implementation libs.coil.gif
+                implementation libs.documentfile
+                implementation "net.java.dev.jna:jna:${libs.versions.jna.get()}@aar"
+            }
+        }
+        desktopMain {
+            dependencies {
+                implementation compose.desktop.currentOs
+                implementation libs.coroutines.swing
+                implementation libs.jna
+                implementation libs.okhttp
+                implementation libs.coil.network.okhttp
+            }
+        }
+        commonTest {
+            dependencies {
+                implementation libs.kotest.assertions
+                implementation libs.kotest.property
+            }
+        }
+    }
+}
+
+dependencies {
+    add("kspAndroid", libs.room.compiler)
+}
+
+def rustCrateDir = rootProject.file("rust/pixiv-api")
+def rustTargetDir = rootProject.file("rust/target")
+def hostOperatingSystem = org.gradle.internal.os.OperatingSystem.current()
+def cargoExecutable = hostOperatingSystem.isWindows()
+    ? new File(System.getProperty("user.home"), ".cargo/bin/cargo.exe").absolutePath
+    : "cargo"
+def uniffiHostLibraryName = hostOperatingSystem.isWindows()
+    ? "palleria_pixiv_api.dll"
+    : hostOperatingSystem.isMacOsX()
+        ? "libpalleria_pixiv_api.dylib"
+        : "libpalleria_pixiv_api.so"
+def uniffiHostLibrary = new File(rustTargetDir, "release/${uniffiHostLibraryName}")
+def uniffiKotlinDir = layout.buildDirectory.dir("generated/uniffi/kotlin")
+def uniffiJniDir = layout.buildDirectory.dir("generated/uniffi/jniLibs")
+def rustInputs = files(
+    fileTree(new File(rustCrateDir, "src")) { include "**/*.rs" },
+    new File(rustCrateDir, "Cargo.toml"),
+    new File(rustCrateDir, "Cargo.lock"),
+)
+
+tasks.register("buildUniFfiHost", Exec) {
+    workingDir rustCrateDir
+    environment "CARGO_TARGET_DIR", rustTargetDir
+    commandLine cargoExecutable, "build", "--release", "--lib"
+    inputs.files(rustInputs)
+    outputs.file(uniffiHostLibrary)
+}
+
+tasks.register("generateUniFfiBindings", Exec) {
+    workingDir rustCrateDir
+    environment "CARGO_TARGET_DIR", rustTargetDir
+    commandLine cargoExecutable, "run", "--release", "--bin", "uniffi-bindgen", "--", "generate",
+        "--library", uniffiHostLibrary,
+        "--language", "kotlin", "--out-dir", uniffiKotlinDir.get().asFile, "--no-format"
+    dependsOn "buildUniFfiHost"
+    inputs.files(rustInputs, new File(rustCrateDir, "uniffi.toml"))
+    outputs.file(uniffiKotlinDir.map { it.file("com/yunfie/illustia/rust/palleria_pixiv_api.kt") })
+}
+
+tasks.register("buildRustAndroid", Exec) {
+    workingDir rustCrateDir
+    environment "CARGO_TARGET_DIR", rustTargetDir
+    commandLine cargoExecutable, "ndk", "--platform", androidMinSdk.toString(),
+        "-t", "arm64-v8a", "-t", "armeabi-v7a", "-t", "x86_64",
+        "-o", uniffiJniDir.get().asFile, "build", "--release"
+    dependsOn "generateUniFfiBindings"
+    inputs.files(rustInputs)
+    outputs.files(
+        uniffiJniDir.map { it.file("arm64-v8a/libpalleria_pixiv_api.so") },
+        uniffiJniDir.map { it.file("armeabi-v7a/libpalleria_pixiv_api.so") },
+        uniffiJniDir.map { it.file("x86_64/libpalleria_pixiv_api.so") },
+    )
+}
+
+tasks.register("buildPallaSyncCoreAndroid", Exec) {
+    def pallaSyncCoreCrateDir = rootProject.file("rust/pallasync-core")
+    workingDir pallaSyncCoreCrateDir
+    environment "CARGO_TARGET_DIR", rustTargetDir
+    commandLine cargoExecutable, "ndk", "--platform", androidMinSdk.toString(),
+        "-t", "arm64-v8a", "-t", "armeabi-v7a", "-t", "x86_64",
+        "-o", uniffiJniDir.get().asFile, "build", "--release"
+}
+
+tasks.matching { it.name.startsWith("compileKotlin") || it.name.startsWith("ksp") }.configureEach {
+    dependsOn "generateUniFfiBindings"
+}

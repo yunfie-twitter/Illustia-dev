@@ -1,0 +1,124 @@
+package com.yunfie.illustia.settings
+
+import androidx.compose.runtime.Immutable
+import com.yunfie.illustia.models.Illust
+import com.yunfie.illustia.models.Restrict
+import com.yunfie.illustia.models.SearchBookmarkFilter
+import com.yunfie.illustia.models.SearchDuration
+import com.yunfie.illustia.models.SearchSort
+import com.yunfie.illustia.models.SearchTarget
+import com.yunfie.illustia.models.SearchWorkType
+import com.yunfie.illustia.models.StoredAccount
+
+private const val DEFAULT_SEED_COLOR = 0xFF42A5F5L
+
+val DEFAULT_NAVIGATION_ORDER = listOf("home", "search", "bookmarks", "ranking", "more")
+val DEFAULT_DETAIL_SECTION_ORDER = listOf("artist", "tags", "description", "related")
+
+@Immutable
+data class AppSettings(
+    val refreshToken: String = "",
+    val bookmarkUserId: Long? = null,
+    val appLanguage: String = "system",
+    val appFont: String = "system",
+    val themeMode: String = "system",
+    val useDynamicColor: Boolean = true,
+    val seedColor: Long = DEFAULT_SEED_COLOR,
+    val onboardingSetupCompleted: Boolean = false,
+    val allowR18: Boolean = false,
+    val highQualityImages: Boolean = true,
+    val bookmarkRestrict: Restrict = Restrict.Public,
+    val searchSort: SearchSort = SearchSort.DateDesc,
+    val searchTarget: SearchTarget = SearchTarget.PartialTags,
+    val searchWorkType: SearchWorkType = SearchWorkType.Artworks,
+    val searchDuration: SearchDuration = SearchDuration.All,
+    val searchBookmarkFilter: SearchBookmarkFilter = SearchBookmarkFilter.None,
+    val searchUsersEnabled: Boolean = true,
+    val searchHistory: List<String> = emptyList(),
+    val favoriteTags: List<String> = emptyList(),
+    val saveViewHistory: Boolean = true,
+    val saveSearchHistory: Boolean = true,
+    val appLockEnabled: Boolean = false,
+    val appLockTiming: String = "launch",
+    val biometricEnabled: Boolean = false,
+    val appLockFailCount: Int = 0,
+    val appLockCooldownUntil: Long = 0L,
+    val viewHistory: List<Illust> = emptyList(),
+    val smoothTransitions: Boolean = true,
+    val hapticMode: String = "rich",
+    val performanceMode: String = "auto",
+    val prefetchImages: Boolean = false,
+    val autoLoadMore: Boolean = false,
+    val notchOptimization: Boolean = true,
+    val confirmOnLongPressSave: Boolean = true,
+    val doubleBackToExit: Boolean = false,
+    val swipeToSwitchWorks: Boolean = true,
+    val secureWindow: Boolean = false,
+    val amoledMode: Boolean = false,
+    val navigationOrder: List<String> = DEFAULT_NAVIGATION_ORDER,
+    val hiddenNavigationTabs: List<String> = emptyList(),
+    val navigationStyle: String = "standard",
+    val artworkThemeEnabled: Boolean = false,
+    val showCardTitle: Boolean = true,
+    val showCardArtist: Boolean = true,
+    val showCardTags: Boolean = false,
+    val showCardBookmarkCount: Boolean = false,
+    val detailSectionOrder: List<String> = DEFAULT_DETAIL_SECTION_ORDER,
+    val skipConfirmOnDetailSave: Boolean = false,
+    val showAiBadge: Boolean = true,
+    val followOnLike: Boolean = false,
+    val privateBookmarkDefault: Boolean = false,
+    val autoDownloadOnBookmark: Boolean = false,
+    val autoBookmarkOnDownload: Boolean = false,
+    val downloadFolderByArtist: Boolean = true,
+    val downloadFolderByWork: Boolean = true,
+    val autoTagOnBookmark: Boolean = false,
+    val simultaneousDownloads: Int = 2,
+    val offlineWifiOnly: Boolean = true,
+    val offlineStorageLimitBytes: Long = 5L * 1024 * 1024 * 1024,
+    val feedPreviewQuality: String = "dynamic",
+    val illustDetailQuality: String = "dynamic",
+    val mangaDetailQuality: String = "low",
+    val fullscreenQuality: String = "dynamic",
+    val mangaReaderMode: String = "paged",
+    val smartCacheEnabled: Boolean = false,
+    val smartCacheWifiOnly: Boolean = true,
+    val smartCacheItemCount: Int = 12,
+    val imageCacheSizeMb: Int = 300,
+    val startupScreen: String = "home",
+    val userProfileBottomSheetEnabled: Boolean = false,
+    val shortsFeedEnabled: Boolean = false,
+    val disableHorizontalSwipeInShortsFeed: Boolean = false,
+    val verticalColumnCount: Int = 2,
+    val horizontalColumnCount: Int = 4,
+    val pixivNetworkMode: String = "standard",
+    val pixivImageProxyBaseUrl: String = "",
+    val mutedIllusts: List<Long> = emptyList(),
+    val mutedUsers: List<Long> = emptyList(),
+    val mutedTags: List<String> = emptyList(),
+    val seenFeedIllusts: List<Long> = emptyList(),
+    val wallpaperPlaylistEnabled: Boolean = false,
+    val liveWallpaperSource: String = "all",
+    val liveWallpaperSourceFolder: String = "",
+    val liveWallpaperChangeMode: String = "screen",
+    val liveWallpaperIntervalMinutes: Int = 60,
+    val liveWallpaperOrder: String = "random",
+    val liveWallpaperScaleMode: String = "cover",
+    val liveWallpaperBackground: String = "black",
+    val liveWallpaperCrossfade: Boolean = true,
+    val liveWallpaperExcludeSensitive: Boolean = true,
+    val accounts: List<StoredAccount> = emptyList(),
+    val activeAccountIndex: Int = -1,
+    val privacyModeEnabled: Boolean = false,
+    val privacyModeAutoLockTiming: String = "immediate", // immediate|30s|1m|5m|10m|disabled
+    val hideRecents: Boolean = true,
+    val hideNotifications: Boolean = false,
+    val dummyAppName: String = "",
+    val dummyIconVariant: String = "ic_launcher_dummy",
+    val pallaSyncEnabled: Boolean = false,
+    val pallaSyncServerUrl: String = "https://api.yunfi.f5.si",
+    val sendTelemetry: Boolean = false,
+) {
+    val useHighQualityFeedImages: Boolean
+        get() = highQualityImages && feedPreviewQuality != "low"
+}
