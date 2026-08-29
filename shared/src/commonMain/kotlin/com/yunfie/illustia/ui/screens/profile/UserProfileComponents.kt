@@ -1,6 +1,5 @@
 package com.yunfie.illustia.ui.screens.profile
 
-import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
@@ -8,6 +7,8 @@ import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import com.yunfie.illustia.*
+import com.yunfie.illustia.platform.LocalPlatformActions
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -45,15 +46,12 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
-import com.yunfie.illustia.R
 import com.yunfie.illustia.models.Illust
 import com.yunfie.illustia.models.UserPreview
 import com.yunfie.illustia.models.UserProfile
@@ -291,7 +289,7 @@ internal fun UserProfileTopAppBar(
     scrollBehavior: ScrollBehavior,
     modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
+    val platformActions = LocalPlatformActions.current
     val shareLabel = stringResource(R.string.detail_share)
     val shareFailedMessage = stringResource(R.string.error_share_failed)
     val shareTitle = user.name.ifBlank { "@${user.account}" }
@@ -310,12 +308,7 @@ internal fun UserProfileTopAppBar(
                             DropdownItem(text = stringResource(R.string.action_sort)),
                             DropdownItem(text = shareLabel, onClick = {
                                 runCatching {
-                                    val intent =
-                                        Intent(Intent.ACTION_SEND).apply {
-                                            type = "text/plain"
-                                            putExtra(Intent.EXTRA_TEXT, "$shareTitle\n$profileUrl")
-                                        }
-                                    context.startActivity(Intent.createChooser(intent, shareLabel))
+                                    platformActions.shareText("$shareTitle\n$profileUrl")
                                 }.onFailure { onMessage(shareFailedMessage) }
                             }),
                             DropdownItem(
@@ -347,7 +340,7 @@ internal fun UserProfileSmallTopAppBar(
     onOpenRelatedUsers: () -> Unit,
     compact: Boolean,
 ) {
-    val context = LocalContext.current
+    val platformActions = LocalPlatformActions.current
     val shareLabel = stringResource(R.string.detail_share)
     val shareFailedMessage = stringResource(R.string.error_share_failed)
     val shareTitle = user.name.ifBlank { "@${user.account}" }
@@ -405,12 +398,7 @@ internal fun UserProfileSmallTopAppBar(
                                 DropdownItem(text = stringResource(R.string.action_sort)),
                                 DropdownItem(text = shareLabel, onClick = {
                                     runCatching {
-                                        val intent =
-                                            Intent(Intent.ACTION_SEND).apply {
-                                                type = "text/plain"
-                                                putExtra(Intent.EXTRA_TEXT, "$shareTitle\n$profileUrl")
-                                            }
-                                        context.startActivity(Intent.createChooser(intent, shareLabel))
+                                        platformActions.shareText("$shareTitle\n$profileUrl")
                                     }.onFailure { onMessage(shareFailedMessage) }
                                 }),
                                 DropdownItem(

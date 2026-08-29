@@ -178,3 +178,9 @@ tasks.register("buildPallaSyncCoreAndroid", Exec) {
 tasks.matching { it.name.startsWith("compileKotlin") || it.name.startsWith("ksp") }.configureEach {
     dependsOn "generateUniFfiBindings"
 }
+
+compose.resources {
+    packageOfResClass = "com.yunfie.illustia"
+    generateResClass = always
+}
+

@@ -8,7 +8,7 @@ import com.yunfie.illustia.models.Illust
  * Keeping this separate from [AppSettings] prevents an incoming sync page from
  * overwriting device-local preferences such as the theme, account, or server URL.
  */
-internal data class SyncedCollectionsSnapshot(
+data class SyncedCollectionsSnapshot(
     val favoriteTags: List<String> = emptyList(),
     val searchHistory: List<String> = emptyList(),
     val mutedTags: List<String> = emptyList(),

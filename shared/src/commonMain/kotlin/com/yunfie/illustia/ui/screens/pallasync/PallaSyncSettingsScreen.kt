@@ -1,6 +1,5 @@
 package com.yunfie.illustia.ui.screens.pallasync
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,8 +13,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.State
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,13 +21,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.yunfie.illustia.IllustiaUiState
-import com.yunfie.illustia.IllustiaViewModel
-import com.yunfie.illustia.R
+import com.yunfie.illustia.*
 import com.yunfie.illustia.pallasync.PalleriaSyncManager
+import com.yunfie.illustia.platform.LocalPlatformActions
 import com.yunfie.illustia.ui.components.DividerLine
 import com.yunfie.illustia.ui.components.ElevatedPanel
 import com.yunfie.illustia.ui.components.HeaderIcon
@@ -39,9 +33,7 @@ import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
 import com.yunfie.illustia.ui.components.Section
 import com.yunfie.illustia.ui.components.SettingLinkRow
 import com.yunfie.illustia.ui.components.SettingSwitchRow
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
@@ -64,9 +56,9 @@ fun PallaSyncSettingsScreen(
 ) {
     PredictiveBackGestureHandler(onBack = onBack)
     val scrollBehavior = MiuixScrollBehavior()
-    val context = LocalContext.current
+    val platformActions = LocalPlatformActions.current
     val scope = rememberCoroutineScope()
-    val syncManager = remember { PalleriaSyncManager(context = context) }
+    val syncManager = remember { PalleriaSyncManager() }
 
     var showUrlDialog by remember { mutableStateOf(false) }
     var tempUrl by remember { mutableStateOf("") }
@@ -74,40 +66,12 @@ fun PallaSyncSettingsScreen(
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var showLeaveConfirm by remember { mutableStateOf(false) }
     var isCreatingChain by remember { mutableStateOf(false) }
-    var devices by remember { mutableStateOf<List<com.yunfie.illustia.pallasync.data.PallaSyncDeviceEntity>>(emptyList()) }
-
-    LaunchedEffect(state.settings.pallaSyncEnabled) {
-        if (state.settings.pallaSyncEnabled) {
-            val db =
-                com.yunfie.illustia.pallasync.data.PallaSyncDatabase
-                    .getDatabase(context)
-            val dao = db.pallaSyncDao()
-
-            launch {
-                while (isActive) {
-                    devices = dao.getAllDevices()
-                    kotlinx.coroutines.delay(2000)
-                }
-            }
-
-            launch {
-                kotlinx.coroutines.delay(1000)
-                val chainState = dao.getAllChainStates().firstOrNull()
-                if (chainState != null) {
-                    val serverUrl = syncManager.getServerUrl()
-                    syncManager.fetchDevices(serverUrl, chainState.chainId)
-                }
-            }
-        }
-    }
 
     if (showUrlDialog) {
         OverlayDialog(
-            show = true,
-            title = stringResource(R.string.pallasync_server_url_dialog_title),
-            summary = stringResource(R.string.pallasync_server_url_dialog_desc),
-            backgroundColor = MiuixTheme.colorScheme.surfaceContainerHighest,
+            show = showUrlDialog,
             onDismissRequest = { showUrlDialog = false },
+            title = stringResource(R.string.pallasync_server_url),
         ) {
             Column(
                 modifier = Modifier.fillMaxWidth(),
@@ -116,6 +80,8 @@ fun PallaSyncSettingsScreen(
                 TextField(
                     value = tempUrl,
                     onValueChange = { tempUrl = it },
+                    label = "https://pallasync.example.com",
+                    useLabelAsPlaceholder = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Row(
@@ -132,7 +98,7 @@ fun PallaSyncSettingsScreen(
                         onClick = {
                             val normalized = syncManager.normalizeServerUrl(tempUrl)
                             if (normalized == null) {
-                                Toast.makeText(context, R.string.error_pallasync_invalid_server_url, Toast.LENGTH_SHORT).show()
+                                platformActions.showToast("Invalid server URL")
                             } else {
                                 viewModel.updatePallaSyncServerUrl(normalized)
                                 showUrlDialog = false
@@ -159,9 +125,9 @@ fun PallaSyncSettingsScreen(
                 scope.launch {
                     if (syncManager.deleteChain()) {
                         viewModel.updatePallaSyncEnabled(false)
-                        Toast.makeText(context, R.string.msg_pallasync_chain_deleted, Toast.LENGTH_SHORT).show()
+                        platformActions.showToast("Chain deleted")
                     } else {
-                        Toast.makeText(context, R.string.error_pallasync_delete_chain_failed, Toast.LENGTH_SHORT).show()
+                        platformActions.showToast("Failed to delete chain")
                     }
                 }
             },
@@ -181,7 +147,7 @@ fun PallaSyncSettingsScreen(
                 scope.launch {
                     if (syncManager.deleteChain(callApi = false)) {
                         viewModel.updatePallaSyncEnabled(false)
-                        Toast.makeText(context, R.string.msg_pallasync_chain_left, Toast.LENGTH_SHORT).show()
+                        platformActions.showToast("Left sync chain")
                     }
                 }
             },
@@ -236,7 +202,7 @@ fun PallaSyncSettingsScreen(
                                                 isCreatingChain = false
                                             }
                                         if (seedPhrase.isBlank()) {
-                                            Toast.makeText(context, R.string.error_pallasync_create_chain_failed, Toast.LENGTH_SHORT).show()
+                                            platformActions.showToast("Failed to initialize genesis")
                                         }
                                     }
                                 }
@@ -267,16 +233,7 @@ fun PallaSyncSettingsScreen(
                                 onClick = {
                                     scope.launch {
                                         val success = syncManager.syncNow()
-                                        Toast
-                                            .makeText(
-                                                context,
-                                                if (success) {
-                                                    context.getString(R.string.msg_pallasync_sync_completed)
-                                                } else {
-                                                    context.getString(R.string.error_pallasync_sync_failed)
-                                                },
-                                                Toast.LENGTH_SHORT,
-                                            ).show()
+                                        platformActions.showToast(if (success) "Sync completed" else "Sync failed")
                                     }
                                 },
                             )
@@ -286,25 +243,6 @@ fun PallaSyncSettingsScreen(
             }
 
             if (state.settings.pallaSyncEnabled) {
-                if (devices.isNotEmpty()) {
-                    item {
-                        Section(stringResource(R.string.pallasync_participating_devices)) {
-                            ElevatedPanel(contentPadding = PaddingValues(0.dp)) {
-                                devices.forEachIndexed { index, device ->
-                                    SettingLinkRow(
-                                        title = device.deviceName,
-                                        summary = stringResource(R.string.pallasync_device_id, device.deviceId),
-                                        onClick = { onDeviceClick(device.deviceId, device.deviceName) },
-                                    )
-                                    if (index < devices.size - 1) {
-                                        DividerLine()
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
                 item {
                     Section(stringResource(R.string.data_section_cleanup)) {
                         ElevatedPanel(contentPadding = PaddingValues(0.dp)) {

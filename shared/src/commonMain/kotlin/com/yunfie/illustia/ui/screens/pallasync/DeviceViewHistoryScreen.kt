@@ -20,12 +20,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import com.yunfie.illustia.IllustiaUiState
-import com.yunfie.illustia.IllustiaViewModel
-import com.yunfie.illustia.R
+import com.yunfie.illustia.*
 import com.yunfie.illustia.models.Illust
 import com.yunfie.illustia.pallasync.PalleriaSyncManager
 import com.yunfie.illustia.ui.components.EmptyState
@@ -60,8 +56,7 @@ fun DeviceViewHistoryScreen(
     onIllustClick: (Illust) -> Unit,
 ) {
     PredictiveBackGestureHandler(onBack = onBack)
-    val context = LocalContext.current
-    val syncManager = remember { PalleriaSyncManager(context = context) }
+    val syncManager = remember { PalleriaSyncManager() }
 
     var viewHistory by remember { mutableStateOf<List<Illust>?>(null) }
     var isLoading by remember { mutableStateOf(true) }

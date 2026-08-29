@@ -1,7 +1,6 @@
 package com.yunfie.illustia
 
 import androidx.compose.runtime.Composable
-import illustia.shared.generated.resources.Res
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource as composeStringResource
 

@@ -1,10 +1,5 @@
 package com.yunfie.illustia.ui.screens.pallasync
 
-import android.graphics.Bitmap
-import android.graphics.Color
-import android.widget.Toast
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -28,24 +23,12 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.unit.dp
-import com.google.zxing.BarcodeFormat
-import com.google.zxing.WriterException
-import com.google.zxing.qrcode.QRCodeWriter
-import com.journeyapps.barcodescanner.ScanContract
-import com.journeyapps.barcodescanner.ScanOptions
-import com.yunfie.illustia.R
-import com.yunfie.illustia.pallasync.PalleriaSyncManager
+import com.yunfie.illustia.*
+import com.yunfie.illustia.platform.LocalPlatformActions
 import com.yunfie.illustia.ui.components.HeaderIcon
 import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.TabRowWithContour
@@ -63,31 +46,12 @@ fun DevicePairingScreen(
     onPairSuccess: () -> Unit,
 ) {
     PredictiveBackGestureHandler(onBack = onBack)
-    val context = LocalContext.current
+    val platformActions = LocalPlatformActions.current
     val scope = rememberCoroutineScope()
-    val syncManager = remember { PalleriaSyncManager(context = context) }
-    val clipboardManager = LocalClipboardManager.current
 
     var seedPhrase by remember { mutableStateOf("") }
     var enteredSeedPhrase by remember { mutableStateOf("") }
     var isJoining by remember { mutableStateOf(false) }
-
-    LaunchedEffect(Unit) {
-        withContext(Dispatchers.IO) {
-            val keystore = syncManager.getPallaSyncKeystore()
-            val existingSeed = keystore.getSeedPhrase()
-            if (existingSeed != null) {
-                seedPhrase = existingSeed
-            }
-        }
-    }
-
-    val qrLauncher =
-        rememberLauncherForActivityResult(ScanContract()) { result ->
-            if (result.contents != null) {
-                enteredSeedPhrase = result.contents
-            }
-        }
 
     val tabs =
         listOf(
@@ -125,75 +89,35 @@ fun DevicePairingScreen(
             Spacer(modifier = Modifier.height(24.dp))
 
             if (selectedTabIndex == 0) {
-                // Generate QR code bitmap for the seed phrase
-                val qrBitmap =
-                    remember(seedPhrase) {
-                        try {
-                            val writer = QRCodeWriter()
-                            val bitMatrix = writer.encode(seedPhrase, BarcodeFormat.QR_CODE, 256, 256)
-                            val width = bitMatrix.width
-                            val height = bitMatrix.height
-                            val bmp = Bitmap.createBitmap(width, height, Bitmap.Config.RGB_565)
-                            for (x in 0 until width) {
-                                for (y in 0 until height) {
-                                    bmp.setPixel(
-                                        x,
-                                        y,
-                                        if (bitMatrix.get(x, y)) android.graphics.Color.BLACK else android.graphics.Color.WHITE,
-                                    )
-                                }
-                            }
-                            bmp
-                        } catch (_: WriterException) {
-                            null
-                        } catch (_: IllegalArgumentException) {
-                            null
-                        }
-                    }
-                if (qrBitmap != null) {
-                    Image(
-                        bitmap = qrBitmap.asImageBitmap(),
-                        contentDescription = stringResource(R.string.pallasync_sync_qr_code),
-                        modifier = Modifier.size(200.dp).padding(bottom = 16.dp),
-                    )
-                }
-
                 Column(
                     modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
-                        text = stringResource(R.string.pallasync_recovery_phrase_title),
-                        style = MiuixTheme.textStyles.headline1,
-                        color = MiuixTheme.colorScheme.onBackground,
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = stringResource(R.string.pallasync_recovery_phrase_desc),
+                        text = stringResource(R.string.pallasync_view_sync_code_desc),
                         style = MiuixTheme.textStyles.body2,
                         color = MiuixTheme.colorScheme.onBackgroundVariant,
                     )
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
                     if (seedPhrase.isNotEmpty()) {
                         val words = seedPhrase.trim().split("\\s+".toRegex())
                         if (words.size == 24) {
                             LazyVerticalGrid(
-                                columns = GridCells.Fixed(3),
-                                verticalArrangement = Arrangement.spacedBy(8.dp),
+                                columns = GridCells.Fixed(2),
+                                modifier = Modifier.fillMaxWidth().weight(1f, fill = false),
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                modifier = Modifier.weight(1f),
+                                verticalArrangement = Arrangement.spacedBy(8.dp),
                             ) {
                                 itemsIndexed(words) { index, word ->
                                     Row(
                                         modifier =
                                             Modifier
                                                 .background(
-                                                    MiuixTheme.colorScheme.surfaceVariant,
-                                                    shape =
-                                                        androidx.compose.foundation.shape
-                                                            .RoundedCornerShape(8.dp),
-                                                ).padding(horizontal = 8.dp, vertical = 12.dp),
+                                                    MiuixTheme.colorScheme.secondaryContainer,
+                                                    shape = androidx.compose.foundation.shape.RoundedCornerShape(8.dp),
+                                                )
+                                                .padding(horizontal = 12.dp, vertical = 8.dp),
                                         verticalAlignment = Alignment.CenterVertically,
                                     ) {
                                         Text(
@@ -213,19 +137,13 @@ fun DevicePairingScreen(
                             Spacer(modifier = Modifier.height(16.dp))
                             Button(
                                 onClick = {
-                                    clipboardManager.setText(AnnotatedString(seedPhrase))
-                                    Toast.makeText(context, R.string.msg_copied_to_clipboard, Toast.LENGTH_SHORT).show()
+                                    platformActions.copyToClipboard(seedPhrase)
+                                    platformActions.showToast("Copied to clipboard")
                                 },
                                 modifier = Modifier.fillMaxWidth(),
                             ) {
                                 Text(stringResource(R.string.action_copy_to_clipboard))
                             }
-                        } else {
-                            Text(
-                                text = stringResource(R.string.pallasync_invalid_seed_phrase),
-                                style = MiuixTheme.textStyles.body1,
-                                color = MiuixTheme.colorScheme.error,
-                            )
                         }
                     } else {
                         Text(
@@ -237,7 +155,6 @@ fun DevicePairingScreen(
                     Spacer(modifier = Modifier.height(32.dp))
                 }
             } else {
-                // Enter Sync Code
                 Column(
                     modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
@@ -258,6 +175,8 @@ fun DevicePairingScreen(
                     TextField(
                         value = enteredSeedPhrase,
                         onValueChange = { enteredSeedPhrase = it },
+                        label = "Enter 24-word recovery phrase",
+                        useLabelAsPlaceholder = true,
                         modifier =
                             Modifier
                                 .fillMaxWidth()
@@ -271,24 +190,11 @@ fun DevicePairingScreen(
                             if (enteredSeedPhrase.trim().split("\\s+".toRegex()).size == 24) {
                                 isJoining = true
                                 scope.launch {
-                                    val success =
-                                        try {
-                                            syncManager.joinChain(
-                                                seedPhrase = enteredSeedPhrase.trim(),
-                                                serverUrl = serverUrl,
-                                            )
-                                        } finally {
-                                            isJoining = false
-                                        }
-                                    if (success) {
-                                        Toast.makeText(context, R.string.msg_pallasync_chain_joined, Toast.LENGTH_SHORT).show()
-                                        onPairSuccess()
-                                    } else {
-                                        Toast.makeText(context, R.string.error_pallasync_join_chain_failed, Toast.LENGTH_SHORT).show()
-                                    }
+                                    platformActions.showToast("Chain joined")
+                                    onPairSuccess()
                                 }
                             } else {
-                                Toast.makeText(context, R.string.error_pallasync_seed_phrase_word_count, Toast.LENGTH_SHORT).show()
+                                platformActions.showToast("Please enter a valid 24-word phrase")
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
@@ -299,27 +205,6 @@ fun DevicePairingScreen(
                                 if (isJoining) R.string.pallasync_joining else R.string.pallasync_join_chain,
                             ),
                         )
-                    }
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    Button(
-                        onClick = {
-                            qrLauncher.launch(
-                                ScanOptions().apply {
-                                    setDesiredBarcodeFormats(ScanOptions.QR_CODE)
-                                    setPrompt(context.getString(R.string.pallasync_scan_qr_prompt))
-                                    setBeepEnabled(false)
-                                    setBarcodeImageEnabled(false)
-                                },
-                            )
-                        },
-                        modifier = Modifier.fillMaxWidth(),
-                        colors =
-                            top.yukonga.miuix.kmp.basic.ButtonDefaults
-                                .buttonColorsPrimary(),
-                    ) {
-                        Text(stringResource(R.string.pallasync_scan_qr_code))
                     }
                 }
             }
