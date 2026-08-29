@@ -1,10 +1,7 @@
 package com.yunfie.illustia.ui.screens
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
+import com.yunfie.illustia.*
+
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
@@ -35,14 +32,12 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import com.yunfie.illustia.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yunfie.illustia.R
@@ -116,7 +111,6 @@ fun IllustDetailScreen(
     skipConfirmOnDetailSave: Boolean,
     detailSectionOrder: List<String>,
 ) {
-    val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     val hapticMode = LocalAppHapticMode.current
     PredictiveBackGestureHandler(onBack = onBack)
@@ -178,7 +172,7 @@ fun IllustDetailScreen(
     fun likeFromDoubleTap() {
         showLikeAnimation = false
         showLikeAnimation = true
-        performAppHapticFeedback(context, haptic, hapticMode)
+        performAppHapticFeedback(hapticFeedback = haptic, mode = hapticMode)
         if (!illust.isBookmarked) onBookmark()
     }
 
@@ -268,13 +262,8 @@ fun IllustDetailScreen(
         floatingActionButton = {
             FloatingActionButton(
                 onClick = {
-                    if (illust.isBookmarked) {
-                        performAppHapticFeedback(context, haptic, hapticMode)
-                        onBookmark()
-                    } else {
-                        performAppHapticFeedback(context, haptic, hapticMode)
-                        onBookmark()
-                    }
+                    performAppHapticFeedback(hapticFeedback = haptic, mode = hapticMode)
+                    onBookmark()
                 },
                 shape = RoundedCornerShape(18.dp),
                 containerColor = MiuixTheme.colorScheme.surfaceContainerHigh,

@@ -1,5 +1,7 @@
 package com.yunfie.illustia.ui.components
 
+import com.yunfie.illustia.*
+
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth

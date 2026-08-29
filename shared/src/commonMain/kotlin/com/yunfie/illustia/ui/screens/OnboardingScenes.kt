@@ -1,5 +1,7 @@
 package com.yunfie.illustia.ui.screens
 
+import com.yunfie.illustia.*
+
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -27,8 +29,8 @@ import top.yukonga.miuix.kmp.squircle.squircleSurface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 internal data class OnboardingSlide(
-    val title: Int,
-    val body: Int,
+    val title: org.jetbrains.compose.resources.StringResource,
+    val body: org.jetbrains.compose.resources.StringResource,
     val accent: Color,
     val icon: ImageVector,
     val scene: OnboardingScene,

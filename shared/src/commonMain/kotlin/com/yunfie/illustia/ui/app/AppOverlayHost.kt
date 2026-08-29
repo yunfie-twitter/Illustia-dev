@@ -1,6 +1,8 @@
 package com.yunfie.illustia.ui.app
 
-import android.content.Intent
+import com.yunfie.illustia.*
+
+import com.yunfie.illustia.platform.LocalPlatformActions
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -14,8 +16,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import com.yunfie.illustia.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -58,8 +58,7 @@ internal fun AppOverlayHost(
     onDismissComments: () -> Unit,
     onSearchTag: (String) -> Unit,
 ) {
-    val configuration = LocalConfiguration.current
-    val context = LocalContext.current
+    val platformActions = LocalPlatformActions.current
 
     selectedCommentTarget?.let { target ->
         CommentScreen(
@@ -189,7 +188,7 @@ internal fun AppOverlayHost(
     appState.state.selectedUser?.let { user ->
         if (!appState.state.showUserPage && !appState.state.userPageDismissed) {
             val userSheetBackground = LocalBottomSheetBackgroundColor.current
-            val userSheetHeight = minOf(configuration.screenHeightDp.dp * 0.68f, 560.dp)
+            val userSheetHeight = 560.dp
             var showRelatedUsers by remember(user.id) { mutableStateOf(false) }
             val shareLabel = stringResource(R.string.detail_share)
             val shareFailedMessage = stringResource(R.string.error_share_failed)
@@ -222,12 +221,7 @@ internal fun AppOverlayHost(
                                                 text = shareLabel,
                                                 onClick = {
                                                     runCatching {
-                                                        val intent =
-                                                            Intent(Intent.ACTION_SEND).apply {
-                                                                type = "text/plain"
-                                                                putExtra(Intent.EXTRA_TEXT, "$shareTitle\n$profileUrl")
-                                                            }
-                                                        context.startActivity(Intent.createChooser(intent, shareLabel))
+                                                        platformActions.shareText("$shareTitle\n$profileUrl")
                                                     }.onFailure { viewModel.showMessage(shareFailedMessage) }
                                                 },
                                             ),

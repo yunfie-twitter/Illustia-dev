@@ -23,7 +23,7 @@ import androidx.annotation.RequiresApi
 import com.yunfie.illustia.MainActivity
 import com.yunfie.illustia.R
 import com.yunfie.illustia.platform.PlatformCapabilities
-import com.yunfie.illustia.settings.SettingsStore
+import com.yunfie.illustia.settings.AndroidSettingsStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -145,7 +145,7 @@ class IllustWidgetProvider : AppWidgetProvider() {
 
         private fun isPrivacyModeEnabled(context: Context): Boolean =
             runBlocking(Dispatchers.IO) {
-                SettingsStore(context.applicationContext).read().privacyModeEnabled
+                AndroidSettingsStore(context.applicationContext).read().privacyModeEnabled
             }
 
         private fun bindEmpty(

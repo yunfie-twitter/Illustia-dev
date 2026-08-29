@@ -9,7 +9,7 @@ import android.content.SyncResult
 import android.os.Bundle
 import com.yunfie.illustia.data.PixivApiClient
 import com.yunfie.illustia.models.NetworkMode
-import com.yunfie.illustia.settings.SettingsStore
+import com.yunfie.illustia.settings.AndroidSettingsStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.runBlocking
 
@@ -26,7 +26,7 @@ class PalleriaSyncAdapter(
         try {
             runBlocking(Dispatchers.IO) {
                 runCatching {
-                    val settingsStore = SettingsStore(context)
+                    val settingsStore = AndroidSettingsStore(context)
                     val settings = settingsStore.read()
                     PalleriaAccount.reconcile(context, settings.accounts)
                     val userId =

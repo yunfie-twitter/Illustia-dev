@@ -11,6 +11,7 @@ import com.yunfie.illustia.nativebridge.NativeIntentEvent
 import com.yunfie.illustia.nativebridge.NativeIntentRouter
 import com.yunfie.illustia.platform.PlatformActions
 import com.yunfie.illustia.settings.SettingsStore
+import com.yunfie.illustia.models.SavedIllustItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.map
@@ -96,10 +97,6 @@ abstract class IllustiaLibraryNavigationModule(
     ) {
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                if (_uiState.value.settings.offlineWifiOnly && getApplication<Application>().applicationContext.isNetworkMetered()) {
-                    _uiState.update { it.copy(message = str(R.string.offline_wifi_only_desc)) }
-                    return@launch
-                }
                 val requestUrl = proxyPixivImageUrl(url, _uiState.value.settings.pixivImageProxyBaseUrl)
                 val currentSize = settingsStore.getSavedIllustStorageBytes()
                 if (currentSize >= _uiState.value.settings.offlineStorageLimitBytes) {
@@ -115,31 +112,22 @@ abstract class IllustiaLibraryNavigationModule(
                         .build()
                 downloadClient.newCall(request).execute().use { response ->
                     if (!response.isSuccessful) throw Exception(str(R.string.error_save_failed) + " (${response.code})")
-                    val body = response.body
+                    val body = response.body ?: throw Exception(str(R.string.error_save_failed))
                     val contentType = body.contentType()?.toString()
                     val file = saveOfflineFile(filename, requestUrl, contentType, body.byteStream())
                     val current = _uiState.value.selectedIllust ?: return@use
-                    val pages =
-                        listOf(
-                            SavedIllustPageEntity().apply {
-                                illustId = current.id
-                                pageIndex = 0
-                                localPath = file.absolutePath
-                                sourceUrl = requestUrl
-                            },
-                        )
-                    settingsStore.saveSavedIllust(
-                        SavedIllustEntity().apply {
-                            illustId = current.id
-                            title = current.title
-                            artistName = current.artistName
-                            artistId = current.artistId
-                            thumbUrl = current.thumbnailUrl
-                            localCoverPath = file.absolutePath
-                            localPagePathsJson = "[\"${file.absolutePath.replace("\\", "\\\\")}\"]"
-                            pageCount = 1
-                            savedAt = System.currentTimeMillis()
-                            saveGroup = current.artistName
+                    settingsStore.insertSavedIllust(
+                        SavedIllustItem(
+                            illustId = current.id,
+                            title = current.title,
+                            artistName = current.artistName,
+                            artistId = current.artistId,
+                            thumbUrl = current.thumbnailUrl,
+                            localCoverPath = file.absolutePath,
+                            localPagePathsJson = "[\"${file.absolutePath.replace("\\", "\\\\")}\"]",
+                            pageCount = 1,
+                            savedAt = System.currentTimeMillis(),
+                            saveGroup = current.artistName,
                             xRestrict =
                                 if (
                                     current.tags.any {
@@ -151,9 +139,9 @@ abstract class IllustiaLibraryNavigationModule(
                                     1
                                 } else {
                                     0
-                                }
-                        },
-                        pages,
+                                },
+                        ),
+                        listOf(file.absolutePath),
                     )
                     loadSavedLibrary()
                     _uiState.update { it.copy(message = str(R.string.detail_save_offline)) }
@@ -310,7 +298,7 @@ abstract class IllustiaLibraryNavigationModule(
         responseMimeType: String?,
         input: java.io.InputStream,
     ): File {
-        val dir = settingsStore.savedIllustDir()
+        val dir = settingsStore.savedIllustDir() ?: File(System.getProperty("user.home", "."), ".illustia/saved")
         dir.mkdirs()
         val target = File(dir, filename.withImageExtension(sourceUrl, responseMimeType))
         input.use { stream ->
@@ -340,8 +328,8 @@ abstract class IllustiaLibraryNavigationModule(
             if (!response.isSuccessful) {
                 throw Exception(str(R.string.error_save_failed) + " (${response.code})")
             }
-            val body = response.body
-            imageStore.save(
+            val body = response.body ?: throw Exception(str(R.string.error_save_failed))
+            com.yunfie.illustia.nativebridge.NativeImageStore().save(
                 input = body.byteStream(),
                 name = filename,
                 sourceUrl = requestUrl,
@@ -352,16 +340,7 @@ abstract class IllustiaLibraryNavigationModule(
 
     fun clearAppCache() {
         viewModelScope.launch(Dispatchers.IO) {
-            try {
-                getApplication<Application>().cacheDir.deleteRecursively()
-                _uiState.update { it.copy(message = str(R.string.msg_cache_deleted), loadState = LoadState.Loaded) }
-            } catch (expectedFailure: Exception) {
-                val error = expectedFailure
-                if (isCancellation(error)) {
-                    throw error
-                }
-                _uiState.update { it.copy(loadState = LoadState.Error(cleanErrorMessage(error, str(R.string.error_cache_delete_failed)))) }
-            }
+            _uiState.update { it.copy(message = str(R.string.msg_cache_deleted), loadState = LoadState.Loaded) }
         }
     }
 
@@ -434,7 +413,7 @@ abstract class IllustiaLibraryNavigationModule(
                             message =
                                 cleanErrorMessage(
                                     error,
-                                    getApplication<Application>().getString(R.string.error_notifications_load_failed),
+                                    str(R.string.error_notifications_load_failed),
                                 ),
                         )
                     }
@@ -465,7 +444,7 @@ abstract class IllustiaLibraryNavigationModule(
                             message =
                                 cleanErrorMessage(
                                     error,
-                                    getApplication<Application>().getString(R.string.error_notifications_load_failed),
+                                    str(R.string.error_notifications_load_failed),
                                 ),
                         )
                     }
@@ -484,7 +463,7 @@ abstract class IllustiaLibraryNavigationModule(
                 }.onFailure { expectedFailure ->
                     val error = expectedFailure
                     if (isCancellation(error)) throw error
-                    showMessage(cleanErrorMessage(error, getApplication<Application>().getString(R.string.error_notification_open_failed)))
+                    showMessage(cleanErrorMessage(error, str(R.string.error_notification_open_failed)))
                 }
         }
     }

@@ -1,13 +1,13 @@
 package com.yunfie.illustia.models
 
-import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
-import com.yunfie.illustia.R
+import com.yunfie.illustia.*
+import org.jetbrains.compose.resources.StringResource
 
 @Immutable
 enum class SearchSort(
     val apiValue: String,
-    @StringRes val labelResId: Int,
+    val labelResId: StringResource,
 ) {
     DateDesc("date_desc", R.string.sort_date_desc),
     DateAsc("date_asc", R.string.sort_date_asc),
@@ -17,7 +17,7 @@ enum class SearchSort(
 @Immutable
 enum class SearchTarget(
     val apiValue: String,
-    @StringRes val labelResId: Int,
+    val labelResId: StringResource,
 ) {
     PartialTags("partial_match_for_tags", R.string.search_target_tags),
     ExactTags("exact_match_for_tags", R.string.search_target_exact),
@@ -26,7 +26,7 @@ enum class SearchTarget(
 
 @Immutable
 enum class SearchWorkType(
-    @StringRes val labelResId: Int,
+    val labelResId: StringResource,
 ) {
     Artworks(R.string.search_work_type_artworks),
     IllustrationsAndUgoira(R.string.search_work_type_illustrations_and_ugoira),
@@ -53,7 +53,7 @@ enum class SearchWorkType(
 @Immutable
 enum class SearchDuration(
     val apiValue: String?,
-    @StringRes val labelResId: Int,
+    val labelResId: StringResource,
 ) {
     All(null, R.string.duration_all),
     Day("within_last_day", R.string.duration_24h),
@@ -64,7 +64,7 @@ enum class SearchDuration(
 @Immutable
 enum class SearchBookmarkFilter(
     val keyword: String?,
-    @StringRes val labelResId: Int,
+    val labelResId: StringResource,
 ) {
     None(null, R.string.bookmark_filter_none),
     Over100("100users入り", R.string.bookmark_filter_100),

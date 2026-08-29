@@ -10,6 +10,7 @@ sealed interface NativeIntentEvent {
 }
 
 object NativeIntentRouter {
+    const val EXTRA_HANDOFF_URI = "com.yunfie.illustia.EXTRA_HANDOFF_URI"
     private val WEB_PIXIV_HOSTS = setOf("pixiv.net", "www.pixiv.net")
     private val CUSTOM_PIXIV_SCHEMES = setOf("pixiv", "pixez")
     private val CUSTOM_PIXIV_HOSTS = setOf("pixiv.net", "www.pixiv.net", "users", "illusts")

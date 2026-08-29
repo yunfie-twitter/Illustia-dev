@@ -1,7 +1,5 @@
 package com.yunfie.illustia.ui.screens
 
-import androidx.biometric.BiometricManager
-import androidx.biometric.BiometricPrompt
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -28,21 +26,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
-import com.yunfie.illustia.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
-import androidx.fragment.app.FragmentActivity
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.compose.LocalLifecycleOwner
-import com.yunfie.illustia.IllustiaUiState
-import com.yunfie.illustia.IllustiaViewModel
-import com.yunfie.illustia.R
+import com.yunfie.illustia.*
 import com.yunfie.illustia.ui.components.AppHapticEffect
 import com.yunfie.illustia.ui.components.DividerLine
 import com.yunfie.illustia.ui.components.ElevatedPanel
@@ -53,17 +42,13 @@ import com.yunfie.illustia.ui.components.Section
 import com.yunfie.illustia.ui.components.SettingLinkRow
 import com.yunfie.illustia.ui.components.SettingSwitchRow
 import com.yunfie.illustia.ui.components.performAppHapticFeedback
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.withContext
-import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
-import top.yukonga.miuix.kmp.icon.extended.Remove
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private sealed class PinVerifyAction {
@@ -82,24 +67,21 @@ fun AppLockSetupScreen(
 ) {
     PredictiveBackGestureHandler(onBack = onBack)
     val scrollBehavior = MiuixScrollBehavior()
-    val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     val hapticMode = LocalAppHapticMode.current
-    val lifecycleOwner = LocalLifecycleOwner.current
 
     var pendingAction by remember { mutableStateOf<PinVerifyAction?>(null) }
     var verifyPin by remember { mutableStateOf("") }
     var verifyError by remember { mutableStateOf(false) }
     var verifyShake by remember { mutableStateOf(false) }
-    var requestBiometric by remember { mutableStateOf(false) }
     var cooldownRemaining by remember { mutableStateOf(0L) }
     val isCooldownActive = cooldownRemaining > 0L
 
-    // Cooldown countdown timer — reads from shared ViewModel state
+    // Cooldown countdown timer
     LaunchedEffect(state.settings.appLockCooldownUntil) {
         val until = state.settings.appLockCooldownUntil
         while (true) {
-            val remaining = ((until - android.os.SystemClock.elapsedRealtime()) / 1000L).coerceAtLeast(0L)
+            val remaining = ((until - System.currentTimeMillis()) / 1000L).coerceAtLeast(0L)
             cooldownRemaining = remaining
             if (remaining <= 0L) break
             delay(250)
@@ -108,58 +90,9 @@ fun AppLockSetupScreen(
 
     LaunchedEffect(verifyShake) {
         if (verifyShake) {
-            delay(400)
+            delay(500)
             verifyShake = false
             verifyError = false
-        }
-    }
-
-    LaunchedEffect(requestBiometric) {
-        if (requestBiometric) {
-            delay(300)
-            // Wait until the activity lifecycle is RESUMED so BiometricPrompt can display
-            val timeout = 3000L
-            var waited = 0L
-            while (
-                lifecycleOwner.lifecycle.currentState != Lifecycle.State.RESUMED &&
-                waited < timeout
-            ) {
-                delay(100)
-                waited += 100
-            }
-            withContext(Dispatchers.Main) {
-                val activity = context as? FragmentActivity ?: return@withContext
-                val executor = ContextCompat.getMainExecutor(context)
-                val prompt =
-                    BiometricPrompt(
-                        activity,
-                        executor,
-                        object : BiometricPrompt.AuthenticationCallback() {
-                            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                                viewModel.updateBiometricEnabled(true)
-                                performAppHapticFeedback(context, haptic, hapticMode, AppHapticEffect.Success)
-                            }
-
-                            override fun onAuthenticationError(
-                                errorCode: Int,
-                                errString: CharSequence,
-                            ) {
-                                requestBiometric = false
-                            }
-                        },
-                    )
-                val promptInfo =
-                    BiometricPrompt.PromptInfo
-                        .Builder()
-                        .setTitle(context.getString(R.string.app_lock_biometric_verify_title))
-                        .setSubtitle(context.getString(R.string.app_lock_biometric_verify_subtitle))
-                        .setNegativeButtonText(context.getString(R.string.action_cancel))
-                        .setAllowedAuthenticators(
-                            BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.BIOMETRIC_WEAK,
-                        ).build()
-                prompt.authenticate(promptInfo)
-            }
-            requestBiometric = false
         }
     }
 
@@ -176,7 +109,7 @@ fun AppLockSetupScreen(
     }
 
     fun onVerifyDigit(digit: Char) {
-        performAppHapticFeedback(context, haptic, hapticMode)
+        performAppHapticFeedback(hapticFeedback = haptic, mode = hapticMode)
         if (isCooldownActive) return
         if (verifyError) {
             verifyPin = digit.toString()
@@ -188,7 +121,7 @@ fun AppLockSetupScreen(
         verifyPin = newPin
         if (newPin.length == 6) {
             if (viewModel.verifyPin(newPin)) {
-                performAppHapticFeedback(context, haptic, hapticMode, AppHapticEffect.Success)
+                performAppHapticFeedback(hapticFeedback = haptic, mode = hapticMode, effect = AppHapticEffect.Success)
                 viewModel.resetLockFailCount()
                 when (val action = pendingAction) {
                     is PinVerifyAction.Disable -> {
@@ -203,7 +136,7 @@ fun AppLockSetupScreen(
                 }
                 dismissPinOverlay()
             } else {
-                performAppHapticFeedback(context, haptic, hapticMode, AppHapticEffect.Error)
+                performAppHapticFeedback(hapticFeedback = haptic, mode = hapticMode, effect = AppHapticEffect.Error)
                 verifyError = true
                 verifyShake = true
                 viewModel.recordLockFailure()
@@ -213,7 +146,7 @@ fun AppLockSetupScreen(
     }
 
     fun onVerifyDelete() {
-        performAppHapticFeedback(context, haptic, hapticMode)
+        performAppHapticFeedback(hapticFeedback = haptic, mode = hapticMode)
         if (verifyError) {
             verifyError = false
             verifyPin = ""
@@ -312,11 +245,7 @@ fun AppLockSetupScreen(
                                     title = stringResource(R.string.app_lock_biometric),
                                     checked = state.settings.biometricEnabled,
                                     onCheckedChange = { enable ->
-                                        if (enable) {
-                                            requestBiometric = true
-                                        } else {
-                                            viewModel.updateBiometricEnabled(false)
-                                        }
+                                        viewModel.updateBiometricEnabled(enable)
                                     },
                                     summary = stringResource(R.string.app_lock_biometric_desc),
                                 )

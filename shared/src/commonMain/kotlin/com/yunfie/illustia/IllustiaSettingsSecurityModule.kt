@@ -39,7 +39,7 @@ abstract class IllustiaSettingsSecurityModule(
             delay(DevicePerformance.profile.deferredDatabaseLoadDelayMs)
             val fullSettings = repository.readSettings()
             val normalizedFullSettings =
-                if (fullSettings.useDynamicColor && !isDynamicColorAvailable()) {
+                if (fullSettings.useDynamicColor && !(platformActions?.isDynamicColorSupported() ?: false)) {
                     fullSettings.copy(useDynamicColor = false)
                 } else {
                     fullSettings
@@ -120,7 +120,7 @@ abstract class IllustiaSettingsSecurityModule(
 
     fun updateUseDynamicColor(value: Boolean) {
         updateSettings {
-            it.copy(useDynamicColor = value && isDynamicColorAvailable())
+            it.copy(useDynamicColor = value && (platformActions?.isDynamicColorSupported() ?: false))
         }
     }
 
@@ -145,7 +145,7 @@ abstract class IllustiaSettingsSecurityModule(
     }
 
     fun updatePerformanceMode(value: String) {
-        DevicePerformance.setMode(value)
+        DevicePerformance.setPerformanceMode(com.yunfie.illustia.performance.DevicePerformanceMode.fromValue(value))
         val normalized = DevicePerformance.mode.storedValue
         updateSettings { it.copy(performanceMode = normalized) }
     }
@@ -198,7 +198,6 @@ abstract class IllustiaSettingsSecurityModule(
 
     fun updatePallaSyncEnabled(value: Boolean) {
         updateSettings { it.copy(pallaSyncEnabled = value) }
-        illustiaApplication?.setPallaSyncEnabled(value)
     }
 
     fun updatePallaSyncServerUrl(value: String) {
@@ -207,7 +206,6 @@ abstract class IllustiaSettingsSecurityModule(
 
     fun updateSendTelemetry(value: Boolean) {
         updateSettings { it.copy(sendTelemetry = value) }
-        illustiaApplication?.setTelemetryEnabled(value)
     }
 
     fun updateDummyAppName(value: String) {
@@ -222,11 +220,6 @@ abstract class IllustiaSettingsSecurityModule(
 
     fun verifyCurrentUnlockCode(code: String): Boolean = settingsStore.verifyUnlockCode(code)
 
-    fun applyDummyIconSettings(context: android.content.Context) {
-        val settings = _uiState.value.settings
-        applyDummyAppIcon(context, settings.privacyModeEnabled)
-    }
-
     fun changeUnlockCode(
         currentCode: String,
         newCode: String,
@@ -238,8 +231,8 @@ abstract class IllustiaSettingsSecurityModule(
     }
 
     fun applyDummyAppIcon(
-        context: Any? = null,
         enabled: Boolean,
+        context: Any? = null,
     ) {
     }
 
@@ -554,7 +547,7 @@ abstract class IllustiaSettingsSecurityModule(
         val cooldownSec = cooldownTable.firstOrNull { count >= it.first }?.second ?: 0L
         val cooldownUntil =
             if (cooldownSec > 0L) {
-                android.os.SystemClock.elapsedRealtime() + cooldownSec * 1000L
+                System.currentTimeMillis() + cooldownSec * 1000L
             } else {
                 0L
             }
@@ -585,7 +578,7 @@ abstract class IllustiaSettingsSecurityModule(
     fun cooldownRemainingSeconds(): Long {
         val until = _uiState.value.settings.appLockCooldownUntil
         if (until == 0L) return 0L
-        return ((until - android.os.SystemClock.elapsedRealtime()) / 1000L).coerceAtLeast(0L)
+        return ((until - System.currentTimeMillis()) / 1000L).coerceAtLeast(0L)
     }
 
     fun updateFollowOnLike(value: Boolean) {
@@ -658,8 +651,6 @@ abstract class IllustiaSettingsSecurityModule(
 
     fun updateWallpaperPlaylistEnabled(value: Boolean) {
         updateSettings { it.copy(wallpaperPlaylistEnabled = value) }
-        com.yunfie.illustia.wallpaper.WallpaperPlaylistScheduler
-            .setEnabled(getApplication(), value)
     }
 
     fun updateLiveWallpaperSource(value: String) {

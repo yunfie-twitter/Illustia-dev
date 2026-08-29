@@ -1,16 +1,22 @@
 package com.yunfie.illustia.settings
 
+import com.yunfie.illustia.models.SavedIllustItem
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import java.io.File
 
-internal data class SettingsSyncUpdate(
+data class SavedIllustWithPages(
+    val illust: SavedIllustItem,
+    val pages: List<String> = emptyList(),
+)
+
+data class SettingsSyncUpdate(
     val revision: Long,
     val collections: SyncedCollectionsSnapshot,
 )
 
-internal data class PallaSyncEnabledUpdate(
+data class PallaSyncEnabledUpdate(
     val revision: Long,
     val enabled: Boolean,
 )
@@ -33,6 +39,10 @@ interface SettingsStore {
     fun setPallaSyncEnabledFromCoordinator(enabled: Boolean)
     fun getSavedIllustStorageBytes(): Long = 0L
     fun savedIllustDir(): File? = null
+    suspend fun getSavedIllusts(): List<SavedIllustItem> = emptyList()
+    suspend fun getSavedIllust(illustId: Long): SavedIllustWithPages? = null
+    suspend fun deleteSavedIllust(illustId: Long) {}
+    suspend fun insertSavedIllust(illust: SavedIllustItem, pages: List<String>) {}
 
     companion object {
         private val _syncUpdates = MutableStateFlow<SettingsSyncUpdate?>(null)

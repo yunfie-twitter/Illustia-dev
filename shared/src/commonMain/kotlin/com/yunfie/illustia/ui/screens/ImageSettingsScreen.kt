@@ -1,10 +1,7 @@
 package com.yunfie.illustia.ui.screens
 
-import android.app.WallpaperManager
-import android.content.ComponentName
-import android.content.Intent
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import com.yunfie.illustia.*
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -20,9 +18,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import com.yunfie.illustia.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -42,7 +40,6 @@ import com.yunfie.illustia.ui.components.SettingDropdownRow
 import com.yunfie.illustia.ui.components.SettingSwitchRow
 import com.yunfie.illustia.ui.components.overlayActionButtonColors
 import com.yunfie.illustia.wallpaper.LiveWallpaperSupport
-import com.yunfie.illustia.wallpaper.PalleriaLiveWallpaperService
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.Scaffold
@@ -63,8 +60,7 @@ fun ImageSettingsScreen(
 ) {
     PredictiveBackGestureHandler(onBack = onBack)
     val scrollBehavior = MiuixScrollBehavior()
-    val context = LocalContext.current
-    val imageStore = remember(context) { NativeImageStore(context.applicationContext) }
+    val imageStore = remember { NativeImageStore() }
     var saveLocation by remember(imageStore) { mutableStateOf(imageStore.currentPathLabel()) }
     val liveWallpaperSource =
         if (
@@ -81,24 +77,6 @@ fun ImageSettingsScreen(
             viewModel.updateWallpaperPlaylistEnabled(false)
         }
     }
-    val folderPicker =
-        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
-            uri?.let {
-                imageStore.persistTreeUri(it)
-                saveLocation = imageStore.currentPathLabel()
-            }
-        }
-    val liveWallpaperFolderPicker =
-        rememberLauncherForActivityResult(ActivityResultContracts.OpenDocumentTree()) { uri ->
-            uri?.let {
-                if (imageStore.persistReadOnlyTreeUri(it)) {
-                    viewModel.updateLiveWallpaperSourceFolder(it.toString())
-                    viewModel.updateLiveWallpaperSource("selected_folder")
-                } else {
-                    viewModel.showMessage(context.getString(R.string.live_wallpaper_folder_permission_failed))
-                }
-            }
-        }
     Scaffold(
         containerColor = MiuixTheme.colorScheme.surface,
         topBar = {
@@ -252,7 +230,7 @@ fun ImageSettingsScreen(
                             title = stringResource(R.string.image_default_save_location),
                             summary = saveLocation.ifBlank { stringResource(R.string.image_default_save_location_fallback) },
                             modifier = Modifier.fillMaxWidth(),
-                            onClick = { folderPicker.launch(null) },
+                            onClick = { },
                         )
                     }
                 }
@@ -281,21 +259,7 @@ fun ImageSettingsScreen(
                                 title = stringResource(R.string.live_wallpaper_open_preview),
                                 summary = stringResource(R.string.live_wallpaper_open_preview_desc),
                                 modifier = Modifier.fillMaxWidth(),
-                                onClick = {
-                                    val previewIntent =
-                                        Intent(WallpaperManager.ACTION_CHANGE_LIVE_WALLPAPER).apply {
-                                            putExtra(
-                                                WallpaperManager.EXTRA_LIVE_WALLPAPER_COMPONENT,
-                                                ComponentName(context, PalleriaLiveWallpaperService::class.java),
-                                            )
-                                        }
-                                    runCatching { context.startActivity(previewIntent) }
-                                        .onFailure {
-                                            runCatching {
-                                                context.startActivity(Intent(WallpaperManager.ACTION_LIVE_WALLPAPER_CHOOSER))
-                                            }
-                                        }
-                                },
+                                onClick = { },
                             )
                             DividerLine()
                             SettingDropdownRow(
@@ -320,7 +284,7 @@ fun ImageSettingsScreen(
                                             .folderLabel(state.settings.liveWallpaperSourceFolder)
                                             .ifBlank { stringResource(R.string.live_wallpaper_folder_name_desc) },
                                     modifier = Modifier.fillMaxWidth(),
-                                    onClick = { liveWallpaperFolderPicker.launch(null) },
+                                    onClick = { },
                                 )
                             }
                             DividerLine()

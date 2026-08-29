@@ -1,5 +1,7 @@
 package com.yunfie.illustia.ui.screens
 
+import com.yunfie.illustia.*
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -14,7 +16,7 @@ import com.yunfie.illustia.IllustiaUiState
 import com.yunfie.illustia.IllustiaViewModel
 import com.yunfie.illustia.R
 import com.yunfie.illustia.models.Illust
-import com.yunfie.illustia.settings.db.SavedIllustEntity
+import com.yunfie.illustia.models.SavedIllustItem
 import com.yunfie.illustia.ui.components.HeaderIcon
 import com.yunfie.illustia.ui.components.IllustGrid
 import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
@@ -37,7 +39,7 @@ fun OfflineLibraryScreen(
 
     val scrollBehavior = MiuixScrollBehavior()
     val columns = adaptiveIllustColumns(state.settings)
-    val savedIllusts = state.savedIllusts.map(SavedIllustEntity::toIllust)
+    val savedIllusts = state.savedIllusts.map(SavedIllustItem::toIllust)
 
     Scaffold(
         containerColor = MiuixTheme.colorScheme.surface,
@@ -72,7 +74,7 @@ fun OfflineLibraryScreen(
     }
 }
 
-private fun SavedIllustEntity.toIllust(): Illust {
+private fun SavedIllustItem.toIllust(): Illust {
     val previewUrl = localCoverPath?.takeIf { it.isNotBlank() } ?: thumbUrl.orEmpty()
     return Illust(
         id = illustId,

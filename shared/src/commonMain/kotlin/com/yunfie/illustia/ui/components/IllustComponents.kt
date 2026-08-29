@@ -1,5 +1,7 @@
 package com.yunfie.illustia.ui.components
 
+import com.yunfie.illustia.*
+
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -42,7 +44,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import com.yunfie.illustia.stringResource
 import androidx.compose.ui.semantics.Role
@@ -236,7 +237,6 @@ private fun IllustCardImpl(
     preferences: ArtworkCardPreferences,
 ) {
     val haptic = LocalHapticFeedback.current
-    val context = LocalContext.current
     val hapticMode = LocalAppHapticMode.current
     val cardModifier =
         if (isSelected) {
@@ -251,7 +251,7 @@ private fun IllustCardImpl(
                 onLongClick =
                     if (onLongClick != null) {
                         {
-                            performAppHapticFeedback(context, haptic, hapticMode)
+                            performAppHapticFeedback(hapticFeedback = haptic, mode = hapticMode)
                             onLongClick()
                         }
                     } else {
@@ -457,7 +457,6 @@ fun IllustListRow(
     onLongClick: (() -> Unit)? = null,
 ) {
     val haptic = LocalHapticFeedback.current
-    val context = LocalContext.current
     val hapticMode = LocalAppHapticMode.current
     val pageBadgeText =
         remember(illust.id) {
@@ -471,13 +470,11 @@ fun IllustListRow(
                 .combinedClickable(
                     onClick = onClick,
                     onLongClick =
-                        if (onLongClick != null) {
+                        onLongClick?.let { longClick ->
                             {
-                                performAppHapticFeedback(context, haptic, hapticMode)
-                                onLongClick()
+                                performAppHapticFeedback(hapticFeedback = haptic, mode = hapticMode)
+                                longClick()
                             }
-                        } else {
-                            null
                         },
                 ),
         cornerRadius = 18.dp,
@@ -650,7 +647,6 @@ fun TagTile(
     modifier: Modifier = Modifier,
     onLongClick: (() -> Unit)? = null,
 ) {
-    val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     val hapticMode = LocalAppHapticMode.current
     Card(
@@ -663,7 +659,7 @@ fun TagTile(
                     onLongClick =
                         onLongClick?.let { longClick ->
                             {
-                                performAppHapticFeedback(context, haptic, hapticMode)
+                                performAppHapticFeedback(hapticFeedback = haptic, mode = hapticMode)
                                 longClick()
                             }
                         },

@@ -1,5 +1,7 @@
 package com.yunfie.illustia.ui.screens
 
+import com.yunfie.illustia.*
+
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animate
 import androidx.compose.animation.core.tween
@@ -35,7 +37,7 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalContext
+import coil3.compose.LocalPlatformContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import com.yunfie.illustia.stringResource
 import androidx.compose.ui.unit.IntSize
@@ -67,7 +69,7 @@ internal fun UgoiraArtwork(
     onZoomChanged: (Boolean) -> Unit = {},
     onTap: (() -> Unit)? = null,
 ) {
-    val context = LocalContext.current
+    val context = LocalPlatformContext.current
     val haptic = LocalHapticFeedback.current
     val animationScope = rememberCoroutineScope()
     val runtimePolicy by DevicePerformance.runtimePolicy.collectAsState()

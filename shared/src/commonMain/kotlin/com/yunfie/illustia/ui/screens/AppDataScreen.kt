@@ -1,12 +1,11 @@
 package com.yunfie.illustia.ui.screens
 
-import android.content.Context
+import com.yunfie.illustia.*
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
@@ -17,7 +16,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import com.yunfie.illustia.stringResource
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.liveRegion
@@ -70,21 +68,20 @@ fun AppDataScreen(
     onBack: () -> Unit,
 ) {
     PredictiveBackGestureHandler(onBack = onBack)
-    val context = LocalContext.current
     val pageTitle = stringResource(R.string.app_data_title)
     var storageUsage by remember { mutableStateOf<AppStorageUsage?>(null) }
     var deleteTarget by remember { mutableStateOf<AppDataDeleteTarget?>(null) }
     val mutedTotal = state.settings.mutedIllusts.size + state.settings.mutedUsers.size + state.settings.mutedTags.size
 
     LaunchedEffect(state.message) {
-        storageUsage = withContext(Dispatchers.IO) { context.readAppStorageUsage() }
+        storageUsage = withContext(Dispatchers.IO) { readAppStorageUsage() }
     }
 
     deleteTarget?.let { target ->
         MiuixConfirmDialog(
             show = true,
-            title = target.confirmTitle(context),
-            summary = target.confirmSummary(context),
+            title = stringResource(target.confirmTitleRes),
+            summary = stringResource(target.confirmSummaryRes),
             confirmText = stringResource(R.string.action_delete),
             destructive = true,
             onConfirm = {
@@ -292,22 +289,22 @@ private fun StorageDetailRow(
     }
 }
 
-private fun AppDataDeleteTarget.confirmTitle(context: Context): String =
-    when (this) {
-        AppDataDeleteTarget.Cache -> context.getString(R.string.data_delete_cache)
-        AppDataDeleteTarget.ViewHistory -> context.getString(R.string.data_delete_view_history)
-        AppDataDeleteTarget.SearchHistory -> context.getString(R.string.data_delete_search_history)
-        AppDataDeleteTarget.FavoriteTags -> context.getString(R.string.data_delete_watchlist_tags)
-        AppDataDeleteTarget.MuteData -> context.getString(R.string.data_delete_mute_data)
+private val AppDataDeleteTarget.confirmTitleRes: org.jetbrains.compose.resources.StringResource
+    get() = when (this) {
+        AppDataDeleteTarget.Cache -> R.string.data_delete_cache
+        AppDataDeleteTarget.ViewHistory -> R.string.data_delete_view_history
+        AppDataDeleteTarget.SearchHistory -> R.string.data_delete_search_history
+        AppDataDeleteTarget.FavoriteTags -> R.string.data_delete_watchlist_tags
+        AppDataDeleteTarget.MuteData -> R.string.data_delete_mute_data
     }
 
-private fun AppDataDeleteTarget.confirmSummary(context: Context): String =
-    when (this) {
-        AppDataDeleteTarget.Cache -> context.getString(R.string.data_delete_cache_desc)
-        AppDataDeleteTarget.ViewHistory -> context.getString(R.string.data_delete_view_history_desc)
-        AppDataDeleteTarget.SearchHistory -> context.getString(R.string.data_delete_search_history_desc)
-        AppDataDeleteTarget.FavoriteTags -> context.getString(R.string.data_delete_watchlist_tags_desc)
-        AppDataDeleteTarget.MuteData -> context.getString(R.string.data_delete_mute_data_desc)
+private val AppDataDeleteTarget.confirmSummaryRes: org.jetbrains.compose.resources.StringResource
+    get() = when (this) {
+        AppDataDeleteTarget.Cache -> R.string.data_delete_cache_desc
+        AppDataDeleteTarget.ViewHistory -> R.string.data_delete_view_history_desc
+        AppDataDeleteTarget.SearchHistory -> R.string.data_delete_search_history_desc
+        AppDataDeleteTarget.FavoriteTags -> R.string.data_delete_watchlist_tags_desc
+        AppDataDeleteTarget.MuteData -> R.string.data_delete_mute_data_desc
     }
 
 private fun Long.readableBytes(): String {

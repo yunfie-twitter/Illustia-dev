@@ -58,6 +58,7 @@ import com.yunfie.illustia.data.proxyPixivImageUrl
 import com.yunfie.illustia.nativebridge.NativeIntentRouter
 import com.yunfie.illustia.performance.DevicePerformance
 import com.yunfie.illustia.platform.PlatformCapabilities
+import com.yunfie.illustia.settings.AndroidSettingsStore
 import com.yunfie.illustia.settings.AppFont
 import com.yunfie.illustia.settings.SettingsStore
 import com.yunfie.illustia.settings.appLanguageLocaleList
@@ -78,8 +79,16 @@ class MainActivity : FragmentActivity() {
     }
 
     private val viewModel by viewModels<IllustiaViewModel> {
-        androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory
-            .getInstance(application)
+        val app = application as IllustiaApplication
+        object : androidx.lifecycle.ViewModelProvider.Factory {
+            @Suppress("UNCHECKED_CAST")
+            override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
+                return IllustiaViewModel(
+                    settingsStore = app.settingsStore,
+                    repository = app.repository,
+                ) as T
+            }
+        }
     }
     private var lastHandledClipboardText: String? = null
     private var appliedRefreshRateHint: Float? = null
@@ -87,7 +96,7 @@ class MainActivity : FragmentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // プライバシーモード ON 時はスプラッシュも電卓アプリ風にする
-        if (SettingsStore.isPrivacyModeEnabledSync(applicationContext)) {
+        if (AndroidSettingsStore.isPrivacyModeEnabledSync(applicationContext)) {
             setTheme(R.style.AppTheme_Splash_Calculator)
         }
         val splashScreen = installSplashScreen()
@@ -141,7 +150,7 @@ class MainActivity : FragmentActivity() {
         )
         super.onCreate(savedInstanceState)
         requestLegacyStoragePermissionIfNeeded()
-        applyAppLanguage(SettingsStore.readStoredAppLanguage(applicationContext))
+        applyAppLanguage(AndroidSettingsStore.readStoredAppLanguage(applicationContext))
 
         // Observe app lifecycle for lock-on-return
         val lifecycleObserver =
@@ -270,7 +279,7 @@ class MainActivity : FragmentActivity() {
 
             LaunchedEffect(settingsLoaded, settings.privacyModeEnabled, settings.dummyAppName, settings.dummyIconVariant) {
                 if (!settingsLoaded) return@LaunchedEffect
-                viewModel.applyDummyIconSettings(this@MainActivity)
+                viewModel.applyDummyAppIcon(settings.privacyModeEnabled)
             }
 
             LaunchedEffect(settingsLoaded) {
@@ -385,19 +394,22 @@ class MainActivity : FragmentActivity() {
 
     private fun currentHandoffUri(state: IllustiaUiState): Uri? {
         if (state.appLocked || state.privacyLocked) return null
+        val user = state.selectedUser
+        val viewer = state.imageViewerIllust
+        val selected = state.selectedIllust
         return when {
-            state.showUserPage && state.selectedUser != null -> {
-                Uri.parse("pixiv://users/${state.selectedUser.id}")
+            state.showUserPage && user != null -> {
+                Uri.parse("pixiv://users/${user.id}")
             }
 
-            state.imageViewerIllust != null -> {
+            viewer != null -> {
                 Uri.parse(
-                    "pixiv://illusts/${state.imageViewerIllust.id}?page=${state.imageViewerCurrentPage}",
+                    "pixiv://illusts/${viewer.id}?page=${state.imageViewerCurrentPage}",
                 )
             }
 
-            state.selectedIllust != null -> {
-                Uri.parse("pixiv://illusts/${state.selectedIllust.id}")
+            selected != null -> {
+                Uri.parse("pixiv://illusts/${selected.id}")
             }
 
             else -> {

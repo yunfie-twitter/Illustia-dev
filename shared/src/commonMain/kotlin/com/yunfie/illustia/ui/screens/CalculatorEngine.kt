@@ -1,5 +1,7 @@
 package com.yunfie.illustia.ui.screens
 
+import com.yunfie.illustia.*
+
 /**
  * 電卓の計算ロジックを提供する純粋関数オブジェクト。
  * ViewModel の状態から独立してテスト可能な設計にする。

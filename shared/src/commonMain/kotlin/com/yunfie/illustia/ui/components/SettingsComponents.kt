@@ -1,6 +1,7 @@
 package com.yunfie.illustia.ui.components
 
-import android.annotation.SuppressLint
+import com.yunfie.illustia.*
+
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -17,7 +18,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import com.yunfie.illustia.stringResource
 import androidx.compose.ui.semantics.Role
@@ -62,7 +62,6 @@ fun Section(
 }
 
 @Composable
-@SuppressLint("ModifierParameter") // Keep the existing positional API stable for current callers.
 fun SettingRow(
     title: String,
     summary: String? = null,
@@ -364,7 +363,6 @@ fun <T> FlowButtons(
     onClick: (T) -> Unit,
     onLongClick: ((T) -> Unit)? = null,
 ) {
-    val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     val hapticMode = LocalAppHapticMode.current
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -381,7 +379,7 @@ fun <T> FlowButtons(
                                     onLongClick =
                                         onLongClick?.let { longClick ->
                                             {
-                                                performAppHapticFeedback(context, haptic, hapticMode)
+                                                performAppHapticFeedback(hapticFeedback = haptic, mode = hapticMode)
                                                 longClick(value)
                                             }
                                         },

@@ -262,14 +262,14 @@ fun PallaSyncSettingsScreen(
                 }
 
                 item {
-                    val logs by PalleriaSyncManager.syncLogs.collectAsState()
+                    val logs by PalleriaSyncManager.syncLogs.collectAsState(initial = emptyList())
                     Section(stringResource(R.string.pallasync_sync_logs)) {
                         ElevatedPanel(contentPadding = PaddingValues(16.dp)) {
                             if (logs.isEmpty()) {
                                 Text(
                                     stringResource(R.string.pallasync_no_logs),
                                     style = MiuixTheme.textStyles.body2,
-                                    color = MiuixTheme.colorScheme.onBackgroundVariant,
+                                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                                 )
                             } else {
                                 Column(modifier = Modifier.fillMaxWidth().heightIn(max = 200.dp)) {
@@ -277,7 +277,7 @@ fun PallaSyncSettingsScreen(
                                         Text(
                                             logMsg,
                                             style = MiuixTheme.textStyles.body2,
-                                            color = MiuixTheme.colorScheme.onBackgroundVariant,
+                                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                                         )
                                     }
                                 }

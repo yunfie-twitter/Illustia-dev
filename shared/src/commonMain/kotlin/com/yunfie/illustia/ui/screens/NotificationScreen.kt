@@ -1,6 +1,7 @@
 package com.yunfie.illustia.ui.screens
 
-import android.text.Html
+import com.yunfie.illustia.*
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -217,6 +218,6 @@ private fun ViewMoreRow(
 }
 
 private fun String?.toPlainNotificationText(): String =
-    this?.let { Html.fromHtml(it, Html.FROM_HTML_MODE_LEGACY).toString().trim() }.orEmpty()
+    this?.replace(Regex("<[^>]*>"), "")?.replace("&nbsp;", " ")?.replace("&amp;", "&")?.replace("&lt;", "<")?.replace("&gt;", ">")?.trim().orEmpty()
 
 private fun String.toDisplayDate(): String = replace('T', ' ').substringBefore('+').removeSuffix("Z")

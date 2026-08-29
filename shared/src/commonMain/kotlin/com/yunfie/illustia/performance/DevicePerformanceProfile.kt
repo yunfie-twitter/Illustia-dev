@@ -18,6 +18,7 @@ enum class DevicePerformanceMode(
 
     companion object {
         fun fromStoredValue(value: String): DevicePerformanceMode = entries.firstOrNull { it.storedValue == value } ?: AUTO
+        fun fromValue(value: String): DevicePerformanceMode = fromStoredValue(value)
     }
 }
 

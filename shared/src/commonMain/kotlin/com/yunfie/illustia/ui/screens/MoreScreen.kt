@@ -1,5 +1,7 @@
 package com.yunfie.illustia.ui.screens
 
+import com.yunfie.illustia.*
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -23,8 +25,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import com.yunfie.illustia.stringResource
+import com.yunfie.illustia.platform.LocalPlatformActions
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -118,37 +119,51 @@ private fun rememberQuickActions(
     viewModel: IllustiaViewModel,
     onOpenWatchlistSeries: (Long) -> Unit,
 ): List<MoreAction> {
-    val context = LocalContext.current
+    val settingsTitle = stringResource(R.string.more_settings)
+    val historyTitle = stringResource(R.string.more_view_history)
+    val notifTitle = stringResource(R.string.more_notifications)
+    val tagsTitle = stringResource(R.string.more_favorite_tags)
+    val syncTitle = stringResource(R.string.login_feature_sync)
+    val muteTitle = stringResource(R.string.more_mute_settings)
+    val downloadTitle = stringResource(R.string.more_download_list)
+
     return remember(
         state.activeDownloads,
         state.settings.favoriteTags.size,
         state.settings.pallaSyncEnabled,
+        settingsTitle,
+        historyTitle,
+        notifTitle,
+        tagsTitle,
+        syncTitle,
+        muteTitle,
+        downloadTitle,
     ) {
         buildList {
             add(
                 MoreAction(
-                    title = context.getString(R.string.more_settings),
+                    title = settingsTitle,
                     icon = MiuixIcons.Settings,
                     onClick = viewModel::openSettings,
                 ),
             )
             add(
                 MoreAction(
-                    title = context.getString(R.string.more_view_history),
+                    title = historyTitle,
                     icon = MiuixIcons.Timer,
                     onClick = viewModel::openViewHistory,
                 ),
             )
             add(
                 MoreAction(
-                    title = context.getString(R.string.more_notifications),
+                    title = notifTitle,
                     icon = MiuixIcons.Messages,
                     onClick = viewModel::openNotifications,
                 ),
             )
             add(
                 MoreAction(
-                    title = context.getString(R.string.more_favorite_tags),
+                    title = tagsTitle,
                     icon = MiuixIcons.FavoritesFill,
                     badge =
                         state.settings.favoriteTags.size
@@ -159,7 +174,7 @@ private fun rememberQuickActions(
             if (state.settings.pallaSyncEnabled) {
                 add(
                     MoreAction(
-                        title = context.getString(R.string.login_feature_sync),
+                        title = syncTitle,
                         icon = MiuixIcons.Refresh,
                         onClick = viewModel::openPallaSyncDevices,
                     ),
@@ -167,14 +182,14 @@ private fun rememberQuickActions(
             }
             add(
                 MoreAction(
-                    title = context.getString(R.string.more_mute_settings),
+                    title = muteTitle,
                     icon = MiuixIcons.Filter,
                     onClick = viewModel::openMuteSettings,
                 ),
             )
             add(
                 MoreAction(
-                    title = context.getString(R.string.more_download_list),
+                    title = downloadTitle,
                     icon = MiuixIcons.Download,
                     onClick = viewModel::openDownloadQueue,
                 ),
@@ -185,19 +200,14 @@ private fun rememberQuickActions(
 
 @Composable
 private fun rememberUtilityActions(viewModel: IllustiaViewModel): List<MoreAction> {
-    val context = LocalContext.current
-    val appVersion =
-        remember {
-            runCatching {
-                val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-                packageInfo.versionName
-            }.getOrNull() ?: "1.0.0"
-        }
+    val platformActions = LocalPlatformActions.current
+    val appVersion = remember { platformActions.getAppVersionName() }
+    val aboutTitle = stringResource(R.string.more_about)
 
-    return remember(viewModel, appVersion) {
+    return remember(viewModel, appVersion, aboutTitle) {
         listOf(
             MoreAction(
-                title = context.getString(R.string.more_about),
+                title = aboutTitle,
                 icon = MiuixIcons.More,
                 onClick = viewModel::openAbout,
             ),

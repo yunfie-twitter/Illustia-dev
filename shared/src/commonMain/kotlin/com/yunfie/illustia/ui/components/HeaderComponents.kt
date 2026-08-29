@@ -1,5 +1,7 @@
 package com.yunfie.illustia.ui.components
 
+import com.yunfie.illustia.*
+
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background

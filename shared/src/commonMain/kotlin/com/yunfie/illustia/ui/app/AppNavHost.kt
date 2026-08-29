@@ -1,9 +1,11 @@
 package com.yunfie.illustia.ui.app
 
-import androidx.compose.animation.ContentTransform
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -15,13 +17,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.yunfie.illustia.stringResource
-import androidx.navigation3.runtime.NavKey
-import androidx.navigation3.runtime.entryProvider
-import androidx.navigation3.runtime.rememberDecoratedNavEntries
-import androidx.navigation3.ui.NavDisplay
-import androidx.navigation3.ui.NavDisplay.popTransitionSpec
-import androidx.navigation3.ui.NavDisplay.predictivePopTransitionSpec
-import androidx.navigation3.ui.NavDisplay.transitionSpec
 import com.yunfie.illustia.IllustiaViewModel
 import com.yunfie.illustia.R
 import com.yunfie.illustia.data.pixiv.CommentArtworkType
@@ -63,7 +58,7 @@ import top.yukonga.miuix.kmp.theme.MiuixTheme
 internal fun AppNavHost(
     appState: IllustiaAppStateBundle,
     viewModel: IllustiaViewModel,
-    backStack: MutableList<NavKey>,
+    backStack: List<AppRoute>,
     detailSnapshots: Map<Long, DetailEntrySnapshot>,
     selectedTab: AppTab,
     pagerState: androidx.compose.foundation.pager.PagerState,
@@ -79,9 +74,19 @@ internal fun AppNavHost(
     onSearchTag: (String) -> Unit,
     onTabSelected: (Int, AppTab) -> Unit,
 ) {
-    val entryProvider =
-        entryProvider<NavKey> {
-            entry(AppRoute.Main) {
+    val currentRoute = backStack.lastOrNull() ?: AppRoute.Main
+
+    AnimatedContent(
+        targetState = currentRoute,
+        transitionSpec = {
+            (slideInHorizontally { width -> width } + fadeIn()) togetherWith
+                (slideOutHorizontally { width -> -width / 4 } + fadeOut())
+        },
+        modifier = Modifier.fillMaxSize().background(MiuixTheme.colorScheme.surface),
+        label = "AppNavHostContent",
+    ) { route ->
+        when (route) {
+            AppRoute.Main -> {
                 MainSurface(
                     appState = appState,
                     viewModel = viewModel,
@@ -108,19 +113,17 @@ internal fun AppNavHost(
                     },
                 )
             }
-            entry(AppRoute.Search) {
+            AppRoute.Search -> {
                 SearchScreen(state = appState.state, viewModel = viewModel)
             }
-            entry<AppRoute.TagSearch>(
-                metadata = artworkPageTransitionMetadata(),
-            ) {
+            is AppRoute.TagSearch -> {
                 SearchScreen(
                     state = appState.state,
                     viewModel = viewModel,
                     onBackFromResults = onPopRoute,
                 )
             }
-            entry(AppRoute.Onboarding) {
+            AppRoute.Onboarding -> {
                 var showTokenLoginSheet by remember { mutableStateOf(false) }
                 OnboardingScreen(
                     state = appState.state,
@@ -130,9 +133,7 @@ internal fun AppNavHost(
                     onTokenLoginDismiss = { showTokenLoginSheet = false },
                 )
             }
-            entry<AppRoute.Detail>(
-                metadata = artworkPageTransitionMetadata(),
-            ) { route ->
+            is AppRoute.Detail -> {
                 val selectedIllust = appState.state.selectedIllust
                 val snapshot =
                     if (selectedIllust?.id == route.illustId) {
@@ -212,10 +213,7 @@ internal fun AppNavHost(
                     contentAlignment = Alignment.Center,
                 ) { LoadingIndicator() }
             }
-            entry(
-                AppRoute.ImageViewer,
-                metadata = artworkPageTransitionMetadata(),
-            ) {
+            AppRoute.ImageViewer -> {
                 appState.state.imageViewerIllust?.let { illust ->
                     ImageViewerScreen(
                         illust = illust,
@@ -232,7 +230,7 @@ internal fun AppNavHost(
                     )
                 }
             }
-            entry(AppRoute.NovelList) {
+            AppRoute.NovelList -> {
                 NovelScreen(
                     items = appState.novelItems,
                     loadState = appState.loadState,
@@ -242,7 +240,7 @@ internal fun AppNavHost(
                     onBack = onPopRoute,
                 )
             }
-            entry(AppRoute.NovelReader) {
+            AppRoute.NovelReader -> {
                 NovelReaderScreen(
                     novel = appState.state.selectedNovel,
                     text = appState.state.selectedNovelText,
@@ -254,22 +252,22 @@ internal fun AppNavHost(
                     },
                 )
             }
-            entry(AppRoute.Settings) {
+            AppRoute.Settings -> {
                 SettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
             }
-            entry(AppRoute.GeneralSettings) {
+            AppRoute.GeneralSettings -> {
                 GeneralSettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
             }
-            entry(AppRoute.ExperimentalSettings) {
+            AppRoute.ExperimentalSettings -> {
                 ExperimentalSettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
             }
-            entry(AppRoute.ImageSettings) {
+            AppRoute.ImageSettings -> {
                 ImageSettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
             }
-            entry(AppRoute.BookmarkSettings) {
+            AppRoute.BookmarkSettings -> {
                 BookmarkSettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
             }
-            entry(AppRoute.AccountSettings) {
+            AppRoute.AccountSettings -> {
                 AccountSettingsScreen(
                     state = appState.state,
                     viewModel = viewModel,
@@ -277,7 +275,7 @@ internal fun AppNavHost(
                     onOpenPallaSync = { onNavigate(AppRoute.PallaSyncSettings) },
                 )
             }
-            entry(AppRoute.PallaSyncSettings) {
+            AppRoute.PallaSyncSettings -> {
                 com.yunfie.illustia.ui.screens.pallasync.PallaSyncSettingsScreen(
                     state = appState.state,
                     viewModel = viewModel,
@@ -288,7 +286,7 @@ internal fun AppNavHost(
                     },
                 )
             }
-            entry(AppRoute.PallaSyncDevices) {
+            AppRoute.PallaSyncDevices -> {
                 com.yunfie.illustia.ui.screens.pallasync.PallaSyncDevicesScreen(
                     state = appState.state,
                     onBack = onPopRoute,
@@ -297,7 +295,7 @@ internal fun AppNavHost(
                     },
                 )
             }
-            entry(AppRoute.DevicePairing) {
+            AppRoute.DevicePairing -> {
                 com.yunfie.illustia.ui.screens.pallasync.DevicePairingScreen(
                     serverUrl = appState.state.settings.pallaSyncServerUrl,
                     onBack = onPopRoute,
@@ -306,44 +304,44 @@ internal fun AppNavHost(
                     },
                 )
             }
-            entry(AppRoute.AccountLoginMethod) {
+            AppRoute.AccountLoginMethod -> {
                 AccountLoginMethodScreen(
                     onBack = onPopRoute,
                     onWebLogin = viewModel::openWebLogin,
                     onRefreshTokenLogin = { onShowTokenLoginChange(true) },
                 )
             }
-            entry(AppRoute.DataSettings) {
+            AppRoute.DataSettings -> {
                 DataSettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
             }
-            entry(AppRoute.ViewHistory) {
+            AppRoute.ViewHistory -> {
                 ViewHistoryScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
             }
-            entry(AppRoute.Notifications) {
+            AppRoute.Notifications -> {
                 NotificationScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
             }
-            entry(AppRoute.MuteSettings) {
+            AppRoute.MuteSettings -> {
                 MuteSettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
             }
-            entry(AppRoute.AppData) {
+            AppRoute.AppData -> {
                 AppDataScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
             }
-            entry(AppRoute.DownloadQueue) {
+            AppRoute.DownloadQueue -> {
                 DownloadQueueScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
             }
-            entry(AppRoute.OfflineLibrary) {
+            AppRoute.OfflineLibrary -> {
                 OfflineLibraryScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
             }
-            entry(AppRoute.SavedIllustViewer) {
+            AppRoute.SavedIllustViewer -> {
                 SavedIllustViewerScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
             }
-            entry(AppRoute.About) {
+            AppRoute.About -> {
                 AboutScreen(onBack = onPopRoute)
             }
-            entry(AppRoute.FavoriteTags) {
+            AppRoute.FavoriteTags -> {
                 FavoriteTagsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
             }
-            entry(AppRoute.WatchlistSeries) {
+            AppRoute.WatchlistSeries -> {
                 WatchlistSeriesScreen(
                     viewModel = viewModel,
                     onBack = onPopRoute,
@@ -353,7 +351,7 @@ internal fun AppNavHost(
                     },
                 )
             }
-            entry(AppRoute.IllustSeries) {
+            AppRoute.IllustSeries -> {
                 val currentSeriesId = selectedWatchlistSeriesId
                 if (currentSeriesId != null) {
                     IllustSeriesScreen(
@@ -374,7 +372,7 @@ internal fun AppNavHost(
                     }
                 }
             }
-            entry<AppRoute.UserProfile> { route ->
+            is AppRoute.UserProfile -> {
                 val selectedUser = appState.state.selectedUser
                 if (selectedUser?.id == route.userId) {
                     val user = selectedUser
@@ -428,20 +426,20 @@ internal fun AppNavHost(
                     }
                 }
             }
-            entry(AppRoute.AppLockSetup) {
+            AppRoute.AppLockSetup -> {
                 AppLockSetupScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
             }
-            entry(AppRoute.AppLockPinEntry) {
+            AppRoute.AppLockPinEntry -> {
                 PinSetupScreen(
                     isChange = appState.state.settings.appLockEnabled,
                     viewModel = viewModel,
                     onBack = onPopRoute,
                 )
             }
-            entry(AppRoute.PrivacyModeSettings) {
+            AppRoute.PrivacyModeSettings -> {
                 PrivacyModeSettingsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
             }
-            entry<AppRoute.DeviceViewHistory> { route ->
+            is AppRoute.DeviceViewHistory -> {
                 com.yunfie.illustia.ui.screens.pallasync.DeviceViewHistoryScreen(
                     deviceId = route.deviceId,
                     deviceName = route.deviceName,
@@ -455,20 +453,7 @@ internal fun AppNavHost(
                 )
             }
         }
-
-    val entries =
-        rememberDecoratedNavEntries(
-            backStack = backStack,
-            entryProvider = entryProvider,
-        )
-    NavDisplay(
-        entries = entries,
-        onBack = onPopRoute,
-        modifier =
-            Modifier
-                .fillMaxSize()
-                .background(MiuixTheme.colorScheme.surface),
-    )
+    }
 
     AppOverlayHost(
         appState = appState,
@@ -480,41 +465,3 @@ internal fun AppNavHost(
         onSearchTag = onSearchTag,
     )
 }
-
-private fun artworkPageTransitionMetadata(): Map<String, Any> =
-    transitionSpec {
-        ContentTransform(
-            slideInHorizontally(
-                initialOffsetX = { fullWidth -> fullWidth },
-                animationSpec = tween(320),
-            ),
-            slideOutHorizontally(
-                targetOffsetX = { fullWidth -> -fullWidth / 4 },
-                animationSpec = tween(320),
-            ),
-        )
-    } +
-        popTransitionSpec {
-            ContentTransform(
-                slideInHorizontally(
-                    initialOffsetX = { fullWidth -> -fullWidth / 4 },
-                    animationSpec = tween(280),
-                ),
-                slideOutHorizontally(
-                    targetOffsetX = { fullWidth -> fullWidth },
-                    animationSpec = tween(280),
-                ),
-            )
-        } +
-        predictivePopTransitionSpec {
-            ContentTransform(
-                slideInHorizontally(
-                    initialOffsetX = { fullWidth -> -fullWidth / 4 },
-                    animationSpec = tween(280),
-                ),
-                slideOutHorizontally(
-                    targetOffsetX = { fullWidth -> fullWidth },
-                    animationSpec = tween(280),
-                ),
-            )
-        }

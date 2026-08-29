@@ -1,5 +1,7 @@
 package com.yunfie.illustia.ui.screens
 
+import com.yunfie.illustia.*
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -9,7 +11,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import com.yunfie.illustia.stringResource
 import androidx.compose.ui.unit.dp
 import com.yunfie.illustia.IllustiaUiState
@@ -55,8 +56,7 @@ fun GeneralSettingsScreen(
     PredictiveBackGestureHandler(onBack = onBack)
     val scrollBehavior = MiuixScrollBehavior()
     val dynamicColorAvailable = isDynamicColorAvailable()
-    val context = LocalContext.current
-    val hapticsSupported = remember(context) { isAppHapticsSupported(context) }
+    val hapticsSupported = remember { isAppHapticsSupported() }
     val effectiveHapticMode = effectiveAppHapticMode(state.settings.hapticMode, hapticsSupported)
     val hapticsEnabled = effectiveHapticMode != AppHapticMode.Off
 

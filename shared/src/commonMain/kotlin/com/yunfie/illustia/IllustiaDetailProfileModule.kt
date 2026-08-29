@@ -111,7 +111,6 @@ abstract class IllustiaDetailProfileModule(
                 updateSettings { it.copy(viewHistory = updatedHistory) }
             } catch (expectedFailure: Exception) {
                 if (isCancellation(expectedFailure)) throw expectedFailure
-                Log.w("IllustiaViewModel", "Failed to lazily refresh illustration detail", expectedFailure)
             }
         }
     }
@@ -158,7 +157,8 @@ abstract class IllustiaDetailProfileModule(
                     throw IllegalStateException("Ugoira zip URL is missing.")
                 }
             val requestUrl = proxyPixivImageUrl(zipUrl, _uiState.value.settings.pixivImageProxyBaseUrl)
-            val cacheRoot = File(getApplication<Application>().cacheDir, "ugoira/$illustId")
+            val cacheRoot = File(System.getProperty("java.io.tmpdir", "."), "ugoira/$illustId")
+            cacheRoot.mkdirs()
             repository.prepareUgoira(
                 url = requestUrl,
                 cacheDir = cacheRoot.absolutePath,

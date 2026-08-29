@@ -1,25 +1,26 @@
 package com.yunfie.illustia.ui.screens
 
-import android.content.Intent
-import android.net.Uri
-import androidx.compose.foundation.Image
+import com.yunfie.illustia.*
+
+import com.yunfie.illustia.platform.LocalPlatformActions
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import com.yunfie.illustia.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -48,14 +49,8 @@ private const val FDROID_URL = "https://yunfi.f5.si/Illustia-dev/repo"
 @Composable
 fun AboutScreen(onBack: () -> Unit) {
     PredictiveBackGestureHandler(onBack = onBack)
-    val context = LocalContext.current
-    val appVersion =
-        remember {
-            runCatching {
-                val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-                packageInfo.versionName
-            }.getOrNull() ?: "1.0.0"
-        }
+    val platformActions = LocalPlatformActions.current
+    val appVersion = remember { platformActions.getAppVersionName() }
 
     val scrollBehavior = MiuixScrollBehavior()
     Scaffold(
@@ -96,21 +91,21 @@ fun AboutScreen(onBack: () -> Unit) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    Box(
+                    androidx.compose.foundation.layout.Box(
                         modifier =
                             Modifier
                                 .size(96.dp)
                                 .squircleSurface(
-                                    color = MiuixTheme.colorScheme.surfaceContainerHigh,
+                                    color = MiuixTheme.colorScheme.primary,
                                     cornerRadius = 24.dp,
                                 ),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Image(
-                            painter = painterResource(R.mipmap.ic_launcher_foreground),
-                            contentDescription = stringResource(R.string.app_name),
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Fit,
+                        Text(
+                            text = "P",
+                            color = MiuixTheme.colorScheme.onPrimary,
+                            style = MiuixTheme.textStyles.title1,
+                            fontWeight = FontWeight.Black,
                         )
                     }
                     Text(
@@ -170,15 +165,11 @@ fun AboutScreen(onBack: () -> Unit) {
                 Section(stringResource(R.string.about_section_links)) {
                     ElevatedPanel(contentPadding = PaddingValues(0.dp)) {
                         SettingLinkRow(stringResource(R.string.about_fdroid)) {
-                            runCatching {
-                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(FDROID_URL)))
-                            }
+                            platformActions.openUrl(FDROID_URL)
                         }
                         DividerLine()
                         SettingLinkRow(stringResource(R.string.about_pixiv)) {
-                            runCatching {
-                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.pixiv.net/")))
-                            }
+                            platformActions.openUrl("https://www.pixiv.net/")
                         }
                     }
                 }

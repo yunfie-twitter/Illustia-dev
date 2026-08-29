@@ -1,6 +1,8 @@
 package com.yunfie.illustia.ui.screens
 
-import android.content.Intent
+import com.yunfie.illustia.*
+
+import com.yunfie.illustia.platform.LocalPlatformActions
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -39,8 +41,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.onSizeChanged
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import com.yunfie.illustia.stringResource
@@ -90,7 +90,7 @@ fun ImageViewerScreen(
     onPageChanged: (Int) -> Unit,
     loadUgoiraPlayback: suspend (Long) -> UgoiraPlayback,
 ) {
-    val context = LocalContext.current
+    val platformActions = LocalPlatformActions.current
     val shareFailedMessage = stringResource(R.string.viewer_share_failed)
     val imageUrls =
         remember(illust, fullscreenQuality) {
@@ -152,15 +152,8 @@ fun ImageViewerScreen(
 
     fun shareCurrentPage() {
         val url = imageUrls[pagerState.currentPage]
-        val sendIntent =
-            Intent().apply {
-                action = Intent.ACTION_SEND
-                putExtra(Intent.EXTRA_TEXT, "${illust.title} by ${illust.artistName}\n$url")
-                type = "text/plain"
-            }
-        val shareIntent = Intent.createChooser(sendIntent, null)
         runCatching {
-            context.startActivity(shareIntent)
+            platformActions.shareText("${illust.title} by ${illust.artistName}\n$url")
         }.onFailure {
             onMessage(shareFailedMessage)
         }

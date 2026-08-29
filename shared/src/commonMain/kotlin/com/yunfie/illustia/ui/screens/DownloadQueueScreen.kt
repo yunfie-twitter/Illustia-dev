@@ -1,5 +1,7 @@
 package com.yunfie.illustia.ui.screens
 
+import com.yunfie.illustia.*
+
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
@@ -279,7 +281,7 @@ private fun QueueTabs(
 }
 
 private fun androidx.compose.foundation.lazy.LazyListScope.queueSection(
-    titleRes: Int,
+    titleRes: org.jetbrains.compose.resources.StringResource,
     items: List<DownloadQueueEntry>,
 ) {
     if (items.isEmpty()) return
@@ -306,7 +308,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.queueTabContent(
 
 @Composable
 private fun QueueSectionHeader(
-    titleRes: Int,
+    titleRes: org.jetbrains.compose.resources.StringResource,
     count: Int,
 ) {
     Row(

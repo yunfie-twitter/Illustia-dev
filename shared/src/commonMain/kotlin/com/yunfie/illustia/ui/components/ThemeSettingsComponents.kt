@@ -1,5 +1,7 @@
 package com.yunfie.illustia.ui.components
 
+import com.yunfie.illustia.*
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement

@@ -44,7 +44,7 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 
-private data class SettingsPersistenceRequest(
+internal data class SettingsPersistenceRequest(
     val settings: AppSettings,
     val baseSettings: AppSettings? = null,
     val notifyLiveWallpaper: Boolean,
@@ -162,7 +162,9 @@ abstract class IllustiaViewModelFoundation(
                 } else {
                     startupSettings
                 }
-            DevicePerformance.setPerformanceMode(normalizedStartupSettings.performanceMode)
+            DevicePerformance.setPerformanceMode(
+                com.yunfie.illustia.performance.DevicePerformanceMode.fromValue(normalizedStartupSettings.performanceMode)
+            )
             val shouldLock = normalizedStartupSettings.appLockEnabled && settingsStore.hasPinSet()
             _uiState.update {
                 it.withSettings(normalizedStartupSettings).copy(
@@ -220,31 +222,7 @@ abstract class IllustiaViewModelFoundation(
         }
     }
 
-    protected fun warmSmartCache(items: List<Illust>) {
-        val settings = _uiState.value.settings
-        if (!settings.smartCacheEnabled) return
-        val context = getApplication<Application>().applicationContext
-        if (settings.smartCacheWifiOnly) {
-            val connectivity = context.getSystemService(ConnectivityManager::class.java)
-            val capabilities = connectivity.getNetworkCapabilities(connectivity.activeNetwork)
-            if (capabilities?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) != true) return
-        }
-        val loader = SingletonImageLoader.get(context)
-        items
-            .asSequence()
-            .take(minOf(settings.smartCacheItemCount.coerceIn(4, 30), DevicePerformance.profile.smartCacheLimit))
-            .flatMap { illust ->
-                (
-                    illust.mediumImagePages.ifEmpty {
-                        listOf(illust.mediumImageUrl.ifBlank { illust.imageUrl })
-                    }
-                ).asSequence()
-            }.filter(String::isNotBlank)
-            .distinct()
-            .forEach { url ->
-                loader.enqueue(ImageRequest.Builder(context).data(url).build())
-            }
-    }
+    protected open fun warmSmartCache(items: List<Illust>) {}
 
     protected fun AppSettings.resolveLoggedInAccount(): UserProfile? {
         val stored =
@@ -287,19 +265,7 @@ abstract class IllustiaViewModelFoundation(
         refreshRankingWidget()
     }
 
-    protected suspend fun refreshRankingWidget() {
-        runCatching {
-            val context = getApplication<Application>().applicationContext
-            val manager = AppWidgetManager.getInstance(context)
-            val ids = manager.getAppWidgetIds(ComponentName(context, RankingWidgetProvider::class.java))
-            if (ids.isEmpty()) return
-            val intent =
-                android.content.Intent(context, RankingWidgetProvider::class.java).apply {
-                    action = RankingWidgetProvider.ACTION_REFRESH_RANKING_WIDGET
-                }
-            context.sendBroadcast(intent)
-        }
-    }
+    protected open suspend fun refreshRankingWidget() {}
 
     protected suspend fun refreshCurrentAccountProfile(settings: AppSettings) {
         val userId = settings.bookmarkUserId
@@ -390,14 +356,7 @@ abstract class IllustiaViewModelFoundation(
                 } else {
                     repository.saveSettings(request.settings, request.baseSettings)
                 }
-                PalleriaAccount.reconcile(getApplication(), request.settings.accounts)
-                if (request.notifyLiveWallpaper) {
-                    val application = getApplication<Application>()
-                    application.sendBroadcast(
-                        Intent(com.yunfie.illustia.wallpaper.PalleriaLiveWallpaperService.ACTION_SETTINGS_CHANGED)
-                            .setPackage(application.packageName),
-                    )
-                }
+                onSettingsPersisted(request)
             } catch (expectedFailure: Exception) {
                 val error = expectedFailure
                 if (isCancellation(error)) throw error
@@ -405,6 +364,8 @@ abstract class IllustiaViewModelFoundation(
             }
         }
     }
+
+    internal open fun onSettingsPersisted(request: SettingsPersistenceRequest) {}
 
     protected fun runLoading(block: suspend () -> Unit): Job {
         loadingJob?.cancel()

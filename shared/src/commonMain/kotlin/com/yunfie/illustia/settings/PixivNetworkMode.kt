@@ -1,8 +1,7 @@
 package com.yunfie.illustia.settings
 
 import androidx.compose.runtime.Composable
-import com.yunfie.illustia.stringResource
-import com.yunfie.illustia.R
+import com.yunfie.illustia.*
 import com.yunfie.illustia.models.NetworkMode
 
 fun pixivNetworkModeOptions(): List<String> =

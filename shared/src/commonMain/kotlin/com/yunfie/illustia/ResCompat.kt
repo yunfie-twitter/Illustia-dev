@@ -4,9 +4,9 @@ import androidx.compose.runtime.Composable
 import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource as composeStringResource
 
-object R {
-    typealias string = Res.string
-    typealias drawable = Res.drawable
+internal object R {
+    val string = Res.string
+    val drawable = Res.drawable
 }
 
 @Composable

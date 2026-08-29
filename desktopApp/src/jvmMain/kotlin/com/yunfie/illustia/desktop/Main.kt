@@ -1,6 +1,7 @@
 package com.yunfie.illustia.desktop
 
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.application
@@ -13,12 +14,14 @@ import com.yunfie.illustia.ui.IllustiaApp
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 fun main() = application {
-    val platformActions = DesktopPlatformActions()
-    val settingsStore = DesktopSettingsStore()
-    val viewModel = IllustiaViewModel(
-        settingsStore = settingsStore,
-        platformActions = platformActions,
-    )
+    val platformActions = remember { DesktopPlatformActions() }
+    val settingsStore = remember { DesktopSettingsStore() }
+    val viewModel = remember {
+        IllustiaViewModel(
+            settingsStore = settingsStore,
+            platformActions = platformActions,
+        )
+    }
 
     val windowState = rememberWindowState(width = 1200.dp, height = 800.dp)
 

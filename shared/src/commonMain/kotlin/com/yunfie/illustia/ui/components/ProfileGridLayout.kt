@@ -1,9 +1,10 @@
 package com.yunfie.illustia.ui.components
 
+import com.yunfie.illustia.*
+
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 
@@ -11,12 +12,7 @@ internal val ProfileGridHorizontalSpacing = 10.dp
 internal val ProfileGridVerticalSpacing = 18.dp
 
 @Composable
-internal fun adaptiveProfileGridColumns(): Int {
-    val configuration = LocalConfiguration.current
-    return remember(configuration.screenWidthDp) {
-        profileGridColumnsForWidth(configuration.screenWidthDp)
-    }
-}
+internal fun adaptiveProfileGridColumns(): Int = 3
 
 internal fun profileGridColumnsForWidth(screenWidthDp: Int): Int =
     when {

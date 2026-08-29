@@ -1,8 +1,9 @@
 package com.yunfie.illustia.platform
 
-internal object PlatformCapabilities {
+object PlatformCapabilities {
     const val HANDOFF_API = 37
 
+    fun requiresLegacyStoragePermission(): Boolean = false
     fun supportsStorageStats(): Boolean = false
     fun supportsDetailedStorageStats(): Boolean = false
     fun supportsAnimatedImageDecoder(): Boolean = true

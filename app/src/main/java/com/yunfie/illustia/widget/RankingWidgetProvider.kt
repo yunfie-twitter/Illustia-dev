@@ -18,7 +18,7 @@ import com.yunfie.illustia.data.IllustiaRepository
 import com.yunfie.illustia.data.proxyPixivImageUrl
 import com.yunfie.illustia.models.Illust
 import com.yunfie.illustia.platform.PlatformCapabilities
-import com.yunfie.illustia.settings.SettingsStore
+import com.yunfie.illustia.settings.AndroidSettingsStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -96,7 +96,7 @@ class RankingWidgetProvider : AppWidgetProvider() {
 
 private suspend fun buildPreview(context: Context): RemoteViews {
     val views = RemoteViews(context.packageName, R.layout.ranking_widget)
-    val settings = SettingsStore(context.applicationContext).read()
+    val settings = AndroidSettingsStore(context.applicationContext).read()
     val loggedIn = settings.refreshToken.isNotBlank() && !settings.privacyModeEnabled
     if (loggedIn) {
         views.setViewVisibility(R.id.widget_status, android.view.View.GONE)
@@ -160,7 +160,7 @@ private class RankingWidgetUpdater(
     private val appWidgetManager: AppWidgetManager,
 ) {
     private val applicationContext = context.applicationContext
-    private val repository = IllustiaRepository(SettingsStore(applicationContext))
+    private val repository = IllustiaRepository(AndroidSettingsStore(applicationContext))
 
     suspend fun update(appWidgetIds: IntArray) {
         val settings = repository.readSettings()
@@ -323,7 +323,7 @@ private class RankingWidgetUpdater(
     }
 
     private suspend fun loadThumbnail(illust: Illust): Bitmap? {
-        val proxyBaseUrl = SettingsStore(context.applicationContext).read().pixivImageProxyBaseUrl
+        val proxyBaseUrl = AndroidSettingsStore(context.applicationContext).read().pixivImageProxyBaseUrl
         val imageUrl = proxyPixivImageUrl(illust.thumbnailUrl, proxyBaseUrl)
         val request =
             Request

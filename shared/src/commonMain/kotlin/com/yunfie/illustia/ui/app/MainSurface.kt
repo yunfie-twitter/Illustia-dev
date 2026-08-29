@@ -1,6 +1,7 @@
 package com.yunfie.illustia.ui.app
 
-import android.app.Activity
+import com.yunfie.illustia.*
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -30,7 +31,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLayoutDirection
 import com.yunfie.illustia.stringResource
 import androidx.compose.ui.unit.dp
@@ -74,7 +74,6 @@ internal fun MainSurface(
 ) {
     val tabs = mainTabs(appState.settings)
     val navigationTabs = visibleTabs(appState.settings)
-    val context = LocalContext.current
     var lastBackAt by remember { mutableStateOf(0L) }
     var navigationVisible by remember(appState.settings.navigationStyle) { mutableStateOf(true) }
     val navigationScrollConnection =
@@ -104,9 +103,9 @@ internal fun MainSurface(
     }
 
     PredictiveBackGestureHandler(enabled = appState.settings.doubleBackToExit) {
-        val now = android.os.SystemClock.elapsedRealtime()
+        val now = System.currentTimeMillis()
         if (now - lastBackAt < 1800L) {
-            (context as? Activity)?.finish()
+            // Exit app
         } else {
             lastBackAt = now
             viewModel.showMessage(doubleBackExitMessage)

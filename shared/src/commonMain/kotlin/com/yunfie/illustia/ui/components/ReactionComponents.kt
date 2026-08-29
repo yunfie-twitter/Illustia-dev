@@ -1,5 +1,7 @@
 package com.yunfie.illustia.ui.components
 
+import com.yunfie.illustia.*
+
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
@@ -25,7 +27,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import com.yunfie.illustia.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -60,7 +61,6 @@ fun FollowPill(
     var awaitingFollowConfirmation by remember { mutableStateOf(false) }
 
     val haptic = LocalHapticFeedback.current
-    val context = LocalContext.current
     val hapticMode = LocalAppHapticMode.current
 
     LaunchedEffect(followAnimationTrigger) {
@@ -68,7 +68,7 @@ fun FollowPill(
         lastHandledTrigger = followAnimationTrigger
         awaitingFollowConfirmation = true
         animationStage = FollowPillStage.CHECK
-        performAppHapticFeedback(context, haptic, hapticMode)
+        performAppHapticFeedback(hapticFeedback = haptic, mode = hapticMode)
         delay(600)
         animationStage = FollowPillStage.FOLLOWED
         awaitingFollowConfirmation = false
@@ -174,7 +174,6 @@ fun BookmarkHeartButton(
     inactiveBackground: Color = Color.Transparent,
 ) {
     val haptic = LocalHapticFeedback.current
-    val context = LocalContext.current
     val hapticMode = LocalAppHapticMode.current
     var previousBookmarked by remember { mutableStateOf(isBookmarked) }
     var stage by remember(isBookmarked) {
@@ -192,13 +191,13 @@ fun BookmarkHeartButton(
     LaunchedEffect(stage) {
         when (stage) {
             BookmarkButtonStage.CHECK -> {
-                performAppHapticFeedback(context, haptic, hapticMode, AppHapticEffect.Toggle)
+                performAppHapticFeedback(hapticFeedback = haptic, mode = hapticMode, effect = AppHapticEffect.Toggle)
                 delay(420)
                 stage = BookmarkButtonStage.BOOKMARKED
             }
 
             BookmarkButtonStage.REMOVING -> {
-                performAppHapticFeedback(context, haptic, hapticMode, AppHapticEffect.Toggle)
+                performAppHapticFeedback(hapticFeedback = haptic, mode = hapticMode, effect = AppHapticEffect.Toggle)
                 delay(220)
                 stage = BookmarkButtonStage.UNBOOKMARKED
             }

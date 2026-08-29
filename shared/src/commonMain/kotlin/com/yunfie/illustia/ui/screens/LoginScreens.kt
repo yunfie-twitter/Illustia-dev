@@ -1,12 +1,5 @@
 package com.yunfie.illustia.ui.screens
 
-import android.graphics.Bitmap
-import android.net.Uri
-import android.webkit.WebChromeClient
-import android.webkit.WebResourceError
-import android.webkit.WebResourceRequest
-import android.webkit.WebView
-import android.webkit.WebViewClient
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,21 +15,18 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import com.yunfie.illustia.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.compose.ui.viewinterop.AndroidView
-import com.yunfie.illustia.IllustiaUiState
-import com.yunfie.illustia.IllustiaViewModel
-import com.yunfie.illustia.PixivWebLoginRequest
-import com.yunfie.illustia.R
+import com.yunfie.illustia.*
+import com.yunfie.illustia.platform.LocalPlatformActions
 import com.yunfie.illustia.ui.components.BottomSheetInsideMargin
 import com.yunfie.illustia.ui.components.ElevatedPanel
 import com.yunfie.illustia.ui.components.HeaderIcon
@@ -119,151 +109,107 @@ fun PixivWebLoginScreen(
     onCodeReceived: (String) -> Unit,
     onCancel: () -> Unit,
     onError: (String) -> Unit,
-    onWebViewChanged: (WebView?) -> Unit = {},
+    onWebViewChanged: (Any?) -> Unit = {},
 ) {
-    var webView by remember { mutableStateOf<WebView?>(null) }
-    var isLoading by remember { mutableStateOf(true) }
-    var completed by remember { mutableStateOf(false) }
-    var webError by remember { mutableStateOf<String?>(null) }
+    val platformActions = LocalPlatformActions.current
+    var callbackUrlInput by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf<String?>(null) }
 
-    fun completeWithUrl(url: String): Boolean {
-        val code = pixivLoginCodeOrNull(url) ?: return false
-        if (!completed) {
-            completed = true
-            onCodeReceived(code)
-        }
-        return true
+    LaunchedEffect(request.authorizationUrl) {
+        platformActions.openUrl(request.authorizationUrl)
     }
 
-    PredictiveBackGestureHandler {
-        val activeWebView = webView
-        if (activeWebView?.canGoBack() == true) {
-            activeWebView.goBack()
-        } else {
-            onCancel()
-        }
-    }
-
-    DisposableEffect(Unit) {
-        onDispose {
-            onWebViewChanged(null)
-            webView?.destroy()
-        }
-    }
+    PredictiveBackGestureHandler(onBack = onCancel)
 
     Column(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .fillMaxHeight(0.82f),
+                .padding(24.dp)
+                .verticalScroll(rememberScrollState()),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Box(modifier = Modifier.weight(1f)) {
-            AndroidView(
-                modifier = Modifier.fillMaxSize(),
-                factory = { context ->
-                    WebView(context).apply {
-                        webView = this
-                        onWebViewChanged(this)
-                        settings.javaScriptEnabled = true
-                        settings.domStorageEnabled = true
-                        settings.userAgentString = "PixivAndroidApp/6.184.0 (Android 14; Illustia)"
-                        webChromeClient = WebChromeClient()
-                        webViewClient =
-                            object : WebViewClient() {
-                                override fun shouldOverrideUrlLoading(
-                                    view: WebView,
-                                    request: WebResourceRequest,
-                                ): Boolean = completeWithUrl(request.url.toString())
+        Text(
+            text = stringResource(R.string.login_web_description),
+            style = MiuixTheme.textStyles.title2,
+            fontWeight = FontWeight.Bold,
+        )
 
-                                override fun onPageStarted(
-                                    view: WebView,
-                                    url: String,
-                                    favicon: Bitmap?,
-                                ) {
-                                    if (completeWithUrl(url)) {
-                                        view.stopLoading()
-                                        return
-                                    }
-                                    webError = null
-                                    isLoading = true
-                                }
+        Button(
+            onClick = {
+                platformActions.openUrl(request.authorizationUrl)
+            },
+            modifier = Modifier.fillMaxWidth(),
+            colors = overlayActionButtonColors(),
+        ) {
+            Text(stringResource(R.string.detail_open_in_browser))
+        }
 
-                                override fun onPageFinished(
-                                    view: WebView,
-                                    url: String,
-                                ) {
-                                    isLoading = false
-                                }
-
-                                override fun onReceivedError(
-                                    view: WebView,
-                                    request: WebResourceRequest,
-                                    error: WebResourceError,
-                                ) {
-                                    if (request.isForMainFrame && completeWithUrl(request.url.toString())) {
-                                        view.stopLoading()
-                                        return
-                                    }
-                                    if (request.isForMainFrame && !completed) {
-                                        isLoading = false
-                                        webError = error.description?.toString()?.ifBlank { context.getString(R.string.error_generic) }
-                                            ?: context.getString(R.string.error_generic)
-                                    }
-                                }
-                            }
-                        loadUrl(request.authorizationUrl)
-                    }
-                },
-                update = { view ->
-                    if (view.url == null) {
-                        view.loadUrl(request.authorizationUrl)
-                    }
-                },
-            )
-            if (webError != null) {
-                Box(
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .background(MiuixTheme.colorScheme.background.copy(alpha = 0.82f))
-                            .padding(26.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    ElevatedPanel {
-                        Text(stringResource(R.string.error_generic), style = MiuixTheme.textStyles.title3, fontWeight = FontWeight.Bold)
-                        Text(
-                            webError.orEmpty(),
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                            style = MiuixTheme.textStyles.body2,
-                            lineHeight = 20.sp,
-                        )
-                        Button(
-                            onClick = {
-                                webError = null
-                                isLoading = true
-                                webView?.reload() ?: webView?.loadUrl(request.authorizationUrl)
-                            },
-                            modifier = Modifier.fillMaxWidth(),
-                            colors = overlayActionButtonColors(),
-                        ) {
-                            Text(stringResource(R.string.dialog_reload))
-                        }
-                    }
+        TextField(
+            value = callbackUrlInput,
+            onValueChange = {
+                callbackUrlInput = it
+                errorMessage = null
+                val code = pixivLoginCodeOrNull(it)
+                if (code != null) {
+                    onCodeReceived(code)
                 }
-            }
+            },
+            label = "pixiv://...",
+            useLabelAsPlaceholder = true,
+            modifier = Modifier.fillMaxWidth(),
+        )
+
+        if (errorMessage != null) {
+            Text(
+                text = errorMessage.orEmpty(),
+                color = MiuixTheme.colorScheme.error,
+                style = MiuixTheme.textStyles.body2,
+            )
+        }
+
+        Button(
+            onClick = {
+                val code = pixivLoginCodeOrNull(callbackUrlInput)
+                if (code != null) {
+                    onCodeReceived(code)
+                } else {
+                    errorMessage = "Invalid callback URL"
+                }
+            },
+            modifier = Modifier.fillMaxWidth(),
+            enabled = callbackUrlInput.isNotBlank(),
+        ) {
+            Text(stringResource(R.string.action_confirm))
+        }
+
+        Button(
+            onClick = onCancel,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            Text(stringResource(R.string.action_cancel))
         }
     }
 }
 
 private fun pixivLoginCodeOrNull(url: String): String? {
-    val uri = runCatching { Uri.parse(url) }.getOrNull() ?: return null
-    val code = uri.getQueryParameter("code") ?: return null
-    val isPixivLoginRedirect = uri.scheme == "pixiv" && uri.host == "account" && uri.path == "/login"
+    val uri = runCatching { java.net.URI(url) }.getOrNull() ?: return null
+    val queryParams =
+        uri.query?.split("&")?.associate {
+            val parts = it.split("=", limit = 2)
+            parts[0] to (parts.getOrNull(1) ?: "")
+        } ?: emptyMap()
+    val code = queryParams["code"] ?: return null
+    val scheme = uri.scheme
+    val host = uri.host
+    val path = uri.path
+    val isPixivLoginRedirect = scheme == "pixiv" && host == "account" && path == "/login"
     val isPixivCallback =
-        uri.scheme == "https" &&
-            uri.host == "app-api.pixiv.net" &&
-            uri.path == "/web/v1/users/auth/pixiv/callback"
-    val isPixivCodeUrl = uri.host?.contains("pixiv", ignoreCase = true) == true && code.isNotBlank()
+        scheme == "https" &&
+            host == "app-api.pixiv.net" &&
+            path == "/web/v1/users/auth/pixiv/callback"
+    val isPixivCodeUrl = host?.contains("pixiv", ignoreCase = true) == true && code.isNotBlank()
     return if (isPixivLoginRedirect || isPixivCallback || isPixivCodeUrl) code else null
 }
 

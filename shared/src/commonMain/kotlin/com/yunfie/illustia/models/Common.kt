@@ -1,12 +1,12 @@
 package com.yunfie.illustia.models
 
-import androidx.annotation.StringRes
 import androidx.compose.runtime.Immutable
-import com.yunfie.illustia.R
+import com.yunfie.illustia.*
+import org.jetbrains.compose.resources.StringResource
 
 @Immutable
 enum class HomeFeedKind(
-    @StringRes val labelResId: Int,
+    val labelResId: StringResource,
 ) {
     Recommended(R.string.feed_recommended),
     Ranking(R.string.feed_ranking),
@@ -16,7 +16,7 @@ enum class HomeFeedKind(
 @Immutable
 enum class Restrict(
     val apiValue: String,
-    @StringRes val labelResId: Int,
+    val labelResId: StringResource,
 ) {
     Public("public", R.string.restrict_public),
     Private("private", R.string.restrict_private),

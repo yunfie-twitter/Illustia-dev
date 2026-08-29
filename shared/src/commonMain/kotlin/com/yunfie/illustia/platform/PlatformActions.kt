@@ -10,6 +10,7 @@ interface PlatformActions {
     fun restartApp() {}
     fun getPlatformName(): String
     fun getOsVersion(): String
+    fun getAppVersionName(): String = "5.5.0"
     fun getUserAgent(): String
     fun isDynamicColorSupported(): Boolean = false
 }
@@ -22,6 +23,7 @@ val LocalPlatformActions = staticCompositionLocalOf<PlatformActions> {
         override fun showToast(message: String) {}
         override fun getPlatformName(): String = "Unknown"
         override fun getOsVersion(): String = "Unknown"
+        override fun getAppVersionName(): String = "5.5.0"
         override fun getUserAgent(): String = "Palleria/5.5.0"
     }
 }

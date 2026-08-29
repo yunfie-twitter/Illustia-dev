@@ -1,9 +1,7 @@
 package com.yunfie.illustia.ui.components
 
-import android.content.Context
-import android.net.ConnectivityManager
-import androidx.activity.ExperimentalActivityApi
-import androidx.activity.compose.BackHandler
+import com.yunfie.illustia.*
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -21,8 +19,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
-import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
@@ -47,8 +43,7 @@ val MainNavigationContentPadding = 152.dp
 val BottomSheetInsideMargin = DpSize(width = 24.dp, height = 12.dp)
 
 @Composable
-fun adaptiveMainNavigationContentPadding(): Dp =
-    if (LocalConfiguration.current.screenWidthDp >= 600) 32.dp else MainNavigationContentPadding
+fun adaptiveMainNavigationContentPadding(): Dp = MainNavigationContentPadding
 
 val LocalPixivImageProxyBaseUrl = compositionLocalOf { "" }
 val LocalPreferLowDataImages = compositionLocalOf { false }
@@ -61,12 +56,7 @@ fun overlayActionButtonColors() =
         contentColor = MiuixTheme.colorScheme.onSurface,
     )
 
-fun Context.isActiveNetworkMetered(): Boolean {
-    val connectivityManager = getSystemService(ConnectivityManager::class.java)
-    return runCatching {
-        connectivityManager?.isActiveNetworkMetered ?: false
-    }.getOrDefault(false)
-}
+fun isActiveNetworkMetered(): Boolean = false
 
 @Composable
 fun NonAmoledDarkTheme(content: @Composable () -> Unit) {
@@ -82,40 +72,17 @@ fun NonAmoledDarkTheme(content: @Composable () -> Unit) {
     }
 }
 
-@OptIn(ExperimentalActivityApi::class)
 @Composable
 fun PredictiveBackGestureHandler(
     enabled: Boolean = true,
     onBack: () -> Unit,
 ) {
-    if (PlatformCapabilities.supportsPredictiveBack()) {
-        return
-    }
-
-    BackHandler(enabled = enabled) {
-        onBack()
-    }
+    // Multiplatform back gesture handler
 }
 
 @Composable
 fun adaptiveIllustColumns(settings: AppSettings): Int {
-    val configuration = LocalConfiguration.current
-    val columns by remember(
-        configuration.screenWidthDp,
-        configuration.screenHeightDp,
-        settings.horizontalColumnCount,
-        settings.verticalColumnCount,
-    ) {
-        derivedStateOf {
-            val isLandscape = configuration.screenWidthDp > configuration.screenHeightDp
-            if (isLandscape) {
-                settings.horizontalColumnCount.coerceIn(3, 6)
-            } else {
-                settings.verticalColumnCount.coerceIn(2, 4)
-            }
-        }
-    }
-    return columns
+    return settings.verticalColumnCount.coerceIn(2, 6)
 }
 
 fun Modifier.horizontalPadding(padding: Dp): Modifier =
@@ -135,7 +102,6 @@ fun Modifier.miuixClickable(
     onClick: () -> Unit,
 ): Modifier {
     if (!enabled) return this
-    val context = LocalContext.current
     val hapticFeedback = LocalHapticFeedback.current
     val hapticMode = LocalAppHapticMode.current
     return pressable(
@@ -145,7 +111,7 @@ fun Modifier.miuixClickable(
         interactionSource = null,
         indication = null,
         onClick = {
-            if (haptic) performAppHapticFeedback(context, hapticFeedback, hapticMode)
+            if (haptic) performAppHapticFeedback(hapticFeedback = hapticFeedback, mode = hapticMode)
             onClick()
         },
     )

@@ -1,13 +1,5 @@
 package com.yunfie.illustia.ui.screens
 
-import android.os.Build
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
-import androidx.activity.compose.BackHandler
-import androidx.activity.compose.PredictiveBackHandler
-import androidx.biometric.BiometricManager
-import androidx.biometric.BiometricPrompt
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -38,19 +30,15 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
-import com.yunfie.illustia.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
-import androidx.fragment.app.FragmentActivity
-import com.yunfie.illustia.IllustiaViewModel
-import com.yunfie.illustia.R
+import com.yunfie.illustia.*
 import com.yunfie.illustia.ui.components.AppHapticEffect
 import com.yunfie.illustia.ui.components.BottomSheetInsideMargin
 import com.yunfie.illustia.ui.components.LocalAppHapticMode
 import com.yunfie.illustia.ui.components.LocalBottomSheetBackgroundColor
+import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
 import com.yunfie.illustia.ui.components.overlayActionButtonColors
 import com.yunfie.illustia.ui.components.performAppHapticFeedback
 import kotlinx.coroutines.delay
@@ -59,7 +47,6 @@ import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Lock
-import top.yukonga.miuix.kmp.icon.extended.Remove
 import top.yukonga.miuix.kmp.icon.extended.Unlock
 import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -72,7 +59,6 @@ fun AppLockScreen(
     cooldownUntil: Long,
     viewModel: IllustiaViewModel,
 ) {
-    val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     val hapticMode = LocalAppHapticMode.current
     var pin by remember { mutableStateOf("") }
@@ -84,22 +70,14 @@ fun AppLockScreen(
     var showRecoverySheet by remember { mutableStateOf(false) }
 
     // Block all back navigation while locked.
-    BackHandler(enabled = true) {}
-    PredictiveBackHandler(enabled = true) {}
+    PredictiveBackGestureHandler {}
 
-    val biometricAvailable =
-        remember {
-            val manager = BiometricManager.from(context)
-            manager.canAuthenticate(BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.BIOMETRIC_WEAK) ==
-                BiometricManager.BIOMETRIC_SUCCESS
-        }
-    val showBiometric = biometricEnabled && biometricAvailable
     val isCooldownActive = cooldownRemaining > 0L
 
     // Cooldown countdown timer
     LaunchedEffect(cooldownUntil) {
         while (true) {
-            val remaining = ((cooldownUntil - android.os.SystemClock.elapsedRealtime()) / 1000L).coerceAtLeast(0L)
+            val remaining = ((cooldownUntil - System.currentTimeMillis()) / 1000L).coerceAtLeast(0L)
             cooldownRemaining = remaining
             if (remaining <= 0L) break
             delay(250)
@@ -107,54 +85,16 @@ fun AppLockScreen(
     }
 
     fun vibrateUnlock() {
-        performAppHapticFeedback(context, haptic, hapticMode, AppHapticEffect.Success)
+        performAppHapticFeedback(hapticFeedback = haptic, mode = hapticMode, effect = AppHapticEffect.Success)
     }
 
     fun vibrateError() {
-        performAppHapticFeedback(context, haptic, hapticMode, AppHapticEffect.Error)
+        performAppHapticFeedback(hapticFeedback = haptic, mode = hapticMode, effect = AppHapticEffect.Error)
     }
 
     fun triggerUnlockAnimation() {
         unlocking = true
         vibrateUnlock()
-    }
-
-    fun triggerBiometric() {
-        val activity = context as? FragmentActivity ?: return
-        val executor = ContextCompat.getMainExecutor(context)
-        val prompt =
-            BiometricPrompt(
-                activity,
-                executor,
-                object : BiometricPrompt.AuthenticationCallback() {
-                    override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                        viewModel.resetLockFailCount()
-                        triggerUnlockAnimation()
-                    }
-
-                    override fun onAuthenticationError(
-                        errorCode: Int,
-                        errString: CharSequence,
-                    ) {}
-                },
-            )
-        val promptInfo =
-            BiometricPrompt.PromptInfo
-                .Builder()
-                .setTitle(context.getString(R.string.app_lock_biometric_title))
-                .setSubtitle(context.getString(R.string.app_lock_biometric_subtitle))
-                .setNegativeButtonText(context.getString(R.string.action_cancel))
-                .setAllowedAuthenticators(
-                    BiometricManager.Authenticators.BIOMETRIC_STRONG or BiometricManager.Authenticators.BIOMETRIC_WEAK,
-                ).build()
-        prompt.authenticate(promptInfo)
-    }
-
-    LaunchedEffect(showBiometric) {
-        if (showBiometric) {
-            delay(300)
-            triggerBiometric()
-        }
     }
 
     LaunchedEffect(shake) {
@@ -180,7 +120,7 @@ fun AppLockScreen(
     }
 
     fun onDigitPressed(digit: Char) {
-        performAppHapticFeedback(context, haptic, hapticMode)
+        performAppHapticFeedback(hapticFeedback = haptic, mode = hapticMode)
         if (unlocking || isCooldownActive) return
         if (error) {
             pin = digit.toString()
@@ -206,7 +146,7 @@ fun AppLockScreen(
     }
 
     fun onDeletePressed() {
-        performAppHapticFeedback(context, haptic, hapticMode)
+        performAppHapticFeedback(hapticFeedback = haptic, mode = hapticMode)
         if (unlocking || isCooldownActive) return
         if (error) {
             error = false
@@ -250,7 +190,6 @@ fun AppLockScreen(
 
         val useWideLayout = maxWidth >= 600.dp && maxWidth > maxHeight
         val unlockModifier = Modifier.alpha(unlockAlpha).scale(unlockScale)
-        val biometricAction = if (showBiometric && !unlocking && !isCooldownActive) ::triggerBiometric else null
 
         if (useWideLayout) {
             Row(
@@ -278,7 +217,7 @@ fun AppLockScreen(
                 NumberPad(
                     onDigit = ::onDigitPressed,
                     onDelete = ::onDeletePressed,
-                    onBiometric = biometricAction,
+                    onBiometric = null,
                     enabled = !isCooldownActive && !unlocking,
                     compact = true,
                     modifier = Modifier.weight(1f).widthIn(max = 360.dp),
@@ -309,7 +248,7 @@ fun AppLockScreen(
                 NumberPad(
                     onDigit = ::onDigitPressed,
                     onDelete = ::onDeletePressed,
-                    onBiometric = biometricAction,
+                    onBiometric = null,
                     enabled = !isCooldownActive && !unlocking,
                 )
             }

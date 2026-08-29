@@ -1,6 +1,7 @@
 package com.yunfie.illustia.ui.components
 
-import android.graphics.Bitmap
+import com.yunfie.illustia.*
+
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -17,7 +18,6 @@ import coil3.network.NetworkHeaders
 import coil3.network.httpHeaders
 import coil3.request.CachePolicy
 import coil3.request.ImageRequest
-import coil3.request.allowRgb565
 import coil3.request.crossfade
 import coil3.size.Precision
 import coil3.size.Scale
@@ -44,7 +44,7 @@ fun PixivImage(
     thumbnail: Boolean = false,
     requestSizePx: Int? = null,
     onLoadSuccess: (() -> Unit)? = null,
-    onSuccess: ((Bitmap) -> Unit)? = null,
+    onSuccess: ((Any) -> Unit)? = null,
 ) {
     val context = LocalPlatformContext.current
     val runtimePolicy by DevicePerformance.runtimePolicy.collectAsState()
@@ -68,7 +68,7 @@ fun PixivImage(
                     onSuccess = { _, result ->
                         currentOnLoadSuccess?.invoke()
                         runCatching {
-                            currentOnSuccess?.invoke(result.image.toBitmap())
+                            currentOnSuccess?.invoke(result.image)
                         }
                     },
                 ).apply {
@@ -76,7 +76,6 @@ fun PixivImage(
                         size(requestSizePx ?: ThumbnailDecodeSizePx)
                         scale(if (contentScale == ContentScale.Crop) Scale.FILL else Scale.FIT)
                         precision(Precision.INEXACT)
-                        allowRgb565(thumbnail)
                     }
                 }.build()
         }
@@ -142,7 +141,6 @@ fun PrefetchPixivImages(
                         .size(performance.prefetchDecodeSizePx)
                         .scale(Scale.FILL)
                         .precision(Precision.INEXACT)
-                        .allowRgb565(true)
                         .build()
                 val disposable = imageLoader.enqueue(request)
                 activeRequests[url] = disposable::dispose

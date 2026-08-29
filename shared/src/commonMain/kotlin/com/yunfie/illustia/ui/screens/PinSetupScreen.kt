@@ -1,5 +1,7 @@
 package com.yunfie.illustia.ui.screens
 
+import com.yunfie.illustia.*
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -23,7 +25,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import com.yunfie.illustia.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -47,7 +48,6 @@ fun PinSetupScreen(
     onBack: () -> Unit,
 ) {
     PredictiveBackGestureHandler(onBack = onBack)
-    val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
     val hapticMode = LocalAppHapticMode.current
 
@@ -72,7 +72,7 @@ fun PinSetupScreen(
 
     LaunchedEffect(shake) {
         if (shake) {
-            kotlinx.coroutines.delay(400)
+            kotlinx.coroutines.delay(500)
             shake = false
         }
     }
@@ -80,7 +80,7 @@ fun PinSetupScreen(
     val title =
         when (step) {
             1 -> stringResource(R.string.app_lock_enter_current)
-            2 -> stringResource(R.string.app_lock_enter_new)
+            2 -> stringResource(if (isChange) R.string.app_lock_enter_new else R.string.app_lock_set_pin)
             3 -> stringResource(R.string.app_lock_confirm_new)
             else -> ""
         }
@@ -89,7 +89,7 @@ fun PinSetupScreen(
     val incorrectError = stringResource(R.string.app_lock_incorrect)
 
     fun onDigitPressed(digit: Char) {
-        performAppHapticFeedback(context, haptic, hapticMode)
+        performAppHapticFeedback(hapticFeedback = haptic, mode = hapticMode)
         if (error.isNotBlank()) {
             error = ""
             when (step) {
@@ -108,7 +108,7 @@ fun PinSetupScreen(
                         pin = ""
                         step = 2
                     } else {
-                        performAppHapticFeedback(context, haptic, hapticMode, AppHapticEffect.Error)
+                        performAppHapticFeedback(hapticFeedback = haptic, mode = hapticMode, effect = AppHapticEffect.Error)
                         error = incorrectError
                         shake = true
                         pin = ""
@@ -134,11 +134,11 @@ fun PinSetupScreen(
                         } else {
                             viewModel.setupPin(newPin)
                         }
-                        performAppHapticFeedback(context, haptic, hapticMode, AppHapticEffect.Success)
+                        performAppHapticFeedback(hapticFeedback = haptic, mode = hapticMode, effect = AppHapticEffect.Success)
                         reset()
                         onBack()
                     } else {
-                        performAppHapticFeedback(context, haptic, hapticMode, AppHapticEffect.Error)
+                        performAppHapticFeedback(hapticFeedback = haptic, mode = hapticMode, effect = AppHapticEffect.Error)
                         error = mismatchError
                         shake = true
                         confirmPin = ""
@@ -149,7 +149,7 @@ fun PinSetupScreen(
     }
 
     fun onDeletePressed() {
-        performAppHapticFeedback(context, haptic, hapticMode)
+        performAppHapticFeedback(hapticFeedback = haptic, mode = hapticMode)
         if (error.isNotBlank()) {
             error = ""
             return

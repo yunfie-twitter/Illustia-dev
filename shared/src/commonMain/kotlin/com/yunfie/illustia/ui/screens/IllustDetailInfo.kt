@@ -1,5 +1,7 @@
 package com.yunfie.illustia.ui.screens
 
+import com.yunfie.illustia.*
+
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
@@ -33,7 +35,6 @@ import androidx.compose.ui.platform.UriHandler
 import com.yunfie.illustia.stringResource
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -258,11 +259,10 @@ internal fun IllustDetailInfo(
                                                 if (illust.caption.isBlank()) {
                                                     null
                                                 } else {
-                                                    try {
-                                                        AnnotatedString.fromHtml(illust.caption)
-                                                    } catch (_: Exception) {
-                                                        AnnotatedString(illust.caption)
-                                                    }
+                                                    val clean = illust.caption
+                                                        .replace(Regex("<br\\s*/?>", RegexOption.IGNORE_CASE), "\n")
+                                                        .replace(Regex("<[^>]*>"), "")
+                                                    AnnotatedString(clean)
                                                 }
                                             }
                                         SelectionContainer {

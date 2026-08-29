@@ -7,7 +7,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.graphics.BitmapFactory
-import com.yunfie.illustia.settings.SettingsStore
+import com.yunfie.illustia.settings.AndroidSettingsStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -51,7 +51,7 @@ class WallpaperPlaylistReceiver : BroadcastReceiver() {
         val pending = goAsync()
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                val store = SettingsStore(context.applicationContext)
+                val store = AndroidSettingsStore(context.applicationContext)
                 if (!store.read().wallpaperPlaylistEnabled) return@launch
                 val image = store.savedIllustDir().randomWallpaperFile() ?: return@launch
                 BitmapFactory.decodeFile(image.absolutePath)?.let { bitmap ->

@@ -1,6 +1,5 @@
 package com.yunfie.illustia.ui.screens
 
-import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -21,15 +20,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
-import com.yunfie.illustia.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.yunfie.illustia.IllustiaViewModel
-import com.yunfie.illustia.R
+import com.yunfie.illustia.*
 import com.yunfie.illustia.models.Illust
+import com.yunfie.illustia.platform.LocalPlatformActions
 import com.yunfie.illustia.ui.components.PixivImage
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.IconButton
@@ -47,7 +44,7 @@ fun ShortsFeedScreen(
     viewModel: IllustiaViewModel,
     onOpenComments: (Long) -> Unit,
 ) {
-    val context = LocalContext.current
+    val platformActions = LocalPlatformActions.current
     val shareLabel = stringResource(R.string.action_share)
     val initialPage =
         remember(items, currentIllustId) {
@@ -71,71 +68,78 @@ fun ShortsFeedScreen(
         }
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+    Box(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(Color.Black),
+    ) {
         if (items.isEmpty()) {
             Text(
-                text = stringResource(R.string.shorts_loading),
+                text = stringResource(R.string.status_loading),
                 color = Color.White,
                 modifier = Modifier.align(Alignment.Center),
             )
         } else {
-            VerticalPager(state = pagerState, modifier = Modifier.fillMaxSize()) { page ->
+            VerticalPager(
+                state = pagerState,
+                modifier = Modifier.fillMaxSize(),
+                beyondViewportPageCount = 1,
+            ) { page ->
                 val illust = items[page]
                 Box(
                     modifier =
                         Modifier
                             .fillMaxSize()
-                            .background(Color.Black)
                             .combinedClickable(
-                                onClick = { viewModel.openIllust(illust) },
-                                onLongClick = { viewModel.onIllustLongPress(illust) },
+                                onClick = { viewModel.toggleBookmark(illust) },
+                                onDoubleClick = { viewModel.toggleBookmark(illust) },
                             ),
                 ) {
                     PixivImage(
-                        url = illust.imageUrl.ifBlank { illust.previewUrl },
+                        url = illust.previewUrl,
                         contentDescription = illust.title,
                         contentScale = ContentScale.Fit,
-                        crossfade = true,
                         modifier = Modifier.fillMaxSize(),
                     )
+
                     Box(
                         modifier =
                             Modifier
-                                .align(Alignment.BottomCenter)
                                 .fillMaxWidth()
+                                .align(Alignment.BottomCenter)
                                 .background(
                                     Brush.verticalGradient(
-                                        listOf(Color.Transparent, Color.Black.copy(alpha = 0.82f)),
+                                        colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.82f)),
                                     ),
-                                ).padding(start = 20.dp, end = 92.dp, top = 72.dp, bottom = 24.dp),
+                                )
+                                .padding(start = 16.dp, end = 88.dp, bottom = 28.dp, top = 48.dp),
                     ) {
-                        Column(verticalArrangement = Arrangement.spacedBy(5.dp)) {
+                        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text(
                                 text = illust.title,
                                 color = Color.White,
-                                fontSize = 19.sp,
+                                fontSize = 18.sp,
                                 fontWeight = FontWeight.Bold,
-                                maxLines = 3,
-                                softWrap = true,
+                                maxLines = 2,
                                 overflow = TextOverflow.Ellipsis,
                             )
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Text(
-                                    text = "@${illust.artistName}",
-                                    color = Color.White.copy(alpha = 0.82f),
-                                    fontSize = 14.sp,
-                                    maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis,
-                                )
-                            }
+                            Text(
+                                text = illust.artistName,
+                                color = Color.White.copy(alpha = 0.88f),
+                                fontSize = 14.sp,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
                         }
                     }
+
                     Column(
                         modifier =
                             Modifier
                                 .align(Alignment.BottomEnd)
-                                .padding(end = 10.dp, bottom = 40.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                                .padding(end = 12.dp, bottom = 32.dp),
+                        verticalArrangement = Arrangement.spacedBy(14.dp),
                         horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         IconButton(
@@ -164,12 +168,7 @@ fun ShortsFeedScreen(
                         }
                         IconButton(
                             onClick = {
-                                val intent =
-                                    Intent(Intent.ACTION_SEND).apply {
-                                        type = "text/plain"
-                                        putExtra(Intent.EXTRA_TEXT, "https://www.pixiv.net/artworks/${illust.id}")
-                                    }
-                                context.startActivity(Intent.createChooser(intent, shareLabel))
+                                platformActions.shareText("https://www.pixiv.net/artworks/${illust.id}", shareLabel)
                             },
                             modifier = Modifier.size(64.dp),
                             backgroundColor = Color.Black.copy(alpha = 0.56f),

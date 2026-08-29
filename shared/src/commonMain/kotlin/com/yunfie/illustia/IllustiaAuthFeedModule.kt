@@ -150,7 +150,7 @@ abstract class IllustiaAuthFeedModule(
                 _uiState.update {
                     if (it.selectedNovel?.id == novel.id) {
                         it.copy(
-                            message = cleanErrorMessage(error, getApplication<Application>().getString(R.string.error_novel_load_failed)),
+                            message = cleanErrorMessage(error, str(R.string.error_novel_load_failed)),
                         )
                     } else {
                         it
@@ -411,7 +411,7 @@ abstract class IllustiaAuthFeedModule(
         }
     }
 
-    protected fun resumePendingNativeIntentIfReady() {
+    override fun resumePendingNativeIntentIfReady() {
         val event = pendingNativeIntentEvent ?: return
         dispatchNativeIntentEvent(event)
     }
@@ -614,33 +614,4 @@ abstract class IllustiaAuthFeedModule(
         }
     }
 
-    fun exportManagedData(uri: Uri) {
-        val settings = _uiState.value.settings
-        viewModelScope.launch(Dispatchers.IO) {
-            runCatching {
-                managedDataRepository.export(uri, settings)
-            }.onSuccess {
-                _uiState.update { it.copy(message = str(R.string.msg_data_exported)) }
-            }.onFailure { expectedFailure ->
-                if (isCancellation(expectedFailure)) throw expectedFailure
-                _uiState.update { it.copy(message = str(R.string.error_data_export_failed)) }
-            }
-        }
-    }
-
-    fun importManagedData(uri: Uri) {
-        viewModelScope.launch(Dispatchers.IO) {
-            runCatching {
-                val current = _uiState.value.settings
-                val imported = managedDataRepository.import(uri, current)
-                repository.saveSettings(imported, current)
-                imported
-            }.onSuccess { imported ->
-                _uiState.update { it.withSettings(imported).copy(message = str(R.string.msg_data_imported)) }
-            }.onFailure { expectedFailure ->
-                if (isCancellation(expectedFailure)) throw expectedFailure
-                _uiState.update { it.copy(message = str(R.string.error_data_import_failed)) }
-            }
-        }
-    }
 }

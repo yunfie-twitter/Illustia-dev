@@ -5,7 +5,7 @@ import com.yunfie.illustia.models.UserPreview
 import com.yunfie.illustia.models.UserProfile
 import com.yunfie.illustia.models.pixiv.PixivNotification
 import com.yunfie.illustia.settings.AppSettings
-import com.yunfie.illustia.settings.db.SavedIllustEntity
+import com.yunfie.illustia.models.SavedIllustItem
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -65,7 +65,7 @@ internal data class DetailProfileState(
 
 internal data class BookmarkLibraryState(
     val bookmarks: List<Illust>,
-    val savedIllusts: List<SavedIllustEntity>,
+    val savedIllusts: List<SavedIllustItem>,
     val notifications: List<PixivNotification>,
     val activeDownloads: Int,
 )

@@ -1,7 +1,8 @@
 package com.yunfie.illustia.ui.app
 
+import com.yunfie.illustia.*
+
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.navigation3.runtime.NavKey
 import com.yunfie.illustia.R
 import com.yunfie.illustia.models.Illust
 import com.yunfie.illustia.models.UserProfile
@@ -15,10 +16,12 @@ import top.yukonga.miuix.kmp.icon.extended.TopDownloads
 import top.yukonga.miuix.kmp.icon.extended.VerticalSplit
 import top.yukonga.miuix.kmp.icon.extended.Search as MiuixSearch
 
+import org.jetbrains.compose.resources.StringResource
+
 internal enum class AppTab(
     val id: String,
-    @param:androidx.annotation.StringRes val labelResId: Int,
-    @param:androidx.annotation.StringRes val titleResId: Int,
+    val labelResId: StringResource,
+    val titleResId: StringResource,
     val icon: ImageVector,
 ) {
     Home("home", R.string.nav_home, R.string.nav_home, MiuixIcons.VerticalSplit),
@@ -86,7 +89,7 @@ internal fun startupTabFor(
     return requested.takeIf { tabs == null || it in tabs } ?: tabs?.firstOrNull() ?: AppTab.Home
 }
 
-internal sealed interface AppRoute : NavKey {
+internal sealed interface AppRoute {
     data object Main : AppRoute
 
     data object Search : AppRoute

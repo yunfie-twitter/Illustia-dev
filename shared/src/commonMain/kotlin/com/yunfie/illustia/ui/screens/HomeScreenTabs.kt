@@ -1,5 +1,7 @@
 package com.yunfie.illustia.ui.screens
 
+import com.yunfie.illustia.*
+
 import androidx.annotation.StringRes
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -10,8 +12,10 @@ import androidx.compose.ui.unit.dp
 import com.yunfie.illustia.R
 import top.yukonga.miuix.kmp.basic.TabRowWithContour
 
+import org.jetbrains.compose.resources.StringResource
+
 internal enum class HomeTab(
-    @param:StringRes val labelResId: Int,
+    val labelResId: StringResource,
 ) {
     Feed(R.string.home_tab_feed),
     Following(R.string.home_tab_following),

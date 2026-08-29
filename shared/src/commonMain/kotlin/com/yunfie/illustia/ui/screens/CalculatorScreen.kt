@@ -1,5 +1,7 @@
 package com.yunfie.illustia.ui.screens
-import androidx.activity.compose.BackHandler
+
+import com.yunfie.illustia.*
+import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -42,7 +44,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.LocalConfiguration
 import com.yunfie.illustia.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -70,7 +71,7 @@ fun CalculatorScreen(
     viewModel: IllustiaViewModel,
 ) {
     // ロック中はバックナビゲーションを無効にする
-    BackHandler(enabled = true) {}
+    PredictiveBackGestureHandler(enabled = true) {}
 
     val buttonsEnabled = !isTransitioning
 
@@ -104,16 +105,13 @@ fun CalculatorScreen(
                 fadeOut(animationSpec = tween(durationMillis = 250, easing = FastOutSlowInEasing)) +
                     slideOutVertically(animationSpec = tween(durationMillis = 250, easing = FastOutSlowInEasing)) { -it / 8 },
         ) {
-            Box(
+            androidx.compose.foundation.layout.BoxWithConstraints(
                 modifier =
                     Modifier
                         .fillMaxSize()
                         .background(MiuixTheme.colorScheme.surface),
             ) {
-                val configuration = LocalConfiguration.current
-                val useWideLayout =
-                    configuration.screenWidthDp >= 600 &&
-                        configuration.screenWidthDp > configuration.screenHeightDp
+                val useWideLayout = maxWidth >= 600.dp && maxWidth > maxHeight
                 if (useWideLayout) {
                     Row(
                         modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp, vertical = 16.dp),

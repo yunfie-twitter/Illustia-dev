@@ -1,13 +1,15 @@
 package com.yunfie.illustia.ui.app
 
-import android.net.Uri
-import androidx.browser.customtabs.CustomTabsIntent
+import com.yunfie.illustia.*
+
+import com.yunfie.illustia.platform.LocalPlatformActions
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -21,11 +23,9 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.navigation3.runtime.NavKey
 import com.yunfie.illustia.AppShortcutDestination
 import com.yunfie.illustia.AppShortcutRouter
 import com.yunfie.illustia.IllustiaNavigationRequest
@@ -71,7 +71,7 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
     var initialHomeLoadAttempted by remember(state.settings.refreshToken) { mutableStateOf(false) }
     val selectedWatchlistSeriesIds = remember { mutableStateListOf<Long>() }
     var selectedCommentTarget by remember { mutableStateOf<Pair<Long, CommentArtworkType>?>(null) }
-    val backStack = remember { mutableStateListOf<NavKey>(AppRoute.Main) }
+    val backStack = remember { mutableStateListOf<AppRoute>(AppRoute.Main) }
     val detailSnapshots = remember { mutableStateMapOf<Long, DetailEntrySnapshot>() }
     val pagerState =
         androidx.compose.foundation.pager.rememberPagerState(
@@ -81,7 +81,7 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
     val coroutineScope = rememberCoroutineScope()
     val snackbarHostState = remember { SnackbarHostState() }
     val homeScrollBehavior = MiuixScrollBehavior()
-    val context = LocalContext.current
+    val platformActions = LocalPlatformActions.current
     val pendingShortcut by AppShortcutRouter.pending.collectAsStateWithLifecycle()
 
     val appState = IllustiaAppStateBundle(state)
@@ -89,14 +89,9 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
     LaunchedEffect(state.webLoginRequest) {
         val request = state.webLoginRequest ?: return@LaunchedEffect
         runCatching {
-            CustomTabsIntent
-                .Builder()
-                .setShowTitle(true)
-                .setUrlBarHidingEnabled(true)
-                .build()
-                .launchUrl(context, Uri.parse(request.authorizationUrl))
+            platformActions.openUrl(request.authorizationUrl)
         }.onFailure {
-            viewModel.failWebLogin(context.getString(R.string.error_browser_failed))
+            viewModel.failWebLogin("Failed to open web browser")
         }
     }
 
@@ -445,9 +440,9 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
             }
     }
 
-    val preferLowDataImages = remember(context) { context.isActiveNetworkMetered() }
+    val preferLowDataImages = false
     val platformHapticFeedback = LocalHapticFeedback.current
-    val hapticsSupported = remember(context) { isAppHapticsSupported(context) }
+    val hapticsSupported = remember { isAppHapticsSupported() }
     val effectiveHapticMode = effectiveAppHapticMode(state.settings.hapticMode, hapticsSupported)
     CompositionLocalProvider(
         LocalPixivImageProxyBaseUrl provides state.settings.pixivImageProxyBaseUrl,

@@ -11,7 +11,7 @@ import com.yunfie.illustia.models.UserProfile
 import com.yunfie.illustia.models.pixiv.Comment
 import com.yunfie.illustia.models.pixiv.PixivNotification
 import com.yunfie.illustia.settings.AppSettings
-import com.yunfie.illustia.settings.db.SavedIllustEntity
+import com.yunfie.illustia.models.SavedIllustItem
 
 @Immutable
 data class IllustiaUiState(
@@ -61,7 +61,7 @@ data class IllustiaUiState(
     val selectedIllustUser: UserProfile? = null,
     val selectedIllustFirstComment: Comment? = null,
     val relatedIllusts: List<Illust> = emptyList(),
-    val savedIllusts: List<SavedIllustEntity> = emptyList(),
+    val savedIllusts: List<SavedIllustItem> = emptyList(),
     val selectedSavedIllustId: Long? = null,
     val selectedUserId: Long? = null,
     val selectedUser: UserProfile? = null,

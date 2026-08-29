@@ -14,6 +14,7 @@ import com.yunfie.illustia.data.IllustiaRepository
 import com.yunfie.illustia.pallasync.PalleriaSyncCoordinator
 import com.yunfie.illustia.performance.DevicePerformance
 import com.yunfie.illustia.platform.PlatformCapabilities
+import com.yunfie.illustia.settings.AndroidSettingsStore
 import com.yunfie.illustia.settings.SettingsStore
 import com.yunfie.illustia.widget.IllustWidgetProvider
 import com.yunfie.illustia.widget.RankingWidgetProvider
@@ -46,7 +47,7 @@ class IllustiaApplication : Application() {
     private var activeNetworkDispatcher: Dispatcher? = null
 
     val settingsStore: SettingsStore by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
-        SettingsStore(this)
+        AndroidSettingsStore(this)
     }
 
     val repository: IllustiaRepository by lazy(LazyThreadSafetyMode.SYNCHRONIZED) {
@@ -87,7 +88,7 @@ class IllustiaApplication : Application() {
         CrashHandler.instance.init(this)
         val appContext = applicationContext
         val cacheDirectory = cacheDir.resolve("image_cache").toOkioPath()
-        val configuredCacheMb = SettingsStore.readImageCacheSizeMbSync(appContext)
+        val configuredCacheMb = AndroidSettingsStore.readImageCacheSizeMbSync(appContext)
         SingletonImageLoader.setSafe {
             val initialDecodeParallelism = DevicePerformance.runtimePolicy.value.imageDecodeParallelism
             val decodeExecutor =

@@ -1,6 +1,6 @@
 package com.yunfie.illustia.settings
 
-import com.yunfie.illustia.R
+import com.yunfie.illustia.*
 import org.jetbrains.compose.resources.StringResource
 import java.util.Locale
 

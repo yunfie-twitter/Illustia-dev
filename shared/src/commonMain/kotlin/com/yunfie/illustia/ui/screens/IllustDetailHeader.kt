@@ -1,10 +1,8 @@
 package com.yunfie.illustia.ui.screens
 
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.content.Intent
-import android.net.Uri
+import com.yunfie.illustia.*
+
+import com.yunfie.illustia.platform.LocalPlatformActions
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
@@ -38,7 +36,6 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import com.yunfie.illustia.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -91,10 +88,9 @@ internal fun IllustDetailHeader(
     expanded: Boolean = false,
     modifier: Modifier = Modifier,
 ) {
-    val context = LocalContext.current
+    val platformActions = LocalPlatformActions.current
     val haptic = LocalHapticFeedback.current
     val hapticMode = LocalAppHapticMode.current
-    val clipboard = remember(context) { context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager }
     val openInBrowserLabel = stringResource(R.string.detail_open_in_browser)
     val shareLabel = stringResource(R.string.detail_share)
     val saveImageLabel = stringResource(R.string.detail_save_image)
@@ -241,7 +237,7 @@ internal fun IllustDetailHeader(
                                         onClick = { onOpenImage(page) },
                                         onDoubleClick = onDoubleTapImage,
                                         onLongClick = {
-                                            performAppHapticFeedback(context, haptic, hapticMode)
+                                            performAppHapticFeedback(hapticFeedback = haptic, mode = hapticMode)
                                             onSaveImage(imageUrls[page], "illustia_${illust.id}_p$page", confirmOnLongPressSave)
                                         },
                                     ),
@@ -357,7 +353,7 @@ internal fun IllustDetailHeader(
                                         text = openInBrowserLabel,
                                         onClick = {
                                             runCatching {
-                                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(pixivUrl)))
+                                                platformActions.openUrl(pixivUrl)
                                             }.onFailure { onMessage(browserFailedMessage) }
                                         },
                                     ),
@@ -365,12 +361,7 @@ internal fun IllustDetailHeader(
                                         text = shareLabel,
                                         onClick = {
                                             runCatching {
-                                                val shareIntent =
-                                                    Intent(Intent.ACTION_SEND).apply {
-                                                        type = "text/plain"
-                                                        putExtra(Intent.EXTRA_TEXT, "${illust.title} by ${illust.artistName}\n$pixivUrl")
-                                                    }
-                                                context.startActivity(Intent.createChooser(shareIntent, shareLabel))
+                                                platformActions.shareText("${illust.title} by ${illust.artistName}\n$pixivUrl")
                                             }.onFailure { onMessage(shareFailedMessage) }
                                         },
                                     ),
@@ -395,7 +386,7 @@ internal fun IllustDetailHeader(
                                     DropdownItem(
                                         text = copyUrlLabel,
                                         onClick = {
-                                            clipboard.setPrimaryClip(ClipData.newPlainText("Pixiv URL", pixivUrl))
+                                            platformActions.copyToClipboard(pixivUrl)
                                             onMessage(urlCopiedMessage)
                                         },
                                     ),

@@ -1,7 +1,8 @@
 package com.yunfie.illustia.ui.screens
 
-import androidx.activity.compose.BackHandler
-import androidx.activity.compose.PredictiveBackHandler
+import com.yunfie.illustia.*
+
+import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -164,11 +165,7 @@ fun SearchScreen(
                 viewModel.clearSearchResults()
             }
         }
-        BackHandler(enabled = true, onBack = closeSearch)
-        PredictiveBackHandler(enabled = true) { progress ->
-            progress.collect { }
-            closeSearch()
-        }
+        PredictiveBackGestureHandler(onBack = closeSearch)
     }
 
     val scheme = MiuixTheme.colorScheme

@@ -20,8 +20,8 @@ import com.yunfie.illustia.R
 import com.yunfie.illustia.data.NativeImageAnalysis
 import com.yunfie.illustia.nativebridge.NativeImageStore
 import com.yunfie.illustia.nativebridge.NativeSavedImage
+import com.yunfie.illustia.settings.AndroidSettingsStore
 import com.yunfie.illustia.settings.AppSettings
-import com.yunfie.illustia.settings.SettingsStore
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -168,7 +168,7 @@ class PalleriaLiveWallpaperService : WallpaperService() {
             val now = System.currentTimeMillis()
             if (now - lastTapAt <= 350L) {
                 scope.launch {
-                    val settings = withContext(Dispatchers.IO) { SettingsStore(applicationContext).read() }
+                    val settings = withContext(Dispatchers.IO) { AndroidSettingsStore(applicationContext).read() }
                     if (settings.liveWallpaperChangeMode == "double_tap") {
                         loadNext(forceDifferent = true)
                     }
@@ -201,7 +201,7 @@ class PalleriaLiveWallpaperService : WallpaperService() {
                 scope.launch {
                     val result =
                         withContext(Dispatchers.IO) {
-                            val store = SettingsStore(applicationContext)
+                            val store = AndroidSettingsStore(applicationContext)
                             val settings = store.read()
                             if (settings.privacyModeEnabled) {
                                 return@withContext WallpaperLoadResult(settings, null, null)

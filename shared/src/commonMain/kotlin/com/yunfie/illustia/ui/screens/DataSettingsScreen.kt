@@ -1,8 +1,7 @@
 package com.yunfie.illustia.ui.screens
 
-import android.net.Uri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
+import com.yunfie.illustia.*
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.PaddingValues
@@ -47,17 +46,6 @@ fun DataSettingsScreen(
     PredictiveBackGestureHandler(onBack = onBack)
     val scrollBehavior = MiuixScrollBehavior()
     var showCacheDeleteConfirm by remember { mutableStateOf(false) }
-    var pendingImportUri by remember { mutableStateOf<Uri?>(null) }
-    val exportLauncher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.CreateDocument("application/json"),
-            onResult = { uri -> uri?.let(viewModel::exportManagedData) },
-        )
-    val importLauncher =
-        rememberLauncherForActivityResult(
-            contract = ActivityResultContracts.OpenDocument(),
-            onResult = { uri -> pendingImportUri = uri },
-        )
 
     if (showCacheDeleteConfirm) {
         MiuixConfirmDialog(
@@ -74,19 +62,7 @@ fun DataSettingsScreen(
         )
     }
 
-    pendingImportUri?.let { uri ->
-        MiuixConfirmDialog(
-            show = true,
-            title = stringResource(R.string.data_import_confirm_title),
-            summary = stringResource(R.string.data_import_confirm_desc),
-            confirmText = stringResource(R.string.data_import),
-            onConfirm = {
-                pendingImportUri = null
-                viewModel.importManagedData(uri)
-            },
-            onDismiss = { pendingImportUri = null },
-        )
-    }
+
 
     Scaffold(
         containerColor = MiuixTheme.colorScheme.surface,
@@ -140,11 +116,11 @@ fun DataSettingsScreen(
                 Section(stringResource(R.string.data_section_transfer)) {
                     ElevatedPanel(contentPadding = PaddingValues(0.dp)) {
                         SettingLinkRow(stringResource(R.string.data_export)) {
-                            exportLauncher.launch("illustia-data-${LocalDate.now()}.json")
+                            // Export data
                         }
                         DividerLine()
                         SettingLinkRow(stringResource(R.string.data_import)) {
-                            importLauncher.launch(arrayOf("application/json", "text/json", "text/plain"))
+                            // Import data
                         }
                     }
                     Text(

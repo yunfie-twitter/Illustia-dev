@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
@@ -15,14 +14,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalContext
-import com.yunfie.illustia.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.yunfie.illustia.IllustiaUiState
-import com.yunfie.illustia.IllustiaViewModel
-import com.yunfie.illustia.R
+import com.yunfie.illustia.*
+import com.yunfie.illustia.platform.LocalPlatformActions
 import com.yunfie.illustia.ui.components.ElevatedPanel
 import com.yunfie.illustia.ui.components.HeaderIcon
 import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
@@ -57,78 +52,101 @@ fun SettingsScreen(
     onBack: () -> Unit,
 ) {
     PredictiveBackGestureHandler(onBack = onBack)
-    val context = LocalContext.current
-    val appVersion =
-        remember {
-            runCatching {
-                val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-                packageInfo.versionName
-            }.getOrNull() ?: "1.0.0"
-        }
+    val platformActions = LocalPlatformActions.current
+    val appVersion = remember { platformActions.getAppVersionName() }
     val scrollBehavior = MiuixScrollBehavior()
     val mutedTotal = state.settings.mutedIllusts.size + state.settings.mutedUsers.size + state.settings.mutedTags.size
 
+    val generalTitle = stringResource(R.string.settings_general)
+    val generalSummary = stringResource(R.string.settings_general_summary)
+    val imageTitle = stringResource(R.string.settings_image)
+    val imageSummary = stringResource(R.string.settings_image_summary)
+    val bookmarkTitle = stringResource(R.string.settings_bookmark)
+    val bookmarkSummary = stringResource(R.string.settings_bookmark_summary)
+    val accountTitle = stringResource(R.string.settings_account)
+    val loggedInSummary = stringResource(R.string.settings_logged_in)
+    val notLoggedInSummary = stringResource(R.string.settings_not_logged_in)
+    val dataTitle = stringResource(R.string.settings_data)
+    val viewHistoryTitle = stringResource(R.string.more_view_history)
+    val itemsCountTemplate = stringResource(R.string.data_items_count, state.settings.viewHistory.size)
+    val muteSettingsTitle = stringResource(R.string.more_mute_settings)
+    val muteItemsCountTemplate = stringResource(R.string.data_items_count, mutedTotal)
+    val privacyTitle = stringResource(R.string.privacy_mode_title)
+    val privacyEnabled = stringResource(R.string.privacy_settings_enabled)
+    val privacyDisabled = stringResource(R.string.privacy_settings_disabled)
+    val experimentalTitle = stringResource(R.string.experimental_settings_title)
+    val experimentalSummary = stringResource(R.string.settings_experimental_summary)
+
     val categories =
-        remember(state.settings.refreshToken, state.settings.viewHistory.size, mutedTotal, state.settings.privacyModeEnabled) {
+        remember(
+            state.settings.refreshToken,
+            state.settings.viewHistory.size,
+            mutedTotal,
+            state.settings.privacyModeEnabled,
+            generalTitle,
+            generalSummary,
+            imageTitle,
+            imageSummary,
+            bookmarkTitle,
+            bookmarkSummary,
+            accountTitle,
+            loggedInSummary,
+            notLoggedInSummary,
+            dataTitle,
+            viewHistoryTitle,
+            itemsCountTemplate,
+            muteSettingsTitle,
+            muteItemsCountTemplate,
+            privacyTitle,
+            privacyEnabled,
+            privacyDisabled,
+            experimentalTitle,
+            experimentalSummary,
+        ) {
             listOf(
                 SettingsCategory(
-                    context.getString(R.string.settings_general),
-                    context.getString(R.string.settings_general_summary),
+                    generalTitle,
+                    generalSummary,
                     MiuixIcons.More,
                 ) {
                     viewModel.openGeneralSettings()
                 },
                 SettingsCategory(
-                    context.getString(R.string.settings_image),
-                    context.getString(R.string.settings_image_summary),
+                    imageTitle,
+                    imageSummary,
                     MiuixIcons.Photos,
                 ) {
                     viewModel.openImageSettings()
                 },
                 SettingsCategory(
-                    context.getString(R.string.settings_bookmark),
-                    context.getString(R.string.settings_bookmark_summary),
+                    bookmarkTitle,
+                    bookmarkSummary,
                     MiuixIcons.FavoritesFill,
                 ) {
                     viewModel.openBookmarkSettings()
                 },
                 SettingsCategory(
-                    context.getString(R.string.settings_account),
-                    if (state.settings.refreshToken.isNotBlank()) {
-                        context.getString(
-                            R.string.settings_logged_in,
-                        )
-                    } else {
-                        context.getString(R.string.settings_not_logged_in)
-                    },
+                    accountTitle,
+                    if (state.settings.refreshToken.isNotBlank()) loggedInSummary else notLoggedInSummary,
                     MiuixIcons.Contacts,
                 ) {
                     viewModel.openAccountSettings()
                 },
                 SettingsCategory(
-                    context.getString(R.string.settings_data),
-                    "${context.getString(
-                        R.string.more_view_history,
-                    )} ${context.getString(
-                        R.string.data_items_count,
-                        state.settings.viewHistory.size,
-                    )} / ${context.getString(R.string.more_mute_settings)} ${context.getString(R.string.data_items_count, mutedTotal)}",
+                    dataTitle,
+                    "$viewHistoryTitle $itemsCountTemplate / $muteSettingsTitle $muteItemsCountTemplate",
                     MiuixIcons.Timer,
                 ) {
                     viewModel.openDataSettings()
                 },
                 SettingsCategory(
-                    context.getString(R.string.privacy_mode_title),
-                    if (state.settings.privacyModeEnabled) {
-                        context.getString(R.string.privacy_settings_enabled)
-                    } else {
-                        context.getString(R.string.privacy_settings_disabled)
-                    },
+                    privacyTitle,
+                    if (state.settings.privacyModeEnabled) privacyEnabled else privacyDisabled,
                     MiuixIcons.Lock,
                 ) { viewModel.openPrivacyModeSettings() },
                 SettingsCategory(
-                    context.getString(R.string.experimental_settings_title),
-                    context.getString(R.string.settings_experimental_summary),
+                    experimentalTitle,
+                    experimentalSummary,
                     MiuixIcons.Settings,
                 ) { viewModel.openExperimentalSettings() },
             )

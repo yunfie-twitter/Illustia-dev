@@ -1,5 +1,7 @@
 package com.yunfie.illustia.ui.components.utils
 
+import com.yunfie.illustia.*
+
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.ui.geometry.Offset

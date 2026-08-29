@@ -1,5 +1,7 @@
 package com.yunfie.illustia.ui.screens
 
+import com.yunfie.illustia.*
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -123,7 +125,6 @@ fun BookmarkScreen(
     }
 
     val scrollBehavior = MiuixScrollBehavior()
-    val context = androidx.compose.ui.platform.LocalContext.current
     val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
     val hapticMode = LocalAppHapticMode.current
 
@@ -134,12 +135,8 @@ fun BookmarkScreen(
                 .background(MiuixTheme.colorScheme.surface),
     ) {
         TopAppBar(
-            title =
-                androidx.compose.ui.res
-                    .stringResource(R.string.nav_bookmarks_full),
-            largeTitle =
-                androidx.compose.ui.res
-                    .stringResource(R.string.nav_bookmarks_full),
+            title = stringResource(R.string.nav_bookmarks_full),
+            largeTitle = stringResource(R.string.nav_bookmarks_full),
             scrollBehavior = scrollBehavior,
             actions = {
                 if (selectedTopTab == 1) {
@@ -158,15 +155,9 @@ fun BookmarkScreen(
                     )
                 }
                 if (selectedTopTab == 3) {
-                    val newestLabel =
-                        androidx.compose.ui.res
-                            .stringResource(R.string.sort_date_desc)
-                    val oldestLabel =
-                        androidx.compose.ui.res
-                            .stringResource(R.string.sort_date_asc)
-                    val nameLabel =
-                        androidx.compose.ui.res
-                            .stringResource(R.string.sort_name_asc)
+                    val newestLabel = stringResource(R.string.sort_date_desc)
+                    val oldestLabel = stringResource(R.string.sort_date_asc)
+                    val nameLabel = stringResource(R.string.sort_name_asc)
                     WindowIconDropdownMenu(
                         entry =
                             DropdownEntry(
@@ -189,14 +180,12 @@ fun BookmarkScreen(
                     ) {
                         Icon(
                             MiuixIcons.Filter,
-                            contentDescription =
-                                androidx.compose.ui.res
-                                    .stringResource(R.string.action_sort),
+                            contentDescription = stringResource(R.string.action_sort),
                         )
                     }
                 }
                 IconButton(onClick = {
-                    performAppHapticFeedback(context, haptic, hapticMode)
+                    performAppHapticFeedback(hapticFeedback = haptic, mode = hapticMode)
                     when (selectedTopTab) {
                         0 -> viewModel.refreshTimeline()
                         2 -> coroutineScope.launch { watchlistStore.fetch() }
@@ -206,9 +195,7 @@ fun BookmarkScreen(
                 }) {
                     Icon(
                         MiuixIcons.Refresh,
-                        contentDescription =
-                            androidx.compose.ui.res
-                                .stringResource(R.string.dialog_reload),
+                        contentDescription = stringResource(R.string.dialog_reload),
                     )
                 }
             },

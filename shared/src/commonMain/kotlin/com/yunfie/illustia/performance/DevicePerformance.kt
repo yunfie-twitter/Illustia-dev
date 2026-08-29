@@ -50,7 +50,12 @@ object DevicePerformance {
 
     var mode: DevicePerformanceMode = DevicePerformanceMode.AUTO
 
+    fun initialize(context: Any? = null): DevicePerformanceProfile = profile
+    fun reportFrame(isJank: Boolean) {}
+    fun setAppForeground(foreground: Boolean) {}
+    fun onMemoryPressure() {}
     fun recordScrollVelocity(pixelsPerSecond: Float) {}
+    fun reportScrollVelocity(velocity: Double) { recordScrollVelocity(velocity.toFloat()) }
     fun recordFrame(durationNanos: Long) {}
     fun recordSlowFrame() {}
     fun setPerformanceMode(newMode: DevicePerformanceMode) {
