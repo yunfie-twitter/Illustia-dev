@@ -1,9 +1,7 @@
 package com.yunfie.illustia
 
-import android.app.Application
-import android.net.ConnectivityManager
 import androidx.lifecycle.viewModelScope
-import com.yunfie.illustia.data.ManagedDataRepository
+import com.yunfie.illustia.data.IllustiaRepository
 import com.yunfie.illustia.data.proxyPixivImageUrl
 import com.yunfie.illustia.models.Illust
 import com.yunfie.illustia.models.LoadState
@@ -11,8 +9,8 @@ import com.yunfie.illustia.models.Restrict
 import com.yunfie.illustia.models.StoredAccount
 import com.yunfie.illustia.nativebridge.NativeIntentEvent
 import com.yunfie.illustia.nativebridge.NativeIntentRouter
-import com.yunfie.illustia.settings.db.SavedIllustEntity
-import com.yunfie.illustia.settings.db.SavedIllustPageEntity
+import com.yunfie.illustia.platform.PlatformActions
+import com.yunfie.illustia.settings.SettingsStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.map
@@ -25,9 +23,10 @@ import java.io.FileOutputStream
 
 /** Downloads, offline library, notifications, settings navigation, and account switching. */
 abstract class IllustiaLibraryNavigationModule(
-    app: Application,
-    managedDataRepository: ManagedDataRepository,
-) : IllustiaBookmarkModule(app, managedDataRepository) {
+    settingsStore: SettingsStore,
+    repository: IllustiaRepository = IllustiaRepository(settingsStore),
+    platformActions: PlatformActions? = null,
+) : IllustiaBookmarkModule(settingsStore, repository, platformActions) {
     override fun saveImage(
         url: String,
         filename: String,
@@ -224,10 +223,7 @@ abstract class IllustiaLibraryNavigationModule(
         updateSettings { it.copy(offlineStorageLimitBytes = value) }
     }
 
-    private fun android.content.Context.isNetworkMetered(): Boolean {
-        val cm = getSystemService(ConnectivityManager::class.java)
-        return runCatching { cm?.isActiveNetworkMetered ?: false }.getOrDefault(false)
-    }
+    private fun isNetworkMetered(): Boolean = false
 
     private suspend fun acquireDownloadSlot() {
         while (true) {

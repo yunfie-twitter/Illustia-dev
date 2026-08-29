@@ -1,11 +1,12 @@
 package com.yunfie.illustia
 
-import android.app.Application
 import androidx.lifecycle.viewModelScope
-import com.yunfie.illustia.data.ManagedDataRepository
+import com.yunfie.illustia.data.IllustiaRepository
 import com.yunfie.illustia.models.Illust
 import com.yunfie.illustia.models.LoadState
 import com.yunfie.illustia.models.Restrict
+import com.yunfie.illustia.platform.PlatformActions
+import com.yunfie.illustia.settings.SettingsStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -16,9 +17,10 @@ import kotlinx.coroutines.launch
 
 /** Pagination for search/profile collections plus bookmark and recommendation behavior. */
 abstract class IllustiaBookmarkModule(
-    app: Application,
-    managedDataRepository: ManagedDataRepository,
-) : IllustiaDetailProfileModule(app, managedDataRepository) {
+    settingsStore: SettingsStore,
+    repository: IllustiaRepository = IllustiaRepository(settingsStore),
+    platformActions: PlatformActions? = null,
+) : IllustiaDetailProfileModule(settingsStore, repository, platformActions) {
     abstract fun saveImage(
         url: String,
         filename: String,

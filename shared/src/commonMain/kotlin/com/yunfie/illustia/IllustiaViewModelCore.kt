@@ -1,7 +1,8 @@
 package com.yunfie.illustia
 
-import android.app.Application
-import com.yunfie.illustia.data.ManagedDataRepository
+import com.yunfie.illustia.data.IllustiaRepository
+import com.yunfie.illustia.platform.PlatformActions
+import com.yunfie.illustia.settings.SettingsStore
 
 /**
  * Stable implementation entry point assembled from responsibility-focused modules.
@@ -10,6 +11,7 @@ import com.yunfie.illustia.data.ManagedDataRepository
  * module, while state shared across modules belongs in [IllustiaViewModelFoundation].
  */
 open class IllustiaViewModelCore(
-    app: Application,
-    managedDataRepository: ManagedDataRepository = ManagedDataRepository(app.contentResolver),
-) : IllustiaLibraryNavigationModule(app, managedDataRepository)
+    settingsStore: SettingsStore,
+    repository: IllustiaRepository = IllustiaRepository(settingsStore),
+    platformActions: PlatformActions? = null,
+) : IllustiaLibraryNavigationModule(settingsStore, repository, platformActions)
