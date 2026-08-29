@@ -1,9 +1,7 @@
 package com.yunfie.illustia
 
-import android.app.Application
-import android.util.Log
 import androidx.lifecycle.viewModelScope
-import com.yunfie.illustia.data.ManagedDataRepository
+import com.yunfie.illustia.data.IllustiaRepository
 import com.yunfie.illustia.data.proxyPixivImageUrl
 import com.yunfie.illustia.models.Illust
 import com.yunfie.illustia.models.LoadState
@@ -11,6 +9,8 @@ import com.yunfie.illustia.models.UserPreview
 import com.yunfie.illustia.models.UserProfile
 import com.yunfie.illustia.models.pixiv.Comment
 import com.yunfie.illustia.models.pixiv.UgoiraPlayback
+import com.yunfie.illustia.platform.PlatformActions
+import com.yunfie.illustia.settings.SettingsStore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.delay
@@ -22,9 +22,10 @@ import java.io.File
 
 /** Illustration detail, image viewer, user profile, follow, and mute interactions. */
 abstract class IllustiaDetailProfileModule(
-    app: Application,
-    managedDataRepository: ManagedDataRepository,
-) : IllustiaAuthFeedModule(app, managedDataRepository) {
+    settingsStore: SettingsStore,
+    repository: IllustiaRepository = IllustiaRepository(settingsStore),
+    platformActions: PlatformActions? = null,
+) : IllustiaAuthFeedModule(settingsStore, repository, platformActions) {
     fun openIllust(illust: Illust) {
         captureProfileReturnDetail()
         if (_uiState.value.settings.saveViewHistory) {

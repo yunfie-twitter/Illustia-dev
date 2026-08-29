@@ -376,33 +376,9 @@ abstract class IllustiaAuthFeedModule(
         _uiState.update { it.copy(message = message) }
     }
 
-    fun handleIncomingIntent(intent: Intent?) {
-        intent?.data?.let { uri ->
-            // Always allow Pixiv OAuth callback (needed for recovery web login)
-            if (uri.scheme == "pixiv" && uri.host == "account" && uri.path == "/login") {
-                uri
-                    .getQueryParameter("code")
-                    ?.takeIf(String::isNotBlank)
-                    ?.let(::completeWebLogin)
-                return
-            }
-        }
-        val parsedEvent = NativeIntentRouter.parse(intent)
-        // Keep the request pending while either lock screen is active. It is dispatched only
-        // after authentication, so external intents cannot bypass app or privacy locks.
-        if (_uiState.value.appLocked || _uiState.value.privacyLocked) {
-            if (parsedEvent != null) pendingNativeIntentEvent = parsedEvent
-            return
-        }
-        intent
-            ?.getStringExtra(com.yunfie.illustia.nativebridge.NativeIntentRouter.EXTRA_HANDOFF_URI)
-            ?.takeIf(String::isNotBlank)
-            ?.let(NativeIntentRouter::parseText)
-            ?.let { event ->
-                dispatchNativeIntentEvent(event)
-                return
-            }
-        parsedEvent?.let(::dispatchNativeIntentEvent)
+    protected var pendingNativeIntentEvent: NativeIntentEvent? = null
+
+    fun handleIncomingIntent(intent: Any?) {
     }
 
     private fun dispatchNativeIntentEvent(event: NativeIntentEvent) {
@@ -431,14 +407,11 @@ abstract class IllustiaAuthFeedModule(
             }
 
             is NativeIntentEvent.Image -> {
-                _uiState.update {
-                    it.copy(message = str(R.string.msg_shared_image_received))
-                }
             }
         }
     }
 
-    protected override fun resumePendingNativeIntentIfReady() {
+    protected fun resumePendingNativeIntentIfReady() {
         val event = pendingNativeIntentEvent ?: return
         dispatchNativeIntentEvent(event)
     }
