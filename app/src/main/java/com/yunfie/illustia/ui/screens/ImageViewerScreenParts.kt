@@ -229,8 +229,7 @@ internal fun ZoomablePixivImage(
                             }
                         },
                     )
-                }
-                .pointerInput(url) {
+                }.pointerInput(url) {
                     detectZoomAndPanGestures(
                         isZoomed = { isActuallyZoomed(localScale) },
                     ) { centroid, pan, zoom ->
@@ -245,10 +244,11 @@ internal fun ZoomablePixivImage(
                         }
 
                         val appliedZoom = nextScale / currentScale
-                        val viewportCenter = Offset(
-                            x = viewportSize.width / 2f,
-                            y = viewportSize.height / 2f,
-                        )
+                        val viewportCenter =
+                            Offset(
+                                x = viewportSize.width / 2f,
+                                y = viewportSize.height / 2f,
+                            )
                         val focalPoint = centroid - viewportCenter
                         val transformedOffset =
                             localOffset +
@@ -257,8 +257,7 @@ internal fun ZoomablePixivImage(
 
                         applyTransform(nextScale, transformedOffset)
                     }
-                }
-                .then(
+                }.then(
                     if (isActuallyZoomed(scale)) {
                         Modifier.pointerInput(url, swipeThresholdPx) {
                             var accumulatedX = 0f
