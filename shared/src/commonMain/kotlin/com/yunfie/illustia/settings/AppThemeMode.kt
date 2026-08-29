@@ -1,7 +1,7 @@
 package com.yunfie.illustia.settings
 
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.res.stringResource
+import com.yunfie.illustia.stringResource
 import com.yunfie.illustia.R
 import top.yukonga.miuix.kmp.theme.ColorSchemeMode
 

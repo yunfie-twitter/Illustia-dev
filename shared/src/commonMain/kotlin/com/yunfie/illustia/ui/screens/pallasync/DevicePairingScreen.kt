@@ -94,7 +94,7 @@ fun DevicePairingScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Text(
-                        text = stringResource(R.string.pallasync_view_sync_code_desc),
+                        text = stringResource(R.string.pallasync_recovery_phrase_desc),
                         style = MiuixTheme.textStyles.body2,
                         color = MiuixTheme.colorScheme.onBackgroundVariant,
                     )
