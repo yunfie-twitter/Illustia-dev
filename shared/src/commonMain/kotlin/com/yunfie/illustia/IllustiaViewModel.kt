@@ -1,7 +1,8 @@
 package com.yunfie.illustia
 
-import android.app.Application
-import androidx.annotation.Keep
+import com.yunfie.illustia.data.IllustiaRepository
+import com.yunfie.illustia.platform.PlatformActions
+import com.yunfie.illustia.settings.SettingsStore
 
 /**
  * Stable ViewModel entry point used by the UI and dependency injection.
@@ -9,7 +10,8 @@ import androidx.annotation.Keep
  * Feature implementation lives under the `viewmodel` source folder so this
  * public type can remain source-compatible while its responsibilities evolve.
  */
-@Keep
-class IllustiaViewModel(
-    app: Application,
-) : IllustiaViewModelCore(app)
+open class IllustiaViewModel(
+    settingsStore: SettingsStore,
+    repository: IllustiaRepository = IllustiaRepository(settingsStore),
+    platformActions: PlatformActions? = null,
+) : IllustiaViewModelCore(settingsStore, repository, platformActions)
