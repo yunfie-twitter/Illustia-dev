@@ -37,8 +37,9 @@ internal suspend fun writeAppSettings(
     database: IllustiaDatabase,
     dao: SettingsDao,
     settings: AppSettings,
+    targetFile: java.io.File? = null,
 ) {
-    writeDataStorePreferences(dataStore, settings)
+    writeDataStorePreferences(dataStore, settings, targetFile)
     writeSensitiveSettings(sensitivePreferences, settings)
     writeRoomSettingsData(database, dao, settings)
 }

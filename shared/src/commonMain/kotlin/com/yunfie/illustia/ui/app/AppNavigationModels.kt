@@ -22,15 +22,26 @@ internal enum class AppTab(
     val id: String,
     val labelResId: StringResource,
     val titleResId: StringResource,
-    val icon: ImageVector,
 ) {
-    Home("home", R.string.nav_home, R.string.nav_home, MiuixIcons.VerticalSplit),
-    Novel("novel", R.string.nav_novel, R.string.nav_novel, MiuixIcons.Photos),
-    Ranking("ranking", R.string.nav_ranking, R.string.nav_ranking, MiuixIcons.TopDownloads),
-    Bookmarks("bookmarks", R.string.nav_bookmarks, R.string.nav_bookmarks_full, MiuixIcons.FavoritesFill),
-    Search("search", R.string.nav_search, R.string.nav_search, MiuixIcons.MiuixSearch),
-    ShortsFeed("shorts", R.string.nav_shorts_feed, R.string.nav_shorts_feed, MiuixIcons.Photos),
-    More("more", R.string.nav_more, R.string.nav_more, MiuixIcons.More),
+    Home("home", Res.string.nav_home, Res.string.nav_home),
+    Novel("novel", Res.string.nav_novel, Res.string.nav_novel),
+    Ranking("ranking", Res.string.nav_ranking, Res.string.nav_ranking),
+    Bookmarks("bookmarks", Res.string.nav_bookmarks, Res.string.nav_bookmarks_full),
+    Search("search", Res.string.nav_search, Res.string.nav_search),
+    ShortsFeed("shorts", Res.string.nav_shorts_feed, Res.string.nav_shorts_feed),
+    More("more", Res.string.nav_more, Res.string.nav_more);
+
+    val icon: ImageVector
+        get() =
+            when (this) {
+                Home -> MiuixIcons.VerticalSplit
+                Novel -> MiuixIcons.Photos
+                Ranking -> MiuixIcons.TopDownloads
+                Bookmarks -> MiuixIcons.FavoritesFill
+                Search -> MiuixIcons.MiuixSearch
+                ShortsFeed -> MiuixIcons.Photos
+                More -> MiuixIcons.More
+            }
 }
 
 internal val SwipeTabs = listOf(AppTab.Home, AppTab.Search, AppTab.Bookmarks, AppTab.Ranking, AppTab.More)

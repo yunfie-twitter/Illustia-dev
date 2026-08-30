@@ -11,8 +11,10 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
+import okio.Path.Companion.toPath
 import com.yunfie.illustia.models.SavedIllustItem
 import com.yunfie.illustia.pallasync.PallaSyncEventWriter
+import com.yunfie.illustia.pallasync.PallaSyncPendingEvent
 import com.yunfie.illustia.pallasync.PalleriaSyncCoordinator
 import com.yunfie.illustia.pallasync.PalleriaSyncManager
 import com.yunfie.illustia.pallasync.buildSettingsSyncEvents
@@ -54,7 +56,19 @@ class AndroidSettingsStore internal constructor(
     context: Context,
     private val syncEventWriter: PallaSyncEventWriter,
 ) : SettingsStore {
-    constructor(context: Context) : this(context, PalleriaSyncCoordinator(context = context.applicationContext))
+    constructor(context: Context) : this(
+        context,
+        object : PallaSyncEventWriter {
+            private val delegate by lazy { PalleriaSyncCoordinator(context = context.applicationContext) }
+            override suspend fun enqueueDataEvents(events: List<PallaSyncPendingEvent>): Boolean =
+                if (events.isEmpty()) true else delegate.enqueueDataEvents(events)
+
+            override suspend fun <T> enqueueDataEventsThen(
+                events: List<PallaSyncPendingEvent>,
+                afterEnqueue: suspend () -> T,
+            ): T = if (events.isEmpty()) afterEnqueue() else delegate.enqueueDataEventsThen(events, afterEnqueue)
+        },
+    )
 
     private val appContext = context.applicationContext
     private val legacyPreferences = appContext.getSharedPreferences(LEGACY_PREFS_NAME, Context.MODE_PRIVATE)
@@ -111,7 +125,7 @@ class AndroidSettingsStore internal constructor(
                             pallaSyncEnabled = enabled,
                             pallaSyncServerUrl = serverUrl,
                         ).withSyncedCollections(rebasedCollections)
-                writeAppSettingsImpl(dataStore, sensitivePreferences, database, dao, rebased)
+                writeAppSettingsImpl(dataStore, sensitivePreferences, database, dao, rebased, appContext.preferencesDataStoreFile(DATASTORE_NAME))
                 legacyPreferences
                     .edit()
                     .putInt(KEY_IMAGE_CACHE_SIZE_MB, rebased.imageCacheSizeMb)
@@ -336,12 +350,21 @@ class AndroidSettingsStore internal constructor(
         private val encryptedPreferencesLock = Any()
         private val migrationLock = Any()
 
+        fun resetForTesting() {
+            synchronized(this) {
+                sharedDataStore = null
+                sharedEncryptedPreferences = null
+                encryptedPreferencesInitialized = false
+                migrationCompleted = false
+            }
+        }
+
         fun dataStoreFor(context: Context): DataStore<Preferences> =
             sharedDataStore ?: synchronized(this) {
                 sharedDataStore ?: PreferenceDataStoreFactory
-                    .create(
+                    .createWithPath(
                         scope = kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.SupervisorJob() + Dispatchers.IO),
-                        produceFile = { context.preferencesDataStoreFile(DATASTORE_NAME) },
+                        produceFile = { context.preferencesDataStoreFile(DATASTORE_NAME).absolutePath.toPath() },
                     ).also { sharedDataStore = it }
             }
 

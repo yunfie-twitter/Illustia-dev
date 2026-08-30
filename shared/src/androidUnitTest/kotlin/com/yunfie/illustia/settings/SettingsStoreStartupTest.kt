@@ -9,6 +9,7 @@ import io.kotest.matchers.collections.shouldBeEmpty
 import io.kotest.matchers.collections.shouldContain
 import io.kotest.matchers.shouldBe
 import kotlinx.coroutines.runBlocking
+import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 import org.robolectric.RobolectricTestRunner
@@ -17,6 +18,11 @@ import org.robolectric.annotation.SQLiteMode
 @RunWith(RobolectricTestRunner::class)
 @SQLiteMode(SQLiteMode.Mode.LEGACY)
 class SettingsStoreStartupTest {
+    @Before
+    fun setup() {
+        AndroidSettingsStore.resetForTesting()
+    }
+
     @Test
     fun `performance mode is available from the startup mirror`() {
         val context = ApplicationProvider.getApplicationContext<Context>()

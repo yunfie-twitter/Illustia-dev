@@ -7,7 +7,7 @@ import androidx.datastore.preferences.core.stringPreferencesKey
 
 internal const val LEGACY_PREFS_NAME = "illustia"
 internal const val SECURE_PREFS_NAME = "illustia_secure"
-internal const val DATASTORE_NAME = "illustia_settings.preferences_pb"
+internal const val DATASTORE_NAME = "illustia_settings"
 internal const val KEY_REFRESH_TOKEN = "refreshToken"
 internal const val KEY_ACCOUNTS = "accounts"
 internal const val KEY_ACCOUNT_TOKENS = "accountTokens"

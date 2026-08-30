@@ -14,6 +14,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
+import java.io.File
 import java.io.IOException
 
 internal fun readFromDataStore(
@@ -173,9 +174,21 @@ internal suspend fun readDataStorePreferences(dataStore: DataStore<Preferences>)
 internal suspend fun writeDataStorePreferences(
     dataStore: DataStore<Preferences>,
     settings: AppSettings,
+    targetFile: File? = null,
 ) {
-    dataStore.edit { preferences ->
-        writeToDataStore(preferences, settings)
+    try {
+        dataStore.edit { preferences ->
+            writeToDataStore(preferences, settings)
+        }
+    } catch (e: IOException) {
+        if (System.getProperty("os.name")?.lowercase()?.contains("win") == true && targetFile?.exists() == true) {
+            targetFile.delete()
+            dataStore.edit { preferences ->
+                writeToDataStore(preferences, settings)
+            }
+        } else {
+            throw e
+        }
     }
 }
 
