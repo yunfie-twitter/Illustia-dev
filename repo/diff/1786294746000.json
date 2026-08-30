@@ -6,14 +6,99 @@
     "description": {
       "en-US": "Stable, beta and pre-release builds for Palleria"
     },
-    "timestamp": 1786775528000
+    "timestamp": 1788087637000
   },
   "packages": {
     "com.yunfie.illustia": {
       "metadata": {
-        "lastUpdated": 1786775522000
+        "lastUpdated": 1788087632000
       },
       "versions": {
+        "29c30866b89ac0a28835014f1d78890ad80210c42747e311f7972d194f4e6c73": {
+          "added": 1788087632000,
+          "file": {
+            "name": "/Illustia-v5.5.0-beta.1-release.apk",
+            "sha256": "29c30866b89ac0a28835014f1d78890ad80210c42747e311f7972d194f4e6c73",
+            "size": 65912489
+          },
+          "manifest": {
+            "nativecode": [
+              "arm64-v8a",
+              "armeabi",
+              "armeabi-v7a",
+              "mips",
+              "mips64",
+              "x86",
+              "x86_64"
+            ],
+            "versionName": "5.5.0-beta.1",
+            "versionCode": 45,
+            "usesSdk": {
+              "minSdkVersion": 24,
+              "targetSdkVersion": 36
+            },
+            "signer": {
+              "sha256": [
+                "28a7f64f373ac1ad5fbb4822870e2e07b2b204c7ec71e58ce40f9d54ef2727d9"
+              ]
+            },
+            "usesPermission": [
+              {
+                "name": "android.permission.VIBRATE"
+              },
+              {
+                "name": "android.permission.INTERNET"
+              },
+              {
+                "name": "android.permission.ACCESS_NETWORK_STATE"
+              },
+              {
+                "name": "android.permission.POST_NOTIFICATIONS"
+              },
+              {
+                "name": "android.permission.READ_MEDIA_IMAGES"
+              },
+              {
+                "name": "android.permission.SET_WALLPAPER"
+              },
+              {
+                "name": "android.permission.READ_SYNC_SETTINGS"
+              },
+              {
+                "name": "android.permission.WRITE_SYNC_SETTINGS"
+              },
+              {
+                "name": "android.permission.CAMERA"
+              },
+              {
+                "name": "android.permission.READ_EXTERNAL_STORAGE",
+                "maxSdkVersion": 32
+              },
+              {
+                "name": "android.permission.WRITE_EXTERNAL_STORAGE",
+                "maxSdkVersion": 28
+              },
+              {
+                "name": "android.permission.USE_BIOMETRIC"
+              },
+              {
+                "name": "android.permission.USE_FINGERPRINT"
+              },
+              {
+                "name": "com.yunfie.illustia.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+              }
+            ]
+          },
+          "antiFeatures": {
+            "NonFreeNet": {
+              "en-US": "Depends on Pixiv, which is proprietary.",
+              "ja-JP": "このアプリは、公開されていないPixiv APIに依存しています。"
+            }
+          },
+          "releaseChannels": [
+            "Beta"
+          ]
+        },
         "29810e51a7c3aa295f44f90508233ca976547ab661efd4bd862b2adb017b1af8": {
           "added": 1786775522000,
           "file": {
