@@ -381,7 +381,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          ./gradlew assembleRelease 2>&1 | tee gradle-release-build.log
+          ./gradlew :shared:buildRustAndroid :shared:buildPallaSyncCoreAndroid assembleRelease 2>&1 | tee gradle-release-build.log
         env:
           # Keep Rust line tables in the pre-strip JNI libraries so the native
           # symbol archive can be used to symbolize release crash addresses.
@@ -541,7 +541,7 @@ jobs:
           set -euo pipefail
 
           VERSION="${{ needs.prepare.outputs.version_name }}"
-          JNI_DIR="app/build/generated/uniffi/jniLibs"
+          JNI_DIR="shared/build/generated/uniffi/jniLibs"
           SYMBOL_ARCHIVE="${GITHUB_WORKSPACE}/release-assets/Illustia-v${VERSION}-native-debug-symbols.zip"
 
           mapfile -d '' NATIVE_LIBS < <(

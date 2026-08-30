@@ -185,11 +185,22 @@ tasks.register("buildRustAndroid", Exec) {
 
 tasks.register("buildPallaSyncCoreAndroid", Exec) {
     def pallaSyncCoreCrateDir = rootProject.file("rust/pallasync-core")
+    def pallaSyncCoreInputs = files(
+        fileTree(new File(pallaSyncCoreCrateDir, "src")) { include "**/*.rs" },
+        new File(pallaSyncCoreCrateDir, "Cargo.toml"),
+        new File(pallaSyncCoreCrateDir, "Cargo.lock"),
+    )
     workingDir pallaSyncCoreCrateDir
     environment "CARGO_TARGET_DIR", rustTargetDir
     commandLine cargoExecutable, "ndk", "--platform", androidMinSdk.toString(),
         "-t", "arm64-v8a", "-t", "armeabi-v7a", "-t", "x86_64",
         "-o", uniffiJniDir.get().asFile, "build", "--release"
+    inputs.files(pallaSyncCoreInputs)
+    outputs.files(
+        uniffiJniDir.map { it.file("arm64-v8a/libpallasync_core.so") },
+        uniffiJniDir.map { it.file("armeabi-v7a/libpallasync_core.so") },
+        uniffiJniDir.map { it.file("x86_64/libpallasync_core.so") },
+    )
 }
 
 tasks.matching { it.name.startsWith("compileKotlin") || it.name.startsWith("ksp") }.configureEach {
