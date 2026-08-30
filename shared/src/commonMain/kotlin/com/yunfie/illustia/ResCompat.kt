@@ -5,8 +5,8 @@ import org.jetbrains.compose.resources.StringResource
 import org.jetbrains.compose.resources.stringResource as composeStringResource
 
 internal object R {
-    val string = Res.string
-    val drawable = Res.drawable
+    val string get() = Res.string
+    val drawable get() = Res.drawable
 }
 
 @Composable

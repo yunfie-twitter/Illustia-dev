@@ -450,28 +450,6 @@ internal data class WallpaperLoadResult(
     val bitmap: Bitmap?,
 )
 
-internal fun selectCandidate(
-    candidates: List<NativeSavedImage>,
-    settings: AppSettings,
-    currentPath: String?,
-    forceDifferent: Boolean,
-): NativeSavedImage? {
-    if (candidates.isEmpty()) return null
-    val ordered =
-        when (settings.liveWallpaperOrder) {
-            "newest" -> candidates.sortedByDescending { it.modifiedAtMillis }
-            "oldest" -> candidates.sortedBy { it.modifiedAtMillis }
-            else -> candidates.shuffled()
-        }
-    if (!forceDifferent || ordered.size == 1) return ordered.first()
-    val currentIndex = ordered.indexOfFirst { it.uri == currentPath }
-    return when {
-        settings.liveWallpaperOrder == "random" -> ordered.firstOrNull { it.uri != currentPath }
-        currentIndex < 0 -> ordered.first()
-        else -> ordered[(currentIndex + 1) % ordered.size]
-    }
-}
-
 private fun decodeSampledBitmap(
     context: Context,
     uriValue: String,

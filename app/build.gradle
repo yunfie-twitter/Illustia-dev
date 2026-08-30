@@ -89,6 +89,62 @@ detekt {
     ignoreFailures = false
 }
 
+def detektBaselineBudget = 400
+def detektRuleBudgets = [
+    ComplexCondition: 11,
+    ConstructorParameterNaming: 2,
+    CyclomaticComplexMethod: 18,
+    EmptyFunctionBlock: 2,
+    InvalidPackageDeclaration: 0,
+    LargeClass: 3,
+    LongMethod: 15,
+    LoopWithTooManyJumpStatements: 3,
+    MagicNumber: 102,
+    MatchingDeclarationName: 5,
+    ReturnCount: 52,
+    SwallowedException: 0,
+    ThrowsCount: 2,
+    TooGenericExceptionCaught: 0,
+    TooGenericExceptionThrown: 1,
+    TooManyFunctions: 28,
+    UnusedParameter: 7,
+    VariableNaming: 3,
+]
+
+tasks.register("checkQualityBaselineBudgets") {
+    group = "verification"
+    description = "Fails when static-analysis baselines grow beyond their approved budgets."
+    def detektBaselineFile = file("detekt-baseline.xml")
+    inputs.file(detektBaselineFile)
+
+    doLast {
+        if (!detektBaselineFile.exists()) {
+            logger.lifecycle("No detekt-baseline.xml found, skipping check.")
+            return
+        }
+        def detektCount = detektBaselineFile.readLines().count { it.contains("<ID>") }
+        def detektEntries = detektBaselineFile.readLines().findAll { it.contains("<ID>") }
+        def ruleCounts = detektEntries.countBy { entry ->
+            def matcher = entry =~ /<ID>([^:]+):/
+            matcher.find() ? matcher.group(1) : "Unknown"
+        }
+        def exceededRuleBudgets = ruleCounts.findAll { rule, count ->
+            !detektRuleBudgets.containsKey(rule) || count > detektRuleBudgets[rule]
+        }
+        if (detektCount > detektBaselineBudget) {
+            throw new GradleException(
+                "detekt baseline has ${detektCount} issues; budget is ${detektBaselineBudget}.",
+            )
+        }
+        if (!exceededRuleBudgets.isEmpty()) {
+            throw new GradleException(
+                "detekt rule budgets exceeded: ${exceededRuleBudgets.sort().collect { rule, count -> "${rule} ${count}/${detektRuleBudgets[rule] ?: 0}" }.join(', ')}.",
+            )
+        }
+        logger.lifecycle("Quality baseline budget: detekt ${detektCount}/${detektBaselineBudget}; ${ruleCounts.sort()}")
+    }
+}
+
 def supportedKtlintCheckTasks = [
     "runKtlintCheckOverMainSourceSet",
     "runKtlintCheckOverTestSourceSet",

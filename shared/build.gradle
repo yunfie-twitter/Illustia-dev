@@ -36,6 +36,12 @@ android {
             keepDebugSymbols += ["**/libandroidx.graphics.path.so"]
         }
     }
+
+    testOptions {
+        unitTests.all {
+            useJUnitPlatform()
+        }
+    }
 }
 
 kotlin {
@@ -103,6 +109,17 @@ kotlin {
             dependencies {
                 implementation libs.kotest.assertions
                 implementation libs.kotest.property
+            }
+        }
+        androidUnitTest {
+            dependencies {
+                implementation libs.kotest.runner
+                implementation libs.kotest.assertions
+                implementation libs.kotest.property
+                implementation libs.junit4
+                implementation libs.androidx.test.core
+                implementation libs.robolectric
+                implementation libs.junit.vintage
             }
         }
     }

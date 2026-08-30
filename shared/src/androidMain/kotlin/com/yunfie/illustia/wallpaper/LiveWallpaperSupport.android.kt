@@ -2,8 +2,8 @@ package com.yunfie.illustia.wallpaper
 
 import android.os.Build
 
-internal object LiveWallpaperSupport {
-    fun isSupported(): Boolean =
+actual object LiveWallpaperSupport {
+    actual fun isSupported(): Boolean =
         !isHyperOsDevice(
             manufacturer = Build.MANUFACTURER,
             brand = Build.BRAND,
@@ -11,22 +11,6 @@ internal object LiveWallpaperSupport {
             incremental = Build.VERSION.INCREMENTAL,
             display = Build.DISPLAY,
         )
-}
-
-internal fun isHyperOsDevice(
-    manufacturer: String,
-    brand: String,
-    osVersionName: String,
-    incremental: String,
-    display: String,
-): Boolean {
-    val vendor = "$manufacturer $brand".lowercase()
-    val isXiaomiFamily = listOf("xiaomi", "redmi", "poco").any(vendor::contains)
-    if (!isXiaomiFamily) return false
-
-    return osVersionName.isNotBlank() ||
-        incremental.startsWith("OS", ignoreCase = true) ||
-        display.contains("HyperOS", ignoreCase = true)
 }
 
 private fun systemProperty(name: String): String =

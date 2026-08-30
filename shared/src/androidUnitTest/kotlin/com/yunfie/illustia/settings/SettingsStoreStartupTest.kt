@@ -26,7 +26,7 @@ class SettingsStoreStartupTest {
         try {
             preferences.edit().putString(KEY_PERFORMANCE_MODE, "lightweight").commit()
 
-            SettingsStore.readPerformanceModeSync(context) shouldBe "lightweight"
+            AndroidSettingsStore.readPerformanceModeSync(context) shouldBe "lightweight"
         } finally {
             val editor = preferences.edit()
             if (original == null) editor.remove(KEY_PERFORMANCE_MODE) else editor.putString(KEY_PERFORMANCE_MODE, original)
@@ -38,7 +38,7 @@ class SettingsStoreStartupTest {
     fun `startup read skips Room collections and uses the privacy mirror`() {
         runBlocking {
             val context = ApplicationProvider.getApplicationContext<Context>()
-            val store = SettingsStore(context)
+            val store = AndroidSettingsStore(context)
             val original = store.read()
             val marker = "startup-room-marker"
 
@@ -51,7 +51,7 @@ class SettingsStoreStartupTest {
                     )
                 store.write(updated, original)
 
-                SettingsStore.isPrivacyModeEnabledSync(context).shouldBeTrue()
+                AndroidSettingsStore.isPrivacyModeEnabledSync(context).shouldBeTrue()
                 store.readStartup().apply {
                     privacyModeEnabled.shouldBeTrue()
                     searchHistory.shouldBeEmpty()

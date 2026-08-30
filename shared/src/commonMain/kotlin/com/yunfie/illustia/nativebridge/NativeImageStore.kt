@@ -8,6 +8,7 @@ data class NativeSavedImage(
     val uri: String,
     val modifiedAtMillis: Long = 0L,
     val size: Long = 0L,
+    val name: String = uri,
 )
 
 class NativeImageStore(

@@ -34,11 +34,11 @@ class SettingsStorePrivacyModePropertyTest {
     private val context: Context
         get() = ApplicationProvider.getApplicationContext<Context>()
 
-    private lateinit var settingsStore: SettingsStore
+    private lateinit var settingsStore: AndroidSettingsStore
 
     @BeforeEach
     fun setup() {
-        settingsStore = SettingsStore(context)
+        settingsStore = AndroidSettingsStore(context)
         settingsStore.clearUnlockCodeHash()
     }
 

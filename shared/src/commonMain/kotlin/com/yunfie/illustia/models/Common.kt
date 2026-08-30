@@ -8,9 +8,9 @@ import org.jetbrains.compose.resources.StringResource
 enum class HomeFeedKind(
     val labelResId: StringResource,
 ) {
-    Recommended(R.string.feed_recommended),
-    Ranking(R.string.feed_ranking),
-    New(R.string.feed_new),
+    Recommended(Res.string.feed_recommended),
+    Ranking(Res.string.feed_ranking),
+    New(Res.string.feed_new),
 }
 
 @Immutable
@@ -18,8 +18,8 @@ enum class Restrict(
     val apiValue: String,
     val labelResId: StringResource,
 ) {
-    Public("public", R.string.restrict_public),
-    Private("private", R.string.restrict_private),
+    Public("public", Res.string.restrict_public),
+    Private("private", Res.string.restrict_private),
 }
 
 @Immutable
