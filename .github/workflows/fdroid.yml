@@ -381,7 +381,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          ./gradlew :shared:buildRustAndroid :shared:buildPallaSyncCoreAndroid assembleRelease 2>&1 | tee gradle-release-build.log
+          ./gradlew assembleRelease 2>&1 | tee gradle-release-build.log
         env:
           # Keep Rust line tables in the pre-strip JNI libraries so the native
           # symbol archive can be used to symbolize release crash addresses.

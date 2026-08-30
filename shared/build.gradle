@@ -207,6 +207,14 @@ tasks.matching { it.name.startsWith("compileKotlin") || it.name.startsWith("ksp"
     dependsOn "generateUniFfiBindings"
 }
 
+tasks.matching {
+    it.name.toLowerCase().contains("jnilib") ||
+    it.name.startsWith("merge") && it.name.endsWith("JniLibFolders") ||
+    it.name.startsWith("copy") && it.name.contains("JniLibs")
+}.configureEach {
+    dependsOn "buildRustAndroid", "buildPallaSyncCoreAndroid"
+}
+
 compose.resources {
     packageOfResClass = "com.yunfie.illustia"
     generateResClass = always
