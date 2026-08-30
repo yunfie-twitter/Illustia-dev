@@ -81,12 +81,11 @@ class IllustWidgetConfigureActivity : FragmentActivity() {
         val app = application as IllustiaApplication
         object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")
-            override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T {
-                return IllustiaViewModel(
+            override fun <T : androidx.lifecycle.ViewModel> create(modelClass: Class<T>): T =
+                IllustiaViewModel(
                     settingsStore = app.settingsStore,
                     repository = app.repository,
                 ) as T
-            }
         }
     }
 
