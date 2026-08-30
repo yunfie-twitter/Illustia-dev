@@ -1,9 +1,17 @@
 # ---------------------------------------------------------------------------
-# Kotlin Objects & Singletons
+# Kotlin Objects, Companions & Enums
 # ---------------------------------------------------------------------------
 -keepclassmembers class * {
     public static final ** INSTANCE;
+    public static final ** Companion;
 }
+
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+
+-keep class kotlin.jvm.internal.DefaultConstructorMarker { *; }
 
 # ---------------------------------------------------------------------------
 # Jetpack Compose & Compose Multiplatform

@@ -1,11 +1,19 @@
 # ---------------------------------------------------------------------------
-# Kotlin Objects & Singletons
+# Kotlin Objects, Companions & Enums
 # ---------------------------------------------------------------------------
-# Preserve Kotlin object INSTANCE fields for all Kotlin singletons so runtime
-# accesses (direct or reflected) do not fail with NoSuchFieldError: No field INSTANCE.
+# Preserve Kotlin object INSTANCE and Companion fields so runtime accesses
+# (direct, Composable singletons, or reflected) do not fail with NoSuchFieldError.
 -keepclassmembers class * {
     public static final ** INSTANCE;
+    public static final ** Companion;
 }
+
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+
+-keep class kotlin.jvm.internal.DefaultConstructorMarker { *; }
 
 # ---------------------------------------------------------------------------
 # Jetpack Compose & Compose Multiplatform
