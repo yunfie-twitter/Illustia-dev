@@ -3809,5 +3809,92 @@
     "size": 68219264,
     "apkName": "Illustia-v5.5.0-beta.6-release.apk",
     "added": 1788168829.1231
+  },
+  "Illustia-v5.5.0-release.apk": {
+    "hash": "4c7a03109832bb2440a410125333721dfaec16dfc080c166df7186bbe79d164b",
+    "hashType": "sha256",
+    "uses-permission": [
+      [
+        "android.permission.VIBRATE",
+        null
+      ],
+      [
+        "android.permission.INTERNET",
+        null
+      ],
+      [
+        "android.permission.ACCESS_NETWORK_STATE",
+        null
+      ],
+      [
+        "android.permission.POST_NOTIFICATIONS",
+        null
+      ],
+      [
+        "android.permission.READ_MEDIA_IMAGES",
+        null
+      ],
+      [
+        "android.permission.SET_WALLPAPER",
+        null
+      ],
+      [
+        "android.permission.READ_SYNC_SETTINGS",
+        null
+      ],
+      [
+        "android.permission.WRITE_SYNC_SETTINGS",
+        null
+      ],
+      [
+        "android.permission.CAMERA",
+        null
+      ],
+      [
+        "android.permission.READ_EXTERNAL_STORAGE",
+        32
+      ],
+      [
+        "android.permission.WRITE_EXTERNAL_STORAGE",
+        28
+      ],
+      [
+        "android.permission.USE_BIOMETRIC",
+        null
+      ],
+      [
+        "android.permission.USE_FINGERPRINT",
+        null
+      ],
+      [
+        "com.yunfie.illustia.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION",
+        null
+      ]
+    ],
+    "uses-permission-sdk-23": [],
+    "features": [],
+    "icons_src": {},
+    "icons": {},
+    "antiFeatures": {},
+    "packageName": "com.yunfie.illustia",
+    "versionCode": 51,
+    "name": "Palleria",
+    "versionName": "5.5.0",
+    "minSdkVersion": 24,
+    "targetSdkVersion": 36,
+    "nativecode": [
+      "arm64-v8a",
+      "armeabi",
+      "armeabi-v7a",
+      "mips",
+      "mips64",
+      "x86",
+      "x86_64"
+    ],
+    "sig": "f647964cdccdcc133cade2961a136053",
+    "signer": "28a7f64f373ac1ad5fbb4822870e2e07b2b204c7ec71e58ce40f9d54ef2727d9",
+    "size": 68219256,
+    "apkName": "Illustia-v5.5.0-release.apk",
+    "added": 1788172683.195246
   }
 }

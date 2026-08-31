@@ -1,13 +1,95 @@
 {
   "repo": {
-    "timestamp": 1788168834000
+    "timestamp": 1788172688000
   },
   "packages": {
     "com.yunfie.illustia": {
       "metadata": {
-        "lastUpdated": 1788168829000
+        "lastUpdated": 1788172683000
       },
       "versions": {
+        "4c7a03109832bb2440a410125333721dfaec16dfc080c166df7186bbe79d164b": {
+          "added": 1788172683000,
+          "file": {
+            "name": "/Illustia-v5.5.0-release.apk",
+            "sha256": "4c7a03109832bb2440a410125333721dfaec16dfc080c166df7186bbe79d164b",
+            "size": 68219256
+          },
+          "manifest": {
+            "nativecode": [
+              "arm64-v8a",
+              "armeabi",
+              "armeabi-v7a",
+              "mips",
+              "mips64",
+              "x86",
+              "x86_64"
+            ],
+            "versionName": "5.5.0",
+            "versionCode": 51,
+            "usesSdk": {
+              "minSdkVersion": 24,
+              "targetSdkVersion": 36
+            },
+            "signer": {
+              "sha256": [
+                "28a7f64f373ac1ad5fbb4822870e2e07b2b204c7ec71e58ce40f9d54ef2727d9"
+              ]
+            },
+            "usesPermission": [
+              {
+                "name": "android.permission.VIBRATE"
+              },
+              {
+                "name": "android.permission.INTERNET"
+              },
+              {
+                "name": "android.permission.ACCESS_NETWORK_STATE"
+              },
+              {
+                "name": "android.permission.POST_NOTIFICATIONS"
+              },
+              {
+                "name": "android.permission.READ_MEDIA_IMAGES"
+              },
+              {
+                "name": "android.permission.SET_WALLPAPER"
+              },
+              {
+                "name": "android.permission.READ_SYNC_SETTINGS"
+              },
+              {
+                "name": "android.permission.WRITE_SYNC_SETTINGS"
+              },
+              {
+                "name": "android.permission.CAMERA"
+              },
+              {
+                "name": "android.permission.READ_EXTERNAL_STORAGE",
+                "maxSdkVersion": 32
+              },
+              {
+                "name": "android.permission.WRITE_EXTERNAL_STORAGE",
+                "maxSdkVersion": 28
+              },
+              {
+                "name": "android.permission.USE_BIOMETRIC"
+              },
+              {
+                "name": "android.permission.USE_FINGERPRINT"
+              },
+              {
+                "name": "com.yunfie.illustia.DYNAMIC_RECEIVER_NOT_EXPORTED_PERMISSION"
+              }
+            ]
+          },
+          "antiFeatures": {
+            "NonFreeNet": {
+              "en-US": "Depends on Pixiv, which is proprietary.",
+              "ja-JP": "このアプリは、公開されていないPixiv APIに依存しています。"
+            }
+          }
+        },
         "6e647e27700c0b077e9d5f68b797a8ac0814981ad5e5a5f5104df5a261c81a09": {
           "added": 1788168829000,
           "file": {
@@ -88,10 +170,7 @@
               "en-US": "Depends on Pixiv, which is proprietary.",
               "ja-JP": "このアプリは、公開されていないPixiv APIに依存しています。"
             }
-          },
-          "releaseChannels": [
-            "Beta"
-          ]
+          }
         },
         "b9d91431f84ab52dca2a02a5a2b926e62403642be27f4f97f08cf5cdc154886e": {
           "added": 1788166138000,
@@ -173,10 +252,19 @@
               "en-US": "Depends on Pixiv, which is proprietary.",
               "ja-JP": "このアプリは、公開されていないPixiv APIに依存しています。"
             }
-          },
-          "releaseChannels": [
-            "Beta"
-          ]
+          }
+        },
+        "651196238075e6c227ff671080bc2ade588e18cc0781a86a9b48da335b6b294f": {
+          "releaseChannels": null
+        },
+        "4c4616ffecddb1a667893de036a28c3e0fa477f0e89ded4af8f72fb800e73117": {
+          "releaseChannels": null
+        },
+        "b092a998ac02fe66e9fc0bde93d2982e42f27fad4020dd42f64ba41a5d00c460": {
+          "releaseChannels": null
+        },
+        "29c30866b89ac0a28835014f1d78890ad80210c42747e311f7972d194f4e6c73": {
+          "releaseChannels": null
         }
       }
     }
