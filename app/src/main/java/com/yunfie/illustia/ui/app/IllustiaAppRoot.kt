@@ -343,6 +343,7 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
                     IllustiaNavigationRequest.ExperimentalSettings -> AppRoute.ExperimentalSettings
                     IllustiaNavigationRequest.PallaSyncSettings -> AppRoute.PallaSyncSettings
                     IllustiaNavigationRequest.PallaSyncDevices -> AppRoute.PallaSyncDevices
+                    IllustiaNavigationRequest.UpdateSettings -> AppRoute.UpdateSettings
                 },
             )
         }

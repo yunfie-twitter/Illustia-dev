@@ -54,6 +54,7 @@ import com.yunfie.illustia.ui.screens.PrivacyModeSettingsScreen
 import com.yunfie.illustia.ui.screens.SavedIllustViewerScreen
 import com.yunfie.illustia.ui.screens.SearchScreen
 import com.yunfie.illustia.ui.screens.SettingsScreen
+import com.yunfie.illustia.ui.screens.UpdateSettingsScreen
 import com.yunfie.illustia.ui.screens.UserProfileScreen
 import com.yunfie.illustia.ui.screens.ViewHistoryScreen
 import com.yunfie.illustia.ui.screens.WatchlistSeriesScreen
@@ -340,7 +341,19 @@ internal fun AppNavHost(
                 SavedIllustViewerScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)
             }
             entry(AppRoute.About) {
-                AboutScreen(onBack = onPopRoute)
+                AboutScreen(
+                    state = appState.state,
+                    viewModel = viewModel,
+                    onBack = onPopRoute,
+                    onOpenUpdateSettings = viewModel::openUpdateSettings,
+                )
+            }
+            entry(AppRoute.UpdateSettings) {
+                UpdateSettingsScreen(
+                    state = appState.state,
+                    viewModel = viewModel,
+                    onBack = onPopRoute,
+                )
             }
             entry(AppRoute.FavoriteTags) {
                 FavoriteTagsScreen(state = appState.state, viewModel = viewModel, onBack = onPopRoute)

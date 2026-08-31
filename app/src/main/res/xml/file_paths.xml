@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<paths>
+    <cache-path
+        name="cached_apks"
+        path="updates" />
+    <cache-path
+        name="all_cache"
+        path="." />
+    <external-cache-path
+        name="external_cached_apks"
+        path="updates" />
+    <external-cache-path
+        name="all_external_cache"
+        path="." />
+    <files-path
+        name="internal_files"
+        path="." />
+</paths>

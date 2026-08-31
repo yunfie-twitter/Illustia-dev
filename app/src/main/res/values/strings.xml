@@ -829,4 +829,38 @@
     <string name="error_crash_storage_permission">保存先フォルダの権限を確認してください。設定から保存先を選び直すと復旧できる場合があります。\n%1$s</string>
     <string name="mute_user_id">ユーザーID: %1$d</string>
     <string name="mute_illust_id">イラストID: %1$d</string>
+
+    <!-- Clipboard & Updates -->
+    <string name="general_clipboard_auto_detect">クリップボード自動表示</string>
+    <string name="general_clipboard_auto_detect_desc">起動時にクリップボード内のPixivリンクを自動検出して開きます</string>
+    <string name="update_settings_title">アップデート</string>
+    <string name="update_settings_summary">インストール方法、更新の確認</string>
+    <string name="update_section_install">インストール設定</string>
+    <string name="update_install_method">インストール方法</string>
+    <string name="update_install_method_desc">アップデート時のAPKインストール方法を選択します</string>
+    <string name="update_method_standard">通常のAPKインストール</string>
+    <string name="update_method_standard_desc">システムのインストーラーを起動して確認画面を表示します</string>
+    <string name="update_method_shizuku">Shizukuインストール</string>
+    <string name="update_method_shizuku_desc">Shizukuを使用してバックグラウンドで自動インストールします</string>
+    <string name="update_shizuku_available">Shizuku 利用可能</string>
+    <string name="update_shizuku_not_running">Shizuku サービス未起動</string>
+    <string name="update_shizuku_permission_required">Shizuku の権限が必要です（タップして許可）</string>
+    <string name="update_section_check">アップデートの確認</string>
+    <string name="update_check_button">更新を確認</string>
+    <string name="update_checking">更新を確認中…</string>
+    <string name="update_up_to_date">最新バージョンを使用中です (%1$s)</string>
+    <string name="update_available_title">新しいバージョンが利用可能です: %1$s</string>
+    <string name="update_download_button">ダウンロードして更新</string>
+    <string name="update_downloading">ダウンロード中… (%1$s / %2$s)</string>
+    <string name="update_ready_to_install">ダウンロード完了</string>
+    <string name="update_install_button">今すぐインストール</string>
+    <string name="update_installing">インストール中…</string>
+    <string name="update_check_failed">アップデートの確認に失敗しました</string>
+    <string name="update_download_failed">アップデートのダウンロードに失敗しました</string>
+    <string name="update_install_failed">アップデートのインストールに失敗しました: %1$s</string>
+    <string name="update_auto_check_startup">起動時に更新を確認</string>
+    <string name="update_auto_check_startup_desc">アプリ起動時に新しいバージョンがないか自動で確認します</string>
+    <string name="update_release_notes">更新内容</string>
+    <string name="update_view_on_github">GitHubで詳細を見る</string>
+    <string name="update_in_app_updater">アプリ内アップデーター</string>
 </resources>

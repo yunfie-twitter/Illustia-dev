@@ -41,6 +41,7 @@ import top.yukonga.miuix.kmp.icon.extended.More
 import top.yukonga.miuix.kmp.icon.extended.Photos
 import top.yukonga.miuix.kmp.icon.extended.Settings
 import top.yukonga.miuix.kmp.icon.extended.Timer
+import top.yukonga.miuix.kmp.icon.extended.TopDownloads
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 private data class SettingsCategory(
@@ -116,6 +117,13 @@ fun SettingsScreen(
                     MiuixIcons.Timer,
                 ) {
                     viewModel.openDataSettings()
+                },
+                SettingsCategory(
+                    context.getString(R.string.update_settings_title),
+                    context.getString(R.string.update_settings_summary),
+                    MiuixIcons.TopDownloads,
+                ) {
+                    viewModel.openUpdateSettings()
                 },
                 SettingsCategory(
                     context.getString(R.string.privacy_mode_title),

@@ -22,8 +22,8 @@ android {
         // Android 7.0 (API 24) and newer.
         minSdk androidMinSdk
         targetSdk 36
-        versionCode 52
-        versionName "5.5.1"
+        versionCode 53
+        versionName "5.5.2"
     }
 
     signingConfigs {
@@ -298,6 +298,8 @@ dependencies {
     implementation libs.miuix.icons
     implementation libs.miuix.squircle
     implementation libs.miuix.navigation3.ui
+    implementation libs.shizuku.api
+    implementation libs.shizuku.provider
 
     // Test dependencies
     testImplementation libs.kotest.runner

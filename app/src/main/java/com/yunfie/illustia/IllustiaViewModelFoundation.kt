@@ -33,14 +33,20 @@ import com.yunfie.illustia.settings.SettingsStore
 import com.yunfie.illustia.settings.SyncedCollectionsSnapshot
 import com.yunfie.illustia.settings.isDynamicColorAvailable
 import com.yunfie.illustia.settings.withSyncedCollections
+import com.yunfie.illustia.updater.AppReleaseInfo
+import com.yunfie.illustia.updater.AppUpdaterRepository
+import com.yunfie.illustia.updater.UpdateCheckState
+import com.yunfie.illustia.updater.UpdateInstallMethod
 import com.yunfie.illustia.widget.RankingWidgetProvider
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
@@ -50,6 +56,7 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
+import java.io.File
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
@@ -163,6 +170,9 @@ abstract class IllustiaViewModelFoundation(
     val detailNavigationRequests: SharedFlow<Long> = _detailNavigationRequests
     protected val _userNavigationRequests = MutableSharedFlow<Long>(extraBufferCapacity = 16)
     val userNavigationRequests: SharedFlow<Long> = _userNavigationRequests
+    val appUpdaterRepository: AppUpdaterRepository by lazy { AppUpdaterRepository(getApplication()) }
+    protected val _updateCheckState = MutableStateFlow<UpdateCheckState>(UpdateCheckState.Idle)
+    val updateCheckState: StateFlow<UpdateCheckState> = _updateCheckState.asStateFlow()
     val settingsState: StateFlow<AppSettings> =
         _uiState
             .map { it.settings }
@@ -673,5 +683,69 @@ abstract class IllustiaViewModelFoundation(
                     .toString(),
             codeVerifier = verifier,
         )
+    }
+
+    fun checkForUpdates(silent: Boolean = false) {
+        if (_updateCheckState.value is UpdateCheckState.Checking || _updateCheckState.value is UpdateCheckState.Downloading) return
+        viewModelScope.launch(Dispatchers.IO) {
+            _updateCheckState.value = UpdateCheckState.Checking
+            appUpdaterRepository
+                .fetchLatestRelease()
+                .onSuccess { release ->
+                    if (release != null && appUpdaterRepository.isNewerVersion(release.versionName)) {
+                        _updateCheckState.value = UpdateCheckState.UpdateAvailable(release)
+                    } else {
+                        _updateCheckState.value = UpdateCheckState.UpToDate(appUpdaterRepository.getCurrentVersionName())
+                    }
+                }.onFailure { error ->
+                    _updateCheckState.value = UpdateCheckState.Error(error.message ?: "Failed to check for updates")
+                    if (!silent) {
+                        _uiState.update { it.copy(message = str(R.string.update_check_failed)) }
+                    }
+                }
+        }
+    }
+
+    fun downloadUpdate(release: AppReleaseInfo) {
+        if (_updateCheckState.value is UpdateCheckState.Downloading) return
+        viewModelScope.launch(Dispatchers.IO) {
+            _updateCheckState.value = UpdateCheckState.Downloading(0f, 0L, release.apkSize)
+            appUpdaterRepository
+                .downloadApk(release) { progress, downloaded, total ->
+                    _updateCheckState.value = UpdateCheckState.Downloading(progress, downloaded, total)
+                }.onSuccess { file ->
+                    _updateCheckState.value = UpdateCheckState.ReadyToInstall(file, release)
+                }.onFailure { error ->
+                    _updateCheckState.value = UpdateCheckState.Error(error.message ?: "Download failed")
+                    _uiState.update { it.copy(message = str(R.string.update_download_failed)) }
+                }
+        }
+    }
+
+    fun installUpdate(apkFile: File) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _updateCheckState.value = UpdateCheckState.Installing
+            val method = UpdateInstallMethod.fromValue(_uiState.value.settings.updateInstallMethod)
+            appUpdaterRepository
+                .installApk(apkFile, method)
+                .onSuccess {
+                    _updateCheckState.value = UpdateCheckState.Idle
+                }.onFailure { error ->
+                    _updateCheckState.value = UpdateCheckState.Error(error.message ?: "Installation failed")
+                    _uiState.update { it.copy(message = str(R.string.update_install_failed, error.message.orEmpty())) }
+                }
+        }
+    }
+
+    fun updateUpdateInstallMethod(method: UpdateInstallMethod) {
+        updateSettings { it.copy(updateInstallMethod = method.value) }
+    }
+
+    fun updateClipboardAutoDetect(enabled: Boolean) {
+        updateSettings { it.copy(autoDetectClipboard = enabled) }
+    }
+
+    fun updateAutoCheckUpdateOnStartup(enabled: Boolean) {
+        updateSettings { it.copy(autoCheckUpdateOnStartup = enabled) }
     }
 }

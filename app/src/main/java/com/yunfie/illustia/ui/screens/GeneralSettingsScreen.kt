@@ -200,6 +200,13 @@ fun GeneralSettingsScreen(
                         )
                         DividerLine()
                         SettingSwitchRow(
+                            title = stringResource(R.string.general_clipboard_auto_detect),
+                            checked = state.settings.autoDetectClipboard,
+                            onCheckedChange = viewModel::updateClipboardAutoDetect,
+                            summary = stringResource(R.string.general_clipboard_auto_detect_desc),
+                        )
+                        DividerLine()
+                        SettingSwitchRow(
                             title = stringResource(R.string.general_secure),
                             checked = state.settings.secureWindow,
                             onCheckedChange = viewModel::updateSecureWindow,

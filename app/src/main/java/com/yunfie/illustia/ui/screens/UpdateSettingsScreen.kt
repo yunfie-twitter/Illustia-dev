@@ -2,7 +2,6 @@ package com.yunfie.illustia.ui.screens
 
 import android.content.Intent
 import android.net.Uri
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -22,12 +21,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yunfie.illustia.IllustiaUiState
@@ -41,7 +37,9 @@ import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
 import com.yunfie.illustia.ui.components.Section
 import com.yunfie.illustia.ui.components.SettingLinkRow
 import com.yunfie.illustia.ui.components.SettingRow
+import com.yunfie.illustia.ui.components.SettingSwitchRow
 import com.yunfie.illustia.updater.UpdateCheckState
+import com.yunfie.illustia.updater.UpdateInstallMethod
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
@@ -51,36 +49,37 @@ import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
-import top.yukonga.miuix.kmp.squircle.squircleSurface
+import top.yukonga.miuix.kmp.preference.OverlayDropdownPreference
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-private const val FDROID_URL = "https://yunfi.f5.si/Illustia-dev/repo"
-
 @Composable
-fun AboutScreen(
+fun UpdateSettingsScreen(
     state: IllustiaUiState,
     viewModel: IllustiaViewModel,
     onBack: () -> Unit,
-    onOpenUpdateSettings: (() -> Unit)? = null,
 ) {
     PredictiveBackGestureHandler(onBack = onBack)
+    val scrollBehavior = MiuixScrollBehavior()
     val context = LocalContext.current
     val updateState by viewModel.updateCheckState.collectAsStateWithLifecycle()
-    val appVersion =
-        remember {
-            runCatching {
-                val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-                packageInfo.versionName
-            }.getOrNull() ?: "1.0.0"
-        }
+    val isShizukuAvailable = remember { viewModel.appUpdaterRepository.isShizukuAvailable() }
+    val isShizukuGranted = remember { viewModel.appUpdaterRepository.isShizukuPermissionGranted() }
+    val currentVersionName = remember { viewModel.appUpdaterRepository.getCurrentVersionName() }
 
-    val scrollBehavior = MiuixScrollBehavior()
+    val installMethods =
+        listOf(
+            stringResource(R.string.update_method_standard),
+            stringResource(R.string.update_method_shizuku),
+        )
+    val selectedInstallIndex =
+        if (state.settings.updateInstallMethod == UpdateInstallMethod.SHIZUKU.value) 1 else 0
+
     Scaffold(
         containerColor = MiuixTheme.colorScheme.surface,
         topBar = {
             TopAppBar(
-                title = stringResource(R.string.about_title),
-                largeTitle = stringResource(R.string.about_title),
+                title = stringResource(R.string.update_settings_title),
+                largeTitle = stringResource(R.string.update_settings_title),
                 scrollBehavior = scrollBehavior,
                 navigationIcon = {
                     HeaderIcon(MiuixIcons.Back, onClick = onBack)
@@ -103,60 +102,67 @@ fun AboutScreen(
                 ),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
-            // アプリアイコン + バージョン
+            // インストール設定セクション
             item {
-                Column(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(8.dp),
-                ) {
-                    Box(
-                        modifier =
-                            Modifier
-                                .size(96.dp)
-                                .squircleSurface(
-                                    color = MiuixTheme.colorScheme.surfaceContainerHigh,
-                                    cornerRadius = 24.dp,
-                                ),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Image(
-                            painter = painterResource(R.mipmap.ic_launcher_foreground),
-                            contentDescription = stringResource(R.string.app_name),
-                            modifier = Modifier.fillMaxSize(),
-                            contentScale = ContentScale.Fit,
+                Section(stringResource(R.string.update_section_install)) {
+                    ElevatedPanel {
+                        OverlayDropdownPreference(
+                            title = stringResource(R.string.update_install_method),
+                            summary =
+                                when (selectedInstallIndex) {
+                                    1 -> stringResource(R.string.update_method_shizuku_desc)
+                                    else -> stringResource(R.string.update_method_standard_desc)
+                                },
+                            items = installMethods,
+                            selectedIndex = selectedInstallIndex,
+                            onSelectedIndexChange = { index ->
+                                val method =
+                                    if (index == 1) UpdateInstallMethod.SHIZUKU else UpdateInstallMethod.STANDARD_APK
+                                viewModel.updateUpdateInstallMethod(method)
+                            },
+                        )
+
+                        if (selectedInstallIndex == 1) {
+                            DividerLine()
+                            SettingRow(
+                                title = "Shizuku",
+                                summary =
+                                    when {
+                                        !isShizukuAvailable -> stringResource(R.string.update_shizuku_not_running)
+                                        !isShizukuGranted -> stringResource(R.string.update_shizuku_permission_required)
+                                        else -> stringResource(R.string.update_shizuku_available)
+                                    },
+                            ) {
+                                if (isShizukuAvailable && !isShizukuGranted) {
+                                    Button(
+                                        onClick = { viewModel.appUpdaterRepository.requestShizukuPermission() },
+                                        colors = ButtonDefaults.buttonColorsPrimary(),
+                                        insideMargin = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                    ) {
+                                        Text("許可", color = MiuixTheme.colorScheme.onPrimary)
+                                    }
+                                }
+                            }
+                        }
+
+                        DividerLine()
+                        SettingSwitchRow(
+                            title = stringResource(R.string.update_auto_check_startup),
+                            summary = stringResource(R.string.update_auto_check_startup_desc),
+                            checked = state.settings.autoCheckUpdateOnStartup,
+                            onCheckedChange = viewModel::updateAutoCheckUpdateOnStartup,
                         )
                     }
-                    Text(
-                        text = stringResource(R.string.app_name),
-                        color = MiuixTheme.colorScheme.onBackground,
-                        style = MiuixTheme.textStyles.title1,
-                        fontWeight = FontWeight.Black,
-                    )
-                    Text(
-                        text = stringResource(R.string.about_version, appVersion),
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                        style = MiuixTheme.textStyles.body2,
-                    )
-                    Text(
-                        text = stringResource(R.string.about_tagline),
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.6f),
-                        style = MiuixTheme.textStyles.footnote1,
-                        textAlign = TextAlign.Center,
-                    )
                 }
             }
 
-            // アプリ内アップデーター
+            // アップデートの確認セクション
             item {
-                Section(stringResource(R.string.update_in_app_updater)) {
+                Section(stringResource(R.string.update_section_check)) {
                     ElevatedPanel {
                         SettingRow(
                             title = stringResource(R.string.about_version_label),
-                            summary = appVersion,
+                            summary = currentVersionName,
                         ) {
                             Button(
                                 onClick = { viewModel.checkForUpdates(silent = false) },
@@ -342,55 +348,13 @@ fun AboutScreen(
                                 // No action needed
                             }
                         }
-
-                        if (onOpenUpdateSettings != null) {
-                            DividerLine()
-                            SettingLinkRow(
-                                title = stringResource(R.string.update_settings_title),
-                                summary = stringResource(R.string.update_settings_summary),
-                                onClick = onOpenUpdateSettings,
-                            )
-                        }
                     }
                 }
             }
 
-            // 情報
-            item {
-                Section(stringResource(R.string.about_section_info)) {
-                    ElevatedPanel(contentPadding = PaddingValues(0.dp)) {
-                        SettingRow(stringResource(R.string.about_version_label), appVersion) {}
-                        DividerLine()
-                        SettingRow(stringResource(R.string.about_supported_os), "Android 7.1+") {}
-                        DividerLine()
-                        SettingRow(stringResource(R.string.about_license), stringResource(R.string.about_open_source)) {
-                            Text(
-                                "GPLv3",
-                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                                fontWeight = FontWeight.Bold,
-                                style = MiuixTheme.textStyles.footnote1,
-                            )
-                        }
-                    }
-                }
-            }
-
-            // リンク
             item {
                 Section(stringResource(R.string.about_section_links)) {
-                    ElevatedPanel(contentPadding = PaddingValues(0.dp)) {
-                        SettingLinkRow(stringResource(R.string.about_fdroid)) {
-                            runCatching {
-                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(FDROID_URL)))
-                            }
-                        }
-                        DividerLine()
-                        SettingLinkRow(stringResource(R.string.about_pixiv)) {
-                            runCatching {
-                                context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.pixiv.net/")))
-                            }
-                        }
-                        DividerLine()
+                    ElevatedPanel {
                         SettingLinkRow(stringResource(R.string.update_view_on_github)) {
                             runCatching {
                                 context.startActivity(
@@ -402,48 +366,6 @@ fun AboutScreen(
                             }
                         }
                     }
-                }
-            }
-
-            // 使用ライブラリ
-            item {
-                Section(stringResource(R.string.about_section_libraries)) {
-                    ElevatedPanel {
-                        listOf(
-                            "Jetpack Compose" to "Google",
-                            "Miuix KMP" to "yukonga",
-                            "Coil 3" to "Coil Contributors",
-                            "OkHttp" to "Square",
-                            "kotlinx.serialization" to "JetBrains",
-                            "Shizuku" to "RikkaApps",
-                        ).forEachIndexed { index, (lib, author) ->
-                            if (index > 0) DividerLine()
-                            SettingRow(lib, author) {}
-                        }
-                    }
-                }
-            }
-
-            item {
-                Column(
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(4.dp),
-                ) {
-                    Text(
-                        stringResource(R.string.about_disclaimer),
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.6f),
-                        style = MiuixTheme.textStyles.footnote1,
-                        textAlign = TextAlign.Center,
-                    )
-                    Text(
-                        "Developed with ❤️ for Art",
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary.copy(alpha = 0.6f),
-                        style = MiuixTheme.textStyles.footnote1,
-                    )
                 }
             }
         }

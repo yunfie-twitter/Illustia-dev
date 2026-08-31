@@ -158,6 +158,9 @@ internal fun readFromDataStore(
         pallaSyncEnabled = preferences[PALLA_SYNC_ENABLED] ?: false,
         pallaSyncServerUrl = preferences[PALLA_SYNC_SERVER_URL] ?: "https://api.yunfi.f5.si",
         sendTelemetry = preferences[SEND_TELEMETRY] ?: false,
+        autoDetectClipboard = preferences[AUTO_DETECT_CLIPBOARD] ?: false,
+        updateInstallMethod = preferences[UPDATE_INSTALL_METHOD] ?: "standard_apk",
+        autoCheckUpdateOnStartup = preferences[AUTO_CHECK_UPDATE_ON_STARTUP] ?: false,
     )
 }
 
@@ -422,6 +425,9 @@ internal fun writeToDataStore(
     preferences[PALLA_SYNC_ENABLED] = settings.pallaSyncEnabled
     preferences[PALLA_SYNC_SERVER_URL] = settings.pallaSyncServerUrl
     preferences[SEND_TELEMETRY] = settings.sendTelemetry
+    preferences[AUTO_DETECT_CLIPBOARD] = settings.autoDetectClipboard
+    preferences[UPDATE_INSTALL_METHOD] = settings.updateInstallMethod
+    preferences[AUTO_CHECK_UPDATE_ON_STARTUP] = settings.autoCheckUpdateOnStartup
 }
 
 internal fun writeSensitiveSettings(

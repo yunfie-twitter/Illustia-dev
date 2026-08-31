@@ -28,6 +28,7 @@ serialization = "1.11.0"
 navigation3 = "1.1.4"
 biometric = "1.4.0-alpha07"
 miuix = "0.9.3"
+shizuku = "13.1.5"
 kotest = "6.2.2"
 junit4 = "4.13.2"
 androidx-test-core = "1.7.0"
@@ -75,6 +76,8 @@ miuix-preference = { module = "top.yukonga.miuix.kmp:miuix-preference-android", 
 miuix-icons = { module = "top.yukonga.miuix.kmp:miuix-icons-android", version.ref = "miuix" }
 miuix-squircle = { module = "top.yukonga.miuix.kmp:miuix-squircle-android", version.ref = "miuix" }
 miuix-navigation3-ui = { module = "top.yukonga.miuix.kmp:miuix-navigation3-ui-android", version.ref = "miuix" }
+shizuku-api = { module = "dev.rikka.shizuku:api", version.ref = "shizuku" }
+shizuku-provider = { module = "dev.rikka.shizuku:provider", version.ref = "shizuku" }
 kotest-runner = { module = "io.kotest:kotest-runner-junit5", version.ref = "kotest" }
 kotest-assertions = { module = "io.kotest:kotest-assertions-core", version.ref = "kotest" }
 kotest-property = { module = "io.kotest:kotest-property", version.ref = "kotest" }

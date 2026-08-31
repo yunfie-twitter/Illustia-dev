@@ -401,6 +401,7 @@ class MainActivity : FragmentActivity() {
     }
 
     private fun openPixivUrlFromClipboardIfNeeded() {
+        if (!viewModel.uiState.value.settings.autoDetectClipboard) return
         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         val text =
             runCatching {

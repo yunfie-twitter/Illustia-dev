@@ -26,4 +26,5 @@ enum class IllustiaNavigationRequest {
     ExperimentalSettings,
     PallaSyncSettings,
     PallaSyncDevices,
+    UpdateSettings,
 }

@@ -398,6 +398,10 @@ abstract class IllustiaLibraryNavigationModule(
         _navigationRequests.tryEmit(IllustiaNavigationRequest.DataSettings)
     }
 
+    fun openUpdateSettings() {
+        _navigationRequests.tryEmit(IllustiaNavigationRequest.UpdateSettings)
+    }
+
     fun openPallaSyncSettings() {
         _navigationRequests.tryEmit(IllustiaNavigationRequest.PallaSyncSettings)
     }

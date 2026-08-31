@@ -165,6 +165,8 @@ internal sealed interface AppRoute : NavKey {
         val deviceId: String,
         val deviceName: String,
     ) : AppRoute
+
+    data object UpdateSettings : AppRoute
 }
 
 internal data class DetailEntrySnapshot(
