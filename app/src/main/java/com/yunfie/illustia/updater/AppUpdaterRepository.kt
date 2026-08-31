@@ -31,7 +31,7 @@ class AppUpdaterRepository(
         runCatching {
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
             packageInfo.versionName.orEmpty()
-        }.getOrNull()?.ifBlank { "5.5.2" } ?: "5.5.2"
+        }.getOrNull()?.ifBlank { "5.5.4" } ?: "5.5.4"
 
     suspend fun fetchLatestRelease(): Result<AppReleaseInfo?> =
         withContext(Dispatchers.IO) {
@@ -189,7 +189,7 @@ class AppUpdaterRepository(
         }
 
     private fun installViaStandardIntent(apkFile: File) {
-        val uri = FileProvider.getUriForFile(context, ".fileprovider", apkFile)
+        val uri = FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", apkFile)
         val intent =
             Intent(Intent.ACTION_VIEW).apply {
                 setDataAndType(uri, "application/vnd.android.package-archive")

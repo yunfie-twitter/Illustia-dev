@@ -739,6 +739,9 @@ abstract class IllustiaViewModelFoundation(
 
     fun updateUpdateInstallMethod(method: UpdateInstallMethod) {
         updateSettings { it.copy(updateInstallMethod = method.value) }
+        if (method == UpdateInstallMethod.SHIZUKU) {
+            appUpdaterRepository.requestShizukuPermission()
+        }
     }
 
     fun updateClipboardAutoDetect(enabled: Boolean) {
