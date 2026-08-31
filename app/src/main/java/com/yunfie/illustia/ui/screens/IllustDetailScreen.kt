@@ -306,6 +306,7 @@ fun IllustDetailScreen(
             }
         },
     ) { scaffoldPadding ->
+        val statusBarTopPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
         Box(modifier = Modifier.fillMaxSize()) {
             Surface(
                 modifier = Modifier.fillMaxSize().padding(bottom = scaffoldPadding.calculateBottomPadding().coerceAtLeast(0.dp)),
@@ -315,6 +316,7 @@ fun IllustDetailScreen(
                     isRefreshing = isRefreshing,
                     onRefresh = { isRefreshing = true },
                     pullToRefreshState = pullToRefreshState,
+                    contentPadding = PaddingValues(top = statusBarTopPadding),
                     modifier = Modifier.fillMaxSize(),
                 ) {
                     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
