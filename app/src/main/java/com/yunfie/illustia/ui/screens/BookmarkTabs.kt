@@ -64,7 +64,6 @@ import com.yunfie.illustia.ui.components.adaptiveProfileGridColumns
 import com.yunfie.illustia.ui.components.miuixClickable
 import com.yunfie.illustia.ui.components.overlayActionButtonColors
 import com.yunfie.illustia.ui.components.profileGridContentPadding
-import com.yunfie.illustia.ui.components.rememberAdaptiveGridImageQuality
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.Card
@@ -334,8 +333,6 @@ internal fun BookmarkMainTab(
     scrollBehavior: ScrollBehavior,
 ) {
     val gridState = viewModel.bookmarkMainGridState
-    val columnCount = adaptiveIllustColumns(settings)
-    val adaptiveImageQuality = rememberAdaptiveGridImageQuality(gridState, columnCount)
     PullToRefresh(
         isRefreshing = loadState == LoadState.Loading && bookmarkItems.isNotEmpty(),
         onRefresh = { viewModel.refreshBookmarks() },
@@ -349,7 +346,7 @@ internal fun BookmarkMainTab(
         )
         LazyVerticalGrid(
             state = gridState,
-            columns = GridCells.Fixed(columnCount),
+            columns = GridCells.Fixed(adaptiveIllustColumns(settings)),
             modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 8.dp, bottom = 24.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -377,7 +374,6 @@ internal fun BookmarkMainTab(
                     onLongClick = onLongClick,
                     highQualityImages = feedHighQuality,
                     showAiBadge = showAiBadge,
-                    dynamicImageQuality = adaptiveImageQuality.takeIf { settings.feedPreviewQuality == "dynamic" },
                 )
             }
             if (!settings.autoLoadMore && chrome.bookmarkNextUrl != null) {
@@ -404,8 +400,6 @@ internal fun BookmarkTimelineTab(
     scrollBehavior: ScrollBehavior,
 ) {
     val gridState = viewModel.bookmarkTimelineGridState
-    val columnCount = adaptiveIllustColumns(settings)
-    val adaptiveImageQuality = rememberAdaptiveGridImageQuality(gridState, columnCount)
     PullToRefresh(
         isRefreshing = loadState == LoadState.Loading && timelineItems.isNotEmpty(),
         onRefresh = { viewModel.refreshTimeline() },
@@ -419,7 +413,7 @@ internal fun BookmarkTimelineTab(
         )
         LazyVerticalGrid(
             state = gridState,
-            columns = GridCells.Fixed(columnCount),
+            columns = GridCells.Fixed(adaptiveIllustColumns(settings)),
             modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 8.dp, bottom = 24.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -447,7 +441,6 @@ internal fun BookmarkTimelineTab(
                     onLongClick = onLongClick,
                     highQualityImages = feedHighQuality,
                     showAiBadge = showAiBadge,
-                    dynamicImageQuality = adaptiveImageQuality.takeIf { settings.feedPreviewQuality == "dynamic" },
                 )
             }
             if (!settings.autoLoadMore && chrome.timelineNextUrl != null) {

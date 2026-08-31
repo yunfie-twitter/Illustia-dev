@@ -1,5 +1,50 @@
-# Compose
+# ---------------------------------------------------------------------------
+# General Attributes & Line Numbers
+# ---------------------------------------------------------------------------
+-keepattributes *Annotation*, InnerClasses, EnclosingMethod, Signature, SourceFile, LineNumberTable
+
+# ---------------------------------------------------------------------------
+# Kotlin Objects, Companions, Singletons & Enums
+# ---------------------------------------------------------------------------
+-keepclasseswithmembers class * {
+    public static final ** INSTANCE;
+}
+
+-keepclasseswithmembers class * {
+    public static final ** Companion;
+}
+
+-keepclassmembers enum * {
+    public static **[] values();
+    public static ** valueOf(java.lang.String);
+}
+
+-keep class kotlin.jvm.internal.DefaultConstructorMarker { *; }
+
+# ---------------------------------------------------------------------------
+# Jetpack Compose
+# ---------------------------------------------------------------------------
 -keepclassmembers class * extends androidx.compose.runtime.snapshots.SnapshotState { *; }
+-keepclassmembers class * implements androidx.compose.runtime.State { *; }
+-keep class **.ComposableSingletons$* { *; }
+-keepclassmembers class **.ComposableSingletons$* {
+    public static final ** INSTANCE;
+    public static final ** lambda-*;
+    public static final ** lambda$*;
+    *;
+}
+-keep class androidx.compose.runtime.internal.ComposableLambdaImpl { *; }
+-keep class androidx.compose.runtime.internal.ComposableLambda { *; }
+
+# ---------------------------------------------------------------------------
+# Miuix UI Library
+# ---------------------------------------------------------------------------
+-keep class top.yukonga.miuix.kmp.** { *; }
+-keepclassmembers class top.yukonga.miuix.kmp.** {
+    public static final ** INSTANCE;
+    *;
+}
+-dontwarn top.yukonga.miuix.kmp.**
 
 # Coil
 -dontwarn coil3.**

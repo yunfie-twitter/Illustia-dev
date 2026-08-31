@@ -26,14 +26,12 @@ import com.yunfie.illustia.R
 import com.yunfie.illustia.RecommendedTagTile
 import com.yunfie.illustia.isMutedByTags
 import com.yunfie.illustia.models.Illust
-import com.yunfie.illustia.performance.imageUrlFor
 import com.yunfie.illustia.ui.components.IllustCard
 import com.yunfie.illustia.ui.components.PrefetchPixivImages
 import com.yunfie.illustia.ui.components.SectionHeader
 import com.yunfie.illustia.ui.components.TagTile
 import com.yunfie.illustia.ui.components.adaptiveMainNavigationContentPadding
 import com.yunfie.illustia.ui.components.adaptiveProfileGridColumns
-import com.yunfie.illustia.ui.components.rememberAdaptiveGridImageQuality
 import com.yunfie.illustia.visibleWithMutedTagsVisible
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -45,29 +43,13 @@ internal fun BrowseArea(
     showHeader: Boolean = false,
     onIllustSelected: ((Illust) -> Unit)? = null,
 ) {
-    val gridState = viewModel.searchBrowseGridState
-    val columnCount = adaptiveProfileGridColumns()
-    val adaptiveImageQuality = rememberAdaptiveGridImageQuality(gridState, columnCount)
     val feedHighQuality = state.settings.useHighQualityFeedImages
     val showAiBadge = remember(state.settings.showAiBadge) { state.settings.showAiBadge }
     val browsePrefetchUrls =
-        remember(
-            state.settings.viewHistory,
-            state.homeItems,
-            state.searchItems,
-            feedHighQuality,
-            state.settings.feedPreviewQuality,
-            adaptiveImageQuality,
-        ) {
+        remember(state.settings.viewHistory, state.homeItems, state.searchItems, feedHighQuality) {
             val historyUrls =
                 state.settings.viewHistory.visibleWithMutedTagsVisible(state.settings).take(8).map {
-                    if (state.settings.feedPreviewQuality == "dynamic") {
-                        it.imageUrlFor(adaptiveImageQuality)
-                    } else if (feedHighQuality) {
-                        it.previewUrl
-                    } else {
-                        it.thumbnailUrl
-                    }
+                    if (feedHighQuality) it.previewUrl else it.thumbnailUrl
                 }
             val tagUrls =
                 sequenceOf(state.homeItems.asSequence(), state.searchItems.asSequence())
@@ -78,11 +60,11 @@ internal fun BrowseArea(
                     .toList()
             historyUrls + tagUrls
         }
-    PrefetchPixivImages(browsePrefetchUrls, enabled = state.settings.prefetchImages, isScrolling = gridState.isScrollInProgress)
+    PrefetchPixivImages(browsePrefetchUrls, enabled = state.settings.prefetchImages)
 
     LazyVerticalGrid(
-        state = gridState,
-        columns = GridCells.Fixed(columnCount),
+        state = viewModel.searchBrowseGridState,
+        columns = GridCells.Fixed(adaptiveProfileGridColumns()),
         modifier = Modifier.fillMaxSize(),
         contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 0.dp, bottom = adaptiveMainNavigationContentPadding()),
         horizontalArrangement = Arrangement.spacedBy(12.dp),
@@ -128,7 +110,6 @@ internal fun BrowseArea(
                                 onClick = { onIllustSelected?.invoke(illust) ?: viewModel.openIllust(illust) },
                                 highQualityImages = feedHighQuality,
                                 showAiBadge = showAiBadge,
-                                dynamicImageQuality = adaptiveImageQuality.takeIf { state.settings.feedPreviewQuality == "dynamic" },
                                 isMutedByTag = illust.isMutedByTags(state.settings),
                             )
                         }

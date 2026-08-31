@@ -12,7 +12,6 @@ import com.yunfie.illustia.models.SearchDuration
 import com.yunfie.illustia.models.SearchSort
 import com.yunfie.illustia.models.SearchTarget
 import com.yunfie.illustia.models.SearchWorkType
-import com.yunfie.illustia.performance.DevicePerformance
 import com.yunfie.illustia.settings.AppHapticMode
 import com.yunfie.illustia.settings.SettingsStore
 import com.yunfie.illustia.settings.isDynamicColorAvailable
@@ -38,7 +37,6 @@ abstract class IllustiaSettingsSecurityModule(
         if (!deferredStartupDataStarted.compareAndSet(false, true)) return
 
         viewModelScope.launch(Dispatchers.IO) {
-            delay(DevicePerformance.profile.deferredDatabaseLoadDelayMs)
             val fullSettings = repository.readSettings()
             val normalizedFullSettings =
                 if (fullSettings.useDynamicColor && !isDynamicColorAvailable()) {
@@ -143,12 +141,6 @@ abstract class IllustiaSettingsSecurityModule(
 
     fun updateHapticMode(value: String) {
         updateSettings { it.copy(hapticMode = value) }
-    }
-
-    fun updatePerformanceMode(value: String) {
-        DevicePerformance.setMode(value)
-        val normalized = DevicePerformance.mode.storedValue
-        updateSettings { it.copy(performanceMode = normalized) }
     }
 
     fun updateHapticsEnabled(enabled: Boolean) {

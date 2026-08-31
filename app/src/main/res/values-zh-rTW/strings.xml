@@ -213,11 +213,6 @@
     <string name="general_dynamic_color">動態顏色</string>
     <string name="general_dynamic_color_desc">將裝置系統調色板應用到應用程式</string>
     <string name="general_dynamic_color_unsupported_desc">動態顏色在此裝置上不可用</string>
-    <string name="general_performance_mode">效能模式</string>
-    <string name="general_performance_mode_desc">選擇裝置負載與畫質之間的平衡</string>
-    <string name="general_performance_mode_auto">自動</string>
-    <string name="general_performance_mode_lightweight">效能優先</string>
-    <string name="general_performance_mode_quality">畫質優先</string>
     <string name="general_seed_color">種子顏色</string>
     <string name="general_seed_color_dialog_title">種子顏色</string>
     <string name="general_seed_color_dialog_desc">選擇動態顏色關閉時使用的基色</string>
@@ -319,7 +314,6 @@
     <string name="image_proxy_title">Pixiv 圖像代理</string>
     <string name="image_proxy_desc">將圖像域替換為選定的公共實例</string>
     <string name="image_quality_high">高</string>
-    <string name="image_quality_dynamic">動態（推薦）</string>
     <string name="image_quality_medium">中</string>
     <string name="image_quality_low">低</string>
     <string name="pixiv_network_mode_standard">標準</string>

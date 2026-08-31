@@ -28,7 +28,6 @@ import com.yunfie.illustia.R
 import com.yunfie.illustia.models.Illust
 import com.yunfie.illustia.models.LoadState
 import com.yunfie.illustia.models.UserProfile
-import com.yunfie.illustia.performance.imageUrlFor
 import com.yunfie.illustia.settings.AppSettings
 import com.yunfie.illustia.ui.components.AutoLoadMoreEffect
 import com.yunfie.illustia.ui.components.EmptyState
@@ -38,7 +37,6 @@ import com.yunfie.illustia.ui.components.PixivImage
 import com.yunfie.illustia.ui.components.PrefetchPixivImages
 import com.yunfie.illustia.ui.components.StateBanner
 import com.yunfie.illustia.ui.components.adaptiveIllustColumns
-import com.yunfie.illustia.ui.components.rememberAdaptiveGridImageQuality
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
@@ -92,24 +90,15 @@ internal fun FeedTabContent(
     val feedHighQuality = settings.useHighQualityFeedImages
     val showAiBadge = remember(settings.showAiBadge) { settings.showAiBadge }
     val gridState = viewModel.homeFeedGridState
-    val columnCount = adaptiveIllustColumns(settings)
-    val adaptiveImageQuality = rememberAdaptiveGridImageQuality(gridState, columnCount)
     val prefetchUrls =
-        remember(items, feedHighQuality, settings.feedPreviewQuality, adaptiveImageQuality) {
+        remember(items, feedHighQuality) {
             items
                 .asSequence()
                 .take(16)
-                .map {
-                    if (settings.feedPreviewQuality == "dynamic") {
-                        it.imageUrlFor(adaptiveImageQuality)
-                    } else if (feedHighQuality) {
-                        it.previewUrl
-                    } else {
-                        it.thumbnailUrl
-                    }
-                }.toList()
+                .map { if (feedHighQuality) it.previewUrl else it.thumbnailUrl }
+                .toList()
         }
-    PrefetchPixivImages(prefetchUrls, enabled = settings.prefetchImages, isScrolling = gridState.isScrollInProgress)
+    PrefetchPixivImages(prefetchUrls, enabled = settings.prefetchImages)
     AutoLoadMoreEffect(
         enabled = settings.autoLoadMore,
         nextUrl = nextUrl,
@@ -124,7 +113,7 @@ internal fun FeedTabContent(
     ) {
         LazyVerticalGrid(
             state = gridState,
-            columns = GridCells.Fixed(columnCount),
+            columns = GridCells.Fixed(adaptiveIllustColumns(settings)),
             modifier =
                 Modifier
                     .fillMaxSize()
@@ -165,7 +154,6 @@ internal fun FeedTabContent(
                     onLongClick = onLongClick,
                     highQualityImages = feedHighQuality,
                     showAiBadge = showAiBadge,
-                    dynamicImageQuality = adaptiveImageQuality.takeIf { settings.feedPreviewQuality == "dynamic" },
                 )
             }
 
@@ -198,24 +186,15 @@ internal fun FollowingTabContent(
     val feedHighQuality = settings.useHighQualityFeedImages
     val showAiBadge = remember(settings.showAiBadge) { settings.showAiBadge }
     val gridState = viewModel.homeTimelineGridState
-    val columnCount = adaptiveIllustColumns(settings)
-    val adaptiveImageQuality = rememberAdaptiveGridImageQuality(gridState, columnCount)
     val prefetchUrls =
-        remember(items, feedHighQuality, settings.feedPreviewQuality, adaptiveImageQuality) {
+        remember(items, feedHighQuality) {
             items
                 .asSequence()
                 .take(16)
-                .map {
-                    if (settings.feedPreviewQuality == "dynamic") {
-                        it.imageUrlFor(adaptiveImageQuality)
-                    } else if (feedHighQuality) {
-                        it.previewUrl
-                    } else {
-                        it.thumbnailUrl
-                    }
-                }.toList()
+                .map { if (feedHighQuality) it.previewUrl else it.thumbnailUrl }
+                .toList()
         }
-    PrefetchPixivImages(prefetchUrls, enabled = settings.prefetchImages, isScrolling = gridState.isScrollInProgress)
+    PrefetchPixivImages(prefetchUrls, enabled = settings.prefetchImages)
     AutoLoadMoreEffect(
         enabled = settings.autoLoadMore,
         nextUrl = nextUrl,
@@ -230,7 +209,7 @@ internal fun FollowingTabContent(
     ) {
         LazyVerticalGrid(
             state = gridState,
-            columns = GridCells.Fixed(columnCount),
+            columns = GridCells.Fixed(adaptiveIllustColumns(settings)),
             modifier =
                 Modifier
                     .fillMaxSize()
@@ -271,7 +250,6 @@ internal fun FollowingTabContent(
                     onLongClick = onLongClick,
                     highQualityImages = feedHighQuality,
                     showAiBadge = showAiBadge,
-                    dynamicImageQuality = adaptiveImageQuality.takeIf { settings.feedPreviewQuality == "dynamic" },
                 )
             }
 

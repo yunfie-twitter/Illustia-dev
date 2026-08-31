@@ -70,7 +70,7 @@ fun NovelScreen(
                 .map { it.coverUrl }
                 .toList()
         }
-    PrefetchPixivImages(prefetchUrls, enabled = settings.prefetchImages, isScrolling = gridState.isScrollInProgress)
+    PrefetchPixivImages(prefetchUrls, enabled = settings.prefetchImages)
     AutoLoadMoreEffect(
         enabled = settings.autoLoadMore,
         nextUrl = nextUrl,

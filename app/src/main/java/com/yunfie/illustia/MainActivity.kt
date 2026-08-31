@@ -47,7 +47,6 @@ import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.metrics.performance.JankStats
 import coil3.SingletonImageLoader
 import coil3.network.httpHeaders
 import coil3.request.ImageRequest
@@ -56,7 +55,6 @@ import coil3.toBitmap
 import com.yunfie.illustia.data.NativeImageAnalysis
 import com.yunfie.illustia.data.proxyPixivImageUrl
 import com.yunfie.illustia.nativebridge.NativeIntentRouter
-import com.yunfie.illustia.performance.DevicePerformance
 import com.yunfie.illustia.platform.PlatformCapabilities
 import com.yunfie.illustia.settings.AppFont
 import com.yunfie.illustia.settings.SettingsStore
@@ -83,7 +81,6 @@ class MainActivity : FragmentActivity() {
     }
     private var lastHandledClipboardText: String? = null
     private var appliedRefreshRateHint: Float? = null
-    private var jankStats: JankStats? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         // プライバシーモード ON 時はスプラッシュも電卓アプリ風にする
@@ -97,10 +94,6 @@ class MainActivity : FragmentActivity() {
 
         // core-splashscreen の互換実装を使い、API 25 以降で同じフェードアウトにする。
         splashScreen.setOnExitAnimationListener { splashScreenView ->
-            if (!DevicePerformance.profile.animationsEnabled) {
-                splashScreenView.remove()
-                return@setOnExitAnimationListener
-            }
             android.animation.ObjectAnimator
                 .ofFloat(
                     splashScreenView.view,
@@ -171,13 +164,7 @@ class MainActivity : FragmentActivity() {
                 settings.pixivImageProxyBaseUrl,
             ) {
                 artworkAccent = null
-                if (
-                    !settings.artworkThemeEnabled ||
-                    selectedArtwork == null ||
-                    DevicePerformance.profile.isLowEnd
-                ) {
-                    return@LaunchedEffect
-                }
+                if (!settings.artworkThemeEnabled || selectedArtwork == null) return@LaunchedEffect
                 runCatching {
                     val url = selectedArtwork.previewUrl.ifBlank { selectedArtwork.imageUrl }
                     val request =
@@ -202,12 +189,6 @@ class MainActivity : FragmentActivity() {
             LaunchedEffect(settingsLoaded, settings.secureWindow) {
                 if (!settingsLoaded) return@LaunchedEffect
                 applySecureWindow(settings.secureWindow)
-            }
-
-            LaunchedEffect(settingsLoaded, settings.sendTelemetry) {
-                if (!settingsLoaded) return@LaunchedEffect
-                // The SDK is never initialized for opted-out users.
-                (application as IllustiaApplication).setTelemetryEnabled(settings.sendTelemetry)
             }
 
             // Force FLAG_SECURE while locked so the app is obscured in recents
@@ -306,10 +287,6 @@ class MainActivity : FragmentActivity() {
                 }
             }
         }
-        jankStats =
-            JankStats.createAndTrack(window) { frameData ->
-                DevicePerformance.reportFrame(frameData.isJank)
-            }
         AppShortcutRouter.accept(intent)
         viewModel.handleIncomingIntent(intent)
         enableHandoffIfSupported()
@@ -317,15 +294,11 @@ class MainActivity : FragmentActivity() {
 
     override fun onResume() {
         super.onResume()
-        DevicePerformance.setAppForeground(true)
-        jankStats?.isTrackingEnabled = true
         applyAdaptiveRefreshRateHint()
         openPixivUrlFromClipboardIfNeeded()
     }
 
     override fun onPause() {
-        jankStats?.isTrackingEnabled = false
-        DevicePerformance.setAppForeground(false)
         clearAdaptiveRefreshRateHint()
         super.onPause()
     }

@@ -41,7 +41,6 @@ import com.yunfie.illustia.IllustiaViewModel
 import com.yunfie.illustia.R
 import com.yunfie.illustia.isMutedByTags
 import com.yunfie.illustia.models.LoadState
-import com.yunfie.illustia.performance.imageUrlFor
 import com.yunfie.illustia.settings.AppSettings
 import com.yunfie.illustia.ui.components.AutoLoadMoreEffect
 import com.yunfie.illustia.ui.components.IllustCard
@@ -49,7 +48,6 @@ import com.yunfie.illustia.ui.components.IllustCardSkeleton
 import com.yunfie.illustia.ui.components.PrefetchPixivImages
 import com.yunfie.illustia.ui.components.StateBanner
 import com.yunfie.illustia.ui.components.adaptiveIllustColumns
-import com.yunfie.illustia.ui.components.rememberAdaptiveGridImageQuality
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.map
@@ -266,24 +264,15 @@ private fun RankingGridContent(
     val feedHighQuality = settings.useHighQualityFeedImages
     val showAiBadge = remember(settings.showAiBadge) { settings.showAiBadge }
     val gridState = viewModel.rankingGridState(mode)
-    val columnCount = adaptiveIllustColumns(settings)
-    val adaptiveImageQuality = rememberAdaptiveGridImageQuality(gridState, columnCount)
     val prefetchUrls =
-        remember(items, feedHighQuality, settings.feedPreviewQuality, adaptiveImageQuality) {
+        remember(items, feedHighQuality) {
             items
                 .asSequence()
                 .take(16)
-                .map {
-                    if (settings.feedPreviewQuality == "dynamic") {
-                        it.imageUrlFor(adaptiveImageQuality)
-                    } else if (feedHighQuality) {
-                        it.previewUrl
-                    } else {
-                        it.thumbnailUrl
-                    }
-                }.toList()
+                .map { if (feedHighQuality) it.previewUrl else it.thumbnailUrl }
+                .toList()
         }
-    PrefetchPixivImages(prefetchUrls, enabled = settings.prefetchImages, isScrolling = gridState.isScrollInProgress)
+    PrefetchPixivImages(prefetchUrls, enabled = settings.prefetchImages)
 
     PullToRefresh(
         isRefreshing = loadState == com.yunfie.illustia.models.LoadState.Loading && items.isNotEmpty(),
@@ -292,7 +281,7 @@ private fun RankingGridContent(
     ) {
         LazyVerticalGrid(
             state = gridState,
-            columns = GridCells.Fixed(columnCount),
+            columns = GridCells.Fixed(adaptiveIllustColumns(settings)),
             modifier = Modifier.fillMaxSize().nestedScroll(scrollBehavior.nestedScrollConnection),
             contentPadding =
                 PaddingValues(
@@ -323,7 +312,6 @@ private fun RankingGridContent(
                     onLongClick = onLongClick,
                     highQualityImages = feedHighQuality,
                     showAiBadge = showAiBadge,
-                    dynamicImageQuality = adaptiveImageQuality.takeIf { settings.feedPreviewQuality == "dynamic" },
                     isMutedByTag = illust.isMutedByTags(settings),
                 )
             }

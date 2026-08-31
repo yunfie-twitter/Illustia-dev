@@ -28,7 +28,6 @@ import com.yunfie.illustia.models.UserPreview
 import com.yunfie.illustia.models.UserProfile
 import com.yunfie.illustia.nativebridge.NativeImageStore
 import com.yunfie.illustia.nativebridge.NativeIntentEvent
-import com.yunfie.illustia.performance.DevicePerformance
 import com.yunfie.illustia.settings.AppSettings
 import com.yunfie.illustia.settings.SettingsStore
 import com.yunfie.illustia.settings.SyncedCollectionsSnapshot
@@ -185,7 +184,6 @@ abstract class IllustiaViewModelFoundation(
                 } else {
                     startupSettings
                 }
-            DevicePerformance.setMode(normalizedStartupSettings.performanceMode)
             val shouldLock = normalizedStartupSettings.appLockEnabled && settingsStore.hasPinSet()
             _uiState.update {
                 it.withSettings(normalizedStartupSettings).copy(
@@ -255,7 +253,7 @@ abstract class IllustiaViewModelFoundation(
         val loader = SingletonImageLoader.get(context)
         items
             .asSequence()
-            .take(minOf(settings.smartCacheItemCount.coerceIn(4, 30), DevicePerformance.profile.smartCacheLimit))
+            .take(settings.smartCacheItemCount.coerceIn(4, 30))
             .flatMap { illust ->
                 (
                     illust.mediumImagePages.ifEmpty {

@@ -87,7 +87,6 @@ internal fun readFromDataStore(
                 }.take(MAX_VIEW_HISTORY),
         smoothTransitions = preferences[SMOOTH_TRANSITIONS] ?: true,
         hapticMode = preferences[HAPTIC_MODE] ?: "rich",
-        performanceMode = preferences[PERFORMANCE_MODE] ?: "auto",
         prefetchImages = preferences[PREFETCH_IMAGES] ?: false,
         autoLoadMore = preferences[AUTO_LOAD_MORE] ?: false,
         notchOptimization = preferences[NOTCH_OPTIMIZATION] ?: true,
@@ -117,10 +116,10 @@ internal fun readFromDataStore(
         simultaneousDownloads = preferences[SIMULTANEOUS_DOWNLOADS] ?: 2,
         offlineWifiOnly = preferences[OFFLINE_WIFI_ONLY] ?: true,
         offlineStorageLimitBytes = preferences[OFFLINE_STORAGE_LIMIT_BYTES] ?: DEFAULT_OFFLINE_STORAGE_LIMIT_BYTES,
-        feedPreviewQuality = preferences[FEED_PREVIEW_QUALITY] ?: "dynamic",
-        illustDetailQuality = preferences[ILLUST_DETAIL_QUALITY] ?: "dynamic",
+        feedPreviewQuality = preferences[FEED_PREVIEW_QUALITY] ?: "low",
+        illustDetailQuality = preferences[ILLUST_DETAIL_QUALITY] ?: "high",
         mangaDetailQuality = preferences[MANGA_DETAIL_QUALITY] ?: "low",
-        fullscreenQuality = preferences[FULLSCREEN_QUALITY] ?: "dynamic",
+        fullscreenQuality = preferences[FULLSCREEN_QUALITY] ?: "high",
         mangaReaderMode = preferences[MANGA_READER_MODE] ?: "paged",
         smartCacheEnabled = preferences[SMART_CACHE_ENABLED] ?: false,
         smartCacheWifiOnly = preferences[SMART_CACHE_WIFI_ONLY] ?: true,
@@ -230,7 +229,6 @@ internal fun readFromSharedPreferences(preferences: SharedPreferences): AppSetti
         viewHistory = decodeHistoryIllusts(preferences.getString(KEY_VIEW_HISTORY, "")).take(MAX_VIEW_HISTORY),
         smoothTransitions = preferences.getBoolean(KEY_SMOOTH_TRANSITIONS, true),
         hapticMode = preferences.getString(KEY_HAPTIC_MODE, "rich") ?: "rich",
-        performanceMode = preferences.getString(KEY_PERFORMANCE_MODE, "auto") ?: "auto",
         prefetchImages = preferences.getBoolean(KEY_PREFETCH_IMAGES, false),
         autoLoadMore = preferences.getBoolean("autoLoadMore", false),
         notchOptimization = preferences.getBoolean("notchOptimization", true),
@@ -260,10 +258,10 @@ internal fun readFromSharedPreferences(preferences: SharedPreferences): AppSetti
         simultaneousDownloads = preferences.getInt("simultaneousDownloads", 2),
         offlineWifiOnly = preferences.getBoolean("offlineWifiOnly", true),
         offlineStorageLimitBytes = preferences.getLong("offlineStorageLimitBytes", DEFAULT_OFFLINE_STORAGE_LIMIT_BYTES),
-        feedPreviewQuality = preferences.getString("feedPreviewQuality", "dynamic") ?: "dynamic",
-        illustDetailQuality = preferences.getString("illustDetailQuality", "dynamic") ?: "dynamic",
+        feedPreviewQuality = preferences.getString("feedPreviewQuality", "low") ?: "low",
+        illustDetailQuality = preferences.getString("illustDetailQuality", "high") ?: "high",
         mangaDetailQuality = preferences.getString("mangaDetailQuality", "low") ?: "low",
-        fullscreenQuality = preferences.getString("fullscreenQuality", "dynamic") ?: "dynamic",
+        fullscreenQuality = preferences.getString("fullscreenQuality", "high") ?: "high",
         startupScreen = preferences.getString("startupScreen", "home") ?: "home",
         userProfileBottomSheetEnabled = preferences.getBoolean("userProfileBottomSheetEnabled", false),
         shortsFeedEnabled = preferences.getBoolean("shortsFeedEnabled", false),
@@ -354,7 +352,6 @@ internal fun writeToDataStore(
     preferences.remove(VIEW_HISTORY_JSON)
     preferences[SMOOTH_TRANSITIONS] = settings.smoothTransitions
     preferences[HAPTIC_MODE] = settings.hapticMode
-    preferences[PERFORMANCE_MODE] = settings.performanceMode
     preferences[PREFETCH_IMAGES] = settings.prefetchImages
     preferences[AUTO_LOAD_MORE] = settings.autoLoadMore
     preferences[NOTCH_OPTIMIZATION] = settings.notchOptimization

@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -23,7 +22,6 @@ import coil3.size.Precision
 import coil3.size.Scale
 import coil3.toBitmap
 import com.yunfie.illustia.data.proxyPixivImageUrl
-import com.yunfie.illustia.performance.DevicePerformance
 
 val PixivImageHeaders =
     NetworkHeaders
@@ -33,6 +31,7 @@ val PixivImageHeaders =
         .build()
 
 private const val ThumbnailDecodeSizePx = 512
+private const val PrefetchDecodeSizePx = 512
 
 @Composable
 fun PixivImage(
@@ -42,41 +41,36 @@ fun PixivImage(
     modifier: Modifier = Modifier,
     crossfade: Boolean = false,
     thumbnail: Boolean = false,
-    requestSizePx: Int? = null,
-    onLoadSuccess: (() -> Unit)? = null,
     onSuccess: ((Bitmap) -> Unit)? = null,
 ) {
     val context = LocalPlatformContext.current
-    val runtimePolicy by DevicePerformance.runtimePolicy.collectAsState()
     val proxyBaseUrl = LocalPixivImageProxyBaseUrl.current
     val effectiveUrl =
         remember(url, proxyBaseUrl) {
             proxyPixivImageUrl(url, proxyBaseUrl)
         }
     val currentOnSuccess by rememberUpdatedState(onSuccess)
-    val currentOnLoadSuccess by rememberUpdatedState(onLoadSuccess)
     val imageRequest =
-        remember(effectiveUrl, contentScale, thumbnail, requestSizePx, runtimePolicy.subtleAnimationsEnabled) {
+        remember(effectiveUrl, thumbnail) {
             ImageRequest
                 .Builder(context)
                 .data(effectiveUrl)
                 .httpHeaders(PixivImageHeaders)
                 .diskCachePolicy(CachePolicy.ENABLED)
                 .memoryCachePolicy(CachePolicy.ENABLED)
-                .crossfade(!thumbnail && crossfade && runtimePolicy.subtleAnimationsEnabled)
+                .crossfade(!thumbnail && crossfade)
                 .listener(
                     onSuccess = { _, result ->
-                        currentOnLoadSuccess?.invoke()
                         runCatching {
                             currentOnSuccess?.invoke(result.image.toBitmap())
                         }
                     },
                 ).apply {
-                    if (thumbnail || requestSizePx != null) {
-                        size(requestSizePx ?: ThumbnailDecodeSizePx)
-                        scale(if (contentScale == ContentScale.Crop) Scale.FILL else Scale.FIT)
+                    if (thumbnail) {
+                        size(ThumbnailDecodeSizePx)
+                        scale(Scale.FILL)
                         precision(Precision.INEXACT)
-                        allowRgb565(thumbnail)
+                        allowRgb565(true)
                     }
                 }.build()
         }
@@ -93,32 +87,24 @@ fun PrefetchPixivImages(
     urls: List<String>,
     enabled: Boolean,
     limit: Int = 12,
-    isScrolling: Boolean = false,
 ) {
     val context = LocalPlatformContext.current
     val proxyBaseUrl = LocalPixivImageProxyBaseUrl.current
-    val performance = DevicePerformance.profile
-    val prefetchAllowed by DevicePerformance.prefetchAllowed.collectAsState()
-    val effectiveLimit =
-        minOf(
-            limit,
-            if (isScrolling) performance.scrollingPrefetchLimit else performance.idlePrefetchLimit,
-        )
     val prefetchUrls =
-        remember(urls, proxyBaseUrl, effectiveLimit) {
+        remember(urls, proxyBaseUrl, limit) {
             urls
                 .asSequence()
                 .filter { it.isNotBlank() }
                 .map { proxyPixivImageUrl(it, proxyBaseUrl) }
                 .distinct()
-                .take(effectiveLimit)
+                .take(limit)
                 .toList()
         }
 
     val activeRequests = remember { mutableMapOf<String, () -> Unit>() }
 
-    LaunchedEffect(enabled, prefetchAllowed, prefetchUrls) {
-        if (!enabled || !prefetchAllowed || prefetchUrls.isEmpty()) {
+    LaunchedEffect(enabled, prefetchUrls) {
+        if (!enabled || prefetchUrls.isEmpty()) {
             activeRequests.values.forEach { cancel -> cancel() }
             activeRequests.clear()
             return@LaunchedEffect
@@ -139,7 +125,7 @@ fun PrefetchPixivImages(
                         .httpHeaders(PixivImageHeaders)
                         .diskCachePolicy(CachePolicy.ENABLED)
                         .memoryCachePolicy(CachePolicy.ENABLED)
-                        .size(performance.prefetchDecodeSizePx)
+                        .size(PrefetchDecodeSizePx)
                         .scale(Scale.FILL)
                         .precision(Precision.INEXACT)
                         .allowRgb565(true)

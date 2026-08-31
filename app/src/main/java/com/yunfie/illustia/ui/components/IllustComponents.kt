@@ -52,9 +52,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.yunfie.illustia.R
 import com.yunfie.illustia.models.Illust
-import com.yunfie.illustia.performance.AdaptiveImageQuality
-import com.yunfie.illustia.performance.DevicePerformance
-import com.yunfie.illustia.performance.imageUrlFor
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
@@ -66,37 +63,33 @@ import top.yukonga.miuix.kmp.utils.PressFeedbackType
 
 @Composable
 fun IllustCardSkeleton(modifier: Modifier = Modifier) {
+    val transition = rememberInfiniteTransition(label = "illustSkeleton")
+    val shimmer =
+        transition.animateFloat(
+            initialValue = -1f,
+            targetValue = 2f,
+            animationSpec =
+                infiniteRepeatable(
+                    animation = tween(durationMillis = 1250, easing = FastOutSlowInEasing),
+                    repeatMode = RepeatMode.Restart,
+                ),
+            label = "illustSkeletonShimmer",
+        )
     val base = MiuixTheme.colorScheme.surfaceContainer
+    val highlight = MiuixTheme.colorScheme.surfaceContainerHigh
+    val shimmerColors = remember(base, highlight) { listOf(base, highlight, base) }
     val shimmerModifier =
-        if (!DevicePerformance.profile.animationsEnabled) {
-            Modifier.background(base)
-        } else {
-            val transition = rememberInfiniteTransition(label = "illustSkeleton")
-            val shimmer =
-                transition.animateFloat(
-                    initialValue = -1f,
-                    targetValue = 2f,
-                    animationSpec =
-                        infiniteRepeatable(
-                            animation = tween(durationMillis = 1250, easing = FastOutSlowInEasing),
-                            repeatMode = RepeatMode.Restart,
+        Modifier.drawWithCache {
+            onDrawBehind {
+                val startX = shimmer.value * size.width
+                drawRect(
+                    brush =
+                        Brush.linearGradient(
+                            colors = shimmerColors,
+                            start = Offset(startX, 0f),
+                            end = Offset(startX + size.width * 0.52f, size.height),
                         ),
-                    label = "illustSkeletonShimmer",
                 )
-            val highlight = MiuixTheme.colorScheme.surfaceContainerHigh
-            val shimmerColors = remember(base, highlight) { listOf(base, highlight, base) }
-            Modifier.drawWithCache {
-                onDrawBehind {
-                    val startX = shimmer.value * size.width
-                    drawRect(
-                        brush =
-                            Brush.linearGradient(
-                                colors = shimmerColors,
-                                start = Offset(startX, 0f),
-                                end = Offset(startX + size.width * 0.52f, size.height),
-                            ),
-                    )
-                }
             }
         }
 
@@ -174,18 +167,15 @@ fun IllustCard(
     showAiBadge: Boolean = true,
     showBookmarkButton: Boolean = true,
     isMutedByTag: Boolean = false,
-    dynamicImageQuality: AdaptiveImageQuality? = null,
 ) {
     val cardPreferences = LocalArtworkCardPreferences.current
     val preferLowDataImages = LocalPreferLowDataImages.current
-    val dynamicListQuality = AdaptiveImageQuality.VERY_LOW.takeIf { dynamicImageQuality != null }
     val previewUrl =
-        remember(illust.id, highQualityImages, preferLowDataImages, dynamicListQuality) {
-            when {
-                preferLowDataImages -> illust.imageUrlFor(AdaptiveImageQuality.VERY_LOW)
-                dynamicListQuality != null -> illust.imageUrlFor(dynamicListQuality)
-                highQualityImages -> illust.previewUrl
-                else -> illust.thumbnailUrl
+        remember(illust.id, highQualityImages, preferLowDataImages) {
+            if (highQualityImages && !preferLowDataImages) {
+                illust.previewUrl
+            } else {
+                illust.thumbnailUrl
             }
         }
     val cardBadgeText =
@@ -195,8 +185,6 @@ fun IllustCard(
 
     IllustCardImpl(
         previewUrl = previewUrl,
-        requestSizePx = dynamicListQuality?.targetPixels,
-        isThumbnail = dynamicListQuality != null || !highQualityImages || preferLowDataImages,
         title = illust.title,
         artistName = illust.artistName,
         tags = illust.tags,
@@ -218,8 +206,6 @@ fun IllustCard(
 @Composable
 private fun IllustCardImpl(
     previewUrl: String,
-    requestSizePx: Int?,
-    isThumbnail: Boolean,
     title: String,
     artistName: String,
     tags: List<String>,
@@ -267,8 +253,6 @@ private fun IllustCardImpl(
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 IllustCardThumbnail(
                     previewUrl = previewUrl,
-                    requestSizePx = requestSizePx,
-                    isThumbnail = isThumbnail,
                     title = title,
                     badgeText = cardBadgeText,
                     isMutedByTag = isMutedByTag,
@@ -323,8 +307,6 @@ private fun IllustCardImpl(
 @Composable
 private fun IllustCardThumbnail(
     previewUrl: String,
-    requestSizePx: Int?,
-    isThumbnail: Boolean,
     title: String,
     badgeText: String?,
     isMutedByTag: Boolean,
@@ -342,9 +324,7 @@ private fun IllustCardThumbnail(
                 contentDescription = title,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize(),
-                crossfade = !isThumbnail,
-                thumbnail = isThumbnail,
-                requestSizePx = requestSizePx,
+                thumbnail = true,
             )
         }
         if (badgeText != null) {

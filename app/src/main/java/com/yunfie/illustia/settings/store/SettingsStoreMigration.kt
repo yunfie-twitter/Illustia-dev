@@ -17,8 +17,8 @@ internal suspend fun migrateSettingsIfNeeded(
     dataStore: DataStore<Preferences>,
     encryptedPreferences: SharedPreferences?,
     legacyPreferences: SharedPreferences,
-    database: () -> IllustiaDatabase,
-    dao: () -> SettingsDao,
+    database: IllustiaDatabase,
+    dao: SettingsDao,
 ) = withContext(Dispatchers.IO) {
     val current =
         dataStore.data
@@ -48,7 +48,7 @@ internal suspend fun migrateSettingsIfNeeded(
         writeToDataStore(preferences, migrated)
     }
     writeSensitiveSettings(sensitivePreferences, migrated)
-    writeRoomSettingsData(database(), dao(), migrated)
+    writeRoomSettingsData(database, dao, migrated)
     legacyPreferences
         .edit()
         .remove(KEY_REFRESH_TOKEN)

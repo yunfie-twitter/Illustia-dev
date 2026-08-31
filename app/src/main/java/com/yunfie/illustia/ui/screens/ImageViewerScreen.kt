@@ -49,8 +49,6 @@ import androidx.compose.ui.unit.dp
 import com.yunfie.illustia.R
 import com.yunfie.illustia.models.Illust
 import com.yunfie.illustia.models.pixiv.UgoiraPlayback
-import com.yunfie.illustia.performance.AdaptiveImageQuality
-import com.yunfie.illustia.performance.imageUrlsFor
 import com.yunfie.illustia.ui.components.PixivImage
 import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
 import kotlinx.coroutines.Job
@@ -109,10 +107,6 @@ fun ImageViewerScreen(
                     illust.imagePages.ifEmpty { listOf(illust.imageUrl) }
                 }
 
-                "dynamic" -> {
-                    illust.imageUrlsFor(AdaptiveImageQuality.MID)
-                }
-
                 else -> {
                     illust.originalImagePages.ifEmpty {
                         illust.imagePages.ifEmpty { listOfNotNull(illust.originalImageUrl ?: illust.imageUrl) }
@@ -120,16 +114,6 @@ fun ImageViewerScreen(
                 }
             }
         }
-    val originalImageUrls =
-        remember(illust, fullscreenQuality) {
-            if (fullscreenQuality == "dynamic") {
-                illust.imageUrlsFor(AdaptiveImageQuality.ORIGINAL)
-            } else {
-                imageUrls
-            }
-        }
-    val highResolutionRequestSizePx =
-        AdaptiveImageQuality.VERY_HIGH.targetPixels.takeIf { fullscreenQuality == "dynamic" }
     val pagerState =
         rememberPagerState(initialPage = startPage.coerceIn(0, imageUrls.lastIndex.coerceAtLeast(0)), pageCount = { imageUrls.size })
     val coroutineScope = rememberCoroutineScope()
@@ -330,8 +314,6 @@ fun ImageViewerScreen(
                     Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                         ZoomablePixivImage(
                             url = imageUrls[page],
-                            highResolutionUrl = originalImageUrls.getOrElse(page) { imageUrls[page] },
-                            highResolutionRequestSizePx = highResolutionRequestSizePx,
                             contentDescription = illust.title,
                             isActive = pagerState.currentPage == page,
                             swipeThresholdPx = swipePageThresholdPx,

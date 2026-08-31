@@ -26,8 +26,6 @@ import com.yunfie.illustia.models.Illust
 import com.yunfie.illustia.models.LoadState
 import com.yunfie.illustia.models.Restrict
 import com.yunfie.illustia.models.UserPreview
-import com.yunfie.illustia.performance.AdaptiveImageQuality
-import com.yunfie.illustia.performance.imageUrlFor
 import com.yunfie.illustia.settings.AppSettings
 import com.yunfie.illustia.ui.components.LocalAppHapticMode
 import com.yunfie.illustia.ui.components.PrefetchPixivImages
@@ -93,25 +91,15 @@ fun BookmarkScreen(
             1 -> bookmarkItems
             else -> emptyList()
         }
-    val activeGridState = if (selectedTopTab == 0) viewModel.bookmarkTimelineGridState else viewModel.bookmarkMainGridState
     val prefetchUrls =
-        remember(activeItems, feedHighQuality, settings.feedPreviewQuality, activeGridState.isScrollInProgress) {
-            val prefetchQuality =
-                if (activeGridState.isScrollInProgress) AdaptiveImageQuality.LOW else AdaptiveImageQuality.MID
+        remember(activeItems, feedHighQuality) {
             activeItems
                 .asSequence()
                 .take(16)
-                .map {
-                    if (settings.feedPreviewQuality == "dynamic") {
-                        it.imageUrlFor(prefetchQuality)
-                    } else if (feedHighQuality) {
-                        it.previewUrl
-                    } else {
-                        it.thumbnailUrl
-                    }
-                }.toList()
+                .map { if (feedHighQuality) it.previewUrl else it.thumbnailUrl }
+                .toList()
         }
-    PrefetchPixivImages(prefetchUrls, enabled = settings.prefetchImages, isScrolling = activeGridState.isScrollInProgress)
+    PrefetchPixivImages(prefetchUrls, enabled = settings.prefetchImages)
 
     LaunchedEffect(selectedTopTab) {
         when (selectedTopTab) {
