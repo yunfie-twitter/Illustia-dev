@@ -13,9 +13,12 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.pager.HorizontalPager
@@ -303,6 +306,8 @@ fun IllustDetailScreen(
             }
         },
     ) { scaffoldPadding ->
+        val statusBarTopPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+        val topPadding = scaffoldPadding.calculateTopPadding().takeIf { it > 0.dp } ?: statusBarTopPadding
         Box(modifier = Modifier.fillMaxSize()) {
             Surface(
                 modifier = Modifier.fillMaxSize().padding(bottom = scaffoldPadding.calculateBottomPadding().coerceAtLeast(0.dp)),
@@ -312,6 +317,7 @@ fun IllustDetailScreen(
                     isRefreshing = isRefreshing,
                     onRefresh = { isRefreshing = true },
                     pullToRefreshState = pullToRefreshState,
+                    contentPadding = PaddingValues(top = topPadding),
                     modifier = Modifier.fillMaxSize(),
                 ) {
                     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {

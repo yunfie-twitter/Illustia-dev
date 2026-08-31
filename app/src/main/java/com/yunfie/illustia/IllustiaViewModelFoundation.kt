@@ -161,6 +161,8 @@ abstract class IllustiaViewModelFoundation(
     val navigationRequests: SharedFlow<IllustiaNavigationRequest> = _navigationRequests
     protected val _detailNavigationRequests = MutableSharedFlow<Long>(extraBufferCapacity = 16)
     val detailNavigationRequests: SharedFlow<Long> = _detailNavigationRequests
+    protected val _userNavigationRequests = MutableSharedFlow<Long>(extraBufferCapacity = 16)
+    val userNavigationRequests: SharedFlow<Long> = _userNavigationRequests
     val settingsState: StateFlow<AppSettings> =
         _uiState
             .map { it.settings }

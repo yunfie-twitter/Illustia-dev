@@ -379,6 +379,12 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
         }
     }
 
+    LaunchedEffect(viewModel) {
+        viewModel.userNavigationRequests.collect { userId ->
+            navigate(AppRoute.UserProfile(userId))
+        }
+    }
+
     LaunchedEffect(state.imageViewerIllust?.id, state.imageViewerStartPage) {
         if (state.imageViewerIllust != null) {
             navigate(AppRoute.ImageViewer)

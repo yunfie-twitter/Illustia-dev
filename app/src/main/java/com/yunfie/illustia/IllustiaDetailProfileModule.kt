@@ -286,12 +286,14 @@ abstract class IllustiaDetailProfileModule(
                     selectedRelatedUsers = emptyList(),
                     selectedRelatedUsersNextUrl = null,
                     selectedRelatedUsersLoading = false,
+                    showUserPage = false,
                     userPageDismissed = false,
                     userPageFromSheet = false,
                 )
             } else {
                 it.copy(
                     selectedUserId = userId,
+                    showUserPage = false,
                     userPageDismissed = false,
                     userPageFromSheet = false,
                 )
@@ -372,6 +374,7 @@ abstract class IllustiaDetailProfileModule(
         }
         userPageSnapshot = snapshotUserPageState()
         captureProfileReturnDetail()
+        _userNavigationRequests.tryEmit(userId)
         _uiState.update {
             it.copy(
                 selectedUserId = userId,
@@ -485,6 +488,10 @@ abstract class IllustiaDetailProfileModule(
         captureProfileReturnDetail()
         closeUserPageJob?.cancel()
         closeUserPageJob = null
+        val activeUserId = _uiState.value.selectedUser?.id
+        if (activeUserId != null) {
+            _userNavigationRequests.tryEmit(activeUserId)
+        }
         _uiState.update { it.copy(showUserPage = true, userPageFromSheet = true) }
     }
 
