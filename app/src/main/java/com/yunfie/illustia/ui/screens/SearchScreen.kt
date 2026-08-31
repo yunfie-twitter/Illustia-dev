@@ -132,9 +132,21 @@ fun SearchScreen(
     }
 
     val onClearResults = { viewModel.clearSearchResults() }
-    val onExpandedChange: (Boolean) -> Unit = { searchExpanded = it }
+    val onExpandedChange: (Boolean) -> Unit = { expanded ->
+        searchExpanded = expanded
+        if (!expanded && state.searchDraft.isBlank()) {
+            viewModel.clearSearchResults()
+        }
+    }
     val onUpdateDraft: (String) -> Unit = { viewModel.updateSearchDraft(it) }
-    val onSubmit: (String) -> Unit = { viewModel.submitSearch(it) }
+    val onSubmit: (String) -> Unit = { word ->
+        if (word.isBlank()) {
+            viewModel.clearSearchResults()
+        } else {
+            viewModel.submitSearch(word)
+        }
+        searchExpanded = false
+    }
     var lastAutoOpenedArtworkUrl by rememberSaveable { mutableStateOf<String?>(null) }
 
     LaunchedEffect(state.searchDraft) {
@@ -143,7 +155,6 @@ fun SearchScreen(
         if (artworkEvent != null && lastAutoOpenedArtworkUrl != normalized) {
             lastAutoOpenedArtworkUrl = normalized
             onSubmit(normalized)
-            onExpandedChange(false)
         } else if (artworkEvent == null) {
             lastAutoOpenedArtworkUrl = null
         }
@@ -156,10 +167,16 @@ fun SearchScreen(
             else -> "browse"
         }
 
-    if ((isResultMode || searchExpanded) && onBackFromResults == null) {
+    if (isResultMode || searchExpanded) {
         val closeSearch = {
             if (searchExpanded) {
+                if (state.searchDraft.isBlank()) {
+                    viewModel.clearSearchResults()
+                }
                 searchExpanded = false
+            } else if (onBackFromResults != null) {
+                viewModel.clearSearchResults()
+                onBackFromResults()
             } else {
                 viewModel.clearSearchResults()
             }
@@ -209,12 +226,11 @@ fun SearchScreen(
                             onExpandedChange(true)
                         },
                         onSearch = {
-                            onSubmit(state.searchDraft.ifBlank { state.activeSearchWord })
-                            onExpandedChange(false)
+                            val target = state.searchDraft.ifBlank { state.activeSearchWord }
+                            onSubmit(target)
                         },
                         onSuggestionClick = {
                             onSubmit(it)
-                            onExpandedChange(false)
                         },
                         modifier = Modifier.weight(1f),
                     )
@@ -228,12 +244,10 @@ fun SearchScreen(
                     onExpandedChange = onExpandedChange,
                     onValueChange = onUpdateDraft,
                     onSearch = {
-                        onSubmit(state.searchDraft.ifBlank { state.activeSearchWord })
-                        onExpandedChange(false)
+                        onSubmit(state.searchDraft)
                     },
                     onSuggestionClick = {
                         onSubmit(it)
-                        onExpandedChange(false)
                     },
                     modifier = Modifier.padding(horizontal = 16.dp),
                 )

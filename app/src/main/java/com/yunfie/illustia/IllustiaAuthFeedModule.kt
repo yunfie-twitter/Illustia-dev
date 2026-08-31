@@ -273,7 +273,10 @@ abstract class IllustiaAuthFeedModule(
 
     override fun submitSearch(word: String) {
         val normalized = word.trim()
-        if (normalized.isBlank()) return
+        if (normalized.isBlank()) {
+            clearSearchResults()
+            return
+        }
         when (val event = NativeIntentRouter.parseText(normalized)) {
             is NativeIntentEvent.Artwork -> {
                 _uiState.update { it.copy(searchDraft = "") }

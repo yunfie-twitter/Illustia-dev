@@ -61,7 +61,6 @@ fun AboutScreen(
     state: IllustiaUiState,
     viewModel: IllustiaViewModel,
     onBack: () -> Unit,
-    onOpenUpdateSettings: (() -> Unit)? = null,
 ) {
     PredictiveBackGestureHandler(onBack = onBack)
     val context = LocalContext.current
@@ -341,15 +340,6 @@ fun AboutScreen(
                             UpdateCheckState.Idle -> {
                                 // No action needed
                             }
-                        }
-
-                        if (onOpenUpdateSettings != null) {
-                            DividerLine()
-                            SettingLinkRow(
-                                title = stringResource(R.string.update_settings_title),
-                                summary = stringResource(R.string.update_settings_summary),
-                                onClick = onOpenUpdateSettings,
-                            )
                         }
                     }
                 }

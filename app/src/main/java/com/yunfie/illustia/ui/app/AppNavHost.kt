@@ -345,7 +345,6 @@ internal fun AppNavHost(
                     state = appState.state,
                     viewModel = viewModel,
                     onBack = onPopRoute,
-                    onOpenUpdateSettings = viewModel::openUpdateSettings,
                 )
             }
             entry(AppRoute.UpdateSettings) {
