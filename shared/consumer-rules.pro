@@ -1,8 +1,17 @@
 # ---------------------------------------------------------------------------
-# Kotlin Objects, Companions & Enums
+# General Attributes & Line Numbers
 # ---------------------------------------------------------------------------
--keepclassmembers class * {
+-keepattributes *Annotation*, InnerClasses, EnclosingMethod, Signature, SourceFile, LineNumberTable
+
+# ---------------------------------------------------------------------------
+# Kotlin Objects, Companions, Singletons & Enums
+# ---------------------------------------------------------------------------
+# Preserve all classes with INSTANCE and Companion fields (Kotlin objects, data objects, companions, Compose singletons)
+-keepclasseswithmembers class * {
     public static final ** INSTANCE;
+}
+
+-keepclasseswithmembers class * {
     public static final ** Companion;
 }
 
@@ -14,6 +23,14 @@
 -keep class kotlin.jvm.internal.DefaultConstructorMarker { *; }
 
 # ---------------------------------------------------------------------------
+# Illustia Shared Library Modules
+# ---------------------------------------------------------------------------
+-keep class com.yunfie.illustia.** { *; }
+-keepclassmembers class com.yunfie.illustia.** { *; }
+-keep class com.yunfie.pallasync.** { *; }
+-keepclassmembers class com.yunfie.pallasync.** { *; }
+
+# ---------------------------------------------------------------------------
 # Jetpack Compose & Compose Multiplatform
 # ---------------------------------------------------------------------------
 -keepclassmembers class * extends androidx.compose.runtime.snapshots.SnapshotState { *; }
@@ -23,8 +40,10 @@
     public static final ** INSTANCE;
     public static final ** lambda-*;
     public static final ** lambda$*;
+    *;
 }
 -keep class androidx.compose.runtime.internal.ComposableLambdaImpl { *; }
+-keep class androidx.compose.runtime.internal.ComposableLambda { *; }
 
 # Compose Multiplatform Resources
 -keep class org.jetbrains.compose.resources.** { *; }
@@ -47,7 +66,6 @@
 # ---------------------------------------------------------------------------
 # Kotlinx Serialization
 # ---------------------------------------------------------------------------
--keepattributes *Annotation*, InnerClasses, EnclosingMethod
 -keepclassmembers class * {
     public static final ** Companion;
     public static final ** $serializer;
@@ -98,11 +116,3 @@
 -keep interface * extends com.sun.jna.Library { *; }
 -keep interface * extends com.sun.jna.Callback { *; }
 -dontwarn com.sun.jna.**
-
-# ---------------------------------------------------------------------------
-# PallaSync & Settings
-# ---------------------------------------------------------------------------
--keep class com.yunfie.pallasync.** { *; }
--keep class com.yunfie.illustia.sync.** { *; }
--keep class com.yunfie.illustia.settings.** { *; }
--keep class com.yunfie.illustia.models.** { *; }
