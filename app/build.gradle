@@ -181,6 +181,20 @@ tasks.register("buildPallaSyncCoreAndroid", Exec) {
         "-o", uniffiJniDir.get().asFile, "build", "--release"
 }
 
+tasks.withType(dev.detekt.gradle.Detekt).configureEach {
+    dependsOn "generateUniFfiBindings"
+    exclude { element ->
+        element.file.absolutePath.replace('\\', '/').contains('/build/generated/')
+    }
+}
+
+tasks.withType(dev.detekt.gradle.DetektCreateBaselineTask).configureEach {
+    dependsOn "generateUniFfiBindings"
+    exclude { element ->
+        element.file.absolutePath.replace('\\', '/').contains('/build/generated/')
+    }
+}
+
 def detektBaselineBudget = 400
 def detektRuleBudgets = [
     ComplexCondition: 11,

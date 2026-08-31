@@ -45,7 +45,11 @@ internal data class PallaSyncRecordsPage(
     val records: List<PallaSyncPageRecord>,
     val nextSeq: Long,
     val hasMore: Boolean,
-)
+) {
+    fun advancesFrom(previousSeq: Long): Boolean =
+        nextSeq > previousSeq ||
+            (nextSeq == previousSeq && !hasMore && records.isEmpty())
+}
 
 internal data class PallaSyncPageRecord(
     val wireRecord: PallaSyncWireRecord?,

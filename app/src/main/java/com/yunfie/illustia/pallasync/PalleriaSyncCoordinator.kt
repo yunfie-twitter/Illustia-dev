@@ -26,10 +26,8 @@ import kotlinx.coroutines.withContext
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonElement
 import kotlinx.serialization.json.JsonObject
-import kotlinx.serialization.json.decodeFromJsonElement
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
@@ -940,10 +938,7 @@ internal class PalleriaSyncCoordinator(
                     is PallaSyncHttpResult.Retryable -> return pageResult
                     is PallaSyncHttpResult.ProtocolError -> return pageResult
                 }
-            if (
-                page.nextSeq < afterSeq ||
-                (page.nextSeq == afterSeq && (page.hasMore || page.records.isNotEmpty()))
-            ) {
+            if (!page.advancesFrom(afterSeq)) {
                 return PallaSyncHttpResult.ProtocolError("Relay returned a non-advancing page cursor")
             }
 
@@ -1138,9 +1133,7 @@ internal class PalleriaSyncCoordinator(
                         else -> return@withLock emptyList()
                     }
                 when (fetchDevicesLocked(baseUrl, state.chainId)) {
-                    is PallaSyncHttpResult.Success -> {
-                        Unit
-                    }
+                    is PallaSyncHttpResult.Success -> {}
 
                     PallaSyncHttpResult.Gone -> {
                         clearLocalChainLocked()
@@ -1158,7 +1151,7 @@ internal class PalleriaSyncCoordinator(
                         ?.takeIf { it.chainId == state.chainId }
                         ?: return@withLock emptyList()
 
-                val history = linkedMapOf<Long, Illust>()
+                val history = PallaSyncDeviceHistory(json)
                 var afterSeq = 0L
                 do {
                     val pageResult = fetchRecordsPage(baseUrl, state.chainId, afterSeq)
@@ -1168,10 +1161,7 @@ internal class PalleriaSyncCoordinator(
                     }
                     if (pageResult !is PallaSyncHttpResult.Success) break
                     val page = pageResult.value
-                    if (
-                        page.nextSeq < afterSeq ||
-                        (page.nextSeq == afterSeq && (page.hasMore || page.records.isNotEmpty()))
-                    ) {
+                    if (!page.advancesFrom(afterSeq)) {
                         log("Stopped device-history paging on a non-advancing relay cursor")
                         break
                     }
@@ -1200,44 +1190,11 @@ internal class PalleriaSyncCoordinator(
                         if (payload.schema != record.collectionName || payload.operation != record.action) {
                             return@forEach
                         }
-                        applyViewHistoryPayload(history, payload)
+                        history.apply(payload)
                     }
                     afterSeq = page.nextSeq
                 } while (page.hasMore)
-                history.values.toList().asReversed()
-            }
-        }
-    }
-
-    private fun applyViewHistoryPayload(
-        history: LinkedHashMap<Long, Illust>,
-        payload: DataPayload,
-    ) {
-        when (payload.schema) {
-            VIEW_HISTORY_SCHEMA_V1 -> {
-                val viewed = (payload.body as? JsonObject)?.get("viewedIllusts") as? JsonArray ?: return
-                viewed.asReversed().forEach { element ->
-                    legacyIllust(element)?.let { illust ->
-                        history.remove(illust.id)
-                        history[illust.id] = illust
-                    }
-                }
-            }
-
-            VIEW_HISTORY_SCHEMA_V2 -> {
-                if (!payload.entity_id.startsWith("viewed:")) return
-                val id = payload.entity_id.removePrefix("viewed:").toLongOrNull() ?: return
-                if (payload.operation == SYNC_OPERATION_DELETE) {
-                    history.remove(id)
-                    return
-                }
-                if (payload.operation != SYNC_OPERATION_UPSERT) return
-                val body =
-                    runCatching { json.decodeFromJsonElement<ViewedIllustBody>(payload.body) }.getOrNull()
-                        ?: return
-                if (body.id != id) return
-                history.remove(body.id)
-                history[body.id] = body.toIllust()
+                history.newestFirst()
             }
         }
     }
@@ -1401,45 +1358,6 @@ internal class PalleriaSyncCoordinator(
         return reportedId?.takeIf(String::isNotBlank)
             ?: UUID.nameUUIDFromBytes(rawJson.toByteArray(Charsets.UTF_8)).toString()
     }
-
-    private fun legacyIllust(element: JsonElement): Illust? {
-        val item = element as? JsonObject ?: return null
-        val id = item["id"]?.jsonPrimitive?.content?.toLongOrNull() ?: return null
-        return Illust(
-            id = id,
-            title = item.string("title").orEmpty(),
-            type = item.string("type") ?: "illust",
-            caption = "",
-            artistId = 0,
-            artistName = item.string("artistName").orEmpty(),
-            artistAvatarUrl = null,
-            squareImageUrl = item.string("imageUrl").orEmpty(),
-            mediumImageUrl = item.string("imageUrl").orEmpty(),
-            imageUrl = item.string("imageUrl").orEmpty(),
-            originalImageUrl = null,
-            tags = emptyList(),
-            pageCount = item["pageCount"]?.jsonPrimitive?.content?.toIntOrNull() ?: 1,
-            isBookmarked = false,
-        )
-    }
-
-    private fun ViewedIllustBody.toIllust() =
-        Illust(
-            id = id,
-            title = title,
-            type = type,
-            caption = "",
-            artistId = 0,
-            artistName = artistName,
-            artistAvatarUrl = null,
-            squareImageUrl = imageUrl,
-            mediumImageUrl = imageUrl,
-            imageUrl = imageUrl,
-            originalImageUrl = null,
-            tags = emptyList(),
-            pageCount = pageCount,
-            isBookmarked = false,
-        )
 
     private fun JsonObject.string(name: String): String? = this[name]?.jsonPrimitive?.content?.takeIf(String::isNotBlank)
 
