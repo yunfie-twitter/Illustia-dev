@@ -85,9 +85,7 @@ abstract class IllustiaSettingsSecurityModule(
         val state = _uiState.value
         if (
             state.settings.refreshToken.isBlank() ||
-            state.settings.startupScreen != "home" ||
-            state.homeItems.isNotEmpty() ||
-            state.loadState == LoadState.Loading
+            state.homeItems.isNotEmpty()
         ) {
             return
         }

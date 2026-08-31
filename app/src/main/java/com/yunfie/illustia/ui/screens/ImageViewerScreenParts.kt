@@ -8,15 +8,9 @@ import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.calculateCentroid
 import androidx.compose.foundation.gestures.calculatePan
 import androidx.compose.foundation.gestures.calculateZoom
-import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -25,11 +19,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.TransformOrigin
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.pointer.PointerInputScope
@@ -39,37 +32,48 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.unit.IntSize
-import androidx.compose.ui.unit.dp
 import com.yunfie.illustia.ui.components.PixivImage
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
-import kotlin.math.abs
 
 private suspend fun PointerInputScope.detectZoomAndPanGestures(
     isZoomed: () -> Boolean,
     onGesture: (centroid: Offset, pan: Offset, zoom: Float) -> Unit,
+    onGestureEnd: () -> Unit,
 ) {
     awaitEachGesture {
         awaitFirstDown(requireUnconsumed = false)
-        var interceptGesture = isZoomed()
+        var isTransforming = isZoomed()
 
         do {
             val event = awaitPointerEvent()
-            if (!interceptGesture && event.changes.count { it.pressed } >= 2) {
-                interceptGesture = true
+            val canceled = event.changes.any { it.isConsumed }
+            if (canceled) break
+
+            val pressedCount = event.changes.count { it.pressed }
+            if (pressedCount >= 2) {
+                isTransforming = true
             }
 
-            if (interceptGesture && event.changes.none { it.isConsumed }) {
-                onGesture(
-                    event.calculateCentroid(useCurrent = true),
-                    event.calculatePan(),
-                    event.calculateZoom(),
-                )
-                event.changes.forEach { change ->
-                    if (change.positionChanged()) change.consume()
+            if (isTransforming) {
+                val zoomChange = event.calculateZoom()
+                val panChange = event.calculatePan()
+                val centroid = event.calculateCentroid(useCurrent = true)
+
+                if (isZoomed() || pressedCount >= 2) {
+                    if (zoomChange != 1f || panChange != Offset.Zero) {
+                        onGesture(centroid, panChange, zoomChange)
+                    }
+                    event.changes.forEach { change ->
+                        if (change.positionChanged()) {
+                            change.consume()
+                        }
+                    }
                 }
             }
         } while (event.changes.any { it.pressed })
+
+        onGestureEnd()
     }
 }
 
@@ -78,16 +82,11 @@ internal fun ZoomablePixivImage(
     url: String,
     contentDescription: String,
     isActive: Boolean,
-    swipeThresholdPx: Float,
-    onSwipePrevious: () -> Unit,
-    onSwipeNext: () -> Unit,
     onZoomChanged: (Boolean) -> Unit,
     onTap: () -> Unit,
 ) {
     var scale by remember(url) { mutableFloatStateOf(1f) }
     var offset by remember(url) { mutableStateOf(Offset.Zero) }
-    var localScale by remember(url) { mutableFloatStateOf(1f) }
-    var localOffset by remember(url) { mutableStateOf(Offset.Zero) }
     var viewportSize by remember { mutableStateOf(IntSize.Zero) }
     val animationScope = rememberCoroutineScope()
     val zoomAnimation = remember { arrayOfNulls<Job>(1) }
@@ -106,8 +105,11 @@ internal fun ZoomablePixivImage(
         candidate: Offset,
         atScale: Float,
     ): Offset {
-        val maxX = viewportSize.width * (atScale - 1f) / 2f
-        val maxY = viewportSize.height * (atScale - 1f) / 2f
+        if (atScale <= 1f || viewportSize.width == 0 || viewportSize.height == 0) {
+            return Offset.Zero
+        }
+        val maxX = (viewportSize.width * (atScale - 1f) / 2f).coerceAtLeast(0f)
+        val maxY = (viewportSize.height * (atScale - 1f) / 2f).coerceAtLeast(0f)
         return Offset(candidate.x.coerceIn(-maxX, maxX), candidate.y.coerceIn(-maxY, maxY))
     }
 
@@ -132,8 +134,6 @@ internal fun ZoomablePixivImage(
                             startOffset.x + (targetOffset.x - startOffset.x) * progress,
                             startOffset.y + (targetOffset.y - startOffset.y) * progress,
                         )
-                    localScale = scale
-                    localOffset = offset
                     notifyZoomChanged(previous, scale)
                 }
             }
@@ -142,11 +142,10 @@ internal fun ZoomablePixivImage(
     LaunchedEffect(isActive) {
         if (!isActive) {
             zoomAnimation[0]?.cancel()
+            val previous = scale
             scale = 1f
             offset = Offset.Zero
-            localScale = 1f
-            localOffset = Offset.Zero
-            onZoomChanged(false)
+            notifyZoomChanged(previous, 1f)
         }
     }
 
@@ -159,80 +158,50 @@ internal fun ZoomablePixivImage(
                 .pointerInput(url) {
                     detectTapGestures(
                         onTap = { onTap() },
-                        onDoubleTap = {
+                        onDoubleTap = { tapOffset ->
                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                             if (scale > 1.02f) {
                                 animateTo(1f, Offset.Zero)
                             } else {
-                                animateTo(2.5f, Offset.Zero)
+                                val targetScale = 2.5f
+                                val viewportCenter = Offset(viewportSize.width / 2f, viewportSize.height / 2f)
+                                val focalPoint = tapOffset - viewportCenter
+                                val targetOffset = clampedOffset(-focalPoint * (targetScale - 1f), targetScale)
+                                animateTo(targetScale, targetOffset)
                             }
                         },
                     )
                 }.pointerInput(url) {
                     detectZoomAndPanGestures(
-                        isZoomed = { localScale > 1.02f },
-                    ) { centroid, pan, zoom ->
-                        zoomAnimation[0]?.cancel()
-                        val previousScale = localScale
-                        val nextScale = (localScale * zoom).coerceIn(1f, 6f)
-                        val appliedZoom = nextScale / localScale
-                        val viewportCenter = Offset(viewportSize.width / 2f, viewportSize.height / 2f)
-                        val focalPoint = centroid - viewportCenter
-                        val transformedOffset =
-                            localOffset + pan +
-                                (focalPoint - localOffset) * (1f - appliedZoom)
+                        isZoomed = { scale > 1.02f },
+                        onGesture = { centroid, pan, zoom ->
+                            zoomAnimation[0]?.cancel()
+                            val previousScale = scale
+                            val nextScale = (scale * zoom).coerceIn(1f, 6f)
+                            val appliedZoom = nextScale / scale
+                            val viewportCenter = Offset(viewportSize.width / 2f, viewportSize.height / 2f)
+                            val focalPoint = centroid - viewportCenter
+                            val transformedOffset =
+                                offset + pan + (focalPoint - offset) * (1f - appliedZoom)
 
-                        localScale = nextScale
-                        localOffset =
-                            if (localScale > 1.02f) {
-                                clampedOffset(transformedOffset, localScale)
+                            scale = nextScale
+                            offset =
+                                if (scale > 1.02f) {
+                                    clampedOffset(transformedOffset, scale)
+                                } else {
+                                    Offset.Zero
+                                }
+                            notifyZoomChanged(previousScale, scale)
+                        },
+                        onGestureEnd = {
+                            if (scale < 1.02f) {
+                                animateTo(1f, Offset.Zero)
                             } else {
-                                Offset.Zero
+                                offset = clampedOffset(offset, scale)
                             }
-                        scale = localScale
-                        offset = localOffset
-                        notifyZoomChanged(previousScale, localScale)
-                    }
-                }.then(
-                    if (scale > 1.02f) {
-                        Modifier.pointerInput(url, swipeThresholdPx) {
-                            var accumulatedX = 0f
-                            var triggered = false
-                            detectHorizontalDragGestures(
-                                onDragStart = {
-                                    accumulatedX = 0f
-                                    triggered = false
-                                },
-                                onHorizontalDrag = { change, dragAmount ->
-                                    if (triggered) return@detectHorizontalDragGestures
-
-                                    accumulatedX += dragAmount
-
-                                    if (abs(accumulatedX) >= swipeThresholdPx) {
-                                        triggered = true
-                                        if (accumulatedX < 0) {
-                                            onSwipeNext()
-                                        } else {
-                                            onSwipePrevious()
-                                        }
-                                        animateTo(1f, Offset.Zero)
-                                        change.consume()
-                                    }
-                                },
-                                onDragEnd = {
-                                    accumulatedX = 0f
-                                    triggered = false
-                                },
-                                onDragCancel = {
-                                    accumulatedX = 0f
-                                    triggered = false
-                                },
-                            )
-                        }
-                    } else {
-                        Modifier
-                    },
-                ),
+                        },
+                    )
+                },
     ) {
         PixivImage(
             url = url,
@@ -242,9 +211,7 @@ internal fun ZoomablePixivImage(
                 Modifier
                     .fillMaxSize()
                     .graphicsLayer {
-                        transformOrigin =
-                            androidx.compose.ui.graphics
-                                .TransformOrigin(0.5f, 0.5f)
+                        transformOrigin = TransformOrigin(0.5f, 0.5f)
                         scaleX = scale
                         scaleY = scale
                         translationX = offset.x

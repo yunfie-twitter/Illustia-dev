@@ -377,7 +377,9 @@ abstract class IllustiaAuthFeedModule(
     }
 
     fun handleIncomingIntent(intent: Intent?) {
-        intent?.data?.let { uri ->
+        if (intent == null) return
+        if (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0) return
+        intent.data?.let { uri ->
             // Always allow Pixiv OAuth callback (needed for recovery web login)
             if (uri.scheme == "pixiv" && uri.host == "account" && uri.path == "/login") {
                 uri

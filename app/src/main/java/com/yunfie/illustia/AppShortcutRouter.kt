@@ -18,7 +18,11 @@ object AppShortcutRouter {
     private val _pending = MutableStateFlow<AppShortcutDestination?>(null)
     val pending: StateFlow<AppShortcutDestination?> = _pending.asStateFlow()
 
-    fun accept(intent: Intent?): Boolean = acceptAction(intent?.action)
+    fun accept(intent: Intent?): Boolean {
+        if (intent == null) return false
+        if (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY != 0) return false
+        return acceptAction(intent.action)
+    }
 
     fun acceptAction(action: String?): Boolean {
         val destination =

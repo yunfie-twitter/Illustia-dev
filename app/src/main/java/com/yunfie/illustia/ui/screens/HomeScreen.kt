@@ -57,7 +57,9 @@ fun HomeScreen(
     LaunchedEffect(selectedTab) {
         when (selectedTab) {
             HomeTab.Feed -> {
-                Unit
+                if (items.isEmpty()) {
+                    viewModel.refreshHome()
+                }
             }
 
             HomeTab.Following -> {

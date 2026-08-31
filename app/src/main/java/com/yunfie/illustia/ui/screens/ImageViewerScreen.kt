@@ -120,7 +120,6 @@ fun ImageViewerScreen(
     var isZoomed by remember { mutableStateOf(false) }
     var showControls by remember { mutableStateOf(true) }
     val comicMode = illust.type == "manga" && imageUrls.size > 1 && mangaReaderMode == "vertical"
-    val swipePageThresholdPx = with(LocalDensity.current) { 72.dp.toPx() }
 
     LaunchedEffect(showControls) {
         if (showControls) {
@@ -316,9 +315,6 @@ fun ImageViewerScreen(
                             url = imageUrls[page],
                             contentDescription = illust.title,
                             isActive = pagerState.currentPage == page,
-                            swipeThresholdPx = swipePageThresholdPx,
-                            onSwipePrevious = { movePage(-1) },
-                            onSwipeNext = { movePage(1) },
                             onZoomChanged = { zoomed ->
                                 if (pagerState.currentPage == page) isZoomed = zoomed
                             },

@@ -135,6 +135,17 @@ class MainActivity : FragmentActivity() {
         super.onCreate(savedInstanceState)
         requestLegacyStoragePermissionIfNeeded()
         applyAppLanguage(SettingsStore.readStoredAppLanguage(applicationContext))
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager
+        lastHandledClipboardText =
+            runCatching {
+                clipboard
+                    ?.primaryClip
+                    ?.takeIf { it.itemCount > 0 }
+                    ?.getItemAt(0)
+                    ?.coerceToText(this)
+                    ?.toString()
+                    ?.trim()
+            }.getOrNull()
 
         // Observe app lifecycle for lock-on-return
         val lifecycleObserver =
@@ -287,8 +298,13 @@ class MainActivity : FragmentActivity() {
                 }
             }
         }
-        AppShortcutRouter.accept(intent)
-        viewModel.handleIncomingIntent(intent)
+        if (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0) {
+            AppShortcutRouter.accept(intent)
+            viewModel.handleIncomingIntent(intent)
+            intent.data = null
+            intent.removeExtra(NativeIntentRouter.EXTRA_HANDOFF_URI)
+            intent.action = Intent.ACTION_MAIN
+        }
         enableHandoffIfSupported()
     }
 
@@ -306,8 +322,13 @@ class MainActivity : FragmentActivity() {
     override fun onNewIntent(intent: Intent) {
         super.onNewIntent(intent)
         setIntent(intent)
-        AppShortcutRouter.accept(intent)
-        viewModel.handleIncomingIntent(intent)
+        if (intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0) {
+            AppShortcutRouter.accept(intent)
+            viewModel.handleIncomingIntent(intent)
+            intent.data = null
+            intent.removeExtra(NativeIntentRouter.EXTRA_HANDOFF_URI)
+            intent.action = Intent.ACTION_MAIN
+        }
     }
 
     @RequiresApi(PlatformCapabilities.HANDOFF_API)
