@@ -170,7 +170,6 @@ internal fun IllustDetailHeader(
         modifier =
             modifier
                 .then(if (expanded) Modifier.fillMaxSize() else Modifier.fillMaxWidth().heightIn(min = 320.dp))
-                .statusBarsPadding()
                 .background(MiuixTheme.colorScheme.surfaceContainer),
     ) {
         if (showImage) {
@@ -314,6 +313,7 @@ internal fun IllustDetailHeader(
             modifier =
                 Modifier
                     .fillMaxWidth()
+                    .statusBarsPadding()
                     .padding(horizontal = 14.dp, vertical = 10.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
