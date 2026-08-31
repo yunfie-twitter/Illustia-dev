@@ -29,6 +29,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -67,9 +68,11 @@ import com.yunfie.illustia.ui.components.performAppHapticFeedback
 import kotlinx.coroutines.delay
 import top.yukonga.miuix.kmp.basic.FloatingActionButton
 import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.PullToRefresh
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Surface
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Background
 import top.yukonga.miuix.kmp.icon.extended.Favorites
@@ -88,6 +91,7 @@ fun IllustDetailScreen(
     firstComment: Comment?,
     onBack: () -> Unit,
     onBookmark: () -> Unit,
+    onRefresh: () -> Unit = {},
     onOpenUser: (Long) -> Unit,
     onOpenComments: () -> Unit,
     onOpenSeries: (() -> Unit)? = null,
@@ -126,6 +130,16 @@ fun IllustDetailScreen(
     val isArtworkMuted = isArtistMuted || isTagMuted
     var revealMutedArtwork by remember(illust.id, isArtistMuted, isTagMuted) { mutableStateOf(!isArtworkMuted) }
     val pixivUrl = remember(illust.id) { "https://www.pixiv.net/artworks/${illust.id}" }
+    var isRefreshing by rememberSaveable { mutableStateOf(false) }
+    val pullToRefreshState = rememberPullToRefreshState()
+
+    LaunchedEffect(isRefreshing) {
+        if (isRefreshing) {
+            onRefresh()
+            delay(500)
+            isRefreshing = false
+        }
+    }
 
     // 詳細画面を開く際の重さを軽減するために、関連作品だけを遅延レンダリングする
     var showHeavyContent by remember { mutableStateOf(false) }
@@ -294,32 +308,39 @@ fun IllustDetailScreen(
                 modifier = Modifier.fillMaxSize().padding(bottom = scaffoldPadding.calculateBottomPadding().coerceAtLeast(0.dp)),
                 color = MiuixTheme.colorScheme.surface,
             ) {
-                BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-                    val useTwoPaneLayout = maxWidth >= 840.dp && maxWidth > maxHeight
-                    if (useTwoPaneLayout) {
-                        Row(modifier = Modifier.fillMaxSize()) {
-                            detailHeaderContent(true, Modifier.weight(1.1f).fillMaxHeight())
+                PullToRefresh(
+                    isRefreshing = isRefreshing,
+                    onRefresh = { isRefreshing = true },
+                    pullToRefreshState = pullToRefreshState,
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                        val useTwoPaneLayout = maxWidth >= 840.dp && maxWidth > maxHeight
+                        if (useTwoPaneLayout) {
+                            Row(modifier = Modifier.fillMaxSize()) {
+                                detailHeaderContent(true, Modifier.weight(1.1f).fillMaxHeight())
+                                LazyColumn(
+                                    modifier =
+                                        Modifier
+                                            .weight(0.9f)
+                                            .fillMaxHeight()
+                                            .background(MiuixTheme.colorScheme.surface),
+                                    contentPadding = PaddingValues(top = 12.dp, bottom = 96.dp),
+                                ) {
+                                    item { detailInfoContent() }
+                                }
+                            }
+                        } else {
                             LazyColumn(
                                 modifier =
                                     Modifier
-                                        .weight(0.9f)
-                                        .fillMaxHeight()
+                                        .fillMaxSize()
                                         .background(MiuixTheme.colorScheme.surface),
-                                contentPadding = PaddingValues(top = 12.dp, bottom = 96.dp),
+                                contentPadding = PaddingValues(bottom = 96.dp),
                             ) {
+                                item { detailHeaderContent(false, Modifier) }
                                 item { detailInfoContent() }
                             }
-                        }
-                    } else {
-                        LazyColumn(
-                            modifier =
-                                Modifier
-                                    .fillMaxSize()
-                                    .background(MiuixTheme.colorScheme.surface),
-                            contentPadding = PaddingValues(bottom = 96.dp),
-                        ) {
-                            item { detailHeaderContent(false, Modifier) }
-                            item { detailInfoContent() }
                         }
                     }
                 }

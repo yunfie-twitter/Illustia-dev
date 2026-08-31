@@ -36,6 +36,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yunfie.illustia.IllustiaUiState
 import com.yunfie.illustia.IllustiaViewModel
 import com.yunfie.illustia.R
@@ -98,6 +99,7 @@ fun RankingScreen(
             pageCount = { modes.size },
         )
     val latestMode by rememberUpdatedState(mode)
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     // Commit a ranking change only after the swipe/scroll animation settles. This
     // avoids loading every intermediate tab when jumping across several modes.
@@ -121,19 +123,11 @@ fun RankingScreen(
     }
 
     LaunchedEffect(Unit) {
-        if (items.isEmpty()) {
-            viewModel.refreshRanking()
-        }
+        viewModel.loadRankingModeIfNeeded(mode)
     }
 
     val scheme = MiuixTheme.colorScheme
     val scrollBehavior = MiuixScrollBehavior()
-    AutoLoadMoreEffect(
-        enabled = settings.autoLoadMore,
-        nextUrl = nextUrl,
-        isLoading = loadState == LoadState.Loading,
-        onLoadMore = viewModel::loadMoreRanking,
-    )
     Column(
         modifier =
             Modifier
@@ -145,7 +139,7 @@ fun RankingScreen(
             largeTitle = stringResource(R.string.nav_ranking),
             scrollBehavior = scrollBehavior,
             actions = {
-                IconButton(onClick = viewModel::refreshRanking) {
+                IconButton(onClick = { viewModel.refreshRanking(modes[pagerState.targetPage]) }) {
                     Icon(MiuixIcons.Refresh, contentDescription = stringResource(R.string.dialog_reload))
                 }
             },
@@ -195,12 +189,20 @@ fun RankingScreen(
                     (
                         (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
                     ).absoluteValue.coerceIn(0f, 1f)
+                val pageMode = modes[page]
+                val pageItems = uiState.rankingModeItems[pageMode] ?: if (pageMode == mode) items else emptyList()
+                val pageLoadState = uiState.rankingModeLoadStates[pageMode] ?: if (pageMode == mode) loadState else LoadState.Idle
+                val pageNextUrl = uiState.rankingModeNextUrls[pageMode] ?: if (pageMode == mode) nextUrl else null
+
+                LaunchedEffect(pageMode) {
+                    viewModel.loadRankingModeIfNeeded(pageMode)
+                }
 
                 RankingGridContent(
-                    items = items,
-                    loadState = loadState,
-                    nextUrl = nextUrl,
-                    mode = modes[page],
+                    items = pageItems,
+                    loadState = pageLoadState,
+                    nextUrl = pageNextUrl,
+                    mode = pageMode,
                     settings = settings,
                     viewModel = viewModel,
                     scrollBehavior = scrollBehavior,
@@ -274,9 +276,16 @@ private fun RankingGridContent(
         }
     PrefetchPixivImages(prefetchUrls, enabled = settings.prefetchImages)
 
+    AutoLoadMoreEffect(
+        enabled = settings.autoLoadMore,
+        nextUrl = nextUrl,
+        isLoading = loadState == LoadState.Loading,
+        onLoadMore = { viewModel.loadMoreRanking(mode) },
+    )
+
     PullToRefresh(
         isRefreshing = loadState == com.yunfie.illustia.models.LoadState.Loading && items.isNotEmpty(),
-        onRefresh = { viewModel.refreshRanking() },
+        onRefresh = { viewModel.refreshRanking(mode) },
         modifier = modifier.fillMaxSize(),
     ) {
         LazyVerticalGrid(
@@ -319,7 +328,7 @@ private fun RankingGridContent(
             if (!settings.autoLoadMore && nextUrl != null) {
                 item(span = { GridItemSpan(maxLineSpan) }) {
                     Button(
-                        onClick = viewModel::loadMoreRanking,
+                        onClick = { viewModel.loadMoreRanking(mode) },
                         modifier =
                             Modifier
                                 .fillMaxWidth()

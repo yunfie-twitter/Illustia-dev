@@ -95,6 +95,55 @@ abstract class IllustiaDetailProfileModule(
         }
     }
 
+    fun refreshIllustDetail(illustId: Long) {
+        detailExtrasJob?.cancel()
+        detailExtrasJob =
+            viewModelScope.launch(Dispatchers.IO) {
+                try {
+                    val fullIllust = repository.illustDetail(illustId)
+                    kotlinx.coroutines.coroutineScope {
+                        val relatedDeferred = async { repository.relatedIllusts(illustId) }
+                        val firstCommentDeferred =
+                            async {
+                                runCatching {
+                                    repository.illustComments(illustId).comments.firstOrNull()
+                                }.getOrNull()
+                            }
+                        val userDeferred =
+                            fullIllust.artistId.takeIf { it > 0L }?.let { artistId ->
+                                async { repository.userDetail(artistId) }
+                            }
+                        val related = relatedDeferred.await()
+                        val firstComment = firstCommentDeferred.await()
+                        val user = userDeferred?.await()
+                        _uiState.update {
+                            if (it.selectedIllust?.id != illustId) {
+                                it
+                            } else {
+                                it.copy(
+                                    selectedIllust = fullIllust,
+                                    relatedIllusts = related.items.visibleWithSettings(it.settings),
+                                    selectedIllustUser = user,
+                                    selectedIllustFirstComment = firstComment,
+                                )
+                            }
+                        }
+                    }
+                } catch (expectedFailure: Exception) {
+                    val error = expectedFailure
+                    if (isCancellation(error)) throw error
+                    if (handleAuthExpired(error)) return@launch
+                    _uiState.update {
+                        if (it.selectedIllust?.id == illustId) {
+                            it.copy(message = cleanErrorMessage(error, str(R.string.error_load_detail_failed)))
+                        } else {
+                            it
+                        }
+                    }
+                }
+            }
+    }
+
     fun lazyLoadPartialIllust(illustId: Long) {
         val currentSettings = _uiState.value.settings
         val target = currentSettings.viewHistory.find { it.id == illustId } ?: return

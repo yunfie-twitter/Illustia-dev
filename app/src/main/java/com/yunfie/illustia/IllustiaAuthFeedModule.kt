@@ -100,8 +100,14 @@ abstract class IllustiaAuthFeedModule(
     }
 
     fun selectRankingMode(mode: String) {
-        _uiState.update { it.copy(rankingMode = mode) }
-        refreshRanking()
+        _uiState.update {
+            it.copy(
+                rankingMode = mode,
+                rankingItems = it.rankingModeItems[mode] ?: it.rankingItems,
+                rankingNextUrl = it.rankingModeNextUrls[mode],
+            )
+        }
+        loadRankingModeIfNeeded(mode)
     }
 
     override fun refreshHome() {
@@ -164,33 +170,87 @@ abstract class IllustiaAuthFeedModule(
         _uiState.update { it.copy(selectedNovel = null, selectedNovelText = null) }
     }
 
-    fun refreshRanking() {
-        runLoading {
-            val page = repository.loadRanking(_uiState.value.rankingMode)
-            val settings = _uiState.value.settings
-            val items =
-                withContext(Dispatchers.Default) {
-                    page.items.visibleWithMutedTagsVisible(settings)
-                }
+    fun loadRankingModeIfNeeded(mode: String = _uiState.value.rankingMode) {
+        val state = _uiState.value
+        if (!state.rankingModeItems[mode].isNullOrEmpty()) return
+        if (state.rankingModeLoadStates[mode] is LoadState.Loading) return
+        refreshRanking(mode)
+    }
+
+    fun refreshRanking(mode: String = _uiState.value.rankingMode) {
+        viewModelScope.launch(Dispatchers.IO) {
             _uiState.update {
                 it.copy(
-                    rankingItems = items,
-                    rankingNextUrl = page.nextUrl,
+                    rankingModeLoadStates = it.rankingModeLoadStates + (mode to LoadState.Loading),
                 )
+            }
+            try {
+                val page = repository.loadRanking(mode)
+                val settings = _uiState.value.settings
+                val items =
+                    withContext(Dispatchers.Default) {
+                        page.items.visibleWithMutedTagsVisible(settings)
+                    }
+                _uiState.update { current ->
+                    val updatedItems = current.rankingModeItems + (mode to items)
+                    val updatedNextUrls = current.rankingModeNextUrls + (mode to page.nextUrl)
+                    val updatedLoadStates = current.rankingModeLoadStates + (mode to LoadState.Idle)
+                    current.copy(
+                        rankingModeItems = updatedItems,
+                        rankingModeNextUrls = updatedNextUrls,
+                        rankingModeLoadStates = updatedLoadStates,
+                        rankingItems = if (current.rankingMode == mode) items else current.rankingItems,
+                        rankingNextUrl = if (current.rankingMode == mode) page.nextUrl else current.rankingNextUrl,
+                    )
+                }
+            } catch (expectedFailure: Exception) {
+                val error = expectedFailure
+                if (isCancellation(error)) throw error
+                if (handleAuthExpired(error)) return@launch
+                _uiState.update { current ->
+                    current.copy(
+                        rankingModeLoadStates = current.rankingModeLoadStates + (mode to LoadState.Error(cleanErrorMessage(error))),
+                    )
+                }
             }
         }
     }
 
-    fun loadMoreRanking() {
-        val nextUrl = _uiState.value.rankingNextUrl ?: return
-        runLoading {
-            val page = repository.nextPage(nextUrl)
-            val settings = _uiState.value.settings
+    fun loadMoreRanking(mode: String = _uiState.value.rankingMode) {
+        val nextUrl = _uiState.value.rankingModeNextUrls[mode] ?: _uiState.value.rankingNextUrl ?: return
+        if (_uiState.value.rankingModeLoadStates[mode] is LoadState.Loading) return
+        viewModelScope.launch(Dispatchers.IO) {
             _uiState.update {
                 it.copy(
-                    rankingItems = it.rankingItems.appendIllusts(page.items.visibleWithMutedTagsVisible(settings)),
-                    rankingNextUrl = page.nextUrl,
+                    rankingModeLoadStates = it.rankingModeLoadStates + (mode to LoadState.Loading),
                 )
+            }
+            try {
+                val page = repository.nextPage(nextUrl)
+                val settings = _uiState.value.settings
+                _uiState.update { current ->
+                    val currentList = current.rankingModeItems[mode] ?: current.rankingItems
+                    val nextList = currentList.appendIllusts(page.items.visibleWithMutedTagsVisible(settings))
+                    val updatedItems = current.rankingModeItems + (mode to nextList)
+                    val updatedNextUrls = current.rankingModeNextUrls + (mode to page.nextUrl)
+                    val updatedLoadStates = current.rankingModeLoadStates + (mode to LoadState.Idle)
+                    current.copy(
+                        rankingModeItems = updatedItems,
+                        rankingModeNextUrls = updatedNextUrls,
+                        rankingModeLoadStates = updatedLoadStates,
+                        rankingItems = if (current.rankingMode == mode) nextList else current.rankingItems,
+                        rankingNextUrl = if (current.rankingMode == mode) page.nextUrl else current.rankingNextUrl,
+                    )
+                }
+            } catch (expectedFailure: Exception) {
+                val error = expectedFailure
+                if (isCancellation(error)) throw error
+                if (handleAuthExpired(error)) return@launch
+                _uiState.update { current ->
+                    current.copy(
+                        rankingModeLoadStates = current.rankingModeLoadStates + (mode to LoadState.Error(cleanErrorMessage(error))),
+                    )
+                }
             }
         }
     }

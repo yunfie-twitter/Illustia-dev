@@ -10,13 +10,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.yunfie.illustia.R
-import com.yunfie.illustia.ui.components.HeaderIcon
 import top.yukonga.miuix.kmp.basic.BasicComponent
 import top.yukonga.miuix.kmp.basic.InputField
 import top.yukonga.miuix.kmp.basic.SearchBar
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.icon.MiuixIcons
-import top.yukonga.miuix.kmp.icon.extended.Close
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -26,7 +23,6 @@ fun SearchToolbar(
     onExpandedChange: (Boolean) -> Unit,
     onValueChange: (String) -> Unit,
     onSearch: () -> Unit,
-    onClear: () -> Unit,
     onSuggestionClick: (String) -> Unit,
     modifier: Modifier = Modifier,
     suggestions: List<String> = emptyList(),
@@ -49,14 +45,6 @@ fun SearchToolbar(
             modifier
                 .fillMaxWidth()
                 .padding(bottom = 8.dp),
-        outsideEndAction = {
-            HeaderIcon(
-                icon = MiuixIcons.Close,
-                onClick = {
-                    onClear()
-                },
-            )
-        },
     ) {
         Column(
             modifier =

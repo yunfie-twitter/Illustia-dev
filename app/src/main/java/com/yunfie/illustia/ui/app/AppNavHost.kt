@@ -153,6 +153,7 @@ internal fun AppNavHost(
                         firstComment = detail.firstComment,
                         onBack = onPopRoute,
                         onBookmark = { viewModel.toggleBookmark(illust) },
+                        onRefresh = { viewModel.refreshIllustDetail(illust.id) },
                         onOpenUser = viewModel::openUser,
                         onOpenComments = {
                             onSelectedCommentTargetChange(illust.id to CommentArtworkType.ILLUST)

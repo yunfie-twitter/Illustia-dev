@@ -49,6 +49,10 @@ internal fun IllustiaUiState.withUpdatedIllust(updated: Illust): IllustiaUiState
     val updatedShortsFeed = shortsFeedItems.replaceIllustIfPresent(updated)
     val updatedWatchlist = watchlistItems.replaceIllustIfPresent(updated)
     val updatedRanking = rankingItems.replaceIllustIfPresent(updated)
+    val updatedRankingModeItems =
+        rankingModeItems.mapValues { (_, list) ->
+            list.replaceIllustIfPresent(updated)
+        }
     val updatedRelated = relatedIllusts.replaceIllustIfPresent(updated)
     val updatedHistory = settings.viewHistory.replaceIllustIfPresent(updated)
     val updatedBookmarks =
@@ -68,6 +72,7 @@ internal fun IllustiaUiState.withUpdatedIllust(updated: Illust): IllustiaUiState
         updatedShortsFeed === shortsFeedItems &&
         updatedWatchlist === watchlistItems &&
         updatedRanking === rankingItems &&
+        updatedRankingModeItems == rankingModeItems &&
         updatedRelated === relatedIllusts &&
         updatedHistory === settings.viewHistory &&
         updatedBookmarks === bookmarkItems &&
@@ -85,6 +90,7 @@ internal fun IllustiaUiState.withUpdatedIllust(updated: Illust): IllustiaUiState
         shortsFeedItems = updatedShortsFeed,
         watchlistItems = updatedWatchlist,
         rankingItems = updatedRanking,
+        rankingModeItems = updatedRankingModeItems,
         relatedIllusts = updatedRelated,
         settings = settings.copy(viewHistory = updatedHistory),
         bookmarkItems = updatedBookmarks,

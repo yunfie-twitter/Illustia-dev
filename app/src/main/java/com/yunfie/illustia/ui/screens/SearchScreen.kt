@@ -204,14 +204,13 @@ fun SearchScreen(
                             }
                             onExpandedChange(expanded)
                         },
-                        onValueChange = onUpdateDraft,
+                        onValueChange = { newQuery ->
+                            onUpdateDraft(newQuery)
+                            onExpandedChange(true)
+                        },
                         onSearch = {
                             onSubmit(state.searchDraft.ifBlank { state.activeSearchWord })
                             onExpandedChange(false)
-                        },
-                        onClear = {
-                            onUpdateDraft("")
-                            onExpandedChange(true)
                         },
                         onSuggestionClick = {
                             onSubmit(it)
@@ -231,10 +230,6 @@ fun SearchScreen(
                     onSearch = {
                         onSubmit(state.searchDraft.ifBlank { state.activeSearchWord })
                         onExpandedChange(false)
-                    },
-                    onClear = {
-                        onUpdateDraft("")
-                        onExpandedChange(true)
                     },
                     onSuggestionClick = {
                         onSubmit(it)

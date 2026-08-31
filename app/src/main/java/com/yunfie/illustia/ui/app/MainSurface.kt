@@ -57,6 +57,7 @@ import top.yukonga.miuix.kmp.basic.NavigationRailItem
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.Surface
+import top.yukonga.miuix.kmp.basic.rememberNavigationRailState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
@@ -123,7 +124,9 @@ internal fun MainSurface(
             onAddAccount = viewModel::openAccountLoginMethod,
         )
 
-        val useNavigationRail = maxWidth >= 600.dp
+        val isLandscape = (maxWidth > maxHeight && maxWidth >= 480.dp) || maxWidth >= 600.dp
+        val useNavigationRail = isLandscape
+        val railState = rememberNavigationRailState()
         Scaffold(
             modifier = Modifier.nestedScroll(navigationScrollConnection),
             containerColor = MiuixTheme.colorScheme.surface,
@@ -190,6 +193,7 @@ internal fun MainSurface(
             ) {
                 if (useNavigationRail && !isSearchResultMode) {
                     NavigationRail(
+                        state = railState,
                         color = MiuixTheme.colorScheme.surfaceContainer,
                         showDivider = true,
                     ) {
