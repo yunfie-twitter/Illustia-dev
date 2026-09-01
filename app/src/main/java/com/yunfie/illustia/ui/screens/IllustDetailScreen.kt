@@ -307,19 +307,42 @@ fun IllustDetailScreen(
             }
         },
     ) { scaffoldPadding ->
-        Box(modifier = Modifier.fillMaxSize()) {
+        val statusBarTopPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(MiuixTheme.colorScheme.surface),
+        ) {
+            PixivImage(
+                url = illust.squareImageUrl.ifBlank { illust.imageUrl },
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .blur(36.dp)
+                        .graphicsLayer { alpha = 0.55f },
+            )
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(MiuixTheme.colorScheme.surface.copy(alpha = 0.42f)),
+            )
+
             Surface(
                 modifier =
                     Modifier
                         .fillMaxSize()
                         .padding(bottom = scaffoldPadding.calculateBottomPadding().coerceAtLeast(0.dp)),
-                color = MiuixTheme.colorScheme.surface,
+                color = Color.Transparent,
             ) {
                 PullToRefresh(
                     isRefreshing = isRefreshing,
                     onRefresh = { isRefreshing = true },
                     pullToRefreshState = pullToRefreshState,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.fillMaxSize().padding(top = statusBarTopPadding),
                 ) {
                     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
                         val useTwoPaneLayout = maxWidth >= 840.dp && maxWidth > maxHeight

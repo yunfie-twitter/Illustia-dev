@@ -1,11 +1,29 @@
 package com.yunfie.illustia.ui.screens
 
+import android.content.Intent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -13,28 +31,36 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yunfie.illustia.IllustiaViewModel
 import com.yunfie.illustia.R
@@ -42,26 +68,30 @@ import com.yunfie.illustia.data.pixiv.WatchlistStore
 import com.yunfie.illustia.models.pixiv.MangaSeriesModel
 import com.yunfie.illustia.ui.components.AutoLoadMoreEffect
 import com.yunfie.illustia.ui.components.EmptyState
+import com.yunfie.illustia.ui.components.HeaderOverlayIcon
 import com.yunfie.illustia.ui.components.PixivImage
+import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
 import com.yunfie.illustia.ui.components.ProfileGridHorizontalSpacing
 import com.yunfie.illustia.ui.components.ProfileGridVerticalSpacing
 import com.yunfie.illustia.ui.components.adaptiveProfileGridColumns
+import com.yunfie.illustia.ui.components.miuixClickable
 import com.yunfie.illustia.ui.components.profileGridContentPadding
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
+import top.yukonga.miuix.kmp.basic.DropdownEntry
+import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
 import top.yukonga.miuix.kmp.basic.PullToRefresh
-import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.icon.extended.FavoritesFill
+import top.yukonga.miuix.kmp.icon.extended.More
 import top.yukonga.miuix.kmp.icon.extended.Refresh
+import top.yukonga.miuix.kmp.menu.WindowIconDropdownMenu
+import top.yukonga.miuix.kmp.squircle.squircleSurface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.PressFeedbackType
 import androidx.compose.foundation.lazy.grid.items as gridItems
@@ -72,41 +102,59 @@ fun WatchlistSeriesScreen(
     onBack: () -> Unit,
     onOpenSeries: (Long) -> Unit,
 ) {
+    PredictiveBackGestureHandler(onBack = onBack)
     val repository = remember(viewModel) { viewModel.uiRepository() }
     val store = remember(repository) { WatchlistStore(repository) }
     val state by store.state.collectAsStateWithLifecycle()
     val settings by viewModel.settingsState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
-    val scrollBehavior = MiuixScrollBehavior()
+    val gridState = rememberLazyGridState()
+
+    val isContentScrolled by remember {
+        derivedStateOf {
+            gridState.firstVisibleItemIndex > 0 || gridState.firstVisibleItemScrollOffset > 24
+        }
+    }
+    val showHeader = !isContentScrolled
+    val bannerCoverUrl = state.mangaSeries.firstOrNull { !it.thumbnailUrl.isNullOrBlank() }?.thumbnailUrl
+    val statusBarTopPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
 
     LaunchedEffect(store) {
         store.fetch()
     }
 
-    Scaffold(
-        containerColor = MiuixTheme.colorScheme.surface,
-        topBar = {
-            TopAppBar(
-                title = stringResource(R.string.watchlist_series_title),
-                largeTitle = stringResource(R.string.watchlist_series_title),
-                scrollBehavior = scrollBehavior,
-                navigationIcon = {
-                    IconButton(onClick = onBack) {
-                        Icon(MiuixIcons.Back, contentDescription = stringResource(R.string.action_close))
-                    }
-                },
-                actions = {
-                    IconButton(onClick = { scope.launch { store.fetch() } }) {
-                        Icon(MiuixIcons.Refresh, contentDescription = stringResource(R.string.action_load_more))
-                    }
-                },
+    val backgroundColor = MiuixTheme.colorScheme.background
+
+    Box(
+        modifier =
+            Modifier
+                .fillMaxSize()
+                .background(backgroundColor),
+    ) {
+        // Blurred backdrop behind PullToRefresh
+        if (!bannerCoverUrl.isNullOrBlank()) {
+            PixivImage(
+                url = bannerCoverUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .blur(36.dp)
+                        .graphicsLayer { alpha = 0.48f },
             )
-        },
-    ) { scaffoldPadding ->
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(backgroundColor.copy(alpha = 0.65f)),
+            )
+        }
+
         PullToRefresh(
             isRefreshing = state.isLoading && state.mangaSeries.isNotEmpty(),
             onRefresh = { scope.launch { store.fetch() } },
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().padding(top = statusBarTopPadding),
         ) {
             AutoLoadMoreEffect(
                 enabled = settings.autoLoadMore,
@@ -114,55 +162,380 @@ fun WatchlistSeriesScreen(
                 isLoading = state.isLoading,
                 onLoadMore = { scope.launch { store.loadMore() } },
             )
-            val gridState = rememberLazyGridState()
-            LazyVerticalGrid(
-                state = gridState,
-                columns = GridCells.Fixed(adaptiveProfileGridColumns()),
+
+            Column(
                 modifier =
                     Modifier
                         .fillMaxSize()
-                        .nestedScroll(scrollBehavior.nestedScrollConnection)
-                        .background(MiuixTheme.colorScheme.surface),
-                contentPadding =
-                    profileGridContentPadding(
-                        top = scaffoldPadding.calculateTopPadding() + 8.dp,
-                    ),
-                horizontalArrangement = Arrangement.spacedBy(ProfileGridHorizontalSpacing),
-                verticalArrangement = Arrangement.spacedBy(ProfileGridVerticalSpacing),
+                        .background(Color.Transparent),
             ) {
-                if (state.isLoading && state.mangaSeries.isEmpty()) {
-                    gridItems(List(6) { it }, contentType = { "watchlist_series_skeleton" }) {
-                        WatchlistSeriesCardSkeleton()
-                    }
-                }
-                if (state.errorMessage != null) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        Text(
-                            text = state.errorMessage ?: "",
-                            color = MiuixTheme.colorScheme.error,
-                        )
-                    }
-                }
-                if (state.mangaSeries.isEmpty() && !state.isLoading && state.errorMessage == null) {
-                    item(span = { GridItemSpan(maxLineSpan) }) { EmptyState(stringResource(R.string.watchlist_series_empty)) }
-                }
-                gridItems(state.mangaSeries, key = { it.id }, contentType = { "watchlist_series_card" }) { series ->
-                    WatchlistSeriesCard(
-                        series = series,
-                        onClick = { onOpenSeries(series.id) },
-                        modifier = Modifier.animateItem(),
+                AnimatedVisibility(
+                    visible = showHeader,
+                    enter =
+                        expandVertically(
+                            animationSpec = tween(320),
+                            expandFrom = Alignment.Top,
+                        ) + fadeIn(animationSpec = tween(220, delayMillis = 60)),
+                    exit =
+                        shrinkVertically(
+                            animationSpec = tween(280),
+                            shrinkTowards = Alignment.Top,
+                        ) + fadeOut(animationSpec = tween(180)),
+                ) {
+                    WatchlistHeader(
+                        bannerUrl = bannerCoverUrl,
+                        seriesCount = state.mangaSeries.size,
+                        backgroundColor = backgroundColor,
+                        onRefresh = { scope.launch { store.fetch() } },
                     )
                 }
-                if (!settings.autoLoadMore && state.model?.nextUrl != null) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        Button(
-                            onClick = { scope.launch { store.loadMore() } },
-                            modifier = Modifier.fillMaxWidth(),
-                        ) {
-                            Text(stringResource(R.string.watchlist_series_load_more))
+
+                AnimatedVisibility(
+                    visible = !showHeader,
+                    enter =
+                        expandVertically(
+                            animationSpec = tween(280),
+                            expandFrom = Alignment.Top,
+                        ) + fadeIn(animationSpec = tween(200, delayMillis = 80)),
+                    exit =
+                        shrinkVertically(
+                            animationSpec = tween(220),
+                            shrinkTowards = Alignment.Top,
+                        ) + fadeOut(animationSpec = tween(140)),
+                ) {
+                    Spacer(
+                        Modifier
+                            .statusBarsPadding()
+                            .height(54.dp),
+                    )
+                }
+
+                LazyVerticalGrid(
+                    state = gridState,
+                    columns = GridCells.Fixed(adaptiveProfileGridColumns()),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .background(Color.Transparent),
+                    contentPadding =
+                        profileGridContentPadding(
+                            top = if (showHeader) 8.dp else 12.dp,
+                            bottom = 96.dp,
+                        ),
+                    horizontalArrangement = Arrangement.spacedBy(ProfileGridHorizontalSpacing),
+                    verticalArrangement = Arrangement.spacedBy(ProfileGridVerticalSpacing),
+                ) {
+                    if (state.isLoading && state.mangaSeries.isEmpty()) {
+                        gridItems(List(6) { it }, contentType = { "watchlist_series_skeleton" }) {
+                            WatchlistSeriesCardSkeleton()
+                        }
+                    }
+                    if (state.errorMessage != null && state.mangaSeries.isEmpty()) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
+                            ) {
+                                Text(
+                                    text = state.errorMessage.orEmpty(),
+                                    color = MiuixTheme.colorScheme.error,
+                                    style = MiuixTheme.textStyles.body2,
+                                )
+                                Button(
+                                    onClick = { scope.launch { store.fetch() } },
+                                ) {
+                                    Text(stringResource(R.string.action_load_more))
+                                }
+                            }
+                        }
+                    }
+                    if (state.mangaSeries.isEmpty() && !state.isLoading && state.errorMessage == null) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            EmptyState(stringResource(R.string.watchlist_series_empty))
+                        }
+                    }
+                    gridItems(state.mangaSeries, key = { it.id }, contentType = { "watchlist_series_card" }) { series ->
+                        WatchlistSeriesCard(
+                            series = series,
+                            onClick = { onOpenSeries(series.id) },
+                            modifier = Modifier.animateItem(),
+                        )
+                    }
+                    if (!settings.autoLoadMore && state.model?.nextUrl != null) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            Button(
+                                onClick = { scope.launch { store.loadMore() } },
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                            ) {
+                                Text(stringResource(R.string.watchlist_series_load_more))
+                            }
                         }
                     }
                 }
+            }
+        }
+
+        WatchlistSmallTopAppBar(
+            bannerUrl = bannerCoverUrl,
+            compact = isContentScrolled,
+            onBack = onBack,
+            onRefresh = { scope.launch { store.fetch() } },
+            onMessage = { viewModel.showMessage(it) },
+        )
+    }
+}
+
+@Composable
+private fun WatchlistHeader(
+    bannerUrl: String?,
+    seriesCount: Int,
+    backgroundColor: Color,
+    onRefresh: () -> Unit,
+) {
+    Column(Modifier.fillMaxWidth()) {
+        Box(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .height(210.dp)
+                    .background(MiuixTheme.colorScheme.surfaceContainerHigh),
+        ) {
+            if (!bannerUrl.isNullOrBlank()) {
+                PixivImage(
+                    url = bannerUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .blur(16.dp),
+                )
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors =
+                                        listOf(
+                                            Color.Black.copy(alpha = 0.25f),
+                                            Color.Transparent,
+                                            backgroundColor.copy(alpha = 0.85f),
+                                        ),
+                                ),
+                            ),
+                )
+            } else {
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors =
+                                        listOf(
+                                            MiuixTheme.colorScheme.primary.copy(alpha = 0.35f),
+                                            MiuixTheme.colorScheme.surfaceContainerHighest,
+                                        ),
+                                ),
+                            ),
+                )
+            }
+        }
+
+        WatchlistInfo(
+            seriesCount = seriesCount,
+            backgroundColor = backgroundColor,
+            onRefresh = onRefresh,
+        )
+    }
+}
+
+@Composable
+private fun WatchlistInfo(
+    seriesCount: Int,
+    backgroundColor: Color,
+    onRefresh: () -> Unit,
+) {
+    Column(
+        Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 18.dp)
+            .offset(y = (-40).dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Row(
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            Box(
+                modifier =
+                    Modifier
+                        .size(88.dp)
+                        .border(BorderStroke(4.dp, backgroundColor), CircleShape)
+                        .clip(CircleShape)
+                        .background(MiuixTheme.colorScheme.primaryContainer),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = MiuixIcons.FavoritesFill,
+                    contentDescription = null,
+                    tint = MiuixTheme.colorScheme.primary,
+                    modifier = Modifier.size(40.dp),
+                )
+            }
+            Spacer(Modifier.weight(1f))
+            Box(
+                modifier =
+                    Modifier
+                        .squircleSurface(MiuixTheme.colorScheme.surfaceContainerHighest, 24.dp)
+                        .miuixClickable(pressedScale = 0.94f, haptic = true, onClick = onRefresh)
+                        .padding(horizontal = 18.dp, vertical = 10.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        imageVector = MiuixIcons.Refresh,
+                        contentDescription = null,
+                        tint = MiuixTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(16.dp),
+                    )
+                    Text(
+                        text = stringResource(R.string.action_reload),
+                        color = MiuixTheme.colorScheme.onSurface,
+                        fontWeight = FontWeight.Bold,
+                        style = MiuixTheme.textStyles.body2,
+                    )
+                }
+            }
+        }
+
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(
+                text = stringResource(R.string.watchlist_series_title),
+                color = MiuixTheme.colorScheme.onBackground,
+                style = MiuixTheme.textStyles.title2,
+                fontWeight = FontWeight.Black,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = " 作品",
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                style = MiuixTheme.textStyles.body2,
+                fontWeight = FontWeight.Bold,
+            )
+            Text(
+                text = stringResource(R.string.more_watchlist_series_summary),
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                style = MiuixTheme.textStyles.footnote1,
+                lineHeight = 18.sp,
+            )
+        }
+    }
+}
+
+@Composable
+private fun WatchlistSmallTopAppBar(
+    bannerUrl: String?,
+    compact: Boolean,
+    onBack: () -> Unit,
+    onRefresh: () -> Unit,
+    onMessage: (String) -> Unit,
+) {
+    val context = LocalContext.current
+    val shareLabel = stringResource(R.string.detail_share)
+    val shareFailedMessage = stringResource(R.string.error_share_failed)
+    val watchlistTitle = stringResource(R.string.watchlist_series_title)
+
+    val barScrimColor by animateColorAsState(
+        targetValue = if (compact) MiuixTheme.colorScheme.background.copy(alpha = 0.82f) else Color.Transparent,
+        label = "watchlist-top-bar-color",
+    )
+
+    Box(Modifier.fillMaxWidth()) {
+        if (compact && !bannerUrl.isNullOrBlank()) {
+            PixivImage(
+                url = bannerUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier =
+                    Modifier
+                        .matchParentSize()
+                        .blur(24.dp),
+            )
+        }
+        Box(Modifier.matchParentSize().background(barScrimColor))
+        Row(
+            modifier =
+                Modifier
+                    .fillMaxWidth()
+                    .statusBarsPadding()
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            HeaderOverlayIcon(
+                icon = MiuixIcons.Back,
+                onClick = onBack,
+                backgroundColor = if (compact) Color.Transparent else Color.White.copy(alpha = 0.92f),
+                contentColor = if (compact) MiuixTheme.colorScheme.onBackground else Color.Black,
+            )
+            if (compact) {
+                Text(
+                    text = watchlistTitle,
+                    modifier = Modifier.weight(1f).padding(horizontal = 16.dp),
+                    color = MiuixTheme.colorScheme.onBackground,
+                    style = MiuixTheme.textStyles.title4,
+                    fontWeight = FontWeight.Black,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            } else {
+                Spacer(Modifier.weight(1f))
+            }
+            WindowIconDropdownMenu(
+                entry =
+                    DropdownEntry(
+                        items =
+                            listOf(
+                                DropdownItem(
+                                    text = stringResource(R.string.action_reload),
+                                    onClick = onRefresh,
+                                ),
+                                DropdownItem(
+                                    text = shareLabel,
+                                    onClick = {
+                                        runCatching {
+                                            val intent =
+                                                Intent(Intent.ACTION_SEND).apply {
+                                                    type = "text/plain"
+                                                    putExtra(
+                                                        Intent.EXTRA_TEXT,
+                                                        "\nhttps://www.pixiv.net/novel/series",
+                                                    )
+                                                }
+                                            context.startActivity(Intent.createChooser(intent, shareLabel))
+                                        }.onFailure { onMessage(shareFailedMessage) }
+                                    },
+                                ),
+                            ),
+                    ),
+                backgroundColor = if (compact) Color.Transparent else Color.White.copy(alpha = 0.92f),
+                cornerRadius = 19.dp,
+                minWidth = 38.dp,
+                minHeight = 38.dp,
+            ) {
+                Icon(
+                    MiuixIcons.More,
+                    contentDescription = stringResource(R.string.detail_more),
+                    tint = if (compact) MiuixTheme.colorScheme.onBackground else Color.Black,
+                )
             }
         }
     }
@@ -231,7 +604,7 @@ private fun WatchlistSeriesCard(
                             .padding(horizontal = 8.dp, vertical = 4.dp),
                 ) {
                     Text(
-                        text = "${series.publishedContentCount}P",
+                        text = "話",
                         color = MiuixTheme.colorScheme.onBackground,
                         style = MiuixTheme.textStyles.footnote2,
                         fontWeight = FontWeight.Black,
@@ -247,14 +620,14 @@ private fun WatchlistSeriesCard(
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    text = series.user?.name?.takeIf { it.isNotBlank() } ?: "@${series.user?.account.orEmpty()}",
+                    text = series.user?.name?.takeIf { it.isNotBlank() } ?: "@",
                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     style = MiuixTheme.textStyles.footnote1,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    text = "ID ${series.id}",
+                    text = "ID ",
                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     style = MiuixTheme.textStyles.footnote2,
                 )
@@ -265,20 +638,18 @@ private fun WatchlistSeriesCard(
 
 @Composable
 private fun WatchlistSeriesCardSkeleton() {
-    val transition =
-        androidx.compose.animation.core
-            .rememberInfiniteTransition(label = "watchlistSeriesSkeleton")
+    val transition = rememberInfiniteTransition(label = "watchlistSeriesSkeleton")
     val shimmer by transition.animateFloat(
         initialValue = -1f,
         targetValue = 2f,
         animationSpec =
-            androidx.compose.animation.core.infiniteRepeatable(
+            infiniteRepeatable(
                 animation =
-                    androidx.compose.animation.core.tween(
+                    tween(
                         durationMillis = 1250,
-                        easing = androidx.compose.animation.core.FastOutSlowInEasing,
+                        easing = FastOutSlowInEasing,
                     ),
-                repeatMode = androidx.compose.animation.core.RepeatMode.Restart,
+                repeatMode = RepeatMode.Restart,
             ),
         label = "watchlistSeriesSkeletonShimmer",
     )
