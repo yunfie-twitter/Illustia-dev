@@ -428,6 +428,7 @@ internal fun AppNavHost(
                                 .contains(user.id),
                         onUnmuteUser = { viewModel.unmuteUser(user.id) },
                         gridState = viewModel.userProfileGridState(user.id),
+                        onRefresh = { viewModel.openUserPage(user.id) },
                         showHeaderControls = true,
                     )
                 } else {

@@ -302,6 +302,7 @@ internal fun UserProfileSmallTopAppBar(
     onMuteUser: () -> Unit,
     onMessage: (String) -> Unit,
     onOpenRelatedUsers: () -> Unit,
+    onTitleClick: () -> Unit = {},
     compact: Boolean,
 ) {
     val context = LocalContext.current
@@ -456,7 +457,11 @@ internal fun UserProfileSmallTopAppBar(
             if (compact) {
                 Text(
                     text = shareTitle,
-                    modifier = Modifier.weight(1f).padding(horizontal = 16.dp),
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .padding(horizontal = 16.dp)
+                            .miuixClickable(onClick = onTitleClick),
                     color = MiuixTheme.colorScheme.onBackground,
                     style = MiuixTheme.textStyles.title4,
                     fontWeight = FontWeight.Black,
