@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
@@ -188,10 +190,13 @@ fun ImageViewerScreen(
         contentWindowInsets = WindowInsets(0),
         topBar = {
             AnimatedVisibility(visible = showControls, enter = fadeIn(), exit = fadeOut()) {
+                val cutoutTop = WindowInsets.displayCutout.asPaddingValues().calculateTopPadding()
+                val safeTop = maxOf(cutoutTop, 24.dp)
                 SmallTopAppBar(
                     title = illust.title,
                     color = Color.Transparent,
                     titleColor = Color.White,
+                    modifier = Modifier.padding(top = safeTop),
                     navigationIcon = {
                         IconButton(onClick = onBack) {
                             Icon(
