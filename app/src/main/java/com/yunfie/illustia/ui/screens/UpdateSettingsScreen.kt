@@ -152,13 +152,40 @@ fun UpdateSettingsScreen(
                                         else -> stringResource(R.string.update_shizuku_available)
                                     },
                             ) {
-                                if (isShizukuAvailable && !isShizukuGranted) {
+                                if (!isShizukuAvailable) {
                                     Button(
-                                        onClick = { viewModel.appUpdaterRepository.requestShizukuPermission() },
+                                        onClick = {
+                                            runCatching {
+                                                val intent =
+                                                    context.packageManager
+                                                        .getLaunchIntentForPackage("moe.shizuku.privileged.api")
+                                                if (intent != null) {
+                                                    context.startActivity(intent)
+                                                } else {
+                                                    context.startActivity(
+                                                        Intent(
+                                                            Intent.ACTION_VIEW,
+                                                            Uri.parse("market://details?id=moe.shizuku.privileged.api"),
+                                                        ),
+                                                    )
+                                                }
+                                            }
+                                        },
+                                        insideMargin = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
+                                    ) {
+                                        Text(stringResource(R.string.update_shizuku_open))
+                                    }
+                                } else if (!isShizukuGranted) {
+                                    Button(
+                                        onClick = {
+                                            isShizukuAvailable = viewModel.appUpdaterRepository.isShizukuAvailable()
+                                            isShizukuGranted = viewModel.appUpdaterRepository.isShizukuPermissionGranted()
+                                            viewModel.appUpdaterRepository.requestShizukuPermission()
+                                        },
                                         colors = ButtonDefaults.buttonColorsPrimary(),
                                         insideMargin = PaddingValues(horizontal = 12.dp, vertical = 4.dp),
                                     ) {
-                                        Text("許可", color = MiuixTheme.colorScheme.onPrimary)
+                                        Text(stringResource(R.string.update_shizuku_grant), color = MiuixTheme.colorScheme.onPrimary)
                                     }
                                 }
                             }

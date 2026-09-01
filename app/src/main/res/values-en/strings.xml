@@ -844,7 +844,9 @@
     <string name="update_method_shizuku_desc">Installs automatically in background using Shizuku</string>
     <string name="update_shizuku_available">Shizuku available</string>
     <string name="update_shizuku_not_running">Shizuku is not running</string>
-    <string name="update_shizuku_permission_required">Shizuku permission required (tap to grant)</string>
+    <string name="update_shizuku_permission_required">Shizuku permission required</string>
+    <string name="update_shizuku_open">Open Shizuku</string>
+    <string name="update_shizuku_grant">Grant permission</string>
     <string name="update_section_check">Check for Updates</string>
     <string name="update_check_button">Check for updates</string>
     <string name="update_checking">Checking for updates…</string>

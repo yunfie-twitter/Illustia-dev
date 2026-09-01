@@ -844,7 +844,9 @@
     <string name="update_method_shizuku_desc">Shizukuを使用してバックグラウンドで自動インストールします</string>
     <string name="update_shizuku_available">Shizuku 利用可能</string>
     <string name="update_shizuku_not_running">Shizuku サービス未起動</string>
-    <string name="update_shizuku_permission_required">Shizuku の権限が必要です（タップして許可）</string>
+    <string name="update_shizuku_permission_required">Shizuku の権限が必要です</string>
+    <string name="update_shizuku_open">Shizuku を開く</string>
+    <string name="update_shizuku_grant">許可する</string>
     <string name="update_section_check">アップデートの確認</string>
     <string name="update_check_button">更新を確認</string>
     <string name="update_checking">更新を確認中…</string>
