@@ -89,6 +89,7 @@ internal fun IllustDetailHeader(
     mutedArtworkSummary: String,
     showLikeAnimation: Boolean,
     expanded: Boolean = false,
+    onHeaderIconsThemeChanged: (Boolean) -> Unit = {},
     modifier: Modifier = Modifier,
 ) {
     val context = LocalContext.current
@@ -236,7 +237,9 @@ internal fun IllustDetailHeader(
                             crossfade = true,
                             onSuccess = { bitmap ->
                                 if (page == pagerState.currentPage) {
-                                    useDarkHeaderIcons = NativeImageAnalysis.shouldUseDarkHeaderIcons(bitmap)
+                                    val isDark = NativeImageAnalysis.shouldUseDarkHeaderIcons(bitmap)
+                                    useDarkHeaderIcons = isDark
+                                    onHeaderIconsThemeChanged(isDark)
                                 }
                             },
                         )

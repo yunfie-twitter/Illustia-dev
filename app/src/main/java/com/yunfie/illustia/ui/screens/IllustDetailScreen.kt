@@ -143,6 +143,7 @@ fun IllustDetailScreen(
     var isRefreshing by rememberSaveable { mutableStateOf(false) }
     val pullToRefreshState = rememberPullToRefreshState()
     val detailListState = rememberLazyListState()
+    var useDarkHeaderIcons by remember(illust.id) { mutableStateOf(false) }
     val isArtworkOffScreen by remember {
         derivedStateOf {
             detailListState.firstVisibleItemIndex > 0
@@ -152,14 +153,17 @@ fun IllustDetailScreen(
     val surfaceColor = MiuixTheme.colorScheme.surface
     val isDarkTheme = surfaceColor.luminance() < 0.5f
 
-    DisposableEffect(isArtworkOffScreen, isDarkTheme) {
+    DisposableEffect(isArtworkOffScreen, isDarkTheme, useDarkHeaderIcons) {
         val window = activity?.window
         if (window != null) {
             val insetsController = WindowCompat.getInsetsController(window, window.decorView)
             window.statusBarColor = android.graphics.Color.TRANSPARENT
-            if (isArtworkOffScreen) {
-                insetsController.isAppearanceLightStatusBars = !isDarkTheme
-            }
+            insetsController.isAppearanceLightStatusBars =
+                if (isArtworkOffScreen) {
+                    !isDarkTheme
+                } else {
+                    useDarkHeaderIcons
+                }
         }
         onDispose { }
     }
@@ -167,7 +171,6 @@ fun IllustDetailScreen(
     LaunchedEffect(isRefreshing) {
         if (isRefreshing) {
             onRefresh()
-            delay(500)
             isRefreshing = false
         }
     }
@@ -274,6 +277,7 @@ fun IllustDetailScreen(
             mutedArtworkSummary = mutedArtworkSummary,
             showLikeAnimation = showLikeAnimation,
             expanded = expanded,
+            onHeaderIconsThemeChanged = { useDarkHeaderIcons = it },
             modifier = modifier,
         )
     }
