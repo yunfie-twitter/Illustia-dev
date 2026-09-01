@@ -124,21 +124,13 @@ internal fun MainSurface(
             onAddAccount = viewModel::openAccountLoginMethod,
         )
 
-        val isDesktop =
-            remember(context) {
-                com.yunfie.illustia.platform.DesktopEnvironment
-                    .isDesktop(context)
-            }
-        val isLandscape = (maxWidth > maxHeight && maxWidth >= 480.dp) || maxWidth >= 600.dp
-        val isRootRailActive = (isDesktop && maxWidth >= 480.dp) || (isLandscape && maxWidth >= 840.dp)
-        val useNavigationRail = isLandscape && !isRootRailActive
-        val railState = rememberNavigationRailState()
+        val useNavigationRail = LocalUseNavigationRail.current
         Scaffold(
             modifier = Modifier.nestedScroll(navigationScrollConnection),
             containerColor = MiuixTheme.colorScheme.surface,
             contentWindowInsets = WindowInsets(0),
             bottomBar = {
-                if (!isRootRailActive && !useNavigationRail && !isSearchResultMode) {
+                if (!useNavigationRail && !isSearchResultMode) {
                     if (appState.settings.navigationStyle == "standard") {
                         NavigationBar(
                             color = MiuixTheme.colorScheme.surfaceContainer,
@@ -186,7 +178,13 @@ internal fun MainSurface(
                 }
             },
         ) { paddingValues ->
-            Row(
+            HorizontalPager(
+                state = pagerState,
+                beyondViewportPageCount = 0,
+                userScrollEnabled =
+                    appState.settings.swipeToSwitchWorks &&
+                        !isSearchResultMode &&
+                        !(selectedTab == AppTab.ShortsFeed && appState.settings.disableHorizontalSwipeInShortsFeed),
                 modifier =
                     Modifier
                         .fillMaxSize()
@@ -195,106 +193,72 @@ internal fun MainSurface(
                             bottom = paddingValues.calculateBottomPadding(),
                             start = paddingValues.calculateStartPadding(LocalLayoutDirection.current),
                             end = paddingValues.calculateEndPadding(LocalLayoutDirection.current),
-                        ),
-            ) {
-                if (useNavigationRail && !isSearchResultMode) {
-                    NavigationRail(
-                        state = railState,
-                        color = MiuixTheme.colorScheme.surfaceContainer,
-                        showDivider = true,
-                    ) {
-                        navigationTabs.forEach { tab ->
-                            val pageIndex = tabs.indexOf(tab)
-                            NavigationRailItem(
-                                selected = selectedTab == tab,
-                                onClick = {
-                                    viewModel.closeAccountSwitcher()
-                                    onTabSelected(pageIndex, tab)
-                                },
-                                icon = tab.icon,
-                                label = stringResource(tab.labelResId),
-                            )
-                        }
+                        ).background(MiuixTheme.colorScheme.surface),
+            ) { page ->
+                when (tabs[page]) {
+                    AppTab.Home -> {
+                        HomeScreen(
+                            items = appState.homeItems,
+                            timelineItems = appState.timelineItems,
+                            loadState = appState.loadState,
+                            nextUrl = appState.homeChrome.homeNextUrl,
+                            timelineNextUrl = appState.homeChrome.timelineNextUrl,
+                            settings = appState.settings,
+                            currentAccount = appState.state.currentAccount,
+                            viewModel = viewModel,
+                            scrollBehavior = homeScrollBehavior,
+                            onSearch = onSearch,
+                            onOpenNovels = onOpenNovels,
+                        )
                     }
-                }
-                HorizontalPager(
-                    state = pagerState,
-                    beyondViewportPageCount = 0,
-                    userScrollEnabled =
-                        appState.settings.swipeToSwitchWorks &&
-                            !isSearchResultMode &&
-                            !(selectedTab == AppTab.ShortsFeed && appState.settings.disableHorizontalSwipeInShortsFeed),
-                    modifier =
-                        Modifier
-                            .weight(1f)
-                            .fillMaxHeight()
-                            .background(MiuixTheme.colorScheme.surface),
-                ) { page ->
-                    when (tabs[page]) {
-                        AppTab.Home -> {
-                            HomeScreen(
-                                items = appState.homeItems,
-                                timelineItems = appState.timelineItems,
-                                loadState = appState.loadState,
-                                nextUrl = appState.homeChrome.homeNextUrl,
-                                timelineNextUrl = appState.homeChrome.timelineNextUrl,
-                                settings = appState.settings,
-                                currentAccount = appState.state.currentAccount,
-                                viewModel = viewModel,
-                                scrollBehavior = homeScrollBehavior,
-                                onSearch = onSearch,
-                                onOpenNovels = onOpenNovels,
-                            )
-                        }
 
-                        AppTab.Novel -> {
-                            Unit
-                        }
+                    AppTab.Novel -> {
+                        Unit
+                    }
 
-                        AppTab.Ranking -> {
-                            RankingScreen(
-                                items = appState.rankingItems,
-                                loadState = appState.loadState,
-                                nextUrl = appState.rankingChrome.rankingNextUrl,
-                                mode = appState.rankingChrome.rankingMode,
-                                settings = appState.settings,
-                                viewModel = viewModel,
-                            )
-                        }
+                    AppTab.Ranking -> {
+                        RankingScreen(
+                            items = appState.rankingItems,
+                            loadState = appState.loadState,
+                            nextUrl = appState.rankingChrome.rankingNextUrl,
+                            mode = appState.rankingChrome.rankingMode,
+                            settings = appState.settings,
+                            viewModel = viewModel,
+                        )
+                    }
 
-                        AppTab.Bookmarks -> {
-                            BookmarkScreen(
-                                settings = appState.settings,
-                                loadState = appState.loadState,
-                                bookmarkItems = appState.bookmarkItems,
-                                timelineItems = appState.timelineItems,
-                                followingUsers = appState.followingUsers,
-                                chrome = appState.bookmarkChrome,
-                                viewModel = viewModel,
-                                onOpenWatchlistSeries = onOpenWatchlistSeries,
-                            )
-                        }
+                    AppTab.Bookmarks -> {
+                        BookmarkScreen(
+                            settings = appState.settings,
+                            loadState = appState.loadState,
+                            bookmarkItems = appState.bookmarkItems,
+                            timelineItems = appState.timelineItems,
+                            followingUsers = appState.followingUsers,
+                            chrome = appState.bookmarkChrome,
+                            viewModel = viewModel,
+                            onOpenWatchlistSeries = onOpenWatchlistSeries,
+                        )
+                    }
 
-                        AppTab.Search -> {
-                            SearchScreen(state = appState.state, viewModel = viewModel)
-                        }
+                    AppTab.Search -> {
+                        SearchScreen(state = appState.state, viewModel = viewModel)
+                    }
 
-                        AppTab.ShortsFeed -> {
-                            ShortsFeedScreen(
-                                items = appState.state.shortsFeedItems.visibleWith(appState.state),
-                                currentIllustId = appState.state.shortsFeedCurrentIllustId,
-                                viewModel = viewModel,
-                                onOpenComments = onOpenComments,
-                            )
-                        }
+                    AppTab.ShortsFeed -> {
+                        ShortsFeedScreen(
+                            items = appState.state.shortsFeedItems.visibleWith(appState.state),
+                            currentIllustId = appState.state.shortsFeedCurrentIllustId,
+                            viewModel = viewModel,
+                            onOpenComments = onOpenComments,
+                        )
+                    }
 
-                        AppTab.More -> {
-                            MoreScreen(
-                                state = appState.state,
-                                viewModel = viewModel,
-                                onOpenWatchlistSeries = onOpenWatchlistSeries,
-                            )
-                        }
+                    AppTab.More -> {
+                        MoreScreen(
+                            state = appState.state,
+                            viewModel = viewModel,
+                            onOpenWatchlistSeries = onOpenWatchlistSeries,
+                        )
                     }
                 }
             }
