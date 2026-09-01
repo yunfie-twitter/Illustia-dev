@@ -75,22 +75,32 @@ import com.yunfie.illustia.ui.components.miuixClickable
 import com.yunfie.illustia.ui.components.profileGridContentPadding
 import com.yunfie.illustia.ui.screens.UserResultCard
 import top.yukonga.miuix.kmp.basic.Button
-import top.yukonga.miuix.kmp.basic.ButtonColors
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.ScrollBehavior
 import top.yukonga.miuix.kmp.basic.TabRowWithContour
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.icon.extended.Close
 import top.yukonga.miuix.kmp.icon.extended.More
-import top.yukonga.miuix.kmp.menu.WindowIconDropdownMenu
+import top.yukonga.miuix.kmp.overlay.OverlayCascadingListPopup
 import top.yukonga.miuix.kmp.squircle.squircleSurface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import androidx.compose.foundation.lazy.items as lazyListItems
+
+enum class UserWorkSortOrder {
+    Newest,
+    Oldest,
+    MostBookmarks,
+}
+
+enum class UserWorkTypeFilter {
+    All,
+    IllustOnly,
+    MangaOnly,
+}
 
 @Composable
 internal fun UserProfilePagerContent(
@@ -282,65 +292,12 @@ private fun UserProfileHeader(
 }
 
 @Composable
-internal fun UserProfileTopAppBar(
-    user: UserProfile,
-    onBack: () -> Unit,
-    onMuteUser: () -> Unit,
-    onMessage: (String) -> Unit,
-    onOpenRelatedUsers: () -> Unit,
-    scrollBehavior: ScrollBehavior,
-    modifier: Modifier = Modifier,
-) {
-    val context = LocalContext.current
-    val shareLabel = stringResource(R.string.detail_share)
-    val shareFailedMessage = stringResource(R.string.error_share_failed)
-    val shareTitle = user.name.ifBlank { "@${user.account}" }
-    val profileUrl = remember(user.id) { "https://www.pixiv.net/users/${user.id}" }
-    Row(
-        modifier = modifier.fillMaxWidth().statusBarsPadding().padding(horizontal = 16.dp, vertical = 10.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        HeaderOverlayIcon(MiuixIcons.Back, onBack, contentColor = Color.White)
-        WindowIconDropdownMenu(
-            entry =
-                DropdownEntry(
-                    items =
-                        listOf(
-                            DropdownItem(text = stringResource(R.string.action_sort)),
-                            DropdownItem(text = shareLabel, onClick = {
-                                runCatching {
-                                    val intent =
-                                        Intent(Intent.ACTION_SEND).apply {
-                                            type = "text/plain"
-                                            putExtra(Intent.EXTRA_TEXT, "$shareTitle\n$profileUrl")
-                                        }
-                                    context.startActivity(Intent.createChooser(intent, shareLabel))
-                                }.onFailure { onMessage(shareFailedMessage) }
-                            }),
-                            DropdownItem(
-                                text = stringResource(R.string.user_tab_related),
-                                onClick = onOpenRelatedUsers,
-                            ),
-                            DropdownItem(text = stringResource(R.string.dialog_mute), onClick = {
-                                onMuteUser()
-                                onBack()
-                            }),
-                        ),
-                ),
-            backgroundColor = Color.Black.copy(alpha = 0.35f),
-            cornerRadius = 19.dp,
-            minWidth = 38.dp,
-            minHeight = 38.dp,
-        ) {
-            Icon(MiuixIcons.More, stringResource(R.string.detail_more), Modifier.size(24.dp), tint = Color.White)
-        }
-    }
-}
-
-@Composable
 internal fun UserProfileSmallTopAppBar(
     user: UserProfile,
+    sortOrder: UserWorkSortOrder,
+    typeFilter: UserWorkTypeFilter,
+    onSortOrderChange: (UserWorkSortOrder) -> Unit,
+    onTypeFilterChange: (UserWorkTypeFilter) -> Unit,
     onBack: () -> Unit,
     onMuteUser: () -> Unit,
     onMessage: (String) -> Unit,
@@ -350,8 +307,120 @@ internal fun UserProfileSmallTopAppBar(
     val context = LocalContext.current
     val shareLabel = stringResource(R.string.detail_share)
     val shareFailedMessage = stringResource(R.string.error_share_failed)
+    val sortLabel = stringResource(R.string.action_sort)
+    val sortNewestLabel = stringResource(R.string.user_sort_newest)
+    val sortOldestLabel = stringResource(R.string.user_sort_oldest)
+    val sortPopularLabel = stringResource(R.string.user_sort_popular)
+    val filterCategoryLabel = stringResource(R.string.user_filter_category)
+    val filterAllLabel = stringResource(R.string.user_filter_all)
+    val filterIllustLabel = stringResource(R.string.user_filter_illust_only)
+    val filterMangaLabel = stringResource(R.string.user_filter_manga_only)
+    val relatedLabel = stringResource(R.string.user_tab_related)
+    val muteLabel = stringResource(R.string.dialog_mute)
     val shareTitle = user.name.ifBlank { "@${user.account}" }
     val profileUrl = remember(user.id) { "https://www.pixiv.net/users/${user.id}" }
+    var showMoreMenu by remember { mutableStateOf(false) }
+
+    val menuEntries =
+        remember(
+            sortOrder,
+            typeFilter,
+            shareTitle,
+            profileUrl,
+            user.id,
+            shareLabel,
+            shareFailedMessage,
+            sortLabel,
+            sortNewestLabel,
+            sortOldestLabel,
+            sortPopularLabel,
+            filterCategoryLabel,
+            filterAllLabel,
+            filterIllustLabel,
+            filterMangaLabel,
+            relatedLabel,
+            muteLabel,
+        ) {
+            listOf(
+                DropdownEntry(
+                    items =
+                        listOf(
+                            DropdownItem(
+                                text = sortLabel,
+                                children =
+                                    listOf(
+                                        DropdownItem(
+                                            text = sortNewestLabel,
+                                            selected = sortOrder == UserWorkSortOrder.Newest,
+                                            onClick = { onSortOrderChange(UserWorkSortOrder.Newest) },
+                                        ),
+                                        DropdownItem(
+                                            text = sortOldestLabel,
+                                            selected = sortOrder == UserWorkSortOrder.Oldest,
+                                            onClick = { onSortOrderChange(UserWorkSortOrder.Oldest) },
+                                        ),
+                                        DropdownItem(
+                                            text = sortPopularLabel,
+                                            selected = sortOrder == UserWorkSortOrder.MostBookmarks,
+                                            onClick = { onSortOrderChange(UserWorkSortOrder.MostBookmarks) },
+                                        ),
+                                    ),
+                            ),
+                            DropdownItem(
+                                text = filterCategoryLabel,
+                                children =
+                                    listOf(
+                                        DropdownItem(
+                                            text = filterAllLabel,
+                                            selected = typeFilter == UserWorkTypeFilter.All,
+                                            onClick = { onTypeFilterChange(UserWorkTypeFilter.All) },
+                                        ),
+                                        DropdownItem(
+                                            text = filterIllustLabel,
+                                            selected = typeFilter == UserWorkTypeFilter.IllustOnly,
+                                            onClick = { onTypeFilterChange(UserWorkTypeFilter.IllustOnly) },
+                                        ),
+                                        DropdownItem(
+                                            text = filterMangaLabel,
+                                            selected = typeFilter == UserWorkTypeFilter.MangaOnly,
+                                            onClick = { onTypeFilterChange(UserWorkTypeFilter.MangaOnly) },
+                                        ),
+                                    ),
+                            ),
+                        ),
+                ),
+                DropdownEntry(
+                    items =
+                        listOf(
+                            DropdownItem(
+                                text = shareLabel,
+                                onClick = {
+                                    runCatching {
+                                        val intent =
+                                            Intent(Intent.ACTION_SEND).apply {
+                                                type = "text/plain"
+                                                putExtra(Intent.EXTRA_TEXT, "$shareTitle\n$profileUrl")
+                                            }
+                                        context.startActivity(Intent.createChooser(intent, shareLabel))
+                                    }.onFailure { onMessage(shareFailedMessage) }
+                                },
+                            ),
+                            DropdownItem(
+                                text = relatedLabel,
+                                onClick = onOpenRelatedUsers,
+                            ),
+                            DropdownItem(
+                                text = muteLabel,
+                                onClick = {
+                                    onMuteUser()
+                                    onBack()
+                                },
+                            ),
+                        ),
+                ),
+            )
+        }
+
     val barScrimColor by animateColorAsState(
         targetValue = if (compact) MiuixTheme.colorScheme.background.copy(alpha = 0.76f) else Color.Transparent,
         label = "profile-top-bar-color",
@@ -397,41 +466,17 @@ internal fun UserProfileSmallTopAppBar(
             } else {
                 Spacer(Modifier.weight(1f))
             }
-            WindowIconDropdownMenu(
-                entry =
-                    DropdownEntry(
-                        items =
-                            listOf(
-                                DropdownItem(text = stringResource(R.string.action_sort)),
-                                DropdownItem(text = shareLabel, onClick = {
-                                    runCatching {
-                                        val intent =
-                                            Intent(Intent.ACTION_SEND).apply {
-                                                type = "text/plain"
-                                                putExtra(Intent.EXTRA_TEXT, "$shareTitle\n$profileUrl")
-                                            }
-                                        context.startActivity(Intent.createChooser(intent, shareLabel))
-                                    }.onFailure { onMessage(shareFailedMessage) }
-                                }),
-                                DropdownItem(
-                                    text = stringResource(R.string.user_tab_related),
-                                    onClick = onOpenRelatedUsers,
-                                ),
-                                DropdownItem(text = stringResource(R.string.dialog_mute), onClick = {
-                                    onMuteUser()
-                                    onBack()
-                                }),
-                            ),
-                    ),
-                backgroundColor = if (compact) Color.Transparent else Color.White.copy(alpha = 0.92f),
-                cornerRadius = 19.dp,
-                minWidth = 38.dp,
-                minHeight = 38.dp,
-            ) {
-                Icon(
-                    MiuixIcons.More,
-                    contentDescription = stringResource(R.string.detail_more),
-                    tint = if (compact) MiuixTheme.colorScheme.onBackground else Color.Black,
+            Box {
+                HeaderOverlayIcon(
+                    icon = MiuixIcons.More,
+                    onClick = { showMoreMenu = true },
+                    backgroundColor = if (compact) Color.Transparent else Color.White.copy(alpha = 0.92f),
+                    contentColor = if (compact) MiuixTheme.colorScheme.onBackground else Color.Black,
+                )
+                OverlayCascadingListPopup(
+                    show = showMoreMenu,
+                    entries = menuEntries,
+                    onDismissRequest = { showMoreMenu = false },
                 )
             }
         }

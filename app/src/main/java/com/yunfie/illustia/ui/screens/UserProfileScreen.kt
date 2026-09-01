@@ -36,6 +36,8 @@ import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
 import com.yunfie.illustia.ui.screens.profile.RelatedCreatorsSheetContent
 import com.yunfie.illustia.ui.screens.profile.UserProfilePagerContent
 import com.yunfie.illustia.ui.screens.profile.UserProfileSmallTopAppBar
+import com.yunfie.illustia.ui.screens.profile.UserWorkSortOrder
+import com.yunfie.illustia.ui.screens.profile.UserWorkTypeFilter
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -76,6 +78,39 @@ fun UserProfileScreen(
     var showUnfollowConfirm by remember(user.id) { mutableStateOf(false) }
     var showRelatedUsers by remember(user.id) { mutableStateOf(false) }
     var followAnimationTrigger by remember(user.id) { mutableIntStateOf(0) }
+    var sortOrder by remember(user.id) { mutableStateOf(UserWorkSortOrder.Newest) }
+    var typeFilter by remember(user.id) { mutableStateOf(UserWorkTypeFilter.All) }
+
+    val processedIllusts =
+        remember(illusts, sortOrder, typeFilter) {
+            val filtered =
+                when (typeFilter) {
+                    UserWorkTypeFilter.All -> illusts
+                    UserWorkTypeFilter.IllustOnly -> illusts.filter { it.type != "manga" }
+                    UserWorkTypeFilter.MangaOnly -> illusts.filter { it.type == "manga" }
+                }
+            when (sortOrder) {
+                UserWorkSortOrder.Newest -> filtered.sortedByDescending { it.id }
+                UserWorkSortOrder.Oldest -> filtered.sortedBy { it.id }
+                UserWorkSortOrder.MostBookmarks -> filtered.sortedByDescending { it.totalBookmarks }
+            }
+        }
+
+    val processedBookmarks =
+        remember(bookmarks, sortOrder, typeFilter) {
+            val filtered =
+                when (typeFilter) {
+                    UserWorkTypeFilter.All -> bookmarks
+                    UserWorkTypeFilter.IllustOnly -> bookmarks.filter { it.type != "manga" }
+                    UserWorkTypeFilter.MangaOnly -> bookmarks.filter { it.type == "manga" }
+                }
+            when (sortOrder) {
+                UserWorkSortOrder.Newest -> filtered.sortedByDescending { it.id }
+                UserWorkSortOrder.Oldest -> filtered.sortedBy { it.id }
+                UserWorkSortOrder.MostBookmarks -> filtered.sortedByDescending { it.totalBookmarks }
+            }
+        }
+
     val bookmarkGridState = remember(user.id) { LazyGridState() }
     val pagerState = rememberPagerState(pageCount = { 3 })
     val coroutineScope = rememberCoroutineScope()
@@ -152,8 +187,8 @@ fun UserProfileScreen(
         UserProfilePagerContent(
             user = user,
             settings = settings,
-            illusts = illusts,
-            bookmarks = bookmarks,
+            illusts = processedIllusts,
+            bookmarks = processedBookmarks,
             hasMore = hasMore,
             bookmarkHasMore = bookmarkHasMore,
             onOpenIllust = onOpenIllust,
@@ -179,6 +214,10 @@ fun UserProfileScreen(
             content(Modifier.fillMaxSize())
             UserProfileSmallTopAppBar(
                 user = user,
+                sortOrder = sortOrder,
+                typeFilter = typeFilter,
+                onSortOrderChange = { sortOrder = it },
+                onTypeFilterChange = { typeFilter = it },
                 onBack = onBack,
                 onMuteUser = onMuteUser,
                 onMessage = onMessage,

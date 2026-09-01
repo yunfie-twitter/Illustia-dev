@@ -865,4 +865,11 @@
     <string name="update_release_notes">Release Notes</string>
     <string name="update_view_on_github">View on GitHub</string>
     <string name="update_in_app_updater">In-App Updater</string>
+    <string name="user_sort_newest">Newest first</string>
+    <string name="user_sort_oldest">Oldest first</string>
+    <string name="user_sort_popular">Most popular</string>
+    <string name="user_filter_category">Filter</string>
+    <string name="user_filter_all">All</string>
+    <string name="user_filter_illust_only">Illustrations only</string>
+    <string name="user_filter_manga_only">Manga only</string>
 </resources>

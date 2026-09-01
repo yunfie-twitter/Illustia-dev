@@ -742,4 +742,11 @@
     <string name="error_crash_storage_permission">請檢查目標資料夾的存取權限。在設定中重新選擇該資料夾可能會解決問題。\n%1$s</string>
     <string name="mute_user_id">使用者 ID：%1$d</string>
     <string name="mute_illust_id">插圖 ID：%1$d</string>
+    <string name="user_sort_newest">最新發布</string>
+    <string name="user_sort_oldest">最早發布</string>
+    <string name="user_sort_popular">熱門作品 (收藏數)</string>
+    <string name="user_filter_category">篩選分類</string>
+    <string name="user_filter_all">全部</string>
+    <string name="user_filter_illust_only">僅插畫</string>
+    <string name="user_filter_manga_only">僅漫畫</string>
 </resources>

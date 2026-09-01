@@ -800,4 +800,11 @@
     <string name="error_crash_storage_permission">대상 폴더의 접근 권한을 확인하세요. 설정에서 폴더를 다시 선택하면 문제가 해결될 수 있습니다.\n%1$s</string>
     <string name="mute_user_id">사용자 ID: %1$d</string>
     <string name="mute_illust_id">일러스트 ID: %1$d</string>
+    <string name="user_sort_newest">최신순</string>
+    <string name="user_sort_oldest">오래된순</string>
+    <string name="user_sort_popular">인기순 (북마크수)</string>
+    <string name="user_filter_category">필터</string>
+    <string name="user_filter_all">전체</string>
+    <string name="user_filter_illust_only">일러스트만</string>
+    <string name="user_filter_manga_only">만화만</string>
 </resources>

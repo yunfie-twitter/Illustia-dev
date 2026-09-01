@@ -742,4 +742,11 @@
     <string name="error_crash_storage_permission">请检查目标文件夹的访问权限。在设置中重新选择该文件夹可能会解决问题。\n%1$s</string>
     <string name="mute_user_id">用户 ID：%1$d</string>
     <string name="mute_illust_id">插图 ID：%1$d</string>
+    <string name="user_sort_newest">最新发布</string>
+    <string name="user_sort_oldest">最早发布</string>
+    <string name="user_sort_popular">热门作品 (收藏数)</string>
+    <string name="user_filter_category">筛选分类</string>
+    <string name="user_filter_all">全部</string>
+    <string name="user_filter_illust_only">仅插画</string>
+    <string name="user_filter_manga_only">仅漫画</string>
 </resources>
