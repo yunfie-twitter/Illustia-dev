@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -307,16 +308,33 @@ fun IllustDetailScreen(
         },
     ) { scaffoldPadding ->
         val statusBarTopPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-        Box(modifier = Modifier.fillMaxSize()) {
+        Box(modifier = Modifier.fillMaxSize().background(MiuixTheme.colorScheme.surface)) {
+            PixivImage(
+                url = illust.squareImageUrl.ifBlank { illust.imageUrl },
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .blur(32.dp)
+                        .graphicsLayer { alpha = 0.5f },
+            )
+            Box(
+                modifier =
+                    Modifier
+                        .fillMaxSize()
+                        .background(MiuixTheme.colorScheme.surface.copy(alpha = 0.35f)),
+            )
+
             Surface(
                 modifier = Modifier.fillMaxSize().padding(bottom = scaffoldPadding.calculateBottomPadding().coerceAtLeast(0.dp)),
-                color = MiuixTheme.colorScheme.surface,
+                color = Color.Transparent,
             ) {
                 PullToRefresh(
                     isRefreshing = isRefreshing,
                     onRefresh = { isRefreshing = true },
                     pullToRefreshState = pullToRefreshState,
-                    contentPadding = PaddingValues(top = statusBarTopPadding),
+                    contentPadding = PaddingValues(top = statusBarTopPadding + 8.dp),
                     modifier = Modifier.fillMaxSize(),
                 ) {
                     BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
