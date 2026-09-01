@@ -1,5 +1,6 @@
 package com.yunfie.illustia.ui.screens
 
+import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -21,13 +22,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
@@ -39,6 +43,7 @@ import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -50,6 +55,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.fromHtml
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
 import com.yunfie.illustia.R
 import com.yunfie.illustia.models.Illust
 import com.yunfie.illustia.models.pixiv.Comment
@@ -136,6 +142,27 @@ fun IllustDetailScreen(
     val pixivUrl = remember(illust.id) { "https://www.pixiv.net/artworks/${illust.id}" }
     var isRefreshing by rememberSaveable { mutableStateOf(false) }
     val pullToRefreshState = rememberPullToRefreshState()
+    val detailListState = rememberLazyListState()
+    val isArtworkOffScreen by remember {
+        derivedStateOf {
+            detailListState.firstVisibleItemIndex > 0
+        }
+    }
+    val activity = context as? Activity
+    val surfaceColor = MiuixTheme.colorScheme.surface
+    val isDarkTheme = surfaceColor.luminance() < 0.5f
+
+    DisposableEffect(isArtworkOffScreen, isDarkTheme) {
+        val window = activity?.window
+        if (window != null) {
+            val insetsController = WindowCompat.getInsetsController(window, window.decorView)
+            window.statusBarColor = android.graphics.Color.TRANSPARENT
+            if (isArtworkOffScreen) {
+                insetsController.isAppearanceLightStatusBars = !isDarkTheme
+            }
+        }
+        onDispose { }
+    }
 
     LaunchedEffect(isRefreshing) {
         if (isRefreshing) {
@@ -314,22 +341,25 @@ fun IllustDetailScreen(
                     .fillMaxSize()
                     .background(MiuixTheme.colorScheme.surface),
         ) {
-            PixivImage(
-                url = illust.squareImageUrl.ifBlank { illust.imageUrl },
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .blur(36.dp)
-                        .graphicsLayer { alpha = 0.55f },
-            )
-            Box(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .background(MiuixTheme.colorScheme.surface.copy(alpha = 0.42f)),
-            )
+            val pullProgress = pullToRefreshState.pullProgress.coerceIn(0f, 1f)
+            if (pullProgress > 0.001f) {
+                PixivImage(
+                    url = illust.squareImageUrl.ifBlank { illust.imageUrl },
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .blur(36.dp)
+                            .graphicsLayer { alpha = pullProgress * 0.55f },
+                )
+                Box(
+                    modifier =
+                        Modifier
+                            .fillMaxSize()
+                            .background(MiuixTheme.colorScheme.surface.copy(alpha = pullProgress * 0.42f)),
+                )
+            }
 
             Surface(
                 modifier =
@@ -342,9 +372,16 @@ fun IllustDetailScreen(
                     isRefreshing = isRefreshing,
                     onRefresh = { isRefreshing = true },
                     pullToRefreshState = pullToRefreshState,
-                    modifier = Modifier.fillMaxSize().padding(top = statusBarTopPadding),
+                    contentPadding = PaddingValues(top = statusBarTopPadding + 8.dp),
+                    modifier = Modifier.fillMaxSize(),
                 ) {
-                    BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                    val pullOffset = (statusBarTopPadding + 8.dp) * pullToRefreshState.pullProgress.coerceAtMost(1f)
+                    BoxWithConstraints(
+                        modifier =
+                            Modifier
+                                .fillMaxSize()
+                                .padding(top = pullOffset),
+                    ) {
                         val useTwoPaneLayout = maxWidth >= 840.dp && maxWidth > maxHeight
                         if (useTwoPaneLayout) {
                             Row(modifier = Modifier.fillMaxSize()) {
@@ -362,6 +399,7 @@ fun IllustDetailScreen(
                             }
                         } else {
                             LazyColumn(
+                                state = detailListState,
                                 modifier =
                                     Modifier
                                         .fillMaxSize()

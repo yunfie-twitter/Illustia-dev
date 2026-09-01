@@ -44,8 +44,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.blur
@@ -54,6 +56,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -85,6 +90,7 @@ import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.basic.PullToRefresh
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.icon.extended.FavoritesFill
@@ -109,10 +115,30 @@ fun WatchlistSeriesScreen(
     val settings by viewModel.settingsState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val gridState = rememberLazyGridState()
+    val pullToRefreshState = rememberPullToRefreshState()
 
-    val isContentScrolled by remember {
+    var isHeaderCollapsed by remember { mutableStateOf(false) }
+
+    val watchlistScrollConnection =
+        remember(gridState) {
+            object : NestedScrollConnection {
+                override fun onPreScroll(
+                    available: Offset,
+                    source: NestedScrollSource,
+                ): Offset {
+                    if (available.y < -8f) {
+                        isHeaderCollapsed = true
+                    } else if (available.y > 8f && gridState.firstVisibleItemIndex == 0 && gridState.firstVisibleItemScrollOffset <= 0) {
+                        isHeaderCollapsed = false
+                    }
+                    return Offset.Zero
+                }
+            }
+        }
+
+    val isContentScrolled by remember(gridState, isHeaderCollapsed) {
         derivedStateOf {
-            gridState.firstVisibleItemIndex > 0 || gridState.firstVisibleItemScrollOffset > 24
+            isHeaderCollapsed || gridState.firstVisibleItemIndex > 0 || gridState.firstVisibleItemScrollOffset > 24
         }
     }
     val showHeader = !isContentScrolled
@@ -129,10 +155,12 @@ fun WatchlistSeriesScreen(
         modifier =
             Modifier
                 .fillMaxSize()
+                .nestedScroll(watchlistScrollConnection)
                 .background(backgroundColor),
     ) {
-        // Blurred backdrop behind PullToRefresh
-        if (!bannerCoverUrl.isNullOrBlank()) {
+        // Blurred backdrop behind PullToRefresh (only active at the very top on pull-down)
+        val pullProgress = pullToRefreshState.pullProgress.coerceIn(0f, 1f)
+        if (pullProgress > 0.001f && !bannerCoverUrl.isNullOrBlank()) {
             PixivImage(
                 url = bannerCoverUrl,
                 contentDescription = null,
@@ -141,21 +169,24 @@ fun WatchlistSeriesScreen(
                     Modifier
                         .fillMaxSize()
                         .blur(36.dp)
-                        .graphicsLayer { alpha = 0.48f },
+                        .graphicsLayer { alpha = pullProgress * 0.48f },
             )
             Box(
                 modifier =
                     Modifier
                         .fillMaxSize()
-                        .background(backgroundColor.copy(alpha = 0.65f)),
+                        .background(backgroundColor.copy(alpha = pullProgress * 0.65f)),
             )
         }
 
         PullToRefresh(
             isRefreshing = state.isLoading && state.mangaSeries.isNotEmpty(),
             onRefresh = { scope.launch { store.fetch() } },
-            modifier = Modifier.fillMaxSize().padding(top = statusBarTopPadding),
+            pullToRefreshState = pullToRefreshState,
+            contentPadding = PaddingValues(top = statusBarTopPadding + 8.dp),
+            modifier = Modifier.fillMaxSize(),
         ) {
+            val pullOffset = (statusBarTopPadding + 8.dp) * pullToRefreshState.pullProgress.coerceAtMost(1f)
             AutoLoadMoreEffect(
                 enabled = settings.autoLoadMore,
                 nextUrl = state.model?.nextUrl,
@@ -167,6 +198,7 @@ fun WatchlistSeriesScreen(
                 modifier =
                     Modifier
                         .fillMaxSize()
+                        .padding(top = pullOffset)
                         .background(Color.Transparent),
             ) {
                 AnimatedVisibility(
@@ -425,7 +457,7 @@ private fun WatchlistInfo(
                 overflow = TextOverflow.Ellipsis,
             )
             Text(
-                text = " 作品",
+                text = stringResource(R.string.data_items_count, seriesCount),
                 color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 style = MiuixTheme.textStyles.body2,
                 fontWeight = FontWeight.Bold,
@@ -476,7 +508,7 @@ private fun WatchlistSmallTopAppBar(
                 Modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
-                    .padding(horizontal = 14.dp, vertical = 8.dp),
+                    .padding(horizontal = 14.dp, vertical = 6.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {

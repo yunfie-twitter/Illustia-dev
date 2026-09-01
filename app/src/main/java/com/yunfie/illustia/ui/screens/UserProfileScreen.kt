@@ -16,7 +16,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
+import androidx.compose.ui.input.nestedscroll.NestedScrollSource
+import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -76,10 +80,35 @@ fun UserProfileScreen(
     val pagerState = rememberPagerState(pageCount = { 3 })
     val coroutineScope = rememberCoroutineScope()
     val selectedTab = pagerState.currentPage
-    val isContentScrolled by remember(selectedTab, gridState, bookmarkGridState) {
+    var isHeaderCollapsed by remember(user.id) { mutableStateOf(false) }
+    val activeGridState = if (selectedTab == 1) bookmarkGridState else gridState
+
+    // Track scroll events reliably without bouncing / flapping on short content lists
+    val profileScrollConnection =
+        remember(selectedTab, activeGridState) {
+            object : NestedScrollConnection {
+                override fun onPreScroll(
+                    available: Offset,
+                    source: NestedScrollSource,
+                ): Offset {
+                    if (selectedTab != 2) {
+                        if (available.y < -8f) {
+                            isHeaderCollapsed = true
+                        } else if (available.y > 8f && activeGridState.firstVisibleItemIndex == 0 &&
+                            activeGridState.firstVisibleItemScrollOffset <= 0
+                        ) {
+                            isHeaderCollapsed = false
+                        }
+                    }
+                    return Offset.Zero
+                }
+            }
+        }
+
+    val isContentScrolled by remember(selectedTab, activeGridState, isHeaderCollapsed) {
         derivedStateOf {
-            val state = if (selectedTab == 1) bookmarkGridState else gridState
-            selectedTab != 2 && (state.firstVisibleItemIndex > 0 || state.firstVisibleItemScrollOffset > 24)
+            selectedTab != 2 &&
+                (isHeaderCollapsed || activeGridState.firstVisibleItemIndex > 0 || activeGridState.firstVisibleItemScrollOffset > 24)
         }
     }
 
@@ -116,6 +145,7 @@ fun UserProfileScreen(
     val contentModifier =
         modifier
             .then(if (contentHeight != null) Modifier.height(contentHeight) else Modifier.fillMaxSize())
+            .nestedScroll(profileScrollConnection)
             .background(backgroundColor)
 
     val content: @Composable (Modifier) -> Unit = { pageModifier ->
