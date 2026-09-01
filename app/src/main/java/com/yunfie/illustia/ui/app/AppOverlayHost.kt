@@ -288,7 +288,6 @@ internal fun AppOverlayHost(
                             .contains(user.id),
                     onUnmuteUser = { viewModel.unmuteUser(user.id) },
                     gridState = viewModel.userProfileGridState(user.id),
-                    onRefresh = { viewModel.openUserPage(user.id) },
                     showHeaderControls = false,
                     backgroundColor = userSheetBackground,
                     contentHeight = userSheetHeight,

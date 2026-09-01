@@ -18,15 +18,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.Dp
@@ -40,7 +37,6 @@ import com.yunfie.illustia.settings.AppSettings
 import com.yunfie.illustia.ui.components.BottomSheetInsideMargin
 import com.yunfie.illustia.ui.components.LocalBottomSheetBackgroundColor
 import com.yunfie.illustia.ui.components.MiuixConfirmDialog
-import com.yunfie.illustia.ui.components.PixivImage
 import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
 import com.yunfie.illustia.ui.screens.profile.RelatedCreatorsSheetContent
 import com.yunfie.illustia.ui.screens.profile.UserProfilePagerContent
@@ -48,8 +44,6 @@ import com.yunfie.illustia.ui.screens.profile.UserProfileSmallTopAppBar
 import com.yunfie.illustia.ui.screens.profile.UserWorkSortOrder
 import com.yunfie.illustia.ui.screens.profile.UserWorkTypeFilter
 import kotlinx.coroutines.launch
-import top.yukonga.miuix.kmp.basic.PullToRefresh
-import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.overlay.OverlayBottomSheet
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
@@ -80,7 +74,6 @@ fun UserProfileScreen(
     isMuted: Boolean,
     onUnmuteUser: () -> Unit,
     gridState: LazyGridState,
-    onRefresh: (() -> Unit)? = null,
     showHeaderControls: Boolean = true,
     modifier: Modifier = Modifier,
     backgroundColor: Color = MiuixTheme.colorScheme.background,
@@ -96,25 +89,6 @@ fun UserProfileScreen(
     var followAnimationTrigger by remember(user.id) { mutableIntStateOf(0) }
     var sortOrder by remember(user.id) { mutableStateOf(UserWorkSortOrder.Newest) }
     var typeFilter by remember(user.id) { mutableStateOf(UserWorkTypeFilter.All) }
-
-    val pullToRefreshState = rememberPullToRefreshState()
-    var isRefreshing by remember { mutableStateOf(false) }
-
-    LaunchedEffect(user, illusts, bookmarks) {
-        isRefreshing = false
-    }
-
-    val rawPullProgress = pullToRefreshState.pullProgress
-    val pullProgress =
-        if (rawPullProgress > 0.06f) {
-            ((rawPullProgress - 0.06f) / 0.94f).coerceIn(0f, 1f)
-        } else {
-            0f
-        }
-
-    val isPulling by remember {
-        derivedStateOf { pullToRefreshState.pullProgress > 0.08f }
-    }
 
     val processedIllusts =
         remember(illusts, sortOrder, typeFilter) {
@@ -182,12 +156,12 @@ fun UserProfileScreen(
         }
     }
 
-    DisposableEffect(isContentScrolled, isDarkTheme, isPulling) {
+    DisposableEffect(isContentScrolled, isDarkTheme) {
         val window = activity?.window
         if (window != null) {
             val insetsController = WindowCompat.getInsetsController(window, window.decorView)
             insetsController.isAppearanceLightStatusBars =
-                if (isContentScrolled || isPulling) {
+                if (isContentScrolled) {
                     !isDarkTheme
                 } else {
                     false
@@ -269,41 +243,7 @@ fun UserProfileScreen(
 
     if (showHeaderControls) {
         Box(modifier = contentModifier) {
-            if (pullProgress > 0.001f && !user.backgroundImageUrl.isNullOrBlank()) {
-                PixivImage(
-                    url = user.backgroundImageUrl,
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .blur(36.dp)
-                            .graphicsLayer { alpha = pullProgress * 0.48f },
-                )
-                Box(
-                    modifier =
-                        Modifier
-                            .fillMaxSize()
-                            .background(backgroundColor.copy(alpha = pullProgress * 0.65f)),
-                )
-            }
-
-            PullToRefresh(
-                isRefreshing = isRefreshing,
-                onRefresh = {
-                    isRefreshing = true
-                    if (selectedTab == 1) {
-                        onLoadBookmarks()
-                    } else {
-                        onRefresh?.invoke()
-                    }
-                },
-                pullToRefreshState = pullToRefreshState,
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                content(Modifier.fillMaxSize())
-            }
-
+            content(Modifier.fillMaxSize())
             UserProfileSmallTopAppBar(
                 user = user,
                 sortOrder = sortOrder,
@@ -322,21 +262,7 @@ fun UserProfileScreen(
             )
         }
     } else {
-        PullToRefresh(
-            isRefreshing = isRefreshing,
-            onRefresh = {
-                isRefreshing = true
-                if (selectedTab == 1) {
-                    onLoadBookmarks()
-                } else {
-                    onRefresh?.invoke()
-                }
-            },
-            pullToRefreshState = pullToRefreshState,
-            modifier = contentModifier,
-        ) {
-            content(Modifier.fillMaxSize())
-        }
+        content(contentModifier)
     }
 
     OverlayBottomSheet(
