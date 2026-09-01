@@ -83,13 +83,24 @@ fun UpdateSettingsScreen(
         }
     }
 
+    val isDesktop =
+        remember(context) {
+            com.yunfie.illustia.platform.DesktopEnvironment
+                .isDesktop(context)
+        }
     val installMethods =
-        listOf(
-            stringResource(R.string.update_method_standard),
-            stringResource(R.string.update_method_shizuku),
-        )
+        remember(isDesktop) {
+            if (isDesktop) {
+                listOf(context.getString(R.string.update_method_standard))
+            } else {
+                listOf(
+                    context.getString(R.string.update_method_standard),
+                    context.getString(R.string.update_method_shizuku),
+                )
+            }
+        }
     val selectedInstallIndex =
-        if (state.settings.updateInstallMethod == UpdateInstallMethod.SHIZUKU.value) 1 else 0
+        if (!isDesktop && state.settings.updateInstallMethod == UpdateInstallMethod.SHIZUKU.value) 1 else 0
 
     Scaffold(
         containerColor = MiuixTheme.colorScheme.surface,
@@ -123,25 +134,27 @@ fun UpdateSettingsScreen(
             item {
                 Section(stringResource(R.string.update_section_install)) {
                     ElevatedPanel {
-                        OverlayDropdownPreference(
-                            title = stringResource(R.string.update_install_method),
-                            summary =
-                                when (selectedInstallIndex) {
-                                    1 -> stringResource(R.string.update_method_shizuku_desc)
-                                    else -> stringResource(R.string.update_method_standard_desc)
+                        if (!isDesktop) {
+                            OverlayDropdownPreference(
+                                title = stringResource(R.string.update_install_method),
+                                summary =
+                                    when (selectedInstallIndex) {
+                                        1 -> stringResource(R.string.update_method_shizuku_desc)
+                                        else -> stringResource(R.string.update_method_standard_desc)
+                                    },
+                                items = installMethods,
+                                selectedIndex = selectedInstallIndex,
+                                onSelectedIndexChange = { index ->
+                                    val method =
+                                        if (index == 1) UpdateInstallMethod.SHIZUKU else UpdateInstallMethod.STANDARD_APK
+                                    viewModel.updateUpdateInstallMethod(method)
+                                    isShizukuAvailable = viewModel.appUpdaterRepository.isShizukuAvailable()
+                                    isShizukuGranted = viewModel.appUpdaterRepository.isShizukuPermissionGranted()
                                 },
-                            items = installMethods,
-                            selectedIndex = selectedInstallIndex,
-                            onSelectedIndexChange = { index ->
-                                val method =
-                                    if (index == 1) UpdateInstallMethod.SHIZUKU else UpdateInstallMethod.STANDARD_APK
-                                viewModel.updateUpdateInstallMethod(method)
-                                isShizukuAvailable = viewModel.appUpdaterRepository.isShizukuAvailable()
-                                isShizukuGranted = viewModel.appUpdaterRepository.isShizukuPermissionGranted()
-                            },
-                        )
+                            )
+                        }
 
-                        if (selectedInstallIndex == 1) {
+                        if (!isDesktop && selectedInstallIndex == 1) {
                             DividerLine()
                             SettingRow(
                                 title = "Shizuku",

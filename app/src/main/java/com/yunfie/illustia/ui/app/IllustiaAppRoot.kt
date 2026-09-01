@@ -3,7 +3,10 @@ package com.yunfie.illustia.ui.app
 import android.net.Uri
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -23,6 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation3.runtime.NavKey
@@ -32,6 +36,8 @@ import com.yunfie.illustia.IllustiaNavigationRequest
 import com.yunfie.illustia.IllustiaViewModel
 import com.yunfie.illustia.R
 import com.yunfie.illustia.data.pixiv.CommentArtworkType
+import com.yunfie.illustia.platform.DesktopEnvironment
+import com.yunfie.illustia.platform.WindowSizeClass
 import com.yunfie.illustia.settings.AppHapticMode
 import com.yunfie.illustia.settings.effectiveAppHapticMode
 import com.yunfie.illustia.ui.components.ArtworkCardPreferences
@@ -48,11 +54,14 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import top.yukonga.miuix.kmp.basic.NavigationRail
+import top.yukonga.miuix.kmp.basic.NavigationRailItem
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SnackbarDuration
 import top.yukonga.miuix.kmp.basic.SnackbarHost
 import top.yukonga.miuix.kmp.basic.SnackbarHostState
 import top.yukonga.miuix.kmp.basic.Surface
+import top.yukonga.miuix.kmp.basic.rememberNavigationRailState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.scrollEndHaptic
 
@@ -473,51 +482,92 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
                         SnackbarHost(state = snackbarHostState)
                     },
                 ) { rootPadding ->
-                    Box(
+                    val isDesktop = remember(context) { DesktopEnvironment.isDesktop(context) }
+                    val rootRailState = rememberNavigationRailState()
+                    BoxWithConstraints(
                         modifier =
                             Modifier
                                 .fillMaxSize()
                                 .padding(rootPadding),
                     ) {
-                        Surface(
-                            modifier = Modifier.fillMaxSize(),
-                            color = MiuixTheme.colorScheme.surface,
-                        ) {
-                            AppNavHost(
-                                appState = appState,
-                                viewModel = viewModel,
-                                backStack = backStack,
-                                detailSnapshots = detailSnapshots,
-                                selectedTab = selectedTab,
-                                pagerState = pagerState,
-                                homeScrollBehavior = homeScrollBehavior,
-                                showTokenLogin = showTokenLogin,
-                                onShowTokenLoginChange = { showTokenLogin = it },
-                                selectedWatchlistSeriesId = selectedWatchlistSeriesIds.lastOrNull(),
-                                onSelectedWatchlistSeriesIdChange = { seriesId ->
-                                    if (seriesId == null) {
-                                        if (selectedWatchlistSeriesIds.isNotEmpty()) {
-                                            selectedWatchlistSeriesIds.removeAt(selectedWatchlistSeriesIds.lastIndex)
+                        val isLandscape = (maxWidth > maxHeight && maxWidth >= 480.dp) || maxWidth >= 600.dp
+                        val showRootNavigationRail = (isDesktop && maxWidth >= 480.dp) || (isLandscape && maxWidth >= 840.dp)
+                        val navigationTabs = visibleTabs(appState.settings)
+
+                        Row(modifier = Modifier.fillMaxSize()) {
+                            if (showRootNavigationRail) {
+                                NavigationRail(
+                                    state = rootRailState,
+                                    color = MiuixTheme.colorScheme.surfaceContainer,
+                                    showDivider = true,
+                                ) {
+                                    navigationTabs.forEach { tab ->
+                                        val pageIndex = tabs.indexOf(tab)
+                                        val isSelected = (backStack.lastOrNull() == AppRoute.Main) && (selectedTab == tab)
+                                        NavigationRailItem(
+                                            selected = isSelected,
+                                            onClick = {
+                                                viewModel.closeAccountSwitcher()
+                                                if (backStack.lastOrNull() != AppRoute.Main) {
+                                                    backStack.clear()
+                                                    backStack.add(AppRoute.Main)
+                                                    selectedWatchlistSeriesIds.clear()
+                                                }
+                                                if (tab == AppTab.ShortsFeed && selectedTab == AppTab.ShortsFeed) {
+                                                    viewModel.refreshShortsFeed()
+                                                } else {
+                                                    selectedTab = tab
+                                                    coroutineScope.launch { pagerState.animateScrollToPage(pageIndex) }
+                                                    if (tab == AppTab.Bookmarks) viewModel.refreshBookmarks()
+                                                }
+                                            },
+                                            icon = tab.icon,
+                                            label = stringResource(tab.labelResId),
+                                        )
+                                    }
+                                }
+                            }
+
+                            Surface(
+                                modifier = Modifier.weight(1f).fillMaxHeight(),
+                                color = MiuixTheme.colorScheme.surface,
+                            ) {
+                                AppNavHost(
+                                    appState = appState,
+                                    viewModel = viewModel,
+                                    backStack = backStack,
+                                    detailSnapshots = detailSnapshots,
+                                    selectedTab = selectedTab,
+                                    pagerState = pagerState,
+                                    homeScrollBehavior = homeScrollBehavior,
+                                    showTokenLogin = showTokenLogin,
+                                    onShowTokenLoginChange = { showTokenLogin = it },
+                                    selectedWatchlistSeriesId = selectedWatchlistSeriesIds.lastOrNull(),
+                                    onSelectedWatchlistSeriesIdChange = { seriesId ->
+                                        if (seriesId == null) {
+                                            if (selectedWatchlistSeriesIds.isNotEmpty()) {
+                                                selectedWatchlistSeriesIds.removeAt(selectedWatchlistSeriesIds.lastIndex)
+                                            }
+                                        } else {
+                                            selectedWatchlistSeriesIds.add(seriesId)
                                         }
-                                    } else {
-                                        selectedWatchlistSeriesIds.add(seriesId)
-                                    }
-                                },
-                                selectedCommentTarget = selectedCommentTarget,
-                                onSelectedCommentTargetChange = { selectedCommentTarget = it },
-                                onNavigate = ::navigate,
-                                onPopRoute = ::popRoute,
-                                onSearchTag = ::searchFromDetail,
-                                onTabSelected = { index, tab ->
-                                    if (tab == AppTab.ShortsFeed && selectedTab == AppTab.ShortsFeed) {
-                                        viewModel.refreshShortsFeed()
-                                    } else {
-                                        selectedTab = tab
-                                        coroutineScope.launch { pagerState.animateScrollToPage(index) }
-                                        if (tab == AppTab.Bookmarks) viewModel.refreshBookmarks()
-                                    }
-                                },
-                            )
+                                    },
+                                    selectedCommentTarget = selectedCommentTarget,
+                                    onSelectedCommentTargetChange = { selectedCommentTarget = it },
+                                    onNavigate = ::navigate,
+                                    onPopRoute = ::popRoute,
+                                    onSearchTag = ::searchFromDetail,
+                                    onTabSelected = { index, tab ->
+                                        if (tab == AppTab.ShortsFeed && selectedTab == AppTab.ShortsFeed) {
+                                            viewModel.refreshShortsFeed()
+                                        } else {
+                                            selectedTab = tab
+                                            coroutineScope.launch { pagerState.animateScrollToPage(index) }
+                                            if (tab == AppTab.Bookmarks) viewModel.refreshBookmarks()
+                                        }
+                                    },
+                                )
+                            }
                         }
                     }
                 }

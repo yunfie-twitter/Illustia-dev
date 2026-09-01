@@ -19,6 +19,9 @@ import android.net.Uri
 import android.os.Bundle
 import android.os.PersistableBundle
 import android.view.Display
+import android.view.InputDevice
+import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.WindowManager
 import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.activity.SystemBarStyle
@@ -263,6 +266,38 @@ class MainActivity : FragmentActivity() {
             LaunchedEffect(settingsLoaded, settings.privacyModeEnabled, settings.dummyAppName, settings.dummyIconVariant) {
                 if (!settingsLoaded) return@LaunchedEffect
                 viewModel.applyDummyIconSettings(this@MainActivity)
+            }
+
+            LaunchedEffect(
+                settingsLoaded,
+                uiState.selectedIllust?.title,
+                uiState.selectedUser?.name,
+                uiState.activeSearchWord,
+                uiState.showUserPage,
+            ) {
+                if (!settingsLoaded) return@LaunchedEffect
+                val appName = getString(R.string.app_name)
+                val pageTitle =
+                    when {
+                        uiState.selectedIllust != null -> {
+                            val illustTitle = uiState.selectedIllust?.title.orEmpty()
+                            val artist = uiState.selectedIllust?.artistName.orEmpty()
+                            if (artist.isNotBlank()) "$illustTitle - $artist | $appName" else "$illustTitle | $appName"
+                        }
+
+                        uiState.showUserPage && uiState.selectedUser != null -> {
+                            "${uiState.selectedUser?.name} | $appName"
+                        }
+
+                        uiState.activeSearchWord.isNotBlank() -> {
+                            "${uiState.activeSearchWord} | $appName"
+                        }
+
+                        else -> {
+                            appName
+                        }
+                    }
+                title = pageTitle
             }
 
             LaunchedEffect(settingsLoaded) {
@@ -563,5 +598,82 @@ class MainActivity : FragmentActivity() {
             title3 = base.title3.copy(fontFamily = fontFamily),
             title4 = base.title4.copy(fontFamily = fontFamily),
         )
+    }
+
+    override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
+        if (event.action == MotionEvent.ACTION_SCROLL &&
+            (event.source and InputDevice.SOURCE_CLASS_POINTER != 0)
+        ) {
+            val vScroll = event.getAxisValue(MotionEvent.AXIS_VSCROLL)
+            val hScroll = event.getAxisValue(MotionEvent.AXIS_HSCROLL)
+            if (vScroll != 0f || hScroll != 0f) {
+                val pointerCount = event.pointerCount
+                val pointerProperties =
+                    Array(pointerCount) { i ->
+                        MotionEvent.PointerProperties().also { event.getPointerProperties(i, it) }
+                    }
+                val pointerCoords =
+                    Array(pointerCount) { i ->
+                        MotionEvent.PointerCoords().also {
+                            event.getPointerCoords(i, it)
+                            it.setAxisValue(MotionEvent.AXIS_VSCROLL, it.getAxisValue(MotionEvent.AXIS_VSCROLL) * 2.2f)
+                            it.setAxisValue(MotionEvent.AXIS_HSCROLL, it.getAxisValue(MotionEvent.AXIS_HSCROLL) * 2.2f)
+                        }
+                    }
+                val modifiedEvent =
+                    MotionEvent.obtain(
+                        event.downTime,
+                        event.eventTime,
+                        event.action,
+                        pointerCount,
+                        pointerProperties,
+                        pointerCoords,
+                        event.metaState,
+                        event.buttonState,
+                        event.xPrecision,
+                        event.yPrecision,
+                        event.deviceId,
+                        event.edgeFlags,
+                        event.source,
+                        event.flags,
+                    )
+                val handled = super.dispatchGenericMotionEvent(modifiedEvent)
+                modifiedEvent.recycle()
+                if (handled) return true
+            }
+        }
+        return super.dispatchGenericMotionEvent(event)
+    }
+
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        if (event.action == KeyEvent.ACTION_DOWN) {
+            val isCtrl = event.isCtrlPressed
+            val isAlt = event.isAltPressed
+            when {
+                isCtrl && event.keyCode == KeyEvent.KEYCODE_R -> {
+                    val state = viewModel.uiState.value
+                    when {
+                        state.selectedIllust != null -> viewModel.refreshIllustDetail(state.selectedIllust.id)
+                        state.showUserPage && state.selectedUser != null -> viewModel.openUserPage(state.selectedUser.id)
+                        else -> viewModel.refreshHome()
+                    }
+                    return true
+                }
+
+                isCtrl && event.keyCode == KeyEvent.KEYCODE_F -> {
+                    AppShortcutRouter.trigger(AppShortcutDestination.Search)
+                    return true
+                }
+
+                event.keyCode == KeyEvent.KEYCODE_ESCAPE ||
+                    (isAlt && event.keyCode == KeyEvent.KEYCODE_DPAD_LEFT) -> {
+                    if (onBackPressedDispatcher.hasEnabledCallbacks()) {
+                        onBackPressedDispatcher.onBackPressed()
+                        return true
+                    }
+                }
+            }
+        }
+        return super.dispatchKeyEvent(event)
     }
 }

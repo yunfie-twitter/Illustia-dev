@@ -33,6 +33,10 @@ object AppShortcutRouter {
         return true
     }
 
+    fun trigger(destination: AppShortcutDestination) {
+        _pending.value = destination
+    }
+
     fun consume(destination: AppShortcutDestination) {
         _pending.compareAndSet(destination, null)
     }

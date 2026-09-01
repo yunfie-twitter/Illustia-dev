@@ -1,16 +1,21 @@
 package com.yunfie.illustia.wallpaper
 
+import android.content.Context
 import android.os.Build
+import com.yunfie.illustia.platform.DesktopEnvironment
 
 internal object LiveWallpaperSupport {
-    fun isSupported(): Boolean =
-        !isHyperOsDevice(
+    fun isSupported(context: Context? = null): Boolean {
+        if (context != null && DesktopEnvironment.isDesktop(context)) return false
+        if (DesktopEnvironment.isWsa()) return false
+        return !isHyperOsDevice(
             manufacturer = Build.MANUFACTURER,
             brand = Build.BRAND,
             osVersionName = systemProperty("ro.mi.os.version.name"),
             incremental = Build.VERSION.INCREMENTAL,
             display = Build.DISPLAY,
         )
+    }
 }
 
 internal fun isHyperOsDevice(

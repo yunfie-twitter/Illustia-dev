@@ -124,15 +124,21 @@ internal fun MainSurface(
             onAddAccount = viewModel::openAccountLoginMethod,
         )
 
+        val isDesktop =
+            remember(context) {
+                com.yunfie.illustia.platform.DesktopEnvironment
+                    .isDesktop(context)
+            }
         val isLandscape = (maxWidth > maxHeight && maxWidth >= 480.dp) || maxWidth >= 600.dp
-        val useNavigationRail = isLandscape
+        val isRootRailActive = (isDesktop && maxWidth >= 480.dp) || (isLandscape && maxWidth >= 840.dp)
+        val useNavigationRail = isLandscape && !isRootRailActive
         val railState = rememberNavigationRailState()
         Scaffold(
             modifier = Modifier.nestedScroll(navigationScrollConnection),
             containerColor = MiuixTheme.colorScheme.surface,
             contentWindowInsets = WindowInsets(0),
             bottomBar = {
-                if (!useNavigationRail && !isSearchResultMode) {
+                if (!isRootRailActive && !useNavigationRail && !isSearchResultMode) {
                     if (appState.settings.navigationStyle == "standard") {
                         NavigationBar(
                             color = MiuixTheme.colorScheme.surfaceContainer,

@@ -41,6 +41,10 @@ import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.isSecondaryPressed
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -225,10 +229,24 @@ private fun IllustCardImpl(
     val context = LocalContext.current
     val hapticMode = LocalAppHapticMode.current
     val cardModifier =
-        if (isSelected) {
-            modifier.border(2.dp, MiuixTheme.colorScheme.primary, RoundedCornerShape(14.dp))
-        } else {
-            modifier
+        (
+            if (isSelected) {
+                modifier.border(2.dp, MiuixTheme.colorScheme.primary, RoundedCornerShape(14.dp))
+            } else {
+                modifier
+            }
+        ).pointerInput(onLongClick) {
+            if (onLongClick != null) {
+                awaitPointerEventScope {
+                    while (true) {
+                        val event = awaitPointerEvent(PointerEventPass.Initial)
+                        if (event.type == PointerEventType.Press && event.buttons.isSecondaryPressed) {
+                            performAppHapticFeedback(context, haptic, hapticMode)
+                            onLongClick()
+                        }
+                    }
+                }
+            }
         }
     Card(
         modifier =
@@ -448,7 +466,19 @@ fun IllustListRow(
         modifier =
             Modifier
                 .fillMaxWidth()
-                .combinedClickable(
+                .pointerInput(onLongClick) {
+                    if (onLongClick != null) {
+                        awaitPointerEventScope {
+                            while (true) {
+                                val event = awaitPointerEvent(PointerEventPass.Initial)
+                                if (event.type == PointerEventType.Press && event.buttons.isSecondaryPressed) {
+                                    performAppHapticFeedback(context, haptic, hapticMode)
+                                    onLongClick()
+                                }
+                            }
+                        }
+                    }
+                }.combinedClickable(
                     onClick = onClick,
                     onLongClick =
                         if (onLongClick != null) {
