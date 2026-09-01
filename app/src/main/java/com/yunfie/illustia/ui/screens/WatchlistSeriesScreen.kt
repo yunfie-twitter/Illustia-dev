@@ -331,7 +331,7 @@ private fun WatchlistHeader(
             modifier =
                 Modifier
                     .fillMaxWidth()
-                    .height(210.dp)
+                    .height(236.dp)
                     .background(MiuixTheme.colorScheme.surfaceContainerHigh),
         ) {
             if (!bannerUrl.isNullOrBlank()) {
@@ -395,7 +395,7 @@ private fun WatchlistInfo(
         Modifier
             .fillMaxWidth()
             .padding(horizontal = 18.dp)
-            .offset(y = (-40).dp),
+            .offset(y = (-48).dp),
         verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
         Row(
@@ -405,7 +405,7 @@ private fun WatchlistInfo(
             Box(
                 modifier =
                     Modifier
-                        .size(88.dp)
+                        .size(104.dp)
                         .border(BorderStroke(4.dp, backgroundColor), CircleShape)
                         .clip(CircleShape)
                         .background(MiuixTheme.colorScheme.primaryContainer),
@@ -415,7 +415,7 @@ private fun WatchlistInfo(
                     imageVector = MiuixIcons.FavoritesFill,
                     contentDescription = null,
                     tint = MiuixTheme.colorScheme.primary,
-                    modifier = Modifier.size(40.dp),
+                    modifier = Modifier.size(44.dp),
                 )
             }
             Spacer(Modifier.weight(1f))
@@ -486,7 +486,7 @@ private fun WatchlistSmallTopAppBar(
     val watchlistTitle = stringResource(R.string.watchlist_series_title)
 
     val barScrimColor by animateColorAsState(
-        targetValue = if (compact) MiuixTheme.colorScheme.background.copy(alpha = 0.82f) else Color.Transparent,
+        targetValue = if (compact) MiuixTheme.colorScheme.background.copy(alpha = 0.76f) else Color.Transparent,
         label = "watchlist-top-bar-color",
     )
 
@@ -508,7 +508,7 @@ private fun WatchlistSmallTopAppBar(
                 Modifier
                     .fillMaxWidth()
                     .statusBarsPadding()
-                    .padding(horizontal = 14.dp, vertical = 6.dp),
+                    .padding(horizontal = 14.dp, vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
