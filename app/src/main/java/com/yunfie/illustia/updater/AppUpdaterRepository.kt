@@ -31,7 +31,7 @@ class AppUpdaterRepository(
         runCatching {
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
             packageInfo.versionName.orEmpty()
-        }.getOrNull()?.ifBlank { "5.5.11" } ?: "5.5.11"
+        }.getOrNull()?.ifBlank { "5.5.12" } ?: "5.5.12"
 
     suspend fun fetchLatestRelease(): Result<AppReleaseInfo?> =
         withContext(Dispatchers.IO) {
