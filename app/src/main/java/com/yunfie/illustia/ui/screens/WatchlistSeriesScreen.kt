@@ -159,7 +159,13 @@ fun WatchlistSeriesScreen(
                 .background(backgroundColor),
     ) {
         // Blurred backdrop behind PullToRefresh (only active at the very top on pull-down)
-        val pullProgress = pullToRefreshState.pullProgress.coerceIn(0f, 1f)
+        val rawPullProgress = pullToRefreshState.pullProgress
+        val pullProgress =
+            if (rawPullProgress > 0.06f) {
+                ((rawPullProgress - 0.06f) / 0.94f).coerceIn(0f, 1f)
+            } else {
+                0f
+            }
         if (pullProgress > 0.001f && !bannerCoverUrl.isNullOrBlank()) {
             PixivImage(
                 url = bannerCoverUrl,
@@ -186,7 +192,7 @@ fun WatchlistSeriesScreen(
             contentPadding = PaddingValues(top = statusBarTopPadding + 8.dp),
             modifier = Modifier.fillMaxSize(),
         ) {
-            val pullOffset = (statusBarTopPadding + 8.dp) * pullToRefreshState.pullProgress.coerceAtMost(1f)
+            val pullOffset = (statusBarTopPadding + 8.dp) * pullProgress
             AutoLoadMoreEffect(
                 enabled = settings.autoLoadMore,
                 nextUrl = state.model?.nextUrl,

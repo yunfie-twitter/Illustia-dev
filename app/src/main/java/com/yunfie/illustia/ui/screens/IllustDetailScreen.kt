@@ -153,13 +153,17 @@ fun IllustDetailScreen(
     val surfaceColor = MiuixTheme.colorScheme.surface
     val isDarkTheme = surfaceColor.luminance() < 0.5f
 
-    DisposableEffect(isArtworkOffScreen, isDarkTheme, useDarkHeaderIcons) {
+    val isPulling by remember {
+        derivedStateOf { pullToRefreshState.pullProgress > 0.08f }
+    }
+
+    DisposableEffect(isArtworkOffScreen, isDarkTheme, useDarkHeaderIcons, isPulling) {
         val window = activity?.window
         if (window != null) {
             val insetsController = WindowCompat.getInsetsController(window, window.decorView)
             window.statusBarColor = android.graphics.Color.TRANSPARENT
             insetsController.isAppearanceLightStatusBars =
-                if (isArtworkOffScreen) {
+                if (isArtworkOffScreen || isPulling) {
                     !isDarkTheme
                 } else {
                     useDarkHeaderIcons
@@ -345,7 +349,13 @@ fun IllustDetailScreen(
                     .fillMaxSize()
                     .background(MiuixTheme.colorScheme.surface),
         ) {
-            val pullProgress = pullToRefreshState.pullProgress.coerceIn(0f, 1f)
+            val rawPullProgress = pullToRefreshState.pullProgress
+            val pullProgress =
+                if (rawPullProgress > 0.06f) {
+                    ((rawPullProgress - 0.06f) / 0.94f).coerceIn(0f, 1f)
+                } else {
+                    0f
+                }
             if (pullProgress > 0.001f) {
                 PixivImage(
                     url = illust.squareImageUrl.ifBlank { illust.imageUrl },
@@ -379,7 +389,7 @@ fun IllustDetailScreen(
                     contentPadding = PaddingValues(top = statusBarTopPadding + 8.dp),
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    val pullOffset = (statusBarTopPadding + 8.dp) * pullToRefreshState.pullProgress.coerceAtMost(1f)
+                    val pullOffset = (statusBarTopPadding + 8.dp) * pullProgress
                     BoxWithConstraints(
                         modifier =
                             Modifier
