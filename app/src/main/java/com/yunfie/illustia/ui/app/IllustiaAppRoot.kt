@@ -400,13 +400,15 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
         }
     }
 
-    val viewingIllust = state.selectedIllust.takeIf { backStack.lastOrNull() is AppRoute.Detail }
+    val currentRoute = backStack.lastOrNull()
+    val viewingIllust = state.selectedIllust.takeIf { currentRoute is AppRoute.Detail }
     LaunchedEffect(
         state.settings.discordRpcEnabled,
         state.settings.discordToken,
         state.settings.discordApplicationId,
         state.settings.discordRpcShowArtworkDetails,
         state.settings.discordRpcShowButtons,
+        currentRoute,
         viewingIllust,
     ) {
         discordRpcManager.updatePresence(
