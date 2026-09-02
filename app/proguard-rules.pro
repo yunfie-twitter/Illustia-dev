@@ -75,3 +75,10 @@
 -keep interface * extends com.sun.jna.Library { *; }
 -keep interface * extends com.sun.jna.Callback { *; }
 -dontwarn com.sun.jna.**
+
+# KizzyRPC & SLF4J
+-dontwarn org.slf4j.**
+-dontwarn com.my.kizzyrpc.**
+-keep class com.my.kizzyrpc.** { *; }
+-keepclassmembers class com.my.kizzyrpc.** { *; }
+
