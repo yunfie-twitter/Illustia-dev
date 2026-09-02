@@ -54,10 +54,12 @@ fun DiscordSettingsScreen(
     state: IllustiaUiState,
     viewModel: IllustiaViewModel,
     onBack: () -> Unit,
+    onOpenDiscordLogin: () -> Unit,
 ) {
     PredictiveBackGestureHandler(onBack = onBack)
     val scrollBehavior = MiuixScrollBehavior()
     val context = LocalContext.current
+    val isSupported = DiscordRpcManager.isSupported()
 
     var showTokenDialog by remember { mutableStateOf(false) }
     var tempToken by remember { mutableStateOf("") }
@@ -192,6 +194,30 @@ fun DiscordSettingsScreen(
                 ),
             verticalArrangement = Arrangement.spacedBy(10.dp),
         ) {
+            if (!isSupported) {
+                item {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors =
+                            CardDefaults.defaultColors(
+                                color = MiuixTheme.colorScheme.errorContainer,
+                            ),
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            Text(
+                                text = stringResource(R.string.discord_unsupported_version),
+                                style = MiuixTheme.textStyles.body1,
+                                fontWeight = FontWeight.Bold,
+                                color = MiuixTheme.colorScheme.error,
+                            )
+                        }
+                    }
+                }
+            }
+
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -225,12 +251,22 @@ fun DiscordSettingsScreen(
                         SettingSwitchRow(
                             title = stringResource(R.string.discord_enable_rpc),
                             summary = stringResource(R.string.discord_enable_rpc_desc),
-                            checked = state.settings.discordRpcEnabled,
-                            onCheckedChange = { viewModel.updateDiscordRpcEnabled(it) },
+                            checked = isSupported && state.settings.discordRpcEnabled,
+                            onCheckedChange = {
+                                if (isSupported) {
+                                    viewModel.updateDiscordRpcEnabled(it)
+                                }
+                            },
                         )
                         DividerLine()
                         SettingLinkRow(
-                            title = stringResource(R.string.discord_token),
+                            title = stringResource(R.string.discord_login_with_discord),
+                            summary = stringResource(R.string.discord_login_with_discord_desc),
+                            onClick = onOpenDiscordLogin,
+                        )
+                        DividerLine()
+                        SettingLinkRow(
+                            title = stringResource(R.string.discord_login_manual_token),
                             summary =
                                 if (state.settings.discordToken.isNotBlank()) {
                                     "••••••••••••••••"
@@ -244,9 +280,10 @@ fun DiscordSettingsScreen(
                         )
                         DividerLine()
                         SettingRow(stringResource(R.string.account_status)) {
-                            val isConnected = state.settings.discordRpcEnabled && state.settings.discordToken.isNotBlank()
+                            val isConnected = isSupported && state.settings.discordRpcEnabled && state.settings.discordToken.isNotBlank()
                             val statusText =
                                 when {
+                                    !isSupported -> stringResource(R.string.discord_unsupported_version)
                                     state.settings.discordToken.isBlank() -> stringResource(R.string.discord_status_no_token)
                                     isConnected -> stringResource(R.string.discord_status_connected)
                                     else -> stringResource(R.string.discord_status_disconnected)

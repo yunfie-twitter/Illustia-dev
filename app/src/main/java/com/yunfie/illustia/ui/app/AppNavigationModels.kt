@@ -173,6 +173,8 @@ internal sealed interface AppRoute : NavKey {
     data object UpdateSettings : AppRoute
 
     data object DiscordSettings : AppRoute
+
+    data object DiscordLogin : AppRoute
 }
 
 internal data class DetailEntrySnapshot(

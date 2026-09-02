@@ -410,6 +410,10 @@ abstract class IllustiaLibraryNavigationModule(
         _navigationRequests.tryEmit(IllustiaNavigationRequest.DiscordSettings)
     }
 
+    fun openDiscordLogin() {
+        _navigationRequests.tryEmit(IllustiaNavigationRequest.DiscordLogin)
+    }
+
     fun openPallaSyncDevices() {
         _navigationRequests.tryEmit(IllustiaNavigationRequest.PallaSyncDevices)
     }

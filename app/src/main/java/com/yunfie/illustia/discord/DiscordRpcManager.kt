@@ -1,5 +1,6 @@
 package com.yunfie.illustia.discord
 
+import android.os.Build
 import com.my.kizzyrpc.KizzyRPC
 import com.my.kizzyrpc.model.Activity
 import com.my.kizzyrpc.model.Assets
@@ -29,7 +30,7 @@ class DiscordRpcManager {
     ) {
         scope.launch {
             mutex.withLock {
-                if (!settings.discordRpcEnabled || settings.discordToken.isBlank()) {
+                if (!isSupported() || !settings.discordRpcEnabled || settings.discordToken.isBlank()) {
                     closeInternal()
                     return@withLock
                 }
@@ -133,5 +134,7 @@ class DiscordRpcManager {
 
     companion object {
         const val DEFAULT_DISCORD_APP_ID = "1544652855233744926"
+
+        fun isSupported(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1
     }
 }

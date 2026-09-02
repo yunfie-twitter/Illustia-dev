@@ -903,4 +903,10 @@
     <string name="discord_button_view_artwork">View on Pixiv</string>
     <string name="discord_warning_title">Note</string>
     <string name="discord_warning_desc">KizzyRPC uses a Discord user token to update Rich Presence. Please manage your account security responsibly.</string>
+    <string name="discord_login_title">Discord Login</string>
+    <string name="discord_login_with_discord">Log in with Discord</string>
+    <string name="discord_login_with_discord_desc">Log in in browser to automatically retrieve user token</string>
+    <string name="discord_login_manual_token">Enter token manually</string>
+    <string name="discord_login_success">Discord token retrieved successfully</string>
+    <string name="discord_unsupported_version">Discord RPC requires Android 8.1 (API 27) or higher</string>
 </resources>
