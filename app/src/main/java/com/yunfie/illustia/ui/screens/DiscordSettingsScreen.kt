@@ -136,8 +136,8 @@ fun DiscordSettingsScreen(
                 ) {
                     TextButton(
                         onClick = {
-                            tempAppId = DiscordRpcManager.DEFAULT_DISCORD_APP_ID
-                            viewModel.updateDiscordApplicationId(DiscordRpcManager.DEFAULT_DISCORD_APP_ID)
+                            tempAppId = DiscordRpcManager.DEFAULT_APP_ID
+                            viewModel.updateDiscordApplicationId(DiscordRpcManager.DEFAULT_APP_ID)
                             showAppIdDialog = false
                         },
                         modifier = Modifier.weight(1f),
@@ -152,7 +152,7 @@ fun DiscordSettingsScreen(
                     Spacer(Modifier.width(12.dp))
                     TextButton(
                         onClick = {
-                            val id = tempAppId.trim().ifBlank { DiscordRpcManager.DEFAULT_DISCORD_APP_ID }
+                            val id = tempAppId.trim().ifBlank { DiscordRpcManager.DEFAULT_APP_ID }
                             viewModel.updateDiscordApplicationId(id)
                             showAppIdDialog = false
                             Toast.makeText(context, R.string.action_save, Toast.LENGTH_SHORT).show()
@@ -329,7 +329,7 @@ fun DiscordSettingsScreen(
                     ElevatedPanel {
                         SettingLinkRow(
                             title = stringResource(R.string.discord_application_id),
-                            summary = state.settings.discordApplicationId.ifBlank { DiscordRpcManager.DEFAULT_DISCORD_APP_ID },
+                            summary = state.settings.discordApplicationId.ifBlank { DiscordRpcManager.DEFAULT_APP_ID },
                             onClick = {
                                 tempAppId = state.settings.discordApplicationId
                                 showAppIdDialog = true

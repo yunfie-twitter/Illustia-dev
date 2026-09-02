@@ -18,14 +18,33 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 
+/**
+ * Manages Discord Rich Presence via KizzyRPC.
+ *
+ * Notes on KizzyRPC behaviour (v1.0.71):
+ * - [KizzyRPC] must NOT be recreated on every presence update; recreating triggers a new
+ *   WebSocket IDENTIFY which Discord rate-limits (max 1000/day per account). Reuse the same
+ *   instance and call [KizzyRPC.setActivity] to update.
+ * - [KizzyRPC] must be recreated when the token changes.
+ * - `since` in [KizzyRPC.setActivity] must be a Unix epoch millis (not 0).
+ * - [Assets.largeImage] accepts either a Discord application asset key (registered in the
+ *   Developer Portal) or an "mp:" attachment URL. Passing `null` causes the RPC payload to
+ *   omit the assets block entirely – which is fine for Discord.
+ * - [Activity.applicationId] is REQUIRED when [Activity.buttons] is non-null; otherwise
+ *   Discord silently drops the buttons.
+ */
 class DiscordRpcManager {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val mutex = Mutex()
     private var updateJob: Job? = null
+
+    /** KizzyRPC WebSocket client – reused across [setActivity] calls. */
     private var rpc: KizzyRPC? = null
-    private var sessionStartTime: Long = System.currentTimeMillis()
+    private var activeToken: String = ""
+
+    private var sessionStart: Long = System.currentTimeMillis()
     private var currentArtworkId: Long? = null
-    private var artworkOpenedTime: Long = System.currentTimeMillis()
+    private var artworkStart: Long = System.currentTimeMillis()
 
     fun updatePresence(
         settings: AppSettings,
@@ -34,89 +53,98 @@ class DiscordRpcManager {
         updateJob?.cancel()
         updateJob =
             scope.launch {
-                delay(600) // Debounce rapid state changes to respect Discord Gateway identify rate limits
+                // Debounce: wait briefly before acting to absorb rapid recompositions.
+                delay(800L)
+
                 mutex.withLock {
-                    val rawToken =
+                    val token =
                         settings.discordToken
                             .trim()
                             .removeSurrounding("\"")
                             .removeSurrounding("'")
-                    if (!isSupported() || !settings.discordRpcEnabled || rawToken.isBlank()) {
-                        Log.d(
-                            TAG,
-                            "Discord RPC disabled or unsupported: isSupported=${isSupported()}, enabled=${settings.discordRpcEnabled}, hasToken=${rawToken.isNotBlank()}",
-                        )
-                        closeInternal()
+
+                    if (!isSupported() || !settings.discordRpcEnabled || token.isBlank()) {
+                        Log.d(TAG, "RPC disabled or unsupported – closing")
+                        tearDown()
                         return@withLock
                     }
 
-                    closeInternal()
+                    // If the token changed (or we have no RPC yet), spin up a fresh client.
+                    if (rpc == null || activeToken != token) {
+                        tearDown()
+                        Log.d(TAG, "Creating new KizzyRPC instance")
+                        runCatching { rpc = KizzyRPC(token) }
+                            .onFailure { e ->
+                                Log.e(TAG, "Failed to create KizzyRPC", e)
+                                rpc = null
+                                activeToken = ""
+                                return@withLock
+                            }
+                        activeToken = token
+                    }
 
-                    val appId = settings.discordApplicationId.trim().ifBlank { DEFAULT_DISCORD_APP_ID }
+                    val currentRpc = rpc ?: return@withLock
+                    val appId = settings.discordApplicationId.trim().ifBlank { DEFAULT_APP_ID }
+                    val showDetails = settings.discordRpcShowArtworkDetails
+                    val showButtons = settings.discordRpcShowButtons
+
                     val activity =
                         if (selectedIllust != null) {
                             if (currentArtworkId != selectedIllust.id) {
                                 currentArtworkId = selectedIllust.id
-                                artworkOpenedTime = System.currentTimeMillis()
+                                artworkStart = System.currentTimeMillis()
                             }
-                            val showDetails = settings.discordRpcShowArtworkDetails
-                            val showButtons = settings.discordRpcShowButtons
-                            val title = if (showDetails) selectedIllust.title.take(128) else "作品を閲覧中"
-                            val artist = if (showDetails) "by ${selectedIllust.artistName}".take(128) else "Palleria"
-                            val buttons = if (showButtons) listOf("Pixivで見る") else null
-                            val metadata =
+                            val detailText = if (showDetails) selectedIllust.title.take(128) else "作品を閲覧中"
+                            val stateText = if (showDetails) "by ${selectedIllust.artistName}".take(128) else "Palleria"
+                            val btns = if (showButtons) listOf("Pixivで見る") else null
+                            val meta =
                                 if (showButtons) {
-                                    Metadata(buttonUrls = listOf("https://www.pixiv.net/artworks/${selectedIllust.id}"))
+                                    Metadata(
+                                        buttonUrls = listOf("https://www.pixiv.net/artworks/${selectedIllust.id}"),
+                                    )
                                 } else {
                                     null
                                 }
 
                             Activity(
-                                name = "Palleria",
-                                details = title.ifBlank { "作品を閲覧中" },
-                                state = artist.ifBlank { "Palleria" },
-                                type = 0,
-                                timestamps = Timestamps(start = artworkOpenedTime, end = null),
-                                assets =
-                                    Assets(
-                                        largeImage = null,
-                                        largeText = "Palleria",
-                                        smallImage = null,
-                                        smallText = null,
-                                    ),
-                                buttons = buttons,
-                                metadata = metadata,
                                 applicationId = appId,
+                                name = "Palleria",
+                                details = detailText,
+                                state = stateText,
+                                type = 0,
+                                timestamps = Timestamps(start = artworkStart, end = null),
+                                assets = null,
+                                buttons = btns,
+                                metadata = meta,
                             )
                         } else {
                             currentArtworkId = null
                             Activity(
+                                applicationId = appId,
                                 name = "Palleria",
                                 details = "イラストを閲覧中",
-                                state = "Palleria",
+                                state = null,
                                 type = 0,
-                                timestamps = Timestamps(start = sessionStartTime, end = null),
-                                assets =
-                                    Assets(
-                                        largeImage = null,
-                                        largeText = "Palleria",
-                                        smallImage = null,
-                                        smallText = null,
-                                    ),
+                                timestamps = Timestamps(start = sessionStart, end = null),
+                                assets = null,
                                 buttons = null,
                                 metadata = null,
-                                applicationId = appId,
                             )
                         }
 
+                    Log.d(
+                        TAG,
+                        "setActivity: name=${activity.name}, details=${activity.details}, state=${activity.state}, appId=${activity.applicationId}",
+                    )
                     runCatching {
-                        Log.d(TAG, "Connecting KizzyRPC with appId=$appId, activity=${activity.details} / ${activity.state}")
-                        val newRpc = KizzyRPC(rawToken)
-                        rpc = newRpc
-                        newRpc.setActivity(activity, status = "online", since = 0L)
-                    }.onFailure { error ->
-                        Log.e(TAG, "Failed to start Discord RPC", error)
-                        closeInternal()
+                        currentRpc.setActivity(
+                            activity = activity,
+                            status = "online",
+                            since = System.currentTimeMillis(),
+                        )
+                    }.onFailure { e ->
+                        Log.e(TAG, "setActivity failed – resetting RPC client", e)
+                        tearDown()
                     }
                 }
             }
@@ -124,25 +152,21 @@ class DiscordRpcManager {
 
     fun close() {
         updateJob?.cancel()
-        scope.launch {
-            mutex.withLock {
-                closeInternal()
-            }
-        }
+        scope.launch { mutex.withLock { tearDown() } }
     }
 
-    private fun closeInternal() {
-        runCatching {
-            rpc?.closeRPC()
-        }
+    private fun tearDown() {
+        runCatching { rpc?.closeRPC() }
         rpc = null
+        activeToken = ""
         currentArtworkId = null
     }
 
     companion object {
         private const val TAG = "DiscordRpcManager"
-        const val DEFAULT_DISCORD_APP_ID = "1544652855233744926"
+        const val DEFAULT_APP_ID = "1544652855233744926"
 
+        /** KizzyRPC requires Android 8.1 (API 27) minimum. */
         fun isSupported(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1
     }
 }
