@@ -110,10 +110,26 @@ internal fun AppNavHost(
                     },
                 )
             }
-            entry(AppRoute.Search) {
-                SearchScreen(state = appState.state, viewModel = viewModel)
+            entry(
+                AppRoute.Search,
+                metadata = artworkPageTransitionMetadata(),
+            ) {
+                SearchScreen(
+                    state = appState.state,
+                    viewModel = viewModel,
+                    onBackFromResults = onPopRoute,
+                )
             }
             entry<AppRoute.TagSearch>(
+                metadata = artworkPageTransitionMetadata(),
+            ) {
+                SearchScreen(
+                    state = appState.state,
+                    viewModel = viewModel,
+                    onBackFromResults = onPopRoute,
+                )
+            }
+            entry<AppRoute.SearchResults>(
                 metadata = artworkPageTransitionMetadata(),
             ) {
                 SearchScreen(

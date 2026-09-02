@@ -89,6 +89,7 @@ internal fun BookmarkWatchlistTab(
     watchlistState: WatchlistState,
     watchlistStore: WatchlistStore,
     onOpenWatchlistSeries: (Long) -> Unit,
+    scrollBehavior: ScrollBehavior? = null,
 ) {
     val scope = rememberCoroutineScope()
     val gridState = rememberLazyGridState()
@@ -107,7 +108,10 @@ internal fun BookmarkWatchlistTab(
         LazyVerticalGrid(
             state = gridState,
             columns = GridCells.Fixed(adaptiveProfileGridColumns()),
-            modifier = Modifier.fillMaxSize(),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .then(if (scrollBehavior != null) Modifier.nestedScroll(scrollBehavior.nestedScrollConnection) else Modifier),
             contentPadding =
                 profileGridContentPadding(
                     top = 8.dp,
@@ -463,6 +467,7 @@ internal fun BookmarkFollowingTab(
     loadState: LoadState,
     viewModel: IllustiaViewModel,
     chrome: BookmarkChromeState,
+    scrollBehavior: ScrollBehavior? = null,
 ) {
     val gridState = viewModel.bookmarkFollowingGridState
     val sortedUsers =
@@ -497,7 +502,10 @@ internal fun BookmarkFollowingTab(
         LazyVerticalGrid(
             state = gridState,
             columns = GridCells.Fixed(1),
-            modifier = Modifier.fillMaxSize(),
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .then(if (scrollBehavior != null) Modifier.nestedScroll(scrollBehavior.nestedScrollConnection) else Modifier),
             contentPadding = PaddingValues(start = 14.dp, end = 14.dp, top = 8.dp, bottom = adaptiveMainNavigationContentPadding()),
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp),

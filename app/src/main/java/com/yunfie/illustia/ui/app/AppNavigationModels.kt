@@ -91,6 +91,10 @@ internal sealed interface AppRoute : NavKey {
 
     data object Search : AppRoute
 
+    data class SearchResults(
+        val query: String,
+    ) : AppRoute
+
     data class TagSearch(
         val word: String,
     ) : AppRoute

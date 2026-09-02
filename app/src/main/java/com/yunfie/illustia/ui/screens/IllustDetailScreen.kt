@@ -154,7 +154,7 @@ fun IllustDetailScreen(
     val isDarkTheme = surfaceColor.luminance() < 0.5f
 
     val isPulling by remember {
-        derivedStateOf { pullToRefreshState.pullProgress > 0.08f }
+        derivedStateOf { pullToRefreshState.pullProgress > 0.05f || isRefreshing }
     }
 
     DisposableEffect(isArtworkOffScreen, isDarkTheme, useDarkHeaderIcons, isPulling) {
@@ -175,6 +175,7 @@ fun IllustDetailScreen(
     LaunchedEffect(isRefreshing) {
         if (isRefreshing) {
             onRefresh()
+            delay(300)
             isRefreshing = false
         }
     }
@@ -389,12 +390,8 @@ fun IllustDetailScreen(
                     contentPadding = PaddingValues(top = statusBarTopPadding + 8.dp),
                     modifier = Modifier.fillMaxSize(),
                 ) {
-                    val pullOffset = (statusBarTopPadding + 8.dp) * pullProgress
                     BoxWithConstraints(
-                        modifier =
-                            Modifier
-                                .fillMaxSize()
-                                .padding(top = pullOffset),
+                        modifier = Modifier.fillMaxSize(),
                     ) {
                         val useTwoPaneLayout = maxWidth >= 840.dp && maxWidth > maxHeight
                         if (useTwoPaneLayout) {

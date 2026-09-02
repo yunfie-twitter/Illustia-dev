@@ -142,6 +142,10 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
                 viewModel.clearSearchResults()
             }
 
+            is AppRoute.SearchResults -> {
+                viewModel.clearSearchResults()
+            }
+
             AppRoute.NovelList -> {
                 Unit
             }

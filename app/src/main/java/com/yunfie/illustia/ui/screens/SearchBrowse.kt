@@ -42,6 +42,7 @@ internal fun BrowseArea(
     viewModel: IllustiaViewModel,
     showHeader: Boolean = false,
     onIllustSelected: ((Illust) -> Unit)? = null,
+    onSearch: ((String) -> Unit)? = null,
 ) {
     val feedHighQuality = state.settings.useHighQualityFeedImages
     val showAiBadge = remember(state.settings.showAiBadge) { state.settings.showAiBadge }
@@ -141,7 +142,10 @@ internal fun BrowseArea(
                             TagTile(
                                 tag = tag.tag,
                                 imageUrl = tag.imageUrl,
-                                onClick = { viewModel.submitSearch(tag.tag.removePrefix("#")) },
+                                onClick = {
+                                    val query = tag.tag.removePrefix("#")
+                                    onSearch?.invoke(query) ?: viewModel.submitSearch(query)
+                                },
                                 onLongClick = {
                                     viewModel.openTagOptions(
                                         rawTag = tag.tag,

@@ -249,6 +249,7 @@ fun BookmarkScreen(
                             watchlistState = watchlistState,
                             watchlistStore = watchlistStore,
                             onOpenWatchlistSeries = onOpenWatchlistSeries,
+                            scrollBehavior = scrollBehavior,
                         )
                     }
 
@@ -260,6 +261,7 @@ fun BookmarkScreen(
                             loadState = loadState,
                             viewModel = viewModel,
                             chrome = chrome,
+                            scrollBehavior = scrollBehavior,
                         )
                     }
                 }

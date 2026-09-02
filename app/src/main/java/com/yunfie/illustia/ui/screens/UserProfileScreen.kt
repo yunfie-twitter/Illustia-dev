@@ -127,6 +127,18 @@ fun UserProfileScreen(
     var isHeaderCollapsed by remember(user.id) { mutableStateOf(false) }
     val activeGridState = if (selectedTab == 1) bookmarkGridState else gridState
 
+    val isAtTop by remember(activeGridState) {
+        derivedStateOf {
+            activeGridState.firstVisibleItemIndex == 0 && activeGridState.firstVisibleItemScrollOffset <= 0
+        }
+    }
+
+    LaunchedEffect(isAtTop) {
+        if (isAtTop) {
+            isHeaderCollapsed = false
+        }
+    }
+
     // Track scroll events reliably without bouncing / flapping on short content lists
     val profileScrollConnection =
         remember(selectedTab, activeGridState) {
@@ -136,10 +148,12 @@ fun UserProfileScreen(
                     source: NestedScrollSource,
                 ): Offset {
                     if (selectedTab != 2) {
-                        if (available.y < -8f) {
+                        if (available.y < -12f &&
+                            (activeGridState.firstVisibleItemIndex > 0 || activeGridState.firstVisibleItemScrollOffset > 32)
+                        ) {
                             isHeaderCollapsed = true
                         } else if (available.y > 8f && activeGridState.firstVisibleItemIndex == 0 &&
-                            activeGridState.firstVisibleItemScrollOffset <= 0
+                            activeGridState.firstVisibleItemScrollOffset <= 12
                         ) {
                             isHeaderCollapsed = false
                         }
@@ -149,9 +163,10 @@ fun UserProfileScreen(
             }
         }
 
-    val isContentScrolled by remember(selectedTab, activeGridState, isHeaderCollapsed) {
+    val isContentScrolled by remember(selectedTab, activeGridState, isHeaderCollapsed, isAtTop) {
         derivedStateOf {
             selectedTab != 2 &&
+                !isAtTop &&
                 (isHeaderCollapsed || activeGridState.firstVisibleItemIndex > 0 || activeGridState.firstVisibleItemScrollOffset > 24)
         }
     }

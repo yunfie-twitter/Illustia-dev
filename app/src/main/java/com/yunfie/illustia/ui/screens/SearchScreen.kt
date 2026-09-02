@@ -1,7 +1,6 @@
 package com.yunfie.illustia.ui.screens
 
 import androidx.activity.compose.BackHandler
-import androidx.activity.compose.PredictiveBackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -63,6 +62,7 @@ import com.yunfie.illustia.nativebridge.NativeIntentRouter
 import com.yunfie.illustia.ui.components.HeaderIcon
 import com.yunfie.illustia.ui.components.IllustGridSkeleton
 import com.yunfie.illustia.ui.components.LoadingIndicator
+import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
 import com.yunfie.illustia.ui.components.adaptiveIllustColumns
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.collect
@@ -167,24 +167,21 @@ fun SearchScreen(
             else -> "browse"
         }
 
-    if (isResultMode || searchExpanded) {
-        val closeSearch = {
-            if (searchExpanded) {
-                if (state.searchDraft.isBlank()) {
-                    viewModel.clearSearchResults()
-                }
-                searchExpanded = false
-            } else if (onBackFromResults != null) {
-                viewModel.clearSearchResults()
-                onBackFromResults()
-            } else {
+    if (searchExpanded) {
+        BackHandler(enabled = true) {
+            if (state.searchDraft.isBlank()) {
                 viewModel.clearSearchResults()
             }
+            searchExpanded = false
         }
-        BackHandler(enabled = true, onBack = closeSearch)
-        PredictiveBackHandler(enabled = true) { progress ->
-            progress.collect { }
-            closeSearch()
+    } else if (onBackFromResults != null) {
+        PredictiveBackGestureHandler(enabled = true) {
+            viewModel.clearSearchResults()
+            onBackFromResults()
+        }
+    } else if (isResultMode) {
+        PredictiveBackGestureHandler(enabled = true) {
+            viewModel.clearSearchResults()
         }
     }
 
