@@ -889,7 +889,7 @@
     <string name="discord_show_artwork_details">Show Artwork Details</string>
     <string name="discord_show_artwork_details_desc">Show title and artist of the currently viewed artwork in status</string>
     <string name="discord_show_buttons">Show Buttons</string>
-    <string name="discord_show_buttons_desc">Show 'View on Pixiv' button on Discord</string>
+    <string name="discord_show_buttons_desc">Show \'View on Pixiv\' button on Discord</string>
     <string name="discord_section_advanced">Advanced</string>
     <string name="discord_application_id">Application ID</string>
     <string name="discord_application_id_desc">Application ID from Discord Developer Portal</string>
