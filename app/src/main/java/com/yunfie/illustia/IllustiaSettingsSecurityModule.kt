@@ -201,6 +201,26 @@ abstract class IllustiaSettingsSecurityModule(
         illustiaApplication?.setTelemetryEnabled(value)
     }
 
+    fun updateDiscordRpcEnabled(value: Boolean) {
+        updateSettings { it.copy(discordRpcEnabled = value) }
+    }
+
+    fun updateDiscordToken(value: String) {
+        updateSettings { it.copy(discordToken = value) }
+    }
+
+    fun updateDiscordApplicationId(value: String) {
+        updateSettings { it.copy(discordApplicationId = value) }
+    }
+
+    fun updateDiscordRpcShowArtworkDetails(value: Boolean) {
+        updateSettings { it.copy(discordRpcShowArtworkDetails = value) }
+    }
+
+    fun updateDiscordRpcShowButtons(value: Boolean) {
+        updateSettings { it.copy(discordRpcShowButtons = value) }
+    }
+
     fun updateDummyAppName(value: String) {
         if (value.isNotBlank() && value.length <= 30) {
             updateSettings { it.copy(dummyAppName = value) }

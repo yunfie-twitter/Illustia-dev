@@ -44,21 +44,25 @@ import com.yunfie.illustia.DownloadQueueStatus
 import com.yunfie.illustia.IllustiaUiState
 import com.yunfie.illustia.IllustiaViewModel
 import com.yunfie.illustia.R
+import com.yunfie.illustia.ui.components.EmptyState
 import com.yunfie.illustia.ui.components.HeaderIcon
 import com.yunfie.illustia.ui.components.MiuixConfirmDialog
 import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.CardDefaults
+import top.yukonga.miuix.kmp.basic.DropdownImpl
+import top.yukonga.miuix.kmp.basic.ListPopupColumn
 import top.yukonga.miuix.kmp.basic.MiuixScrollBehavior
+import top.yukonga.miuix.kmp.basic.PopupPositionProvider
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.Surface
-import top.yukonga.miuix.kmp.basic.TabRow
-import top.yukonga.miuix.kmp.basic.TabRowDefaults
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.TopAppBar
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.icon.extended.Delete
+import top.yukonga.miuix.kmp.icon.extended.More
+import top.yukonga.miuix.kmp.overlay.OverlayListPopup
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.PressFeedbackType
 import java.text.DateFormat
@@ -89,6 +93,7 @@ fun DownloadQueueScreen(
     PredictiveBackGestureHandler(onBack = onBack)
     val scrollBehavior = MiuixScrollBehavior()
     var selectedTab by remember { mutableIntStateOf(0) }
+    var showCategoryPopup by remember { mutableStateOf(false) }
     var showClearConfirmation by remember { mutableStateOf(false) }
     val groups =
         remember(state.downloadQueue) {
@@ -105,6 +110,14 @@ fun DownloadQueueScreen(
         }
     val selected = QueueTab.entries[selectedTab.coerceIn(0, QueueTab.entries.lastIndex)]
     val hasFinishedItems = groups.completed.isNotEmpty() || groups.failed.isNotEmpty()
+
+    val categoryOptions =
+        listOf(
+            stringResource(R.string.download_queue_tab_all),
+            stringResource(R.string.download_queue_tab_downloading),
+            stringResource(R.string.download_queue_tab_completed),
+            stringResource(R.string.download_queue_section_failed),
+        )
 
     if (showClearConfirmation) {
         MiuixConfirmDialog(
@@ -136,6 +149,32 @@ fun DownloadQueueScreen(
                             onClick = { showClearConfirmation = true },
                         )
                     }
+                    Box {
+                        HeaderIcon(
+                            icon = MiuixIcons.More,
+                            onClick = { showCategoryPopup = true },
+                        )
+                        OverlayListPopup(
+                            show = showCategoryPopup,
+                            alignment = PopupPositionProvider.Align.TopEnd,
+                            onDismissRequest = { showCategoryPopup = false },
+                        ) {
+                            ListPopupColumn {
+                                categoryOptions.forEachIndexed { index, title ->
+                                    DropdownImpl(
+                                        text = title,
+                                        optionSize = categoryOptions.size,
+                                        isSelected = selectedTab == index,
+                                        index = index,
+                                        onSelectedIndexChange = {
+                                            selectedTab = index
+                                            showCategoryPopup = false
+                                        },
+                                    )
+                                }
+                            }
+                        }
+                    }
                 },
             )
         },
@@ -153,19 +192,11 @@ fun DownloadQueueScreen(
                     PaddingValues(
                         start = 16.dp,
                         end = 16.dp,
-                        top = padding.calculateTopPadding() + 12.dp,
+                        top = padding.calculateTopPadding() + 8.dp,
                         bottom = 96.dp,
                     ),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                item {
-                    QueueTabs(
-                        selectedTab = selectedTab,
-                        onSelected = { selectedTab = it },
-                        groups = groups,
-                    )
-                }
-
                 when (selected) {
                     QueueTab.All -> {
                         queueSection(
@@ -247,35 +278,6 @@ private fun ActiveTransferTrack() {
                     },
         )
     }
-}
-
-@Composable
-private fun QueueTabs(
-    selectedTab: Int,
-    onSelected: (Int) -> Unit,
-    groups: QueueGroups,
-) {
-    TabRow(
-        tabs =
-            listOf(
-                "${stringResource(R.string.download_queue_tab_all)} ${groups.totalCount}",
-                "${stringResource(R.string.download_queue_tab_downloading)} ${groups.active.size}",
-                "${stringResource(R.string.download_queue_tab_completed)} ${groups.completed.size}",
-                "${stringResource(R.string.download_queue_section_failed)} ${groups.failed.size}",
-            ),
-        selectedTabIndex = selectedTab,
-        onTabSelected = onSelected,
-        colors =
-            TabRowDefaults.tabRowColors(
-                backgroundColor = MiuixTheme.colorScheme.surface,
-                contentColor = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                selectedBackgroundColor = MiuixTheme.colorScheme.surfaceContainerHigh,
-                selectedContentColor = MiuixTheme.colorScheme.onBackground,
-            ),
-        modifier = Modifier.fillMaxWidth(),
-        minWidth = 78.dp,
-        maxWidth = 136.dp,
-    )
 }
 
 private fun androidx.compose.foundation.lazy.LazyListScope.queueSection(
@@ -461,45 +463,16 @@ private fun StatusPill(
 
 @Composable
 private fun QueueEmptyState(tab: QueueTab) {
-    Card(
-        modifier =
-            Modifier
-                .fillMaxWidth()
-                .padding(top = 18.dp),
-        cornerRadius = 24.dp,
-        insideMargin = PaddingValues(24.dp),
-        colors =
-            CardDefaults.defaultColors(
-                color = MiuixTheme.colorScheme.surfaceContainer,
-                contentColor = MiuixTheme.colorScheme.onSurface,
-            ),
-    ) {
-        Column(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(8.dp),
-        ) {
-            Text(
-                text = "— 00 —",
-                color = MiuixTheme.colorScheme.primary,
-                style = MiuixTheme.textStyles.title3,
-                fontWeight = FontWeight.Black,
-            )
-            Text(
-                text =
-                    stringResource(
-                        when (tab) {
-                            QueueTab.All -> R.string.download_queue_empty_all
-                            QueueTab.Active -> R.string.download_queue_empty
-                            QueueTab.Completed -> R.string.download_queue_empty_completed
-                            QueueTab.Failed -> R.string.download_queue_empty_failed
-                        },
-                    ),
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                style = MiuixTheme.textStyles.body2,
-            )
-        }
-    }
+    val message =
+        stringResource(
+            when (tab) {
+                QueueTab.All -> R.string.download_queue_empty_all
+                QueueTab.Active -> R.string.download_queue_empty
+                QueueTab.Completed -> R.string.download_queue_empty_completed
+                QueueTab.Failed -> R.string.download_queue_empty_failed
+            },
+        )
+    EmptyState(message)
 }
 
 @Composable

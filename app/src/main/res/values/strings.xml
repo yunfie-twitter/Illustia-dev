@@ -45,6 +45,7 @@
     <string name="action_show">表示する</string>
     <string name="action_add">追加</string>
     <string name="action_enable">有効にする</string>
+    <string name="action_reset">リセット</string>
     <string name="active">アクティブ</string>
 
     <!-- Home screen -->
@@ -872,4 +873,34 @@
     <string name="user_filter_all">すべて</string>
     <string name="user_filter_illust_only">イラストのみ</string>
     <string name="user_filter_manga_only">マンガのみ</string>
+
+    <!-- Discord RPC settings -->
+    <string name="discord_settings_title">Discord 連携設定</string>
+    <string name="discord_section_account">Discord 連携</string>
+    <string name="discord_section_connection">連携と状態</string>
+    <string name="discord_enable_rpc">Discord Rich Presence を有効にする</string>
+    <string name="discord_enable_rpc_desc">閲覧中の作品や利用状況を Discord のステータスに表示します</string>
+    <string name="discord_token">ユーザートークン</string>
+    <string name="discord_token_summary">ステータス更新に使用する Discord ユーザートークン</string>
+    <string name="discord_token_dialog_title">Discord ユーザートークン</string>
+    <string name="discord_token_hint">Token を貼り付け</string>
+    <string name="discord_token_desc">Discord から取得したユーザートークンを入力してください。トークンは端末内に安全に暗号化されて保存されます。</string>
+    <string name="discord_section_display">表示設定</string>
+    <string name="discord_show_artwork_details">作品の詳細を表示</string>
+    <string name="discord_show_artwork_details_desc">閲覧中のイラストのタイトルと作者名をステータスに表示します</string>
+    <string name="discord_show_buttons">ボタンを表示</string>
+    <string name="discord_show_buttons_desc">Discord 上に「Pixivで見る」ボタンを表示します</string>
+    <string name="discord_section_advanced">詳細設定</string>
+    <string name="discord_application_id">Application ID</string>
+    <string name="discord_application_id_desc">Discord Developer Portal の Application ID</string>
+    <string name="discord_application_id_dialog_title">Application ID の変更</string>
+    <string name="discord_status_connected">接続中 / 有効</string>
+    <string name="discord_status_disconnected">未接続 / 無効</string>
+    <string name="discord_status_no_token">Token が設定されていません</string>
+    <string name="discord_viewing_artwork">作品を閲覧中</string>
+    <string name="discord_browsing">イラストを閲覧中</string>
+    <string name="discord_in_app">Palleria アプリ内</string>
+    <string name="discord_button_view_artwork">Pixivで見る</string>
+    <string name="discord_warning_title">ご注意</string>
+    <string name="discord_warning_desc">KizzyRPC によるステータス更新機能は Discord ユーザートークンを使用します。アカウントのセキュリティには十分ご注意ください。</string>
 </resources>

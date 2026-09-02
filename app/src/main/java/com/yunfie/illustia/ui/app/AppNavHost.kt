@@ -35,6 +35,7 @@ import com.yunfie.illustia.ui.screens.AppDataScreen
 import com.yunfie.illustia.ui.screens.AppLockSetupScreen
 import com.yunfie.illustia.ui.screens.BookmarkSettingsScreen
 import com.yunfie.illustia.ui.screens.DataSettingsScreen
+import com.yunfie.illustia.ui.screens.DiscordSettingsScreen
 import com.yunfie.illustia.ui.screens.DownloadQueueScreen
 import com.yunfie.illustia.ui.screens.ExperimentalSettingsScreen
 import com.yunfie.illustia.ui.screens.FavoriteTagsScreen
@@ -294,6 +295,14 @@ internal fun AppNavHost(
                     viewModel = viewModel,
                     onBack = onPopRoute,
                     onOpenPallaSync = { onNavigate(AppRoute.PallaSyncSettings) },
+                    onOpenDiscordSettings = { onNavigate(AppRoute.DiscordSettings) },
+                )
+            }
+            entry(AppRoute.DiscordSettings) {
+                DiscordSettingsScreen(
+                    state = appState.state,
+                    viewModel = viewModel,
+                    onBack = onPopRoute,
                 )
             }
             entry(AppRoute.PallaSyncSettings) {

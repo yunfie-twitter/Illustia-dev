@@ -1,5 +1,7 @@
 package com.yunfie.illustia.ui.app
 
+import android.content.Context
+import android.content.Intent
 import android.net.Uri
 import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.layout.Box
@@ -13,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -60,6 +63,7 @@ import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.SnackbarDuration
 import top.yukonga.miuix.kmp.basic.SnackbarHost
 import top.yukonga.miuix.kmp.basic.SnackbarHostState
+import top.yukonga.miuix.kmp.basic.SnackbarResult
 import top.yukonga.miuix.kmp.basic.Surface
 import top.yukonga.miuix.kmp.basic.rememberNavigationRailState
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -92,6 +96,11 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
     val homeScrollBehavior = MiuixScrollBehavior()
     val context = LocalContext.current
     val pendingShortcut by AppShortcutRouter.pending.collectAsStateWithLifecycle()
+    val discordRpcManager =
+        remember {
+            com.yunfie.illustia.discord
+                .DiscordRpcManager()
+        }
 
     val appState = IllustiaAppStateBundle(state)
 
@@ -195,7 +204,7 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
 
     fun searchFromDetail(tag: String) {
         viewModel.submitSearch(tag)
-        navigate(AppRoute.TagSearch(tag))
+        navigate(AppRoute.SearchResults(tag))
     }
 
     LaunchedEffect(state.settingsLoaded, state.settings.refreshToken) {
@@ -246,20 +255,12 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
 
     LaunchedEffect(state.activeSearchWord) {
         if (state.activeSearchWord.isNotBlank()) {
-            if (settings.shortsFeedEnabled) {
-                if (
-                    backStack.lastOrNull() != AppRoute.Search &&
-                    backStack.lastOrNull() !is AppRoute.TagSearch
-                ) {
-                    navigate(AppRoute.Search)
-                }
-            } else if (
+            if (
+                backStack.lastOrNull() != AppRoute.Search &&
                 backStack.lastOrNull() !is AppRoute.TagSearch &&
-                selectedTab != AppTab.Search
+                backStack.lastOrNull() !is AppRoute.SearchResults
             ) {
-                selectedTab = AppTab.Search
-                val searchIndex = tabs.indexOf(AppTab.Search)
-                if (searchIndex >= 0) pagerState.scrollToPage(searchIndex)
+                navigate(AppRoute.SearchResults(state.activeSearchWord))
             }
         }
     }
@@ -332,6 +333,39 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
         }
     }
 
+    LaunchedEffect(Unit) {
+        val prefs = context.getSharedPreferences("freedroidwarn_prefs", Context.MODE_PRIVATE)
+        val lastWarnedVersion = prefs.getLong("version_code_warn", 0L)
+        val currentVersion =
+            runCatching {
+                val pInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+                androidx.core.content.pm.PackageInfoCompat
+                    .getLongVersionCode(pInfo)
+            }.getOrDefault(0L)
+        if (currentVersion > 0L && currentVersion > lastWarnedVersion) {
+            delay(1200L)
+            val warnMessage = context.getString(org.woheller69.freeDroidWarn.R.string.dialog_Warning)
+            val moreInfoLabel = context.getString(org.woheller69.freeDroidWarn.R.string.dialog_more_info)
+
+            val result =
+                snackbarHostState.showSnackbar(
+                    message = warnMessage,
+                    actionLabel = moreInfoLabel,
+                    withDismissAction = true,
+                    duration = SnackbarDuration.Custom(9000L),
+                )
+            prefs.edit().putLong("version_code_warn", currentVersion).apply()
+
+            if (result == SnackbarResult.ActionPerformed) {
+                runCatching {
+                    val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://keepandroidopen.org"))
+                    intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                    context.startActivity(intent)
+                }
+            }
+        }
+    }
+
     LaunchedEffect(viewModel) {
         viewModel.navigationRequests.collect { request ->
             navigate(
@@ -359,8 +393,30 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
                     IllustiaNavigationRequest.PallaSyncSettings -> AppRoute.PallaSyncSettings
                     IllustiaNavigationRequest.PallaSyncDevices -> AppRoute.PallaSyncDevices
                     IllustiaNavigationRequest.UpdateSettings -> AppRoute.UpdateSettings
+                    IllustiaNavigationRequest.DiscordSettings -> AppRoute.DiscordSettings
                 },
             )
+        }
+    }
+
+    val viewingIllust = state.selectedIllust.takeIf { backStack.lastOrNull() is AppRoute.Detail }
+    LaunchedEffect(
+        state.settings.discordRpcEnabled,
+        state.settings.discordToken,
+        state.settings.discordApplicationId,
+        state.settings.discordRpcShowArtworkDetails,
+        state.settings.discordRpcShowButtons,
+        viewingIllust,
+    ) {
+        discordRpcManager.updatePresence(
+            settings = state.settings,
+            selectedIllust = viewingIllust,
+        )
+    }
+
+    DisposableEffect(Unit) {
+        onDispose {
+            discordRpcManager.close()
         }
     }
 

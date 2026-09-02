@@ -40,6 +40,7 @@ fun AccountSettingsScreen(
     viewModel: IllustiaViewModel,
     onBack: () -> Unit,
     onOpenPallaSync: () -> Unit,
+    onOpenDiscordSettings: () -> Unit,
 ) {
     PredictiveBackGestureHandler(onBack = onBack)
     val scrollBehavior = MiuixScrollBehavior()
@@ -114,6 +115,23 @@ fun AccountSettingsScreen(
                         SettingLinkRow(stringResource(R.string.account_switch_add)) { viewModel.openAccountLoginMethod() }
                         DividerLine()
                         SettingLinkRow(stringResource(R.string.account_logout)) { showLogoutConfirm = true }
+                    }
+                }
+            }
+
+            item {
+                Section(stringResource(R.string.discord_section_account)) {
+                    ElevatedPanel {
+                        SettingLinkRow(
+                            title = stringResource(R.string.discord_settings_title),
+                            summary =
+                                if (state.settings.discordRpcEnabled) {
+                                    stringResource(R.string.discord_status_connected)
+                                } else {
+                                    stringResource(R.string.discord_status_disconnected)
+                                },
+                            onClick = onOpenDiscordSettings,
+                        )
                     }
                 }
             }

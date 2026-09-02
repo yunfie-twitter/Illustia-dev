@@ -50,6 +50,7 @@ import com.yunfie.illustia.models.UserPreview
 import com.yunfie.illustia.models.pixiv.MangaSeriesModel
 import com.yunfie.illustia.settings.AppSettings
 import com.yunfie.illustia.ui.components.AutoLoadMoreEffect
+import com.yunfie.illustia.ui.components.AvatarImage
 import com.yunfie.illustia.ui.components.EmptyState
 import com.yunfie.illustia.ui.components.IllustCard
 import com.yunfie.illustia.ui.components.IllustCardSkeleton
@@ -173,8 +174,8 @@ private fun WatchlistSeriesCard(
         insideMargin = PaddingValues(0.dp),
         colors =
             CardDefaults.defaultColors(
-                color = Color.Transparent,
-                contentColor = MiuixTheme.colorScheme.onBackground,
+                color = MiuixTheme.colorScheme.surfaceContainer,
+                contentColor = MiuixTheme.colorScheme.onSurfaceContainer,
             ),
         pressFeedbackType = PressFeedbackType.Sink,
         onClick = onClick,
@@ -191,7 +192,7 @@ private fun WatchlistSeriesCard(
                     Modifier
                         .fillMaxWidth()
                         .aspectRatio(1.15f)
-                        .clip(RoundedCornerShape(18.dp))
+                        .clip(RoundedCornerShape(14.dp))
                         .background(MiuixTheme.colorScheme.surfaceContainerHigh),
                 contentAlignment = Alignment.Center,
             ) {
@@ -209,45 +210,57 @@ private fun WatchlistSeriesCard(
                         imageVector = MiuixIcons.FavoritesFill,
                         contentDescription = null,
                         tint = MiuixTheme.colorScheme.primary,
+                        modifier = Modifier.size(36.dp),
                     )
                 }
-                Box(
-                    modifier =
-                        Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(8.dp)
-                            .clip(RoundedCornerShape(999.dp))
-                            .background(MiuixTheme.colorScheme.surfaceContainer.copy(alpha = 0.9f))
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                ) {
-                    Text(
-                        text = "${series.publishedContentCount}P",
-                        color = MiuixTheme.colorScheme.onBackground,
-                        style = MiuixTheme.textStyles.footnote2,
-                        fontWeight = FontWeight.Black,
-                    )
+                if (series.publishedContentCount > 0) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(8.dp)
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(MiuixTheme.colorScheme.surfaceContainer.copy(alpha = 0.92f))
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                    ) {
+                        Text(
+                            text = "${series.publishedContentCount}話",
+                            color = MiuixTheme.colorScheme.onBackground,
+                            style = MiuixTheme.textStyles.footnote2,
+                            fontWeight = FontWeight.Black,
+                        )
+                    }
                 }
             }
-            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text = series.title,
                     style = MiuixTheme.textStyles.subtitle,
                     fontWeight = FontWeight.Black,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
+                    color = MiuixTheme.colorScheme.onBackground,
                 )
-                Text(
-                    text = series.user?.name?.takeIf { it.isNotBlank() } ?: "@${series.user?.account.orEmpty()}",
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                    style = MiuixTheme.textStyles.footnote1,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    text = "ID ${series.id}",
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                    style = MiuixTheme.textStyles.footnote2,
-                )
+                if (series.user != null) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        AvatarImage(
+                            url = series.user.profileImageUrls?.medium,
+                            name = series.user.name,
+                            size = 18.dp,
+                        )
+                        Text(
+                            text = series.user.name,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            style = MiuixTheme.textStyles.footnote1,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false),
+                        )
+                    }
+                }
             }
         }
     }

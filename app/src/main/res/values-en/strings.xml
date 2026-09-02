@@ -39,6 +39,7 @@
     <string name="action_show">Show</string>
     <string name="action_add">Add</string>
     <string name="action_enable">Enable</string>
+    <string name="action_reset">Reset</string>
     <string name="action_open">Open</string>
     <string name="active">Active</string>
 
@@ -872,4 +873,34 @@
     <string name="user_filter_all">All</string>
     <string name="user_filter_illust_only">Illustrations only</string>
     <string name="user_filter_manga_only">Manga only</string>
+
+    <!-- Discord RPC settings -->
+    <string name="discord_settings_title">Discord Integration</string>
+    <string name="discord_section_account">Discord Integration</string>
+    <string name="discord_section_connection">Connection &amp; Status</string>
+    <string name="discord_enable_rpc">Enable Discord Rich Presence</string>
+    <string name="discord_enable_rpc_desc">Display viewing artworks and activity status on Discord</string>
+    <string name="discord_token">User Token</string>
+    <string name="discord_token_summary">Discord user token used for presence updates</string>
+    <string name="discord_token_dialog_title">Discord User Token</string>
+    <string name="discord_token_hint">Paste token here</string>
+    <string name="discord_token_desc">Enter the Discord user token. The token will be securely encrypted and stored on your device.</string>
+    <string name="discord_section_display">Display Settings</string>
+    <string name="discord_show_artwork_details">Show Artwork Details</string>
+    <string name="discord_show_artwork_details_desc">Show title and artist of the currently viewed artwork in status</string>
+    <string name="discord_show_buttons">Show Buttons</string>
+    <string name="discord_show_buttons_desc">Show 'View on Pixiv' button on Discord</string>
+    <string name="discord_section_advanced">Advanced</string>
+    <string name="discord_application_id">Application ID</string>
+    <string name="discord_application_id_desc">Application ID from Discord Developer Portal</string>
+    <string name="discord_application_id_dialog_title">Change Application ID</string>
+    <string name="discord_status_connected">Connected / Active</string>
+    <string name="discord_status_disconnected">Disconnected / Inactive</string>
+    <string name="discord_status_no_token">Token is not configured</string>
+    <string name="discord_viewing_artwork">Viewing Artwork</string>
+    <string name="discord_browsing">Browsing illustrations</string>
+    <string name="discord_in_app">In Palleria</string>
+    <string name="discord_button_view_artwork">View on Pixiv</string>
+    <string name="discord_warning_title">Note</string>
+    <string name="discord_warning_desc">KizzyRPC uses a Discord user token to update Rich Presence. Please manage your account security responsibly.</string>
 </resources>

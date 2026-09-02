@@ -120,6 +120,11 @@ data class AppSettings(
     val autoDetectClipboard: Boolean = false,
     val updateInstallMethod: String = "standard_apk",
     val autoCheckUpdateOnStartup: Boolean = false,
+    val discordRpcEnabled: Boolean = false,
+    val discordToken: String = "",
+    val discordApplicationId: String = "1544652855233744926",
+    val discordRpcShowArtworkDetails: Boolean = true,
+    val discordRpcShowButtons: Boolean = true,
 ) {
     val useHighQualityFeedImages: Boolean
         get() = highQualityImages && feedPreviewQuality != "low"

@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -31,6 +33,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -92,7 +95,10 @@ import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.basic.LinearProgressIndicator
+import top.yukonga.miuix.kmp.basic.PullToRefresh
 import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.icon.extended.FavoritesFill
@@ -196,6 +202,8 @@ fun WatchlistSeriesScreen(
         scope.launch { gridState.animateScrollToItem(0) }
     }
 
+    val pullToRefreshState = rememberPullToRefreshState()
+
     Box(
         modifier =
             Modifier
@@ -203,121 +211,128 @@ fun WatchlistSeriesScreen(
                 .nestedScroll(watchlistScrollConnection)
                 .background(backgroundColor),
     ) {
-        AutoLoadMoreEffect(
-            enabled = settings.autoLoadMore,
-            nextUrl = state.model?.nextUrl,
-            isLoading = state.isLoading,
-            onLoadMore = { scope.launch { store.loadMore() } },
-        )
-
-        Column(
-            modifier =
-                Modifier
-                    .fillMaxSize()
-                    .background(Color.Transparent),
+        PullToRefresh(
+            isRefreshing = state.isLoading && state.mangaSeries.isNotEmpty(),
+            onRefresh = { scope.launch { store.fetch() } },
+            pullToRefreshState = pullToRefreshState,
+            modifier = Modifier.fillMaxSize(),
         ) {
-            AnimatedVisibility(
-                visible = !isContentScrolled,
-                enter =
-                    expandVertically(
-                        animationSpec = tween(320),
-                        expandFrom = Alignment.Top,
-                    ) + fadeIn(animationSpec = tween(220, delayMillis = 60)),
-                exit =
-                    shrinkVertically(
-                        animationSpec = tween(280),
-                        shrinkTowards = Alignment.Top,
-                    ) + fadeOut(animationSpec = tween(180)),
-            ) {
-                WatchlistHeader(
-                    bannerUrl = bannerCoverUrl,
-                    seriesCount = processedSeries.size,
-                    backgroundColor = backgroundColor,
-                    onRefresh = { scope.launch { store.fetch() } },
-                )
-            }
+            AutoLoadMoreEffect(
+                enabled = settings.autoLoadMore,
+                nextUrl = state.model?.nextUrl,
+                isLoading = state.isLoading,
+                onLoadMore = { scope.launch { store.loadMore() } },
+            )
 
-            AnimatedVisibility(
-                visible = isContentScrolled,
-                enter =
-                    expandVertically(
-                        animationSpec = tween(280),
-                        expandFrom = Alignment.Top,
-                    ) + fadeIn(animationSpec = tween(200, delayMillis = 80)),
-                exit =
-                    shrinkVertically(
-                        animationSpec = tween(220),
-                        shrinkTowards = Alignment.Top,
-                    ) + fadeOut(animationSpec = tween(140)),
-            ) {
-                Spacer(
-                    Modifier
-                        .statusBarsPadding()
-                        .height(54.dp),
-                )
-            }
-
-            LazyVerticalGrid(
-                state = gridState,
-                columns = GridCells.Fixed(adaptiveProfileGridColumns()),
+            Column(
                 modifier =
                     Modifier
-                        .fillMaxWidth()
-                        .weight(1f)
+                        .fillMaxSize()
                         .background(Color.Transparent),
-                contentPadding =
-                    profileGridContentPadding(
-                        top = if (!isContentScrolled) 8.dp else 12.dp,
-                        bottom = adaptiveMainNavigationContentPadding(),
-                    ),
-                horizontalArrangement = Arrangement.spacedBy(ProfileGridHorizontalSpacing),
-                verticalArrangement = Arrangement.spacedBy(ProfileGridVerticalSpacing),
             ) {
-                if (state.isLoading && state.mangaSeries.isEmpty()) {
-                    gridItems(List(6) { it }, contentType = { "watchlist_series_skeleton" }) {
-                        WatchlistSeriesCardSkeleton()
-                    }
+                AnimatedVisibility(
+                    visible = !isContentScrolled,
+                    enter =
+                        expandVertically(
+                            animationSpec = tween(320),
+                            expandFrom = Alignment.Top,
+                        ) + fadeIn(animationSpec = tween(220, delayMillis = 60)),
+                    exit =
+                        shrinkVertically(
+                            animationSpec = tween(280),
+                            shrinkTowards = Alignment.Top,
+                        ) + fadeOut(animationSpec = tween(180)),
+                ) {
+                    WatchlistHeader(
+                        bannerUrl = bannerCoverUrl,
+                        seriesCount = processedSeries.size,
+                        backgroundColor = backgroundColor,
+                        onRefresh = { scope.launch { store.fetch() } },
+                    )
                 }
-                if (state.errorMessage != null && state.mangaSeries.isEmpty()) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth().padding(32.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.spacedBy(12.dp),
-                        ) {
-                            Text(
-                                text = state.errorMessage.orEmpty(),
-                                color = MiuixTheme.colorScheme.error,
-                                style = MiuixTheme.textStyles.body2,
-                            )
-                            Button(
-                                onClick = { scope.launch { store.fetch() } },
+
+                AnimatedVisibility(
+                    visible = isContentScrolled,
+                    enter =
+                        expandVertically(
+                            animationSpec = tween(280),
+                            expandFrom = Alignment.Top,
+                        ) + fadeIn(animationSpec = tween(200, delayMillis = 80)),
+                    exit =
+                        shrinkVertically(
+                            animationSpec = tween(220),
+                            shrinkTowards = Alignment.Top,
+                        ) + fadeOut(animationSpec = tween(140)),
+                ) {
+                    Spacer(
+                        Modifier
+                            .statusBarsPadding()
+                            .height(54.dp),
+                    )
+                }
+
+                LazyVerticalGrid(
+                    state = gridState,
+                    columns = GridCells.Fixed(adaptiveProfileGridColumns()),
+                    modifier =
+                        Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+                            .background(Color.Transparent),
+                    contentPadding =
+                        profileGridContentPadding(
+                            top = if (!isContentScrolled) 8.dp else 12.dp,
+                            bottom = adaptiveMainNavigationContentPadding(),
+                        ),
+                    horizontalArrangement = Arrangement.spacedBy(ProfileGridHorizontalSpacing),
+                    verticalArrangement = Arrangement.spacedBy(ProfileGridVerticalSpacing),
+                ) {
+                    if (state.isLoading && state.mangaSeries.isEmpty()) {
+                        gridItems(List(6) { it }, contentType = { "watchlist_series_skeleton" }) {
+                            WatchlistSeriesCardSkeleton()
+                        }
+                    }
+                    if (state.errorMessage != null && state.mangaSeries.isEmpty()) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            Column(
+                                modifier = Modifier.fillMaxWidth().padding(32.dp),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.spacedBy(12.dp),
                             ) {
-                                Text(stringResource(R.string.action_load_more))
+                                Text(
+                                    text = state.errorMessage.orEmpty(),
+                                    color = MiuixTheme.colorScheme.error,
+                                    style = MiuixTheme.textStyles.body2,
+                                )
+                                Button(
+                                    onClick = { scope.launch { store.fetch() } },
+                                ) {
+                                    Text(stringResource(R.string.action_load_more))
+                                }
                             }
                         }
                     }
-                }
-                if (processedSeries.isEmpty() && !state.isLoading && state.errorMessage == null) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        EmptyState(stringResource(R.string.watchlist_series_empty))
+                    if (processedSeries.isEmpty() && !state.isLoading && state.errorMessage == null) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            EmptyState(stringResource(R.string.watchlist_series_empty))
+                        }
                     }
-                }
-                gridItems(processedSeries, key = { it.id }, contentType = { "watchlist_series_card" }) { series ->
-                    WatchlistSeriesCard(
-                        series = series,
-                        onClick = { onOpenSeries(series.id) },
-                        modifier = Modifier.animateItem(),
-                    )
-                }
-                if (!settings.autoLoadMore && state.model?.nextUrl != null) {
-                    item(span = { GridItemSpan(maxLineSpan) }) {
-                        Button(
-                            onClick = { scope.launch { store.loadMore() } },
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
-                            colors = overlayActionButtonColors(),
-                        ) {
-                            Text(stringResource(R.string.watchlist_series_load_more))
+                    gridItems(processedSeries, key = { it.id }, contentType = { "watchlist_series_card" }) { series ->
+                        WatchlistSeriesCard(
+                            series = series,
+                            onClick = { onOpenSeries(series.id) },
+                            modifier = Modifier.animateItem(),
+                        )
+                    }
+                    if (!settings.autoLoadMore && state.model?.nextUrl != null) {
+                        item(span = { GridItemSpan(maxLineSpan) }) {
+                            Button(
+                                onClick = { scope.launch { store.loadMore() } },
+                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                                colors = overlayActionButtonColors(),
+                            ) {
+                                Text(stringResource(R.string.watchlist_series_load_more))
+                            }
                         }
                     }
                 }

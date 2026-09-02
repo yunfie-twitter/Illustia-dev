@@ -27,4 +27,5 @@ enum class IllustiaNavigationRequest {
     PallaSyncSettings,
     PallaSyncDevices,
     UpdateSettings,
+    DiscordSettings,
 }

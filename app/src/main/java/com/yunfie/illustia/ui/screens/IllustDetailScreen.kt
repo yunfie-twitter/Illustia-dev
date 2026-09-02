@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.lazy.LazyColumn
@@ -387,6 +388,9 @@ fun IllustDetailScreen(
                     isRefreshing = isRefreshing,
                     onRefresh = { isRefreshing = true },
                     pullToRefreshState = pullToRefreshState,
+                    circleSize = 0.dp,
+                    color = Color.Transparent,
+                    refreshTexts = emptyList(),
                     contentPadding = PaddingValues(top = statusBarTopPadding + 8.dp),
                     modifier = Modifier.fillMaxSize(),
                 ) {
@@ -423,6 +427,17 @@ fun IllustDetailScreen(
                         }
                     }
                 }
+            }
+
+            androidx.compose.animation.AnimatedVisibility(
+                visible = isRefreshing,
+                enter = androidx.compose.animation.fadeIn() + androidx.compose.animation.expandVertically(),
+                exit = androidx.compose.animation.fadeOut() + androidx.compose.animation.shrinkVertically(),
+                modifier = Modifier.align(androidx.compose.ui.Alignment.TopCenter),
+            ) {
+                top.yukonga.miuix.kmp.basic.LinearProgressIndicator(
+                    modifier = Modifier.fillMaxWidth().padding(top = statusBarTopPadding + 54.dp),
+                )
             }
         }
     }

@@ -42,6 +42,7 @@ internal fun readFromDataStore(
         }
     return AppSettings(
         refreshToken = sensitivePreferences.getString(KEY_REFRESH_TOKEN, "").orEmpty(),
+        discordToken = sensitivePreferences.getString(KEY_DISCORD_TOKEN, "").orEmpty(),
         bookmarkUserId = preferences[BOOKMARK_USER_ID].takeIf { it != null && it > 0L },
         appLanguage = preferences[APP_LANGUAGE] ?: "system",
         appFont = preferences[APP_FONT] ?: "system",
@@ -161,6 +162,10 @@ internal fun readFromDataStore(
         autoDetectClipboard = preferences[AUTO_DETECT_CLIPBOARD] ?: false,
         updateInstallMethod = preferences[UPDATE_INSTALL_METHOD] ?: "standard_apk",
         autoCheckUpdateOnStartup = preferences[AUTO_CHECK_UPDATE_ON_STARTUP] ?: false,
+        discordRpcEnabled = preferences[DISCORD_RPC_ENABLED] ?: false,
+        discordApplicationId = preferences[DISCORD_APPLICATION_ID] ?: "1544652855233744926",
+        discordRpcShowArtworkDetails = preferences[DISCORD_RPC_SHOW_ARTWORK_DETAILS] ?: true,
+        discordRpcShowButtons = preferences[DISCORD_RPC_SHOW_BUTTONS] ?: true,
     )
 }
 
@@ -428,6 +433,10 @@ internal fun writeToDataStore(
     preferences[AUTO_DETECT_CLIPBOARD] = settings.autoDetectClipboard
     preferences[UPDATE_INSTALL_METHOD] = settings.updateInstallMethod
     preferences[AUTO_CHECK_UPDATE_ON_STARTUP] = settings.autoCheckUpdateOnStartup
+    preferences[DISCORD_RPC_ENABLED] = settings.discordRpcEnabled
+    preferences[DISCORD_APPLICATION_ID] = settings.discordApplicationId
+    preferences[DISCORD_RPC_SHOW_ARTWORK_DETAILS] = settings.discordRpcShowArtworkDetails
+    preferences[DISCORD_RPC_SHOW_BUTTONS] = settings.discordRpcShowButtons
 }
 
 internal fun writeSensitiveSettings(
@@ -437,6 +446,7 @@ internal fun writeSensitiveSettings(
     sensitivePreferences
         .edit()
         .putString(KEY_REFRESH_TOKEN, settings.refreshToken)
+        .putString(KEY_DISCORD_TOKEN, settings.discordToken)
         .putString(KEY_ACCOUNT_TOKENS, encodeAccountTokens(settings.accounts))
         .remove(KEY_ACCOUNTS)
         .apply()
