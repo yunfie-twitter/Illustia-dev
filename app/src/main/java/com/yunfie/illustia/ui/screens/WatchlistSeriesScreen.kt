@@ -1,5 +1,6 @@
 package com.yunfie.illustia.ui.screens
 
+import android.app.Activity
 import android.content.Intent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
@@ -22,8 +23,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.asPaddingValues
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,8 +31,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.statusBarsPadding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -41,6 +40,7 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -55,7 +55,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
 import androidx.compose.ui.input.nestedscroll.NestedScrollSource
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -66,20 +66,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.view.WindowCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.yunfie.illustia.IllustiaViewModel
 import com.yunfie.illustia.R
 import com.yunfie.illustia.data.pixiv.WatchlistStore
 import com.yunfie.illustia.models.pixiv.MangaSeriesModel
 import com.yunfie.illustia.ui.components.AutoLoadMoreEffect
+import com.yunfie.illustia.ui.components.AvatarImage
 import com.yunfie.illustia.ui.components.EmptyState
 import com.yunfie.illustia.ui.components.HeaderOverlayIcon
 import com.yunfie.illustia.ui.components.PixivImage
 import com.yunfie.illustia.ui.components.PredictiveBackGestureHandler
 import com.yunfie.illustia.ui.components.ProfileGridHorizontalSpacing
 import com.yunfie.illustia.ui.components.ProfileGridVerticalSpacing
+import com.yunfie.illustia.ui.components.adaptiveMainNavigationContentPadding
 import com.yunfie.illustia.ui.components.adaptiveProfileGridColumns
 import com.yunfie.illustia.ui.components.miuixClickable
+import com.yunfie.illustia.ui.components.overlayActionButtonColors
 import com.yunfie.illustia.ui.components.profileGridContentPadding
 import kotlinx.coroutines.launch
 import top.yukonga.miuix.kmp.basic.Button
@@ -88,19 +92,23 @@ import top.yukonga.miuix.kmp.basic.CardDefaults
 import top.yukonga.miuix.kmp.basic.DropdownEntry
 import top.yukonga.miuix.kmp.basic.DropdownItem
 import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.PullToRefresh
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.rememberPullToRefreshState
 import top.yukonga.miuix.kmp.icon.MiuixIcons
 import top.yukonga.miuix.kmp.icon.extended.Back
 import top.yukonga.miuix.kmp.icon.extended.FavoritesFill
 import top.yukonga.miuix.kmp.icon.extended.More
 import top.yukonga.miuix.kmp.icon.extended.Refresh
-import top.yukonga.miuix.kmp.menu.WindowIconDropdownMenu
+import top.yukonga.miuix.kmp.overlay.OverlayCascadingListPopup
 import top.yukonga.miuix.kmp.squircle.squircleSurface
 import top.yukonga.miuix.kmp.theme.MiuixTheme
 import top.yukonga.miuix.kmp.utils.PressFeedbackType
 import androidx.compose.foundation.lazy.grid.items as gridItems
+
+enum class WatchlistSortOrder {
+    Newest,
+    Oldest,
+    MostEpisodes,
+}
 
 @Composable
 fun WatchlistSeriesScreen(
@@ -109,15 +117,38 @@ fun WatchlistSeriesScreen(
     onOpenSeries: (Long) -> Unit,
 ) {
     PredictiveBackGestureHandler(onBack = onBack)
+    val context = LocalContext.current
+    val activity = context as? Activity
     val repository = remember(viewModel) { viewModel.uiRepository() }
     val store = remember(repository) { WatchlistStore(repository) }
     val state by store.state.collectAsStateWithLifecycle()
     val settings by viewModel.settingsState.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
     val gridState = rememberLazyGridState()
-    val pullToRefreshState = rememberPullToRefreshState()
 
+    var sortOrder by remember { mutableStateOf(WatchlistSortOrder.Newest) }
     var isHeaderCollapsed by remember { mutableStateOf(false) }
+
+    val processedSeries =
+        remember(state.mangaSeries, sortOrder) {
+            when (sortOrder) {
+                WatchlistSortOrder.Newest -> state.mangaSeries.sortedByDescending { it.id }
+                WatchlistSortOrder.Oldest -> state.mangaSeries.sortedBy { it.id }
+                WatchlistSortOrder.MostEpisodes -> state.mangaSeries.sortedByDescending { it.publishedContentCount }
+            }
+        }
+
+    val isAtTop by remember(gridState) {
+        derivedStateOf {
+            gridState.firstVisibleItemIndex == 0 && gridState.firstVisibleItemScrollOffset <= 0
+        }
+    }
+
+    LaunchedEffect(isAtTop) {
+        if (isAtTop) {
+            isHeaderCollapsed = false
+        }
+    }
 
     val watchlistScrollConnection =
         remember(gridState) {
@@ -126,9 +157,9 @@ fun WatchlistSeriesScreen(
                     available: Offset,
                     source: NestedScrollSource,
                 ): Offset {
-                    if (available.y < -8f) {
+                    if (available.y < -12f && (gridState.firstVisibleItemIndex > 0 || gridState.firstVisibleItemScrollOffset > 32)) {
                         isHeaderCollapsed = true
-                    } else if (available.y > 8f && gridState.firstVisibleItemIndex == 0 && gridState.firstVisibleItemScrollOffset <= 0) {
+                    } else if (available.y > 8f && gridState.firstVisibleItemIndex == 0 && gridState.firstVisibleItemScrollOffset <= 12) {
                         isHeaderCollapsed = false
                     }
                     return Offset.Zero
@@ -136,20 +167,34 @@ fun WatchlistSeriesScreen(
             }
         }
 
-    val isContentScrolled by remember(gridState, isHeaderCollapsed) {
+    val isContentScrolled by remember(gridState, isHeaderCollapsed, isAtTop) {
         derivedStateOf {
-            isHeaderCollapsed || gridState.firstVisibleItemIndex > 0 || gridState.firstVisibleItemScrollOffset > 24
+            !isAtTop && (isHeaderCollapsed || gridState.firstVisibleItemIndex > 0 || gridState.firstVisibleItemScrollOffset > 24)
         }
     }
-    val showHeader = !isContentScrolled
-    val bannerCoverUrl = state.mangaSeries.firstOrNull { !it.thumbnailUrl.isNullOrBlank() }?.thumbnailUrl
-    val statusBarTopPadding = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+
+    val backgroundColor = MiuixTheme.colorScheme.background
+    val isDarkTheme = backgroundColor.luminance() < 0.5f
+
+    DisposableEffect(isContentScrolled, isDarkTheme) {
+        val window = activity?.window
+        if (window != null) {
+            val insetsController = WindowCompat.getInsetsController(window, window.decorView)
+            insetsController.isAppearanceLightStatusBars = if (isContentScrolled) !isDarkTheme else false
+        }
+        onDispose {}
+    }
+
+    val bannerCoverUrl = processedSeries.firstOrNull { !it.thumbnailUrl.isNullOrBlank() }?.thumbnailUrl
 
     LaunchedEffect(store) {
         store.fetch()
     }
 
-    val backgroundColor = MiuixTheme.colorScheme.background
+    val scrollToTop: () -> Unit = {
+        isHeaderCollapsed = false
+        scope.launch { gridState.animateScrollToItem(0) }
+    }
 
     Box(
         modifier =
@@ -158,157 +203,121 @@ fun WatchlistSeriesScreen(
                 .nestedScroll(watchlistScrollConnection)
                 .background(backgroundColor),
     ) {
-        // Blurred backdrop behind PullToRefresh (only active at the very top on pull-down)
-        val rawPullProgress = pullToRefreshState.pullProgress
-        val pullProgress =
-            if (rawPullProgress > 0.06f) {
-                ((rawPullProgress - 0.06f) / 0.94f).coerceIn(0f, 1f)
-            } else {
-                0f
-            }
-        if (pullProgress > 0.001f && !bannerCoverUrl.isNullOrBlank()) {
-            PixivImage(
-                url = bannerCoverUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .blur(36.dp)
-                        .graphicsLayer { alpha = pullProgress * 0.48f },
-            )
-            Box(
-                modifier =
-                    Modifier
-                        .fillMaxSize()
-                        .background(backgroundColor.copy(alpha = pullProgress * 0.65f)),
-            )
-        }
+        AutoLoadMoreEffect(
+            enabled = settings.autoLoadMore,
+            nextUrl = state.model?.nextUrl,
+            isLoading = state.isLoading,
+            onLoadMore = { scope.launch { store.loadMore() } },
+        )
 
-        PullToRefresh(
-            isRefreshing = state.isLoading && state.mangaSeries.isNotEmpty(),
-            onRefresh = { scope.launch { store.fetch() } },
-            pullToRefreshState = pullToRefreshState,
-            contentPadding = PaddingValues(top = statusBarTopPadding + 8.dp),
-            modifier = Modifier.fillMaxSize(),
+        Column(
+            modifier =
+                Modifier
+                    .fillMaxSize()
+                    .background(Color.Transparent),
         ) {
-            val pullOffset = (statusBarTopPadding + 8.dp) * pullProgress
-            AutoLoadMoreEffect(
-                enabled = settings.autoLoadMore,
-                nextUrl = state.model?.nextUrl,
-                isLoading = state.isLoading,
-                onLoadMore = { scope.launch { store.loadMore() } },
-            )
+            AnimatedVisibility(
+                visible = !isContentScrolled,
+                enter =
+                    expandVertically(
+                        animationSpec = tween(320),
+                        expandFrom = Alignment.Top,
+                    ) + fadeIn(animationSpec = tween(220, delayMillis = 60)),
+                exit =
+                    shrinkVertically(
+                        animationSpec = tween(280),
+                        shrinkTowards = Alignment.Top,
+                    ) + fadeOut(animationSpec = tween(180)),
+            ) {
+                WatchlistHeader(
+                    bannerUrl = bannerCoverUrl,
+                    seriesCount = processedSeries.size,
+                    backgroundColor = backgroundColor,
+                    onRefresh = { scope.launch { store.fetch() } },
+                )
+            }
 
-            Column(
+            AnimatedVisibility(
+                visible = isContentScrolled,
+                enter =
+                    expandVertically(
+                        animationSpec = tween(280),
+                        expandFrom = Alignment.Top,
+                    ) + fadeIn(animationSpec = tween(200, delayMillis = 80)),
+                exit =
+                    shrinkVertically(
+                        animationSpec = tween(220),
+                        shrinkTowards = Alignment.Top,
+                    ) + fadeOut(animationSpec = tween(140)),
+            ) {
+                Spacer(
+                    Modifier
+                        .statusBarsPadding()
+                        .height(54.dp),
+                )
+            }
+
+            LazyVerticalGrid(
+                state = gridState,
+                columns = GridCells.Fixed(adaptiveProfileGridColumns()),
                 modifier =
                     Modifier
-                        .fillMaxSize()
-                        .padding(top = pullOffset)
+                        .fillMaxWidth()
+                        .weight(1f)
                         .background(Color.Transparent),
+                contentPadding =
+                    profileGridContentPadding(
+                        top = if (!isContentScrolled) 8.dp else 12.dp,
+                        bottom = adaptiveMainNavigationContentPadding(),
+                    ),
+                horizontalArrangement = Arrangement.spacedBy(ProfileGridHorizontalSpacing),
+                verticalArrangement = Arrangement.spacedBy(ProfileGridVerticalSpacing),
             ) {
-                AnimatedVisibility(
-                    visible = showHeader,
-                    enter =
-                        expandVertically(
-                            animationSpec = tween(320),
-                            expandFrom = Alignment.Top,
-                        ) + fadeIn(animationSpec = tween(220, delayMillis = 60)),
-                    exit =
-                        shrinkVertically(
-                            animationSpec = tween(280),
-                            shrinkTowards = Alignment.Top,
-                        ) + fadeOut(animationSpec = tween(180)),
-                ) {
-                    WatchlistHeader(
-                        bannerUrl = bannerCoverUrl,
-                        seriesCount = state.mangaSeries.size,
-                        backgroundColor = backgroundColor,
-                        onRefresh = { scope.launch { store.fetch() } },
-                    )
+                if (state.isLoading && state.mangaSeries.isEmpty()) {
+                    gridItems(List(6) { it }, contentType = { "watchlist_series_skeleton" }) {
+                        WatchlistSeriesCardSkeleton()
+                    }
                 }
-
-                AnimatedVisibility(
-                    visible = !showHeader,
-                    enter =
-                        expandVertically(
-                            animationSpec = tween(280),
-                            expandFrom = Alignment.Top,
-                        ) + fadeIn(animationSpec = tween(200, delayMillis = 80)),
-                    exit =
-                        shrinkVertically(
-                            animationSpec = tween(220),
-                            shrinkTowards = Alignment.Top,
-                        ) + fadeOut(animationSpec = tween(140)),
-                ) {
-                    Spacer(
-                        Modifier
-                            .statusBarsPadding()
-                            .height(54.dp),
-                    )
-                }
-
-                LazyVerticalGrid(
-                    state = gridState,
-                    columns = GridCells.Fixed(adaptiveProfileGridColumns()),
-                    modifier =
-                        Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                            .background(Color.Transparent),
-                    contentPadding =
-                        profileGridContentPadding(
-                            top = if (showHeader) 8.dp else 12.dp,
-                            bottom = 96.dp,
-                        ),
-                    horizontalArrangement = Arrangement.spacedBy(ProfileGridHorizontalSpacing),
-                    verticalArrangement = Arrangement.spacedBy(ProfileGridVerticalSpacing),
-                ) {
-                    if (state.isLoading && state.mangaSeries.isEmpty()) {
-                        gridItems(List(6) { it }, contentType = { "watchlist_series_skeleton" }) {
-                            WatchlistSeriesCardSkeleton()
-                        }
-                    }
-                    if (state.errorMessage != null && state.mangaSeries.isEmpty()) {
-                        item(span = { GridItemSpan(maxLineSpan) }) {
-                            Column(
-                                modifier = Modifier.fillMaxWidth().padding(32.dp),
-                                horizontalAlignment = Alignment.CenterHorizontally,
-                                verticalArrangement = Arrangement.spacedBy(12.dp),
-                            ) {
-                                Text(
-                                    text = state.errorMessage.orEmpty(),
-                                    color = MiuixTheme.colorScheme.error,
-                                    style = MiuixTheme.textStyles.body2,
-                                )
-                                Button(
-                                    onClick = { scope.launch { store.fetch() } },
-                                ) {
-                                    Text(stringResource(R.string.action_load_more))
-                                }
-                            }
-                        }
-                    }
-                    if (state.mangaSeries.isEmpty() && !state.isLoading && state.errorMessage == null) {
-                        item(span = { GridItemSpan(maxLineSpan) }) {
-                            EmptyState(stringResource(R.string.watchlist_series_empty))
-                        }
-                    }
-                    gridItems(state.mangaSeries, key = { it.id }, contentType = { "watchlist_series_card" }) { series ->
-                        WatchlistSeriesCard(
-                            series = series,
-                            onClick = { onOpenSeries(series.id) },
-                            modifier = Modifier.animateItem(),
-                        )
-                    }
-                    if (!settings.autoLoadMore && state.model?.nextUrl != null) {
-                        item(span = { GridItemSpan(maxLineSpan) }) {
+                if (state.errorMessage != null && state.mangaSeries.isEmpty()) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth().padding(32.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(12.dp),
+                        ) {
+                            Text(
+                                text = state.errorMessage.orEmpty(),
+                                color = MiuixTheme.colorScheme.error,
+                                style = MiuixTheme.textStyles.body2,
+                            )
                             Button(
-                                onClick = { scope.launch { store.loadMore() } },
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                                onClick = { scope.launch { store.fetch() } },
                             ) {
-                                Text(stringResource(R.string.watchlist_series_load_more))
+                                Text(stringResource(R.string.action_load_more))
                             }
+                        }
+                    }
+                }
+                if (processedSeries.isEmpty() && !state.isLoading && state.errorMessage == null) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        EmptyState(stringResource(R.string.watchlist_series_empty))
+                    }
+                }
+                gridItems(processedSeries, key = { it.id }, contentType = { "watchlist_series_card" }) { series ->
+                    WatchlistSeriesCard(
+                        series = series,
+                        onClick = { onOpenSeries(series.id) },
+                        modifier = Modifier.animateItem(),
+                    )
+                }
+                if (!settings.autoLoadMore && state.model?.nextUrl != null) {
+                    item(span = { GridItemSpan(maxLineSpan) }) {
+                        Button(
+                            onClick = { scope.launch { store.loadMore() } },
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                            colors = overlayActionButtonColors(),
+                        ) {
+                            Text(stringResource(R.string.watchlist_series_load_more))
                         }
                     }
                 }
@@ -317,8 +326,11 @@ fun WatchlistSeriesScreen(
 
         WatchlistSmallTopAppBar(
             bannerUrl = bannerCoverUrl,
+            sortOrder = sortOrder,
+            onSortOrderChange = { sortOrder = it },
             compact = isContentScrolled,
             onBack = onBack,
+            onTitleClick = scrollToTop,
             onRefresh = { scope.launch { store.fetch() } },
             onMessage = { viewModel.showMessage(it) },
         )
@@ -481,15 +493,81 @@ private fun WatchlistInfo(
 @Composable
 private fun WatchlistSmallTopAppBar(
     bannerUrl: String?,
+    sortOrder: WatchlistSortOrder,
+    onSortOrderChange: (WatchlistSortOrder) -> Unit,
     compact: Boolean,
     onBack: () -> Unit,
+    onTitleClick: () -> Unit,
     onRefresh: () -> Unit,
     onMessage: (String) -> Unit,
 ) {
     val context = LocalContext.current
+    var showMoreMenu by remember { mutableStateOf(false) }
+    val reloadLabel = stringResource(R.string.action_reload)
     val shareLabel = stringResource(R.string.detail_share)
     val shareFailedMessage = stringResource(R.string.error_share_failed)
     val watchlistTitle = stringResource(R.string.watchlist_series_title)
+    val sortLabel = stringResource(R.string.search_sort_order)
+    val sortNewestLabel = stringResource(R.string.sort_date_desc)
+    val sortOldestLabel = stringResource(R.string.sort_date_asc)
+    val sortEpisodesLabel = stringResource(R.string.sort_popular_desc)
+
+    val menuEntries =
+        remember(sortOrder, sortLabel, sortNewestLabel, sortOldestLabel, sortEpisodesLabel, reloadLabel, shareLabel) {
+            listOf(
+                DropdownEntry(
+                    items =
+                        listOf(
+                            DropdownItem(
+                                text = sortLabel,
+                                children =
+                                    listOf(
+                                        DropdownItem(
+                                            text = sortNewestLabel,
+                                            selected = sortOrder == WatchlistSortOrder.Newest,
+                                            onClick = { onSortOrderChange(WatchlistSortOrder.Newest) },
+                                        ),
+                                        DropdownItem(
+                                            text = sortOldestLabel,
+                                            selected = sortOrder == WatchlistSortOrder.Oldest,
+                                            onClick = { onSortOrderChange(WatchlistSortOrder.Oldest) },
+                                        ),
+                                        DropdownItem(
+                                            text = sortEpisodesLabel,
+                                            selected = sortOrder == WatchlistSortOrder.MostEpisodes,
+                                            onClick = { onSortOrderChange(WatchlistSortOrder.MostEpisodes) },
+                                        ),
+                                    ),
+                            ),
+                        ),
+                ),
+                DropdownEntry(
+                    items =
+                        listOf(
+                            DropdownItem(
+                                text = reloadLabel,
+                                onClick = onRefresh,
+                            ),
+                            DropdownItem(
+                                text = shareLabel,
+                                onClick = {
+                                    runCatching {
+                                        val intent =
+                                            Intent(Intent.ACTION_SEND).apply {
+                                                type = "text/plain"
+                                                putExtra(
+                                                    Intent.EXTRA_TEXT,
+                                                    "$watchlistTitle\nhttps://www.pixiv.net/novel/series",
+                                                )
+                                            }
+                                        context.startActivity(Intent.createChooser(intent, shareLabel))
+                                    }.onFailure { onMessage(shareFailedMessage) }
+                                },
+                            ),
+                        ),
+                ),
+            )
+        }
 
     val barScrimColor by animateColorAsState(
         targetValue = if (compact) MiuixTheme.colorScheme.background.copy(alpha = 0.76f) else Color.Transparent,
@@ -527,7 +605,15 @@ private fun WatchlistSmallTopAppBar(
             if (compact) {
                 Text(
                     text = watchlistTitle,
-                    modifier = Modifier.weight(1f).padding(horizontal = 16.dp),
+                    modifier =
+                        Modifier
+                            .weight(1f)
+                            .padding(horizontal = 16.dp)
+                            .miuixClickable(
+                                onClick = onTitleClick,
+                                haptic = true,
+                                pressedScale = 0.96f,
+                            ),
                     color = MiuixTheme.colorScheme.onBackground,
                     style = MiuixTheme.textStyles.title4,
                     fontWeight = FontWeight.Black,
@@ -537,42 +623,17 @@ private fun WatchlistSmallTopAppBar(
             } else {
                 Spacer(Modifier.weight(1f))
             }
-            WindowIconDropdownMenu(
-                entry =
-                    DropdownEntry(
-                        items =
-                            listOf(
-                                DropdownItem(
-                                    text = stringResource(R.string.action_reload),
-                                    onClick = onRefresh,
-                                ),
-                                DropdownItem(
-                                    text = shareLabel,
-                                    onClick = {
-                                        runCatching {
-                                            val intent =
-                                                Intent(Intent.ACTION_SEND).apply {
-                                                    type = "text/plain"
-                                                    putExtra(
-                                                        Intent.EXTRA_TEXT,
-                                                        "\nhttps://www.pixiv.net/novel/series",
-                                                    )
-                                                }
-                                            context.startActivity(Intent.createChooser(intent, shareLabel))
-                                        }.onFailure { onMessage(shareFailedMessage) }
-                                    },
-                                ),
-                            ),
-                    ),
-                backgroundColor = if (compact) Color.Transparent else Color.White.copy(alpha = 0.92f),
-                cornerRadius = 19.dp,
-                minWidth = 38.dp,
-                minHeight = 38.dp,
-            ) {
-                Icon(
-                    MiuixIcons.More,
-                    contentDescription = stringResource(R.string.detail_more),
-                    tint = if (compact) MiuixTheme.colorScheme.onBackground else Color.Black,
+            Box {
+                HeaderOverlayIcon(
+                    icon = MiuixIcons.More,
+                    onClick = { showMoreMenu = true },
+                    backgroundColor = if (compact) Color.Transparent else Color.White.copy(alpha = 0.92f),
+                    contentColor = if (compact) MiuixTheme.colorScheme.onBackground else Color.Black,
+                )
+                OverlayCascadingListPopup(
+                    show = showMoreMenu,
+                    entries = menuEntries,
+                    onDismissRequest = { showMoreMenu = false },
                 )
             }
         }
@@ -594,8 +655,8 @@ private fun WatchlistSeriesCard(
         insideMargin = PaddingValues(0.dp),
         colors =
             CardDefaults.defaultColors(
-                color = Color.Transparent,
-                contentColor = MiuixTheme.colorScheme.onBackground,
+                color = MiuixTheme.colorScheme.surfaceContainer,
+                contentColor = MiuixTheme.colorScheme.onSurfaceContainer,
             ),
         pressFeedbackType = PressFeedbackType.Sink,
         onClick = onClick,
@@ -612,7 +673,7 @@ private fun WatchlistSeriesCard(
                     Modifier
                         .fillMaxWidth()
                         .aspectRatio(1.15f)
-                        .clip(RoundedCornerShape(18.dp))
+                        .clip(RoundedCornerShape(14.dp))
                         .background(MiuixTheme.colorScheme.surfaceContainerHigh),
                 contentAlignment = Alignment.Center,
             ) {
@@ -630,45 +691,57 @@ private fun WatchlistSeriesCard(
                         imageVector = MiuixIcons.FavoritesFill,
                         contentDescription = null,
                         tint = MiuixTheme.colorScheme.primary,
+                        modifier = Modifier.size(36.dp),
                     )
                 }
-                Box(
-                    modifier =
-                        Modifier
-                            .align(Alignment.TopEnd)
-                            .padding(8.dp)
-                            .clip(RoundedCornerShape(999.dp))
-                            .background(MiuixTheme.colorScheme.surfaceContainer.copy(alpha = 0.9f))
-                            .padding(horizontal = 8.dp, vertical = 4.dp),
-                ) {
-                    Text(
-                        text = "話",
-                        color = MiuixTheme.colorScheme.onBackground,
-                        style = MiuixTheme.textStyles.footnote2,
-                        fontWeight = FontWeight.Black,
-                    )
+                if (series.publishedContentCount > 0) {
+                    Box(
+                        modifier =
+                            Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(8.dp)
+                                .clip(RoundedCornerShape(999.dp))
+                                .background(MiuixTheme.colorScheme.surfaceContainer.copy(alpha = 0.92f))
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                    ) {
+                        Text(
+                            text = "${series.publishedContentCount}話",
+                            color = MiuixTheme.colorScheme.onBackground,
+                            style = MiuixTheme.textStyles.footnote2,
+                            fontWeight = FontWeight.Black,
+                        )
+                    }
                 }
             }
-            Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
                     text = series.title,
                     style = MiuixTheme.textStyles.subtitle,
                     fontWeight = FontWeight.Black,
                     maxLines = 2,
                     overflow = TextOverflow.Ellipsis,
+                    color = MiuixTheme.colorScheme.onBackground,
                 )
-                Text(
-                    text = series.user?.name?.takeIf { it.isNotBlank() } ?: "@",
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                    style = MiuixTheme.textStyles.footnote1,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    text = "ID ",
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                    style = MiuixTheme.textStyles.footnote2,
-                )
+                if (series.user != null) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        AvatarImage(
+                            url = series.user.profileImageUrls?.medium,
+                            name = series.user.name,
+                            size = 18.dp,
+                        )
+                        Text(
+                            text = series.user.name,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            style = MiuixTheme.textStyles.footnote1,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.weight(1f, fill = false),
+                        )
+                    }
+                }
             }
         }
     }
