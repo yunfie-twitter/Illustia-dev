@@ -436,7 +436,9 @@ fun IllustDetailScreen(
                 modifier = Modifier.align(androidx.compose.ui.Alignment.TopCenter),
             ) {
                 top.yukonga.miuix.kmp.basic.LinearProgressIndicator(
-                    modifier = Modifier.fillMaxWidth().padding(top = statusBarTopPadding + 54.dp),
+                    // Draw in the edge-to-edge layer so the refresh bar remains visible
+                    // over the transparent status bar instead of below the artwork header.
+                    modifier = Modifier.fillMaxWidth(),
                 )
             }
         }
