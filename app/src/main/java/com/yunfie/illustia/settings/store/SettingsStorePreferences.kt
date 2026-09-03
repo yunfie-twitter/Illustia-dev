@@ -164,7 +164,7 @@ internal fun readFromDataStore(
         autoCheckUpdateOnStartup = preferences[AUTO_CHECK_UPDATE_ON_STARTUP] ?: false,
         discordRpcEnabled = preferences[DISCORD_RPC_ENABLED] ?: false,
         discordApplicationId = preferences[DISCORD_APPLICATION_ID] ?: "1544652855233744926",
-        discordRpcShowArtworkDetails = preferences[DISCORD_RPC_SHOW_ARTWORK_DETAILS] ?: true,
+        discordRpcShowArtworkDetails = preferences[DISCORD_RPC_SHOW_ARTWORK_DETAILS] ?: false,
         discordRpcShowButtons = preferences[DISCORD_RPC_SHOW_BUTTONS] ?: true,
     )
 }

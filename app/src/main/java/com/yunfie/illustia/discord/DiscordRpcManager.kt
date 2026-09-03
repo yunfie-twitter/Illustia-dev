@@ -1,11 +1,15 @@
 package com.yunfie.illustia.discord
 
+import android.app.ActivityManager
+import android.content.Context
 import android.os.Build
 import android.util.Log
 import com.my.kizzyrpc.KizzyRPC
 import com.my.kizzyrpc.model.Activity
 import com.my.kizzyrpc.model.Assets
 import com.my.kizzyrpc.model.Metadata
+import com.my.kizzyrpc.model.RichPresence
+import com.my.kizzyrpc.model.RichPresenceData
 import com.my.kizzyrpc.model.Timestamps
 import com.yunfie.illustia.models.Illust
 import com.yunfie.illustia.settings.AppSettings
@@ -21,30 +25,30 @@ import kotlinx.coroutines.sync.withLock
 /**
  * Manages Discord Rich Presence via KizzyRPC.
  *
- * Notes on KizzyRPC behaviour (v1.0.71):
- * - [KizzyRPC] must NOT be recreated on every presence update; recreating triggers a new
- *   WebSocket IDENTIFY which Discord rate-limits (max 1000/day per account). Reuse the same
- *   instance and call [KizzyRPC.setActivity] to update.
- * - [KizzyRPC] must be recreated when the token changes.
- * - `since` in [KizzyRPC.setActivity] must be a Unix epoch millis (not 0).
- * - [Assets.largeImage] accepts either a Discord application asset key (registered in the
- *   Developer Portal) or an "mp:" attachment URL. Passing `null` causes the RPC payload to
- *   omit the assets block entirely – which is fine for Discord.
- * - [Activity.applicationId] is REQUIRED when [Activity.buttons] is non-null; otherwise
- *   Discord silently drops the buttons.
+ * Requirements & Features:
+ * - Requires Android 8.1+ (API 27) and > 3GB RAM.
+ * - Reuses active WebSocket connection by pushing Opcode 3 (Presence Update) directly
+ *   to avoid duplicate socket connections and Discord rate limits.
+ * - Uses official "palleria_logo" asset registered in Discord Developer Portal.
+ * - Silences uncaught KizzyRPC "Invalid" close exceptions on WebSocket threads.
  */
-class DiscordRpcManager {
+class DiscordRpcManager(
+    private val appContext: Context? = null,
+) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val mutex = Mutex()
     private var updateJob: Job? = null
 
-    /** KizzyRPC WebSocket client – reused across [setActivity] calls. */
     private var rpc: KizzyRPC? = null
     private var activeToken: String = ""
 
     private var sessionStart: Long = System.currentTimeMillis()
     private var currentArtworkId: Long? = null
     private var artworkStart: Long = System.currentTimeMillis()
+
+    init {
+        installExceptionSilencer()
+    }
 
     fun updatePresence(
         settings: AppSettings,
@@ -53,8 +57,7 @@ class DiscordRpcManager {
         updateJob?.cancel()
         updateJob =
             scope.launch {
-                // Debounce: wait briefly before acting to absorb rapid recompositions.
-                delay(800L)
+                delay(600L) // Debounce rapid UI state updates
 
                 mutex.withLock {
                     val token =
@@ -63,27 +66,12 @@ class DiscordRpcManager {
                             .removeSurrounding("\"")
                             .removeSurrounding("'")
 
-                    if (!isSupported() || !settings.discordRpcEnabled || token.isBlank()) {
-                        Log.d(TAG, "RPC disabled or unsupported – closing")
+                    if (!isSupported(appContext) || !settings.discordRpcEnabled || token.isBlank()) {
+                        Log.d(TAG, "RPC disabled or unsupported (token blank: ${token.isBlank()})")
                         tearDown()
                         return@withLock
                     }
 
-                    // If the token changed (or we have no RPC yet), spin up a fresh client.
-                    if (rpc == null || activeToken != token) {
-                        tearDown()
-                        Log.d(TAG, "Creating new KizzyRPC instance")
-                        runCatching { rpc = KizzyRPC(token) }
-                            .onFailure { e ->
-                                Log.e(TAG, "Failed to create KizzyRPC", e)
-                                rpc = null
-                                activeToken = ""
-                                return@withLock
-                            }
-                        activeToken = token
-                    }
-
-                    val currentRpc = rpc ?: return@withLock
                     val appId = settings.discordApplicationId.trim().ifBlank { DEFAULT_APP_ID }
                     val showDetails = settings.discordRpcShowArtworkDetails
                     val showButtons = settings.discordRpcShowButtons
@@ -94,14 +82,22 @@ class DiscordRpcManager {
                                 currentArtworkId = selectedIllust.id
                                 artworkStart = System.currentTimeMillis()
                             }
-                            val detailText = if (showDetails) selectedIllust.title.take(128) else "作品を閲覧中"
-                            val stateText = if (showDetails) "by ${selectedIllust.artistName}".take(128) else "Palleria"
+                            val detailText =
+                                if (showDetails) {
+                                    selectedIllust.title.take(128).ifBlank { "作品を閲覧中" }
+                                } else {
+                                    "作品を閲覧中"
+                                }
+                            val stateText =
+                                if (showDetails) {
+                                    "by ${selectedIllust.artistName}".take(128).ifBlank { "Palleria" }
+                                } else {
+                                    "Palleria"
+                                }
                             val btns = if (showButtons) listOf("Pixivで見る") else null
                             val meta =
                                 if (showButtons) {
-                                    Metadata(
-                                        buttonUrls = listOf("https://www.pixiv.net/artworks/${selectedIllust.id}"),
-                                    )
+                                    Metadata(buttonUrls = listOf("https://www.pixiv.net/artworks/${selectedIllust.id}"))
                                 } else {
                                     null
                                 }
@@ -113,7 +109,13 @@ class DiscordRpcManager {
                                 state = stateText,
                                 type = 0,
                                 timestamps = Timestamps(start = artworkStart, end = null),
-                                assets = null,
+                                assets =
+                                    Assets(
+                                        largeImage = "palleria_logo",
+                                        largeText = "Palleria",
+                                        smallImage = null,
+                                        smallText = null,
+                                    ),
                                 buttons = btns,
                                 metadata = meta,
                             )
@@ -123,40 +125,102 @@ class DiscordRpcManager {
                                 applicationId = appId,
                                 name = "Palleria",
                                 details = "イラストを閲覧中",
-                                state = null,
+                                state = "Palleria",
                                 type = 0,
                                 timestamps = Timestamps(start = sessionStart, end = null),
-                                assets = null,
+                                assets =
+                                    Assets(
+                                        largeImage = "palleria_logo",
+                                        largeText = "Palleria",
+                                        smallImage = null,
+                                        smallText = null,
+                                    ),
                                 buttons = null,
                                 metadata = null,
                             )
                         }
 
-                    Log.d(
-                        TAG,
-                        "setActivity: name=${activity.name}, details=${activity.details}, state=${activity.state}, appId=${activity.applicationId}",
-                    )
+                    val now = System.currentTimeMillis()
+                    val richPresence =
+                        RichPresence(
+                            RichPresenceData(
+                                activities = listOf(activity),
+                                afk = false,
+                                since = now,
+                                status = "online",
+                            ),
+                            3,
+                        )
+
+                    val currentRpc = rpc
+                    if (currentRpc != null && activeToken == token && currentRpc.isRpcRunning()) {
+                        val sent = sendDirectPresence(currentRpc, richPresence)
+                        if (sent) {
+                            Log.d(TAG, "Sent presence update over existing WebSocket: ${activity.details} / ${activity.state}")
+                            return@withLock
+                        }
+                    }
+
+                    // Spin up new client if token changed or connection not active
+                    tearDown()
+                    Log.d(TAG, "Starting new KizzyRPC connection with appId=$appId")
                     runCatching {
-                        currentRpc.setActivity(
+                        val newRpc = KizzyRPC(token)
+                        rpc = newRpc
+                        activeToken = token
+                        newRpc.setActivity(
                             activity = activity,
                             status = "online",
-                            since = System.currentTimeMillis(),
+                            since = now,
                         )
                     }.onFailure { e ->
-                        Log.e(TAG, "setActivity failed – resetting RPC client", e)
+                        Log.e(TAG, "Failed to start KizzyRPC", e)
                         tearDown()
                     }
                 }
             }
     }
 
+    private fun sendDirectPresence(
+        rpcClient: KizzyRPC,
+        richPresence: RichPresence,
+    ): Boolean {
+        return runCatching {
+            val wsField = rpcClient.javaClass.getDeclaredField("webSocketClient").apply { isAccessible = true }
+            val ws = wsField.get(rpcClient) ?: return false
+
+            val isOpenMethod = ws.javaClass.getMethod("isOpen")
+            val isOpen = isOpenMethod.invoke(ws) as? Boolean ?: false
+            if (!isOpen) return false
+
+            val gsonField = rpcClient.javaClass.getDeclaredField("gson").apply { isAccessible = true }
+            val gson = gsonField.get(rpcClient) ?: return false
+
+            val rpcField = rpcClient.javaClass.getDeclaredField("rpc").apply { isAccessible = true }
+            rpcField.set(rpcClient, richPresence)
+
+            val toJsonMethod = gson.javaClass.getMethod("toJson", Any::class.java)
+            val jsonString = toJsonMethod.invoke(gson, richPresence) as? String ?: return false
+
+            val sendMethod = ws.javaClass.getMethod("send", String::class.java)
+            sendMethod.invoke(ws, jsonString)
+            true
+        }.getOrDefault(false)
+    }
+
     fun close() {
         updateJob?.cancel()
-        scope.launch { mutex.withLock { tearDown() } }
+        scope.launch {
+            mutex.withLock {
+                tearDown()
+            }
+        }
     }
 
     private fun tearDown() {
-        runCatching { rpc?.closeRPC() }
+        runCatching {
+            rpc?.closeRPC()
+        }
         rpc = null
         activeToken = ""
         currentArtworkId = null
@@ -166,7 +230,39 @@ class DiscordRpcManager {
         private const val TAG = "DiscordRpcManager"
         const val DEFAULT_APP_ID = "1544652855233744926"
 
-        /** KizzyRPC requires Android 8.1 (API 27) minimum. */
-        fun isSupported(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O_MR1
+        /** KizzyRPC requires Android 8.1 (API 27) minimum and more than 3GB of RAM. */
+        fun isSupported(context: Context? = null): Boolean {
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O_MR1) return false
+            if (context != null && !hasSufficientRam(context)) return false
+            return true
+        }
+
+        fun hasSufficientRam(context: Context): Boolean {
+            val actManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager ?: return true
+            val memInfo = ActivityManager.MemoryInfo()
+            actManager.getMemoryInfo(memInfo)
+            // 3GB RAM devices typically report ~2.8GB - 3.0GB totalMem due to hardware reserves.
+            // 4GB+ RAM devices report >= ~3.5GB totalMem.
+            // Requiring totalMem > 3.2 GB ensures 3GB and lower devices are excluded.
+            return memInfo.totalMem > 3_200_000_000L
+        }
+
+        @Volatile
+        private var silencerInstalled = false
+
+        private fun installExceptionSilencer() {
+            if (silencerInstalled) return
+            silencerInstalled = true
+            val prevHandler = Thread.getDefaultUncaughtExceptionHandler()
+            Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
+                if (throwable is RuntimeException && throwable.message == "Invalid" &&
+                    thread.name.contains("WebSocket", ignoreCase = true)
+                ) {
+                    Log.w(TAG, "Suppressed KizzyRPC unhandled thread exception on ${thread.name}")
+                    return@setDefaultUncaughtExceptionHandler
+                }
+                prevHandler?.uncaughtException(thread, throwable)
+            }
+        }
     }
 }

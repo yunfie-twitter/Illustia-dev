@@ -99,7 +99,7 @@ internal fun IllustiaAppRoot(viewModel: IllustiaViewModel) {
     val discordRpcManager =
         remember {
             com.yunfie.illustia.discord
-                .DiscordRpcManager()
+                .DiscordRpcManager(context.applicationContext)
         }
 
     val appState = IllustiaAppStateBundle(state)

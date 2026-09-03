@@ -908,5 +908,5 @@
     <string name="discord_login_with_discord_desc">ブラウザでログインしてトークンを自動取得します</string>
     <string name="discord_login_manual_token">手動でトークンを入力</string>
     <string name="discord_login_success">Discord トークンを取得しました</string>
-    <string name="discord_unsupported_version">Discord RPC 機能は Android 8.1 (API 27) 以上の端末でのみ利用可能です</string>
+    <string name="discord_unsupported_version">Discord RPC 機能は Android 8.1 以上かつ RAM 3GB を超える端末でのみ利用可能です</string>
 </resources>

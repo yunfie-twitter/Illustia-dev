@@ -908,5 +908,5 @@
     <string name="discord_login_with_discord_desc">Log in in browser to automatically retrieve user token</string>
     <string name="discord_login_manual_token">Enter token manually</string>
     <string name="discord_login_success">Discord token retrieved successfully</string>
-    <string name="discord_unsupported_version">Discord RPC requires Android 8.1 (API 27) or higher</string>
+    <string name="discord_unsupported_version">Discord RPC requires Android 8.1+ and more than 3GB of RAM</string>
 </resources>

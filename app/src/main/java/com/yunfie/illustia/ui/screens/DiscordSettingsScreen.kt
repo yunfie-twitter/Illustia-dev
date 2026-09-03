@@ -59,7 +59,7 @@ fun DiscordSettingsScreen(
     PredictiveBackGestureHandler(onBack = onBack)
     val scrollBehavior = MiuixScrollBehavior()
     val context = LocalContext.current
-    val isSupported = DiscordRpcManager.isSupported()
+    val isSupported = DiscordRpcManager.isSupported(context)
 
     var showTokenDialog by remember { mutableStateOf(false) }
     var tempToken by remember { mutableStateOf("") }
