@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -60,6 +61,7 @@ fun DiscordSettingsScreen(
     val scrollBehavior = MiuixScrollBehavior()
     val context = LocalContext.current
     val isSupported = DiscordRpcManager.isSupported(context)
+    val diagnostics by DiscordRpcManager.diagnostics.collectAsState()
 
     var showTokenDialog by remember { mutableStateOf(false) }
     var tempToken by remember { mutableStateOf("") }
@@ -334,6 +336,32 @@ fun DiscordSettingsScreen(
                                 tempAppId = state.settings.discordApplicationId
                                 showAppIdDialog = true
                             },
+                        )
+                    }
+                }
+            }
+
+            item {
+                Section(stringResource(R.string.discord_section_log)) {
+                    ElevatedPanel {
+                        if (diagnostics.isEmpty()) {
+                            Text(
+                                text = stringResource(R.string.discord_log_empty),
+                                style = MiuixTheme.textStyles.body2,
+                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            )
+                        } else {
+                            diagnostics.asReversed().forEach { entry ->
+                                Text(
+                                    text = entry,
+                                    style = MiuixTheme.textStyles.body2,
+                                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                )
+                            }
+                        }
+                        TextButton(
+                            text = stringResource(R.string.discord_log_clear),
+                            onClick = DiscordRpcManager::clearDiagnostics,
                         )
                     }
                 }

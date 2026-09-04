@@ -909,4 +909,7 @@
     <string name="discord_login_manual_token">手動でトークンを入力</string>
     <string name="discord_login_success">Discord トークンを取得しました</string>
     <string name="discord_unsupported_version">Discord RPC 機能は Android 8.1 以上かつ RAM 3GB を超える端末でのみ利用可能です</string>
+    <string name="discord_section_log">Discord Rich Presence ログ</string>
+    <string name="discord_log_empty">まだログはありません。Rich Presence を有効にすると接続状況がここに表示されます。</string>
+    <string name="discord_log_clear">ログを消去</string>
 </resources>

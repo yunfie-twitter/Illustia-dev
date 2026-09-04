@@ -909,4 +909,7 @@
     <string name="discord_login_manual_token">Enter token manually</string>
     <string name="discord_login_success">Discord token retrieved successfully</string>
     <string name="discord_unsupported_version">Discord RPC requires Android 8.1+ and more than 3GB of RAM</string>
+    <string name="discord_section_log">Discord Rich Presence Log</string>
+    <string name="discord_log_empty">No logs yet. Connection status will appear here after Rich Presence is enabled.</string>
+    <string name="discord_log_clear">Clear log</string>
 </resources>

@@ -21,6 +21,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
  * Manages Discord Rich Presence via KizzyRPC.
@@ -67,7 +73,13 @@ class DiscordRpcManager(
                             .removeSurrounding("'")
 
                     if (!isSupported(appContext) || !settings.discordRpcEnabled || token.isBlank()) {
-                        Log.d(TAG, "RPC disabled or unsupported (token blank: ${token.isBlank()})")
+                        recordDiagnostic(
+                            when {
+                                !isSupported(appContext) -> "開始不可: この端末は Rich Presence の要件を満たしていません"
+                                !settings.discordRpcEnabled -> "停止: Rich Presence は無効です"
+                                else -> "開始不可: Discord Token が設定されていません"
+                            },
+                        )
                         tearDown()
                         return@withLock
                     }
@@ -156,14 +168,15 @@ class DiscordRpcManager(
                     if (currentRpc != null && activeToken == token && currentRpc.isRpcRunning()) {
                         val sent = sendDirectPresence(currentRpc, richPresence)
                         if (sent) {
-                            Log.d(TAG, "Sent presence update over existing WebSocket: ${activity.details} / ${activity.state}")
+                            recordDiagnostic("Presence を既存接続へ送信しました: ${activity.details}")
                             return@withLock
                         }
+                        recordDiagnostic("既存接続への送信に失敗したため、再接続します")
                     }
 
                     // Spin up new client if token changed or connection not active
                     tearDown()
-                    Log.d(TAG, "Starting new KizzyRPC connection with appId=$appId")
+                    recordDiagnostic("Discord Gateway に接続を開始しました (Application ID: $appId)")
                     runCatching {
                         val newRpc = KizzyRPC(token)
                         rpc = newRpc
@@ -173,8 +186,17 @@ class DiscordRpcManager(
                             status = "online",
                             since = now,
                         )
-                    }.onFailure { e ->
-                        Log.e(TAG, "Failed to start KizzyRPC", e)
+                        // KizzyRPC opens the socket asynchronously. Check the actual connection
+                        // shortly after setActivity instead of treating configuration as success.
+                        delay(CONNECTION_CHECK_DELAY_MS)
+                        if (newRpc.isRpcRunning()) {
+                            recordDiagnostic("Discord Gateway に接続し、Presence を送信しました")
+                        } else {
+                            recordDiagnostic("接続を開始しましたが WebSocket が確立しませんでした。Token、ネットワーク、Discord 側の制限を確認してください")
+                        }
+                    }.onFailure { error ->
+                        Log.e(TAG, "Failed to start KizzyRPC", error)
+                        recordDiagnostic("Discord 接続エラー: ${error.safeDiagnosticMessage()}")
                         tearDown()
                     }
                 }
@@ -205,6 +227,9 @@ class DiscordRpcManager(
             val sendMethod = ws.javaClass.getMethod("send", String::class.java)
             sendMethod.invoke(ws, jsonString)
             true
+        }.onFailure { error ->
+            Log.w(TAG, "Failed to send presence through existing WebSocket", error)
+            recordDiagnostic("Presence 更新エラー: ${error.safeDiagnosticMessage()}")
         }.getOrDefault(false)
     }
 
@@ -226,9 +251,31 @@ class DiscordRpcManager(
         currentArtworkId = null
     }
 
+    private fun recordDiagnostic(message: String) {
+        val entry = "${DIAGNOSTIC_TIME_FORMAT.format(Date())}  $message"
+        Log.d(TAG, entry)
+        _diagnostics.value = (_diagnostics.value + entry).takeLast(MAX_DIAGNOSTIC_ENTRIES)
+    }
+
+    private fun Throwable.safeDiagnosticMessage(): String =
+        message
+            ?.replace(Regex("(?i)(token|authorization)\\s*[:=]\\s*[^,\\s]+"), "$1=[redacted]")
+            ?.take(MAX_ERROR_MESSAGE_LENGTH)
+            ?: javaClass.simpleName
+
     companion object {
         private const val TAG = "DiscordRpcManager"
         const val DEFAULT_APP_ID = "1544652855233744926"
+        private const val CONNECTION_CHECK_DELAY_MS = 1_500L
+        private const val MAX_DIAGNOSTIC_ENTRIES = 20
+        private const val MAX_ERROR_MESSAGE_LENGTH = 240
+        private val DIAGNOSTIC_TIME_FORMAT = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+        private val _diagnostics = MutableStateFlow<List<String>>(emptyList())
+        val diagnostics: StateFlow<List<String>> = _diagnostics.asStateFlow()
+
+        fun clearDiagnostics() {
+            _diagnostics.value = emptyList()
+        }
 
         /** KizzyRPC requires Android 8.1 (API 27) minimum and more than 3GB of RAM. */
         fun isSupported(context: Context? = null): Boolean {
