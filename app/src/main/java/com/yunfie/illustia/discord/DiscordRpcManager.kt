@@ -8,17 +8,17 @@ import com.my.kizzyrpc.KizzyRPC
 import com.my.kizzyrpc.model.Activity
 import com.my.kizzyrpc.model.Assets
 import com.my.kizzyrpc.model.Metadata
-import com.my.kizzyrpc.model.RichPresence
-import com.my.kizzyrpc.model.RichPresenceData
 import com.my.kizzyrpc.model.Timestamps
 import com.yunfie.illustia.models.Illust
 import com.yunfie.illustia.settings.AppSettings
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,8 +33,8 @@ import java.util.Locale
  *
  * Requirements & Features:
  * - Requires Android 8.1+ (API 27) and > 3GB RAM.
- * - Reuses active WebSocket connection by pushing Opcode 3 (Presence Update) directly
- *   to avoid duplicate socket connections and Discord rate limits.
+ * - Reuses the active KizzyRPC session through its public update API to avoid
+ *   duplicate socket connections and Discord rate limits.
  * - Uses official "palleria_logo" asset registered in Discord Developer Portal.
  * - Silences uncaught KizzyRPC "Invalid" close exceptions on WebSocket threads.
  */
@@ -153,84 +153,56 @@ class DiscordRpcManager(
                         }
 
                     val now = System.currentTimeMillis()
-                    val richPresence =
-                        RichPresence(
-                            RichPresenceData(
-                                activities = listOf(activity),
-                                afk = false,
-                                since = now,
-                                status = "online",
-                            ),
-                            3,
-                        )
-
                     val currentRpc = rpc
                     if (currentRpc != null && activeToken == token && currentRpc.isRpcRunning()) {
-                        val sent = sendDirectPresence(currentRpc, richPresence)
-                        if (sent) {
+                        val updated =
+                            withTimeoutOrNull(CONNECTION_TIMEOUT_MS) {
+                                currentRpc.updateRPC(
+                                    activity = activity,
+                                    status = "online",
+                                    since = now,
+                                )
+                                true
+                            } ?: false
+                        if (updated) {
                             recordDiagnostic("Presence を既存接続へ送信しました: ${activity.details}")
                             return@withLock
                         }
-                        recordDiagnostic("既存接続への送信に失敗したため、再接続します")
+                        recordDiagnostic("既存接続の更新がタイムアウトしたため、再接続します")
                     }
 
                     // Spin up new client if token changed or connection not active
                     tearDown()
                     recordDiagnostic("Discord Gateway に接続を開始しました (Application ID: $appId)")
-                    runCatching {
+                    try {
                         val newRpc = KizzyRPC(token)
                         rpc = newRpc
                         activeToken = token
-                        newRpc.setActivity(
-                            activity = activity,
-                            status = "online",
-                            since = now,
-                        )
-                        // KizzyRPC opens the socket asynchronously. Check the actual connection
-                        // shortly after setActivity instead of treating configuration as success.
-                        delay(CONNECTION_CHECK_DELAY_MS)
-                        if (newRpc.isRpcRunning()) {
+                        val connected =
+                            withTimeoutOrNull(CONNECTION_TIMEOUT_MS) {
+                                newRpc.setActivity(
+                                    activity = activity,
+                                    status = "online",
+                                    since = now,
+                                )
+                                true
+                            } ?: false
+                        if (connected && newRpc.isRpcRunning()) {
                             recordDiagnostic("Discord Gateway に接続し、Presence を送信しました")
                         } else {
-                            recordDiagnostic("接続を開始しましたが WebSocket が確立しませんでした。Token、ネットワーク、Discord 側の制限を確認してください")
+                            recordDiagnostic("接続がタイムアウトしました。Token、ネットワーク、Discord 側の制限を確認してください")
+                            tearDown()
                         }
-                    }.onFailure { error ->
+                    } catch (error: CancellationException) {
+                        // A newer UI state superseded this request. This is expected and is not a connection error.
+                        throw error
+                    } catch (error: Exception) {
                         Log.e(TAG, "Failed to start KizzyRPC", error)
                         recordDiagnostic("Discord 接続エラー: ${error.safeDiagnosticMessage()}")
                         tearDown()
                     }
                 }
             }
-    }
-
-    private fun sendDirectPresence(
-        rpcClient: KizzyRPC,
-        richPresence: RichPresence,
-    ): Boolean {
-        return runCatching {
-            val wsField = rpcClient.javaClass.getDeclaredField("webSocketClient").apply { isAccessible = true }
-            val ws = wsField.get(rpcClient) ?: return false
-
-            val isOpenMethod = ws.javaClass.getMethod("isOpen")
-            val isOpen = isOpenMethod.invoke(ws) as? Boolean ?: false
-            if (!isOpen) return false
-
-            val gsonField = rpcClient.javaClass.getDeclaredField("gson").apply { isAccessible = true }
-            val gson = gsonField.get(rpcClient) ?: return false
-
-            val rpcField = rpcClient.javaClass.getDeclaredField("rpc").apply { isAccessible = true }
-            rpcField.set(rpcClient, richPresence)
-
-            val toJsonMethod = gson.javaClass.getMethod("toJson", Any::class.java)
-            val jsonString = toJsonMethod.invoke(gson, richPresence) as? String ?: return false
-
-            val sendMethod = ws.javaClass.getMethod("send", String::class.java)
-            sendMethod.invoke(ws, jsonString)
-            true
-        }.onFailure { error ->
-            Log.w(TAG, "Failed to send presence through existing WebSocket", error)
-            recordDiagnostic("Presence 更新エラー: ${error.safeDiagnosticMessage()}")
-        }.getOrDefault(false)
     }
 
     fun close() {
@@ -266,7 +238,7 @@ class DiscordRpcManager(
     companion object {
         private const val TAG = "DiscordRpcManager"
         const val DEFAULT_APP_ID = "1544652855233744926"
-        private const val CONNECTION_CHECK_DELAY_MS = 1_500L
+        private const val CONNECTION_TIMEOUT_MS = 15_000L
         private const val MAX_DIAGNOSTIC_ENTRIES = 20
         private const val MAX_ERROR_MESSAGE_LENGTH = 240
         private val DIAGNOSTIC_TIME_FORMAT = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
