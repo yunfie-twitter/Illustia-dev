@@ -311,6 +311,7 @@
     <string name="image_simultaneous_downloads">同時下載</string>
     <string name="image_columns">網格列</string>
     <string name="image_columns_landscape">景觀柱</string>
+    <string name="image_related_columns">相關作品列數</string>
     <string name="image_proxy_title">Pixiv 圖像代理</string>
     <string name="image_proxy_desc">將圖像域替換為選定的公共實例</string>
     <string name="image_quality_high">高</string>
@@ -405,6 +406,7 @@
     <string name="data_import_export_note">使用 JSON 檔案移動視圖歷史記錄、搜尋記錄、監視清單標籤以及靜音資料。帳戶資訊永遠不會包含在內。</string>
     <string name="data_items_count">%1$d 項目</string>
     <string name="data_columns_count">%1$d 列</string>
+    <string name="data_columns_dynamic">動態</string>
     <string name="app_data_title">應用程式數據</string>
     <string name="app_data_section_overview">概述</string>
     <string name="data_storage_section">儲存空間用量</string>

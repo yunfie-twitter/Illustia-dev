@@ -227,6 +227,7 @@ internal fun AppNavHost(
                         confirmOnLongPressSave = appState.state.settings.confirmOnLongPressSave,
                         skipConfirmOnDetailSave = appState.state.settings.skipConfirmOnDetailSave,
                         detailSectionOrder = appState.state.settings.detailSectionOrder,
+                        relatedIllustColumnCount = appState.state.settings.relatedIllustColumnCount,
                     )
                 } ?: Box(
                     modifier = Modifier.fillMaxSize().background(MiuixTheme.colorScheme.surface),

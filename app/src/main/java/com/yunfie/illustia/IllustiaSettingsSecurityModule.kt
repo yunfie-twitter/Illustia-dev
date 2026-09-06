@@ -742,6 +742,11 @@ abstract class IllustiaSettingsSecurityModule(
         updateSettings { it.copy(horizontalColumnCount = value.coerceIn(3, 6)) }
     }
 
+    fun updateRelatedIllustColumnCount(value: Int) {
+        val count = if (value == 0) 0 else value.coerceIn(2, 5)
+        updateSettings { it.copy(relatedIllustColumnCount = count) }
+    }
+
     fun updatePixivImageProxyBaseUrl(value: String) {
         updateSettings { it.copy(pixivImageProxyBaseUrl = value) }
     }

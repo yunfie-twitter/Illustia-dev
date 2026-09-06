@@ -90,6 +90,7 @@ data class AppSettings(
     val disableHorizontalSwipeInShortsFeed: Boolean = false,
     val verticalColumnCount: Int = 2,
     val horizontalColumnCount: Int = 4,
+    val relatedIllustColumnCount: Int = 3,
     val pixivNetworkMode: String = "standard",
     val pixivImageProxyBaseUrl: String = "",
     val mutedIllusts: List<Long> = emptyList(),

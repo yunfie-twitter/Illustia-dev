@@ -132,6 +132,7 @@ internal fun readFromDataStore(
         disableHorizontalSwipeInShortsFeed = preferences[DISABLE_HORIZONTAL_SWIPE_IN_SHORTS_FEED] ?: false,
         verticalColumnCount = preferences[VERTICAL_COLUMN_COUNT] ?: 2,
         horizontalColumnCount = preferences[HORIZONTAL_COLUMN_COUNT] ?: 4,
+        relatedIllustColumnCount = preferences[RELATED_ILLUST_COLUMN_COUNT] ?: 3,
         pixivNetworkMode = preferences[PIXIV_NETWORK_MODE] ?: "standard",
         pixivImageProxyBaseUrl = preferences[PIXIV_IMAGE_PROXY_BASE_URL].orEmpty(),
         mutedIllusts = decodeLongList(preferences[MUTED_ILLUSTS_JSON]),
@@ -277,6 +278,7 @@ internal fun readFromSharedPreferences(preferences: SharedPreferences): AppSetti
         disableHorizontalSwipeInShortsFeed = preferences.getBoolean("disableHorizontalSwipeInShortsFeed", false),
         verticalColumnCount = preferences.getInt("verticalColumnCount", 2),
         horizontalColumnCount = preferences.getInt("horizontalColumnCount", 4),
+        relatedIllustColumnCount = preferences.getInt("relatedIllustColumnCount", 3),
         pixivNetworkMode = preferences.getString(KEY_PIXIV_NETWORK_MODE, "standard") ?: "standard",
         pixivImageProxyBaseUrl = preferences.getString(KEY_PIXIV_IMAGE_PROXY_BASE_URL, "").orEmpty(),
         mutedIllusts =
@@ -405,6 +407,7 @@ internal fun writeToDataStore(
     preferences[DISABLE_HORIZONTAL_SWIPE_IN_SHORTS_FEED] = settings.disableHorizontalSwipeInShortsFeed
     preferences[VERTICAL_COLUMN_COUNT] = settings.verticalColumnCount
     preferences[HORIZONTAL_COLUMN_COUNT] = settings.horizontalColumnCount
+    preferences[RELATED_ILLUST_COLUMN_COUNT] = settings.relatedIllustColumnCount
     preferences[PIXIV_NETWORK_MODE] = settings.pixivNetworkMode
     preferences[PIXIV_IMAGE_PROXY_BASE_URL] = settings.pixivImageProxyBaseUrl
     preferences[MUTED_ILLUSTS_JSON] = encodeLongList(settings.mutedIllusts)

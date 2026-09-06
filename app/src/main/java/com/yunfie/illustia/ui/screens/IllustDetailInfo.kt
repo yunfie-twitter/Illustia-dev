@@ -46,6 +46,7 @@ import com.yunfie.illustia.ui.components.ElevatedPanel
 import com.yunfie.illustia.ui.components.FlowButtons
 import com.yunfie.illustia.ui.components.FollowPill
 import com.yunfie.illustia.ui.components.PixivImage
+import com.yunfie.illustia.ui.components.adaptiveRelatedIllustColumns
 import com.yunfie.illustia.ui.components.miuixClickable
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.ButtonDefaults
@@ -385,8 +386,10 @@ internal fun RelatedIllustsList(
     onOpenIllust: (Illust) -> Unit,
     onLongPressIllust: (Illust) -> Unit,
     modifier: Modifier = Modifier,
+    configuredColumns: Int = 3,
 ) {
-    val relatedRows = remember(relatedIllusts) { relatedIllusts.chunked(3) }
+    val columns = adaptiveRelatedIllustColumns(configuredColumns)
+    val relatedRows = remember(relatedIllusts, columns) { relatedIllusts.chunked(columns) }
     Column(modifier = modifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
         relatedRows.forEach { rowItems ->
             Row(
@@ -430,7 +433,7 @@ internal fun RelatedIllustsList(
                         }
                     }
                 }
-                repeat(3 - rowItems.size) {
+                repeat(columns - rowItems.size) {
                     Spacer(modifier = Modifier.weight(1f))
                 }
             }

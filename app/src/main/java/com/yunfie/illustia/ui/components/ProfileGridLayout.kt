@@ -26,6 +26,45 @@ internal fun profileGridColumnsForWidth(screenWidthDp: Int): Int =
         else -> 2
     }
 
+@Composable
+internal fun adaptiveRecommendedTagColumns(): Int {
+    val configuration = LocalConfiguration.current
+    return remember(configuration.screenWidthDp) {
+        recommendedTagColumnsForWidth(configuration.screenWidthDp)
+    }
+}
+
+internal fun recommendedTagColumnsForWidth(screenWidthDp: Int): Int =
+    when {
+        screenWidthDp >= 1_400 -> 8
+        screenWidthDp >= 1_100 -> 7
+        screenWidthDp >= 840 -> 6
+        screenWidthDp >= 600 -> 4
+        else -> 3
+    }
+
+@Composable
+internal fun adaptiveRelatedIllustColumns(configuredColumns: Int = 3): Int {
+    val configuration = LocalConfiguration.current
+    return remember(configuration.screenWidthDp, configuredColumns) {
+        relatedIllustColumnsForWidth(configuration.screenWidthDp, configuredColumns)
+    }
+}
+
+internal fun relatedIllustColumnsForWidth(
+    screenWidthDp: Int,
+    configuredColumns: Int = 3,
+): Int {
+    if (configuredColumns in 2..5) {
+        return configuredColumns
+    }
+    return when {
+        screenWidthDp >= 1_200 -> 5
+        screenWidthDp >= 840 -> 4
+        else -> 3
+    }
+}
+
 internal fun profileGridContentPadding(
     top: Dp = 14.dp,
     bottom: Dp = 96.dp,

@@ -340,6 +340,7 @@
     <string name="image_simultaneous_downloads">동시 다운로드</string>
     <string name="image_columns">그리드 열</string>
     <string name="image_columns_landscape">가로 화면 열</string>
+    <string name="image_related_columns">관련 작품 열 수</string>
     <string name="image_proxy_title">Pixiv 이미지 프록시</string>
     <string name="image_proxy_desc">이미지 도메인을 선택한 공개 인스턴스로 바꿉니다</string>
     <string name="image_quality_high">높음</string>
@@ -440,6 +441,7 @@
     <string name="data_import_export_note">JSON 파일로 열람 기록, 검색 기록, 관심 목록 태그 및 뮤트 데이터를 옮깁니다. 계정 정보는 포함되지 않습니다.</string>
     <string name="data_items_count">%1$d개</string>
     <string name="data_columns_count">%1$d열</string>
+    <string name="data_columns_dynamic">동적</string>
 
     <!-- App data screen -->
     <string name="app_data_title">앱 데이터</string>

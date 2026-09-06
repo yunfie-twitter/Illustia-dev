@@ -130,6 +130,7 @@ fun IllustDetailScreen(
     confirmOnLongPressSave: Boolean,
     skipConfirmOnDetailSave: Boolean,
     detailSectionOrder: List<String>,
+    relatedIllustColumnCount: Int = 3,
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
@@ -310,6 +311,7 @@ fun IllustDetailScreen(
                         relatedIllusts = relatedIllusts,
                         onOpenIllust = onOpenIllust,
                         onLongPressIllust = onLongPressIllust,
+                        configuredColumns = relatedIllustColumnCount,
                     )
                 } else {
                     LoadingIndicator(modifier = Modifier.padding(vertical = 24.dp))

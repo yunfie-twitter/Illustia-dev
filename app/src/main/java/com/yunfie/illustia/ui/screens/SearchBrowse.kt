@@ -32,6 +32,7 @@ import com.yunfie.illustia.ui.components.SectionHeader
 import com.yunfie.illustia.ui.components.TagTile
 import com.yunfie.illustia.ui.components.adaptiveMainNavigationContentPadding
 import com.yunfie.illustia.ui.components.adaptiveProfileGridColumns
+import com.yunfie.illustia.ui.components.adaptiveRecommendedTagColumns
 import com.yunfie.illustia.visibleWithMutedTagsVisible
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -127,6 +128,7 @@ internal fun BrowseArea(
             )
         }
         item(span = { GridItemSpan(maxLineSpan) }) {
+            val tagColumns = adaptiveRecommendedTagColumns()
             val recommendedTags =
                 remember(state.recommendedTagTiles, state.recommendedTags) {
                     if (state.recommendedTagTiles.isNotEmpty()) {
@@ -136,7 +138,7 @@ internal fun BrowseArea(
                     }
                 }
             Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                recommendedTags.chunked(3).forEach { row ->
+                recommendedTags.chunked(tagColumns).forEach { row ->
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), modifier = Modifier.fillMaxWidth()) {
                         row.forEach { tag ->
                             TagTile(
@@ -155,7 +157,7 @@ internal fun BrowseArea(
                                 modifier = Modifier.weight(1f),
                             )
                         }
-                        repeat(3 - row.size) { Spacer(modifier = Modifier.weight(1f)) }
+                        repeat(tagColumns - row.size) { Spacer(modifier = Modifier.weight(1f)) }
                     }
                 }
             }

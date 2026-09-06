@@ -256,6 +256,20 @@ fun ImageSettingsScreen(
                             label = { stringResource(R.string.data_columns_count, it) },
                             onSelect = viewModel::updateHorizontalColumnCount,
                         )
+                        DividerLine()
+                        SettingDropdownRow(
+                            title = stringResource(R.string.image_related_columns),
+                            values = listOf(0, 2, 3, 4, 5),
+                            selected = if (state.settings.relatedIllustColumnCount in 2..5) state.settings.relatedIllustColumnCount else 0,
+                            label = {
+                                if (it == 0) {
+                                    stringResource(R.string.data_columns_dynamic)
+                                } else {
+                                    stringResource(R.string.data_columns_count, it)
+                                }
+                            },
+                            onSelect = viewModel::updateRelatedIllustColumnCount,
+                        )
                     }
                 }
             }

@@ -370,6 +370,7 @@
     <string name="image_simultaneous_downloads">Simultaneous Downloads</string>
     <string name="image_columns">Grid Columns</string>
     <string name="image_columns_landscape">Landscape Columns</string>
+    <string name="image_related_columns">Related Artworks Columns</string>
     <string name="image_proxy_title">Pixiv Image Proxy</string>
     <string name="image_proxy_desc">Replace image domain with a selected public instance</string>
     <string name="image_quality_high">High</string>
@@ -470,6 +471,7 @@
     <string name="data_import_export_note">Move view history, search history, Watchlist tags, and mute data with a JSON file. Account information is never included.</string>
     <string name="data_items_count">%1$d items</string>
     <string name="data_columns_count">%1$d columns</string>
+    <string name="data_columns_dynamic">Dynamic</string>
 
     <!-- App data screen -->
     <string name="app_data_title">App Data</string>

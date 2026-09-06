@@ -224,7 +224,7 @@ abstract class IllustiaBookmarkModule(
                         repository
                             .trendingTags()
                             .distinct()
-                            .take(12)
+                            .take(24)
                     if (tags.isEmpty()) return@runCatching emptyList<RecommendedTagTile>()
 
                     kotlinx.coroutines.coroutineScope {

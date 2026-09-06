@@ -372,6 +372,7 @@
     <string name="image_simultaneous_downloads">同時保存数</string>
     <string name="image_columns">一覧の列数</string>
     <string name="image_columns_landscape">横画面の列数</string>
+    <string name="image_related_columns">関連作品の列数</string>
     <string name="image_proxy_title">Pixiv画像プロキシ</string>
     <string name="image_proxy_desc">画像ドメインを選択した公開インスタンスに置き換えます</string>
     <string name="image_quality_high">高画質</string>
@@ -475,6 +476,7 @@
     <string name="data_import_export_note">閲覧履歴、検索履歴、Watchlistタグ、ミュート情報をJSONファイルで移行できます。アカウント情報は含まれません。</string>
     <string name="data_items_count">%1$d件</string>
     <string name="data_columns_count">%1$d列</string>
+    <string name="data_columns_dynamic">動的</string>
 
     <!-- App data screen -->
     <string name="app_data_title">アプリのデータ</string>
