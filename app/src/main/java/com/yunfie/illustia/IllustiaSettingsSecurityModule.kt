@@ -221,6 +221,10 @@ abstract class IllustiaSettingsSecurityModule(
         updateSettings { it.copy(discordRpcShowButtons = value) }
     }
 
+    fun updateDiscordRpcShowLogs(value: Boolean) {
+        updateSettings { it.copy(discordRpcShowLogs = value) }
+    }
+
     fun updateDummyAppName(value: String) {
         if (value.isNotBlank() && value.length <= 30) {
             updateSettings { it.copy(dummyAppName = value) }

@@ -344,25 +344,34 @@ fun DiscordSettingsScreen(
             item {
                 Section(stringResource(R.string.discord_section_log)) {
                     ElevatedPanel {
-                        if (diagnostics.isEmpty()) {
-                            Text(
-                                text = stringResource(R.string.discord_log_empty),
-                                style = MiuixTheme.textStyles.body2,
-                                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                            )
-                        } else {
-                            diagnostics.asReversed().forEach { entry ->
+                        SettingSwitchRow(
+                            title = stringResource(R.string.discord_enable_log),
+                            summary = stringResource(R.string.discord_enable_log_desc),
+                            checked = state.settings.discordRpcShowLogs,
+                            onCheckedChange = { viewModel.updateDiscordRpcShowLogs(it) },
+                        )
+                        if (state.settings.discordRpcShowLogs) {
+                            DividerLine()
+                            if (diagnostics.isEmpty()) {
                                 Text(
-                                    text = entry,
+                                    text = stringResource(R.string.discord_log_empty),
                                     style = MiuixTheme.textStyles.body2,
                                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                                 )
+                            } else {
+                                diagnostics.asReversed().forEach { entry ->
+                                    Text(
+                                        text = entry,
+                                        style = MiuixTheme.textStyles.body2,
+                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                    )
+                                }
                             }
+                            TextButton(
+                                text = stringResource(R.string.discord_log_clear),
+                                onClick = DiscordRpcManager::clearDiagnostics,
+                            )
                         }
-                        TextButton(
-                            text = stringResource(R.string.discord_log_clear),
-                            onClick = DiscordRpcManager::clearDiagnostics,
-                        )
                     }
                 }
             }

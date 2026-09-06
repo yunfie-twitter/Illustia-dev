@@ -125,6 +125,7 @@ data class AppSettings(
     val discordApplicationId: String = "1544652855233744926",
     val discordRpcShowArtworkDetails: Boolean = false,
     val discordRpcShowButtons: Boolean = true,
+    val discordRpcShowLogs: Boolean = false,
 ) {
     val useHighQualityFeedImages: Boolean
         get() = highQualityImages && feedPreviewQuality != "low"

@@ -889,7 +889,7 @@
     <string name="discord_show_artwork_details">Show Artwork Details</string>
     <string name="discord_show_artwork_details_desc">Show title and artist of the currently viewed artwork in status</string>
     <string name="discord_show_buttons">Show Buttons</string>
-    <string name="discord_show_buttons_desc">Show \'View on Pixiv\' button on Discord</string>
+    <string name="discord_show_buttons_desc">Show \'View on Pixiv\' and \'Download Palleria\' buttons on Discord</string>
     <string name="discord_section_advanced">Advanced</string>
     <string name="discord_application_id">Application ID</string>
     <string name="discord_application_id_desc">Application ID from Discord Developer Portal</string>
@@ -901,8 +901,9 @@
     <string name="discord_browsing">Browsing illustrations</string>
     <string name="discord_in_app">In Palleria</string>
     <string name="discord_button_view_artwork">View on Pixiv</string>
+    <string name="discord_button_download">Download Palleria</string>
     <string name="discord_warning_title">Note</string>
-    <string name="discord_warning_desc">KizzyRPC uses a Discord user token to update Rich Presence. Please manage your account security responsibly.</string>
+    <string name="discord_warning_desc">Discord status update feature uses a user token. Please manage your account security responsibly.</string>
     <string name="discord_login_title">Discord Login</string>
     <string name="discord_login_with_discord">Log in with Discord</string>
     <string name="discord_login_with_discord_desc">Log in in browser to automatically retrieve user token</string>
@@ -910,6 +911,8 @@
     <string name="discord_login_success">Discord token retrieved successfully</string>
     <string name="discord_unsupported_version">Discord RPC requires Android 8.1+ and more than 3GB of RAM</string>
     <string name="discord_section_log">Discord Rich Presence Log</string>
+    <string name="discord_enable_log">Show Logs</string>
+    <string name="discord_enable_log_desc">Display Rich Presence connection and diagnostic logs</string>
     <string name="discord_log_empty">No logs yet. Connection status will appear here after Rich Presence is enabled.</string>
     <string name="discord_log_clear">Clear log</string>
 </resources>

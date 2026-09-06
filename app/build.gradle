@@ -22,8 +22,8 @@ android {
         // Android 7.0 (API 24) and newer.
         minSdk androidMinSdk
         targetSdk 36
-        versionCode 79
-        versionName "5.5.28"
+        versionCode 80
+        versionName "5.5.29"
     }
 
     signingConfigs {
@@ -301,7 +301,6 @@ dependencies {
     implementation libs.shizuku.api
     implementation libs.shizuku.provider
     implementation 'com.github.woheller69:FreeDroidWarn:V1.+'
-    implementation 'com.github.dead8309:KizzyRPC:1.0.71'
 
     // Test dependencies
     testImplementation libs.kotest.runner

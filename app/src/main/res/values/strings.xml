@@ -889,7 +889,7 @@
     <string name="discord_show_artwork_details">作品の詳細を表示</string>
     <string name="discord_show_artwork_details_desc">閲覧中のイラストのタイトルと作者名をステータスに表示します</string>
     <string name="discord_show_buttons">ボタンを表示</string>
-    <string name="discord_show_buttons_desc">Discord 上に「Pixivで見る」ボタンを表示します</string>
+    <string name="discord_show_buttons_desc">Discord 上に「Pixivで見る」「Palleriaをダウンロード」ボタンを表示します</string>
     <string name="discord_section_advanced">詳細設定</string>
     <string name="discord_application_id">Application ID</string>
     <string name="discord_application_id_desc">Discord Developer Portal の Application ID</string>
@@ -901,8 +901,9 @@
     <string name="discord_browsing">イラストを閲覧中</string>
     <string name="discord_in_app">Palleria アプリ内</string>
     <string name="discord_button_view_artwork">Pixivで見る</string>
+    <string name="discord_button_download">Palleriaをダウンロード</string>
     <string name="discord_warning_title">ご注意</string>
-    <string name="discord_warning_desc">KizzyRPC によるステータス更新機能は Discord ユーザートークンを使用します。アカウントのセキュリティには十分ご注意ください。</string>
+    <string name="discord_warning_desc">Discord ステータス更新機能はユーザートークンを使用します。アカウントのセキュリティには十分ご注意ください。</string>
     <string name="discord_login_title">Discord ログイン</string>
     <string name="discord_login_with_discord">Discord でログイン</string>
     <string name="discord_login_with_discord_desc">ブラウザでログインしてトークンを自動取得します</string>
@@ -910,6 +911,8 @@
     <string name="discord_login_success">Discord トークンを取得しました</string>
     <string name="discord_unsupported_version">Discord RPC 機能は Android 8.1 以上かつ RAM 3GB を超える端末でのみ利用可能です</string>
     <string name="discord_section_log">Discord Rich Presence ログ</string>
+    <string name="discord_enable_log">ログを表示</string>
+    <string name="discord_enable_log_desc">Rich Presence の接続ログと診断情報を表示します</string>
     <string name="discord_log_empty">まだログはありません。Rich Presence を有効にすると接続状況がここに表示されます。</string>
     <string name="discord_log_clear">ログを消去</string>
 </resources>

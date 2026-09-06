@@ -166,6 +166,7 @@ internal fun readFromDataStore(
         discordApplicationId = preferences[DISCORD_APPLICATION_ID] ?: "1544652855233744926",
         discordRpcShowArtworkDetails = preferences[DISCORD_RPC_SHOW_ARTWORK_DETAILS] ?: false,
         discordRpcShowButtons = preferences[DISCORD_RPC_SHOW_BUTTONS] ?: true,
+        discordRpcShowLogs = preferences[DISCORD_RPC_SHOW_LOGS] ?: false,
     )
 }
 
@@ -437,6 +438,7 @@ internal fun writeToDataStore(
     preferences[DISCORD_APPLICATION_ID] = settings.discordApplicationId
     preferences[DISCORD_RPC_SHOW_ARTWORK_DETAILS] = settings.discordRpcShowArtworkDetails
     preferences[DISCORD_RPC_SHOW_BUTTONS] = settings.discordRpcShowButtons
+    preferences[DISCORD_RPC_SHOW_LOGS] = settings.discordRpcShowLogs
 }
 
 internal fun writeSensitiveSettings(
