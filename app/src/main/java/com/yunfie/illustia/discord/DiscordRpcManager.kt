@@ -108,19 +108,27 @@ class DiscordRpcManager(
                                 }
                             val btns =
                                 if (showButtons) {
-                                    listOf(BUTTON_PIXIV_LABEL, BUTTON_DOWNLOAD_LABEL)
+                                    if (showDetails) {
+                                        listOf(BUTTON_PIXIV_LABEL, BUTTON_DOWNLOAD_LABEL)
+                                    } else {
+                                        listOf(BUTTON_DOWNLOAD_LABEL)
+                                    }
                                 } else {
                                     null
                                 }
                             val meta =
                                 if (showButtons) {
-                                    Metadata(
-                                        buttonUrls =
-                                            listOf(
-                                                "https://www.pixiv.net/artworks/${selectedIllust.id}",
-                                                DOWNLOAD_URL,
-                                            ),
-                                    )
+                                    if (showDetails) {
+                                        Metadata(
+                                            buttonUrls =
+                                                listOf(
+                                                    "https://www.pixiv.net/artworks/${selectedIllust.id}",
+                                                    DOWNLOAD_URL,
+                                                ),
+                                        )
+                                    } else {
+                                        Metadata(buttonUrls = listOf(DOWNLOAD_URL))
+                                    }
                                 } else {
                                     null
                                 }
@@ -298,9 +306,7 @@ class DiscordRpcManager(
             return true
         }
 
-        fun hasSufficientRam(context: Context): Boolean {
-            return !PlatformCapabilities.isLowRamDevice(context)
-        }
+        fun hasSufficientRam(context: Context): Boolean = !PlatformCapabilities.isLowRamDevice(context)
 
         private fun recordDiagnosticStatic(message: String) {
             val entry = "${DIAGNOSTIC_TIME_FORMAT.format(Date())}  $message"
