@@ -188,17 +188,89 @@ class DiscordRpcManager(
                             status = "online",
                             since = now,
                         )
+
+                        var wsClient: Any? = null
+                        var authFailedOrClosed = false
+                        var lastCloseReason: String? = null
+
+                        // 1. Wait for connection or premature close (up to CONNECTION_TIMEOUT_MS)
                         val connected =
                             withTimeoutOrNull(CONNECTION_TIMEOUT_MS) {
-                                while (!newRpc.isRpcRunning()) {
+                                while (true) {
+                                    if (wsClient == null) {
+                                        wsClient = runCatching {
+                                            val wsField = newRpc.javaClass.getDeclaredField("webSocketClient")
+                                                .apply { isAccessible = true }
+                                            wsField.get(newRpc)
+                                        }.getOrNull()
+                                    }
+
+                                    val ws = wsClient
+                                    if (ws != null) {
+                                        val isClosed = runCatching {
+                                            ws.javaClass.getMethod("isClosed").invoke(ws) as? Boolean
+                                        }.getOrNull() ?: false
+                                        val isClosing = runCatching {
+                                            ws.javaClass.getMethod("isClosing").invoke(ws) as? Boolean
+                                        }.getOrNull() ?: false
+                                        val isOpen = runCatching {
+                                            ws.javaClass.getMethod("isOpen").invoke(ws) as? Boolean
+                                        }.getOrNull() ?: false
+
+                                        if (isClosed || isClosing) {
+                                            authFailedOrClosed = true
+                                            val readyState = runCatching {
+                                                ws.javaClass.getMethod("getReadyState").invoke(ws)?.toString()
+                                            }.getOrNull()
+                                            lastCloseReason = "WebSocket 切断 (状態: ${readyState ?: "CLOSED"})"
+                                            return@withTimeoutOrNull false
+                                        }
+                                        if (newRpc.isRpcRunning() && isOpen) {
+                                            // Connected to Gateway!
+                                            return@withTimeoutOrNull true
+                                        }
+                                    }
                                     delay(100L)
                                 }
-                                true
+                                @Suppress("UNREACHABLE_CODE")
+                                false
                             } ?: false
+
                         if (connected && newRpc.isRpcRunning()) {
-                            recordDiagnostic("Discord Gateway に接続し、Presence を送信しました")
+                            // 2. Allow a short stabilization window (2s) to ensure Discord doesn't reject IDENTIFY
+                            val stable =
+                                withTimeoutOrNull(2000L) {
+                                    while (newRpc.isRpcRunning()) {
+                                        val ws = wsClient
+                                        if (ws != null) {
+                                            val isClosed = runCatching {
+                                                ws.javaClass.getMethod("isClosed").invoke(ws) as? Boolean
+                                            }.getOrNull() ?: false
+                                            val isClosing = runCatching {
+                                                ws.javaClass.getMethod("isClosing").invoke(ws) as? Boolean
+                                            }.getOrNull() ?: false
+                                            if (isClosed || isClosing) {
+                                                authFailedOrClosed = true
+                                                return@withTimeoutOrNull false
+                                            }
+                                        }
+                                        delay(200L)
+                                    }
+                                    false
+                                } ?: true
+
+                            if (stable && newRpc.isRpcRunning()) {
+                                recordDiagnostic("Discord Gateway に接続し、Presence を送信しました")
+                            } else {
+                                recordDiagnostic("Discord Gateway から切断されました (Token が無効、期限切れ、または認証が拒否されました)")
+                                tearDown()
+                            }
                         } else {
-                            recordDiagnostic("接続がタイムアウトしました。Token、ネットワーク、Discord 側の制限を確認してください")
+                            if (authFailedOrClosed) {
+                                recordDiagnostic("Discord 接続が拒否または切断されました: ${lastCloseReason ?: "認証エラー (Token を確認してください)"}")
+                            } else {
+                                recordDiagnostic("接続がタイムアウトしました。Token、ネットワーク、Discord 側の制限を確認してください")
+                            }
                             tearDown()
                         }
                     } catch (error: CancellationException) {
@@ -262,9 +334,7 @@ class DiscordRpcManager(
     }
 
     private fun recordDiagnostic(message: String) {
-        val entry = "${DIAGNOSTIC_TIME_FORMAT.format(Date())}  $message"
-        Log.d(TAG, entry)
-        _diagnostics.value = (_diagnostics.value + entry).takeLast(MAX_DIAGNOSTIC_ENTRIES)
+        recordDiagnosticStatic(message)
     }
 
     private fun Throwable.safeDiagnosticMessage(): String =
@@ -316,10 +386,17 @@ class DiscordRpcManager(
                     thread.name.contains("WebSocket", ignoreCase = true)
                 ) {
                     Log.w(TAG, "Suppressed KizzyRPC unhandled thread exception on ${thread.name}")
+                    recordDiagnosticStatic("Discord Gateway 切断イベントを受信 (Discord から切断または無効なデータを受信)")
                     return@setDefaultUncaughtExceptionHandler
                 }
                 prevHandler?.uncaughtException(thread, throwable)
             }
+        }
+
+        private fun recordDiagnosticStatic(message: String) {
+            val entry = "${DIAGNOSTIC_TIME_FORMAT.format(Date())}  $message"
+            Log.d(TAG, entry)
+            _diagnostics.value = (_diagnostics.value + entry).takeLast(MAX_DIAGNOSTIC_ENTRIES)
         }
     }
 }

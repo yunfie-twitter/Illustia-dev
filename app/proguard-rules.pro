@@ -76,9 +76,12 @@
 -keep interface * extends com.sun.jna.Callback { *; }
 -dontwarn com.sun.jna.**
 
-# KizzyRPC & SLF4J
+# KizzyRPC, Java-WebSocket & SLF4J
 -dontwarn org.slf4j.**
 -dontwarn com.my.kizzyrpc.**
+-dontwarn org.java_websocket.**
 -keep class com.my.kizzyrpc.** { *; }
 -keepclassmembers class com.my.kizzyrpc.** { *; }
+-keep class org.java_websocket.** { *; }
+-keepclassmembers class org.java_websocket.** { *; }
 
