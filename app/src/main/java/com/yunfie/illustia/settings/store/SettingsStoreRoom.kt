@@ -13,12 +13,15 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
 
-internal suspend fun readRoomSettingsData(dao: SettingsDao): RoomSettingsData =
+internal suspend fun readRoomSettingsData(
+    dao: SettingsDao,
+    viewHistoryLimit: Int? = null,
+): RoomSettingsData =
     withContext(Dispatchers.IO) {
         RoomSettingsData(
             searchHistory = dao.getSearchHistory(),
             favoriteTags = dao.getFavoriteTags(),
-            viewHistory = dao.getViewHistory(),
+            viewHistory = if (viewHistoryLimit != null) dao.getViewHistory(viewHistoryLimit) else dao.getViewHistory(),
             accounts = dao.getAccounts(),
         )
     }

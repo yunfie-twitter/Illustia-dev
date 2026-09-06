@@ -52,13 +52,21 @@ class IllustiaRepository(
     @Volatile
     private var apiClient: PixivApiClient = PixivApiClient()
 
-    suspend fun readSettings(): AppSettings {
+    suspend fun readSettings(viewHistoryLimit: Int? = null): AppSettings {
         val settings =
             settingsCacheMutex.withLock {
-                cachedSettings ?: settingsStore.read().also { cachedSettings = it }
+                cachedSettings ?: settingsStore.read(viewHistoryLimit).also { cachedSettings = it }
             }
         ensureApiClient(NetworkMode.fromCode(settings.pixivNetworkMode))
         return settings
+    }
+
+    suspend fun readFullViewHistory(): List<Illust> {
+        val fullHistory = settingsStore.readFullViewHistory()
+        settingsCacheMutex.withLock {
+            cachedSettings = cachedSettings?.copy(viewHistory = fullHistory)
+        }
+        return fullHistory
     }
 
     suspend fun readStartupSettings(): AppSettings {

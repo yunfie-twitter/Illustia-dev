@@ -419,6 +419,7 @@ abstract class IllustiaLibraryNavigationModule(
     }
 
     fun openViewHistory() {
+        loadFullViewHistory()
         _navigationRequests.tryEmit(IllustiaNavigationRequest.ViewHistory)
     }
 

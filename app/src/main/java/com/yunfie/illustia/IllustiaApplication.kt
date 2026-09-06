@@ -18,6 +18,7 @@ import com.yunfie.illustia.widget.RankingWidgetProvider
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.Dispatcher
@@ -78,19 +79,23 @@ class IllustiaApplication : Application() {
         val appContext = applicationContext
         val cacheDirectory = cacheDir.resolve("image_cache").toOkioPath()
         val configuredCacheMb = SettingsStore.readImageCacheSizeMbSync(appContext)
+        val isLowRam = PlatformCapabilities.isLowRamDevice(appContext)
+        val memoryCachePercent = if (isLowRam) 0.03 else 0.06
         SingletonImageLoader.setSafe {
             ImageLoader
                 .Builder(appContext)
                 .components {
                     add(OkHttpNetworkFetcherFactory(callFactory = { sharedHttpClient }))
-                    if (PlatformCapabilities.supportsAnimatedImageDecoder()) {
-                        add(AnimatedImageDecoder.Factory())
+                    if (!isLowRam) {
+                        if (PlatformCapabilities.supportsAnimatedImageDecoder()) {
+                            add(AnimatedImageDecoder.Factory())
+                        }
+                        add(GifDecoder.Factory())
                     }
-                    add(GifDecoder.Factory())
                 }.memoryCache {
                     MemoryCache
                         .Builder()
-                        .maxSizePercent(appContext, 0.06)
+                        .maxSizePercent(appContext, memoryCachePercent)
                         .build()
                 }.diskCache {
                     DiskCache
@@ -114,8 +119,11 @@ class IllustiaApplication : Application() {
                 }.getOrDefault(false)
             val settings = repository.readSettings()
             PalleriaAccount.reconcile(appContext, settings.accounts)
-            RankingWidgetProvider.publishPreview(appContext)
-            IllustWidgetProvider.publishPreview(appContext)
+            launch {
+                delay(6_000L)
+                RankingWidgetProvider.publishPreview(appContext)
+                IllustWidgetProvider.publishPreview(appContext)
+            }
             setPallaSyncEnabled(recoveredPallaSync || settings.pallaSyncEnabled)
         }
     }

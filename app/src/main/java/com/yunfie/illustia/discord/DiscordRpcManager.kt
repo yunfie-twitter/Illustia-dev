@@ -13,6 +13,7 @@ import com.discord.oauth2rpc.structures.RichPresence
 import com.discord.oauth2rpc.structures.Timestamps
 import com.discord.oauth2rpc.utils.ActivityFlags
 import com.yunfie.illustia.models.Illust
+import com.yunfie.illustia.platform.PlatformCapabilities
 import com.yunfie.illustia.settings.AppSettings
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -298,10 +299,7 @@ class DiscordRpcManager(
         }
 
         fun hasSufficientRam(context: Context): Boolean {
-            val actManager = context.getSystemService(Context.ACTIVITY_SERVICE) as? ActivityManager ?: return true
-            val memInfo = ActivityManager.MemoryInfo()
-            actManager.getMemoryInfo(memInfo)
-            return memInfo.totalMem > 3_200_000_000L
+            return !PlatformCapabilities.isLowRamDevice(context)
         }
 
         private fun recordDiagnosticStatic(message: String) {

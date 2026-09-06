@@ -63,6 +63,20 @@ class SyncedSettingsMergeTest :
             rebased.favoriteTags shouldBe listOf("remote", "keep", "local")
             rebased.searchHistory shouldBe listOf("local search", "remote search", "old")
         }
+
+        "rebasing view history retains newly viewed items across devices" {
+            val baseItem = syncIllust(id = 10L, title = "Base")
+            val localItem = syncIllust(id = 11L, title = "Local New")
+            val remoteItem = syncIllust(id = 12L, title = "Remote New")
+
+            val base = SyncedCollectionsSnapshot(viewHistory = listOf(baseItem))
+            val intended = SyncedCollectionsSnapshot(viewHistory = listOf(localItem, baseItem))
+            val persisted = SyncedCollectionsSnapshot(viewHistory = listOf(remoteItem, baseItem))
+
+            val rebased = rebaseSyncedCollections(base, intended, persisted)
+
+            rebased.viewHistory.map { it.id } shouldBe listOf(localItem.id, remoteItem.id, baseItem.id)
+        }
     })
 
 private fun syncIllust(

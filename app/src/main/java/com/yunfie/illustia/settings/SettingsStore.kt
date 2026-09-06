@@ -12,6 +12,7 @@ import androidx.datastore.preferences.preferencesDataStoreFile
 import androidx.security.crypto.EncryptedSharedPreferences
 import androidx.security.crypto.MasterKey
 import com.yunfie.illustia.IllustiaApplication
+import com.yunfie.illustia.models.Illust
 import com.yunfie.illustia.pallasync.PallaSyncEventWriter
 import com.yunfie.illustia.pallasync.PalleriaSyncCoordinator
 import com.yunfie.illustia.pallasync.PalleriaSyncManager
@@ -26,6 +27,7 @@ import com.yunfie.illustia.settings.store.KEY_APP_LANGUAGE
 import com.yunfie.illustia.settings.store.LEGACY_PREFS_NAME
 import com.yunfie.illustia.settings.store.PALLA_SYNC_ENABLED
 import com.yunfie.illustia.settings.store.PALLA_SYNC_SERVER_URL
+import com.yunfie.illustia.settings.store.illustFromEntity
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -88,9 +90,18 @@ class SettingsStore internal constructor(
         migrateIfNeeded()
     }
 
-    suspend fun read(): AppSettings = readAppSettingsImpl(dataStore, sensitivePreferences, dao)
+    suspend fun read(viewHistoryLimit: Int? = null): AppSettings =
+        readAppSettingsImpl(dataStore, sensitivePreferences, dao, viewHistoryLimit)
 
     suspend fun readStartup(): AppSettings = readStartupAppSettingsImpl(dataStore, sensitivePreferences)
+
+    suspend fun readStartupWithRecentHistory(limit: Int = STARTUP_VIEW_HISTORY_LIMIT): AppSettings =
+        readAppSettingsImpl(dataStore, sensitivePreferences, dao, limit)
+
+    suspend fun readFullViewHistory(): List<Illust> =
+        withContext(Dispatchers.IO) {
+            dao.getViewHistory().map(::illustFromEntity)
+        }
 
     suspend fun write(
         settings: AppSettings,
@@ -387,5 +398,6 @@ class SettingsStore internal constructor(
         private const val DEFAULT_IMAGE_CACHE_SIZE_MB = 300
         private const val MIN_IMAGE_CACHE_SIZE_MB = 100
         private const val MAX_IMAGE_CACHE_SIZE_MB = 1000
+        const val STARTUP_VIEW_HISTORY_LIMIT = 16
     }
 }

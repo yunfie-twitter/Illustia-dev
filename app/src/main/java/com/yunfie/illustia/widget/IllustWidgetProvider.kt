@@ -80,6 +80,7 @@ class IllustWidgetProvider : AppWidgetProvider() {
 
         fun publishPreview(context: Context) {
             if (!PlatformCapabilities.supportsWidgetPreview()) return
+            if (PlatformCapabilities.isLowRamDevice(context)) return
 
             val manager = AppWidgetManager.getInstance(context)
             val views = buildPreview(context)

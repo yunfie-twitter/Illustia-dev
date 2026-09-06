@@ -13,9 +13,10 @@ internal suspend fun readAppSettings(
     dataStore: DataStore<Preferences>,
     sensitivePreferences: SharedPreferences,
     dao: SettingsDao,
+    viewHistoryLimit: Int? = null,
 ): AppSettings {
     val preferences = readDataStorePreferences(dataStore)
-    val roomData = readRoomSettingsData(dao)
+    val roomData = readRoomSettingsData(dao, viewHistoryLimit)
     return readFromDataStore(preferences, roomData, sensitivePreferences)
 }
 

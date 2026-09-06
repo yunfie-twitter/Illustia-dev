@@ -37,7 +37,7 @@ abstract class IllustiaSettingsSecurityModule(
         if (!deferredStartupDataStarted.compareAndSet(false, true)) return
 
         viewModelScope.launch(Dispatchers.IO) {
-            val fullSettings = repository.readSettings()
+            val fullSettings = repository.readSettings(SettingsStore.STARTUP_VIEW_HISTORY_LIMIT)
             val normalizedFullSettings =
                 if (fullSettings.useDynamicColor && !isDynamicColorAvailable()) {
                     fullSettings.copy(useDynamicColor = false)
@@ -78,6 +78,15 @@ abstract class IllustiaSettingsSecurityModule(
                         applySyncedSettings(update.collections)
                     }
                 }
+        }
+    }
+
+    fun loadFullViewHistory() {
+        viewModelScope.launch(Dispatchers.IO) {
+            val fullHistory = repository.readFullViewHistory()
+            _uiState.update { current ->
+                current.withSettings(current.settings.copy(viewHistory = fullHistory))
+            }
         }
     }
 

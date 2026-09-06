@@ -29,6 +29,9 @@ interface SettingsDao {
     @Query("SELECT * FROM view_history ORDER BY position ASC")
     fun getViewHistory(): List<ViewHistoryEntity>
 
+    @Query("SELECT * FROM view_history ORDER BY position ASC LIMIT :limit")
+    fun getViewHistory(limit: Int): List<ViewHistoryEntity>
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun insertViewHistory(items: List<ViewHistoryEntity>)
 

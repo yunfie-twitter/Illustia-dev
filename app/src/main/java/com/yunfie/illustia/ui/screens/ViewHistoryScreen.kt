@@ -67,6 +67,9 @@ fun ViewHistoryScreen(
     onBack: () -> Unit,
 ) {
     PredictiveBackGestureHandler(onBack = onBack)
+    LaunchedEffect(Unit) {
+        viewModel.loadFullViewHistory()
+    }
     var deleteTarget by remember { mutableStateOf<ViewHistoryDeleteTarget?>(null) }
     var selectedIds by remember { mutableStateOf(emptySet<Long>()) }
     var showSearch by remember { mutableStateOf(false) }
